@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Environment — NEVER commit real values (see docs/phase-2-architecture/05-security-architecture.md §6)
+.env
+.env.*
+!.env.example
+
+# Secrets, keys, credentials
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Test & coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Mobile
+apps/mobile/ios/Pods/
+apps/mobile/android/.gradle/
+apps/mobile/android/app/build/
+apps/mobile/.expo/
+
+# Editors & OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*

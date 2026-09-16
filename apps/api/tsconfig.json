@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": ["node"]
+  },
+  // Consume @nhoga/shared through its emitted declarations, not its source. Vitest still aliases
+  // to source (see vitest.config.ts) so tests run without a build step.
+  "references": [{ "path": "../../packages/shared" }],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+}

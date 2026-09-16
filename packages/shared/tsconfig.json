@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // Required so apps/* can consume this package through a project reference rather than by
+    // pulling its source into their own compilation.
+    "composite": true,
+    // Keep the incremental build state inside dist. Left at its default it sits next to this
+    // tsconfig, so deleting dist orphans it: tsc then believes every output is current and
+    // silently emits nothing, and consumers fall back to `any`. Cleaning dist must clear it too.
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
+}

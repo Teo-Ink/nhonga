@@ -1,0 +1,1070 @@
+openapi: 3.1.0
+
+info:
+  title: Nhoga Marketplace API
+  version: 1.0.0-phase2
+  description: |
+    Multi-vendor marketplace API for Mozambique.
+
+    **Scope of this document.** This is the buyer-critical core: identity, catalogue, cart,
+    checkout, payments, and orders — the surfaces that define the architecture and carry the
+    money. The vendor console, admin console, disputes, and settlement endpoints follow the same
+    conventions and are specified in `openapi-vendor.yaml` and `openapi-admin.yaml` during Phase 3.
+
+    **Conventions**
+    - All money is an integer in **centavos** (`1250000` = 12.500,00 MT). Never a float, never a
+      formatted string. Formatting is the client's job via `formatMZN()` in `packages/shared`.
+    - All timestamps are RFC 3339 UTC.
+    - Pagination is cursor-based. Offset pagination is not offered: the catalogue changes under
+      the reader, and offsets silently skip or duplicate rows.
+    - `Accept-Language: pt-MZ | en` selects localised content. Default `pt-MZ`.
+    - Every mutating request that creates or moves money **must** carry `Idempotency-Key`.
+    - Errors follow RFC 9457 (problem+json).
+  contact:
+    name: Nhoga Engineering
+
+servers:
+  - url: https://api.nhoga.co.mz/v1
+    description: Production
+  - url: https://api.staging.nhoga.co.mz/v1
+    description: Staging
+  - url: http://localhost:3000/v1
+    description: Local (mock payment providers)
+
+tags:
+  - name: auth
+    description: Phone-first OTP authentication (D-04)
+  - name: catalog
+    description: Public, cacheable catalogue reads
+  - name: cart
+  - name: checkout
+    description: Order placement and payment initiation
+  - name: payments
+  - name: orders
+  - name: addresses
+  - name: reviews
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # ─────────────────────────────── AUTH ───────────────────────────────
+  /auth/otp/request:
+    post:
+      tags: [auth]
+      summary: Request an OTP code by SMS
+      description: |
+        Rate limited on three independent axes — per phone number, per IP, and per device — plus a
+        global send-rate circuit breaker and a hard daily SMS spend cap. Every SMS costs money, so
+        an unprotected endpoint here is both a security hole and a direct financial drain.
+
+        Always returns 202 for a valid number shape, whether or not an account exists. Revealing
+        which numbers are registered is an enumeration oracle we do not need to give away.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, purpose]
+              properties:
+                phone:
+                  type: string
+                  pattern: '^\+258(8[2-7])[0-9]{7}$'
+                  examples: ['+258841234567']
+                purpose:
+                  type: string
+                  enum: [login, verify_phone, payout_change]
+      responses:
+        '202':
+          description: Code sent (or silently suppressed)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  challengeId: { type: string, format: uuid }
+                  expiresAt:   { type: string, format: date-time }
+                  resendAfterSeconds: { type: integer, examples: [30] }
+                  operator:
+                    type: string
+                    enum: [vodacom, movitel, tmcel]
+                    description: Derived from the MSISDN prefix; pre-selects the wallet at checkout (D-05)
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /auth/otp/verify:
+    post:
+      tags: [auth]
+      summary: Exchange an OTP code for a session
+      description: |
+        Five failed attempts invalidate the challenge entirely and require a new code. Timing is
+        constant regardless of whether the challenge exists, so failures cannot be distinguished.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, code]
+              properties:
+                challengeId: { type: string, format: uuid }
+                code:        { type: string, pattern: '^[0-9]{6}$' }
+                deviceLabel: { type: string, maxLength: 64 }
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate the refresh token
+      description: |
+        Refresh tokens rotate on every use. Presenting an already-rotated token revokes the whole
+        token family — the only reason to present an old token is that it was stolen.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New token pair
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Revoke the current token family
+      responses:
+        '204': { description: Logged out }
+
+  # ────────────────────────────── CATALOG ──────────────────────────────
+  /catalog/categories:
+    get:
+      tags: [catalog]
+      summary: Full category tree
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: Category tree, three levels maximum
+          headers:
+            Cache-Control:
+              schema: { type: string, examples: ['public, max-age=3600, stale-while-revalidate=86400'] }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items: { $ref: '#/components/schemas/Category' }
+
+  /catalog/products:
+    get:
+      tags: [catalog]
+      summary: Search and browse products
+      description: |
+        Returns the narrow `ProductListItem` shape, not full products. Description bodies and full
+        galleries are deliberately excluded — a grid of 20 products must not cost the user the
+        bandwidth of 20 product pages (D-09).
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - { name: q,          in: query, schema: { type: string }, description: Free-text search; diacritic-insensitive }
+        - { name: categoryId, in: query, schema: { type: string, format: uuid } }
+        - { name: vendorId,   in: query, schema: { type: string, format: uuid } }
+        - { name: districtId, in: query, schema: { type: string, format: uuid }, description: Filter to vendors who deliver here }
+        - { name: minPrice,   in: query, schema: { type: integer, format: int64 }, description: Centavos }
+        - { name: maxPrice,   in: query, schema: { type: integer, format: int64 } }
+        - { name: minRating,  in: query, schema: { type: number, minimum: 1, maximum: 5 } }
+        - { name: inStock,    in: query, schema: { type: boolean } }
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [relevance, price_asc, price_desc, rating, newest]
+            default: relevance
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Paginated results with facets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, page]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProductListItem' }
+                  facets: { $ref: '#/components/schemas/Facets' }
+                  page:   { $ref: '#/components/schemas/PageInfo' }
+                  degraded:
+                    type: boolean
+                    description: |
+                      True when OpenSearch is unavailable and results came from the Postgres
+                      fallback. Clients show a "search is limited" notice rather than failing.
+
+  /catalog/products/{productId}:
+    get:
+      tags: [catalog]
+      summary: Full product detail
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/AcceptLanguage'
+        - { name: productId, in: path, required: true, schema: { type: string } , description: UUID or slug-id }
+        - name: addressId
+          in: query
+          schema: { type: string, format: uuid }
+          description: 'When supplied, the response includes a delivery quote for that address (key screens §3)'
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ──────────────────────────────── CART ────────────────────────────────
+  /cart:
+    get:
+      tags: [cart]
+      summary: Current cart, grouped by vendor
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+
+  /cart/items:
+    post:
+      tags: [cart]
+      summary: Add an item
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId, quantity]
+              properties:
+                variantId: { type: string, format: uuid }
+                quantity:  { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '409':
+          description: Insufficient stock
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /cart/items/{itemId}:
+    patch:
+      tags: [cart]
+      summary: Change quantity
+      parameters:
+        - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 0, maximum: 99, description: 0 removes the item }
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+    delete:
+      tags: [cart]
+      summary: Remove an item
+      parameters:
+        - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+
+  # ────────────────────────────── CHECKOUT ──────────────────────────────
+  /checkout/quote:
+    post:
+      tags: [checkout]
+      summary: Price the cart for a delivery address
+      description: |
+        Returns per-vendor shipping fees, delivery windows, and the grand total. Called on the
+        delivery step so the buyer sees the real total before committing — shipping revealed at the
+        last moment is the leading cause of abandonment, and fees are large relative to order value
+        in this market.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [addressId]
+              properties:
+                addressId:      { type: string, format: uuid }
+                deliveryMethod: { type: string, enum: [marketplace, vendor, pickup], default: marketplace }
+                paymentProvider:
+                  type: string
+                  enum: [mpesa, emola, mkesh, cod]
+                  description: Affects payment fee, if the platform charges one (OQ-5)
+      responses:
+        '200':
+          description: Quote
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckoutQuote' }
+        '409':
+          description: Cart is no longer purchasable (stock or price changed)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /checkout:
+    post:
+      tags: [checkout]
+      summary: Place the order and initiate payment
+      description: |
+        The single most important endpoint in the system.
+
+        In one database transaction it validates stock and prices, reserves stock, creates the
+        order with one `sub_order` per vendor, creates the payment in `initiated`, and writes the
+        outbox event. **The provider call happens after that transaction commits** — holding row
+        locks across a network call to Vodacom is how you take down the database.
+
+        `Idempotency-Key` is mandatory. A replay returns the original response verbatim; it never
+        creates a second order and never initiates a second payment. This is what makes the pay
+        button safe to double-tap on a bad connection.
+
+        Returns **202**, not 201: the order exists but the payment has not resolved. Mobile-money
+        push takes 10–120 seconds and the client must poll or wait for the push notification.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [addressId, paymentProvider, expectedTotalCents]
+              properties:
+                addressId:      { type: string, format: uuid }
+                deliveryMethod: { type: string, enum: [marketplace, vendor, pickup], default: marketplace }
+                paymentProvider: { type: string, enum: [mpesa, emola, mkesh, cod] }
+                paymentMsisdn:
+                  type: string
+                  pattern: '^\+258(8[2-7])[0-9]{7}$'
+                  description: Defaults to the account phone. Buyers often pay from another wallet.
+                expectedTotalCents:
+                  type: integer
+                  format: int64
+                  description: |
+                    The total the buyer was shown. If it no longer matches, the request is rejected
+                    with 409 rather than silently charging a different amount.
+      responses:
+        '202':
+          description: Order placed, payment initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orderId, orderNumber, payment]
+                properties:
+                  orderId:     { type: string, format: uuid }
+                  orderNumber: { type: string, examples: ['4821'] }
+                  payment:     { $ref: '#/components/schemas/Payment' }
+        '409':
+          description: Price changed, out of stock, or vendor suspended
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/BadRequest' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  # ────────────────────────────── PAYMENTS ──────────────────────────────
+  /payments/{paymentId}:
+    get:
+      tags: [payments]
+      summary: Poll payment status
+      description: |
+        The client's safety net when the webhook is slow. Recommended backoff: 2s, 4s, 8s, then
+        every 10s to a 3-minute ceiling.
+
+        **The client never decides payment state** — it renders what this endpoint returns. A
+        client that concludes "paid" on its own produces the one failure this product cannot
+        afford.
+      parameters:
+        - { name: paymentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Current state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /payments/{paymentId}/retry:
+    post:
+      tags: [payments]
+      summary: Retry a failed or expired payment
+      description: |
+        Creates a **new** payment attempt against the same order, with a new idempotency key, so a
+        retry is never collapsed into the prior attempt. May switch provider — a failed M-Pesa
+        attempt should be able to become an e-Mola or COD attempt rather than leaving the funnel.
+
+        Refused if the original payment later reached `paid`, which can happen when a user approves
+        on the handset after our expiry window closed.
+      parameters:
+        - { name: paymentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paymentProvider: { type: string, enum: [mpesa, emola, mkesh, cod] }
+                paymentMsisdn:   { type: string, pattern: '^\+258(8[2-7])[0-9]{7}$' }
+      responses:
+        '202':
+          description: New attempt initiated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '409':
+          description: Original payment already resolved as paid
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  # ─────────────────────────────── ORDERS ───────────────────────────────
+  /orders:
+    get:
+      tags: [orders]
+      summary: Buyer order history
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [active, completed, cancelled] } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/OrderListItem' }
+                  page: { $ref: '#/components/schemas/PageInfo' }
+
+  /orders/{orderId}:
+    get:
+      tags: [orders]
+      summary: Order detail with a timeline per vendor
+      parameters:
+        - { name: orderId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /orders/{orderId}/sub-orders/{subOrderId}/confirm-receipt:
+    post:
+      tags: [orders]
+      summary: Buyer confirms delivery
+      description: |
+        Moves the sub-order to `completed` and makes its settlement eligible. Auto-fires 7 days
+        after delivery if the buyer never confirms — otherwise vendor payouts would be stranded
+        indefinitely by ordinary buyer inattention.
+      parameters:
+        - { name: orderId,    in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: subOrderId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubOrder' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ────────────────────────────── ADDRESSES ─────────────────────────────
+  /addresses:
+    get:
+      tags: [addresses]
+      summary: Address book
+      responses:
+        '200':
+          description: Addresses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Address' }
+    post:
+      tags: [addresses]
+      summary: Add an address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddressInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Address' }
+
+  # ─────────────────────────────── REVIEWS ──────────────────────────────
+  /reviews:
+    post:
+      tags: [reviews]
+      summary: Review a delivered item
+      description: |
+        Only permitted against an `order_item` from a delivered sub-order belonging to the caller.
+        This is the primary defence against review fraud, which would destroy the trust the whole
+        marketplace depends on.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderItemId, rating]
+              properties:
+                orderItemId: { type: string, format: uuid }
+                rating:      { type: integer, minimum: 1, maximum: 5 }
+                comment:     { type: string, maxLength: 2000 }
+                imageIds:
+                  type: array
+                  maxItems: 3
+                  items: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Submitted; may be held for moderation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+        '403':
+          description: Caller did not buy and receive this item
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token, 15-minute lifetime. Refresh via `/auth/refresh`.
+
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      schema: { type: string, enum: ['pt-MZ', 'en'], default: 'pt-MZ' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+      description: |
+        Client-generated UUID. The server stores the response against this key for 24 hours and
+        replays it verbatim on a repeat. Mandatory on everything that creates or moves money.
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+      description: Opaque cursor from `page.nextCursor`
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+
+  responses:
+    BadRequest:
+      description: Validation failed
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Missing, expired, or invalid credentials
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Conflicts with current state
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RateLimited:
+      description: Too many requests
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+
+    Problem:
+      type: object
+      description: RFC 9457. `detail` is already localised per `Accept-Language` and is safe to show to the user.
+      required: [type, title, status]
+      properties:
+        type:     { type: string, examples: ['https://nhoga.co.mz/problems/insufficient-stock'] }
+        title:    { type: string, examples: ['Stock insuficiente'] }
+        status:   { type: integer, examples: [409] }
+        detail:   { type: string, examples: ['Restam apenas 2 unidades de "Auscultadores Bluetooth".'] }
+        instance: { type: string }
+        traceId:  { type: string, description: 'Show beneath the message for support, never as the message' }
+        errors:
+          type: array
+          description: Field-level validation failures
+          items:
+            type: object
+            properties:
+              field:   { type: string }
+              code:    { type: string }
+              message: { type: string }
+
+    PageInfo:
+      type: object
+      properties:
+        nextCursor: { type: [string, 'null'] }
+        hasMore:    { type: boolean }
+
+    AuthSession:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, user]
+      properties:
+        accessToken:  { type: string }
+        refreshToken: { type: string }
+        expiresIn:    { type: integer, examples: [900] }
+        isNewUser:    { type: boolean }
+        user:         { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      properties:
+        id:          { type: string, format: uuid }
+        displayName: { type: string }
+        phone:       { type: string, description: 'Masked, e.g. +258 84 *** 4567' }
+        email:       { type: [string, 'null'], format: email }
+        locale:      { type: string, enum: ['pt-MZ', 'en'] }
+        roles:
+          type: array
+          items: { type: string, enum: [buyer, vendor_owner, vendor_staff, admin, support] }
+
+    Money:
+      type: integer
+      format: int64
+      description: Centavos. 1250000 = 12.500,00 MT.
+
+    Category:
+      type: object
+      properties:
+        id:       { type: string, format: uuid }
+        slug:     { type: string }
+        name:     { type: string, description: Already localised }
+        level:    { type: integer, minimum: 1, maximum: 3 }
+        iconKey:  { type: string }
+        children:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+
+    ProductListItem:
+      type: object
+      description: Deliberately narrow — the grid shape. No description body, one image.
+      required: [id, slug, title, priceCents, vendor]
+      properties:
+        id:              { type: string, format: uuid }
+        slug:            { type: string }
+        title:           { type: string }
+        priceCents:      { $ref: '#/components/schemas/Money' }
+        compareAtCents:  { $ref: '#/components/schemas/Money' }
+        discountPercent: { type: [integer, 'null'] }
+        image:           { $ref: '#/components/schemas/Image' }
+        ratingAvg:       { type: [number, 'null'] }
+        ratingCount:     { type: integer }
+        inStock:         { type: boolean }
+        freeDelivery:    { type: boolean }
+        vendor:          { $ref: '#/components/schemas/VendorSummary' }
+
+    ProductDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProductListItem'
+        - type: object
+          properties:
+            description: { type: string }
+            attributes:
+              type: object
+              additionalProperties: { type: string }
+            images:
+              type: array
+              items: { $ref: '#/components/schemas/Image' }
+            variants:
+              type: array
+              items: { $ref: '#/components/schemas/ProductVariant' }
+            options:
+              type: array
+              description: |
+                Option groups for the selector. Unavailable values are present with
+                `available: false` — hidden variants make the catalogue look thinner than it is.
+              items:
+                type: object
+                properties:
+                  name: { type: string, examples: ['Cor'] }
+                  values:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        value:     { type: string }
+                        available: { type: boolean }
+            deliveryQuote: { $ref: '#/components/schemas/DeliveryQuote' }
+            buyerProtection:
+              type: object
+              properties:
+                returnDays:     { type: integer, examples: [7] }
+                disputeWindowDays: { type: integer, examples: [7] }
+
+    ProductVariant:
+      type: object
+      properties:
+        id:             { type: string, format: uuid }
+        sku:            { type: string }
+        options:
+          type: object
+          additionalProperties: { type: string }
+        priceCents:     { $ref: '#/components/schemas/Money' }
+        compareAtCents: { $ref: '#/components/schemas/Money' }
+        stockQuantity:  { type: integer, description: 'Exact below the low-stock threshold, otherwise capped' }
+        inStock:        { type: boolean }
+
+    Image:
+      type: object
+      properties:
+        url:       { type: string, format: uri, description: 'CloudFront, content-hashed' }
+        width:     { type: integer }
+        height:    { type: integer }
+        lqip:      { type: string, description: 'Inline base64 placeholder, under 400 bytes (D-09)' }
+        alt:       { type: string }
+
+    VendorSummary:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        slug:         { type: string }
+        displayName:  { type: string }
+        isVerified:   { type: boolean }
+        ratingAvg:    { type: [number, 'null'] }
+        ratingCount:  { type: integer }
+        districtName: { type: string }
+        responseTimeHours: { type: [integer, 'null'] }
+
+    Facets:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              count: { type: integer }
+        priceRange:
+          type: object
+          properties:
+            minCents: { $ref: '#/components/schemas/Money' }
+            maxCents: { $ref: '#/components/schemas/Money' }
+        districts:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              count: { type: integer }
+
+    Cart:
+      type: object
+      description: Always grouped by vendor — the multi-vendor reality is made legible as early as possible (D-11).
+      properties:
+        id: { type: string, format: uuid }
+        groups:
+          type: array
+          items:
+            type: object
+            properties:
+              vendor: { $ref: '#/components/schemas/VendorSummary' }
+              items:
+                type: array
+                items: { $ref: '#/components/schemas/CartItem' }
+              subtotalCents: { $ref: '#/components/schemas/Money' }
+        itemCount:     { type: integer }
+        vendorCount:   { type: integer, description: 'Rendered as "N entregas" — parcels, not line items' }
+        subtotalCents: { $ref: '#/components/schemas/Money' }
+        issues:
+          type: array
+          description: Non-blocking warnings, e.g. a price change since the item was added
+          items:
+            type: object
+            properties:
+              itemId:  { type: string, format: uuid }
+              code:    { type: string, enum: [price_changed, low_stock, out_of_stock, vendor_unavailable] }
+              message: { type: string }
+
+    CartItem:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        variantId:       { type: string, format: uuid }
+        productId:       { type: string, format: uuid }
+        title:           { type: string }
+        optionsLabel:    { type: string, examples: ['Preto · M'] }
+        image:           { $ref: '#/components/schemas/Image' }
+        unitPriceCents:  { $ref: '#/components/schemas/Money' }
+        quantity:        { type: integer }
+        lineTotalCents:  { $ref: '#/components/schemas/Money' }
+        selected:        { type: boolean, description: Per-item checkbox — buyers part-order without deleting }
+
+    DeliveryQuote:
+      type: object
+      properties:
+        feeCents:  { $ref: '#/components/schemas/Money' }
+        minDays:   { type: integer }
+        maxDays:   { type: integer }
+        method:    { type: string, enum: [marketplace, vendor, pickup] }
+        districtName: { type: string }
+
+    CheckoutQuote:
+      type: object
+      properties:
+        groups:
+          type: array
+          items:
+            type: object
+            properties:
+              vendor:         { $ref: '#/components/schemas/VendorSummary' }
+              itemsTotalCents: { $ref: '#/components/schemas/Money' }
+              delivery:       { $ref: '#/components/schemas/DeliveryQuote' }
+        itemsTotalCents:    { $ref: '#/components/schemas/Money' }
+        shippingTotalCents: { $ref: '#/components/schemas/Money' }
+        paymentFeeCents:    { $ref: '#/components/schemas/Money' }
+        grandTotalCents:    { $ref: '#/components/schemas/Money' }
+        availableProviders:
+          type: array
+          description: Excludes providers currently circuit-broken, so checkout never offers a dead rail
+          items:
+            type: object
+            properties:
+              provider:    { type: string, enum: [mpesa, emola, mkesh, cod] }
+              label:       { type: string }
+              feeCents:    { $ref: '#/components/schemas/Money' }
+              recommended: { type: boolean, description: True for the wallet matching the buyer's MSISDN prefix (D-05) }
+
+    Payment:
+      type: object
+      required: [id, status, provider, amountCents]
+      properties:
+        id:       { type: string, format: uuid }
+        orderId:  { type: string, format: uuid }
+        provider: { type: string, enum: [mpesa, emola, mkesh, cod] }
+        status:
+          type: string
+          enum: [initiated, awaiting_user, paid, failed, expired, refund_pending, refunded, refund_failed]
+        amountCents: { $ref: '#/components/schemas/Money' }
+        maskedMsisdn: { type: string, examples: ['84 *** 4567'] }
+        providerRef:  { type: [string, 'null'], description: Shown to the buyer; they reconcile it against the operator SMS }
+        expiresAt:    { type: string, format: date-time }
+        failure:
+          type: [object, 'null']
+          properties:
+            code:
+              type: string
+              enum: [insufficient_balance, wrong_pin, user_cancelled, timeout, provider_unavailable, unknown]
+            message:
+              type: string
+              description: |
+                Localised and safe to display. For `unknown` this explicitly does NOT claim failure —
+                the buyer may have been debited, and telling them otherwise is the worst outcome.
+            retryable: { type: boolean }
+
+    OrderListItem:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        orderNumber:     { type: string }
+        placedAt:        { type: string, format: date-time }
+        grandTotalCents: { $ref: '#/components/schemas/Money' }
+        rollupStatus:
+          type: string
+          description: Derived for display only. Real state lives on each sub-order.
+          enum: [awaiting_payment, confirmed, partially_shipped, shipped, partially_delivered, delivered, completed, cancelled, disputed]
+        vendorCount:     { type: integer }
+        thumbnails:
+          type: array
+          items: { $ref: '#/components/schemas/Image' }
+
+    OrderDetail:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        orderNumber:     { type: string }
+        placedAt:        { type: string, format: date-time }
+        address:         { $ref: '#/components/schemas/Address' }
+        subOrders:
+          type: array
+          items: { $ref: '#/components/schemas/SubOrder' }
+        payment:         { $ref: '#/components/schemas/Payment' }
+        itemsTotalCents:    { $ref: '#/components/schemas/Money' }
+        shippingTotalCents: { $ref: '#/components/schemas/Money' }
+        paymentFeeCents:    { $ref: '#/components/schemas/Money' }
+        grandTotalCents:    { $ref: '#/components/schemas/Money' }
+
+    SubOrder:
+      type: object
+      properties:
+        id:              { type: string, format: uuid }
+        subOrderNumber:  { type: string, examples: ['4821-A'] }
+        vendor:          { $ref: '#/components/schemas/VendorSummary' }
+        status:
+          type: string
+          enum: [awaiting_payment, confirmed, preparing, shipped, in_transit, delivered, completed, cancelled, disputed, refunded]
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:             { type: string, format: uuid }
+              title:          { type: string }
+              optionsLabel:   { type: string }
+              image:          { $ref: '#/components/schemas/Image' }
+              unitPriceCents: { $ref: '#/components/schemas/Money' }
+              quantity:       { type: integer }
+              canReview:      { type: boolean }
+              reviewId:       { type: [string, 'null'], format: uuid }
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              status:    { type: string }
+              label:     { type: string, description: Localised }
+              occurredAt: { type: [string, 'null'], format: date-time }
+              detail:    { type: [string, 'null'] }
+              isCurrent: { type: boolean }
+        nextStep:
+          type: [object, 'null']
+          description: |
+            What happens next and by when, present even when nothing has changed. Silence is what
+            buyers interpret as theft, so this is populated aggressively.
+          properties:
+            message:     { type: string }
+            expectedBy:  { type: [string, 'null'], format: date-time }
+        trackingCode:    { type: [string, 'null'] }
+        shippingCents:   { $ref: '#/components/schemas/Money' }
+        autoCompleteAt:  { type: [string, 'null'], format: date-time }
+        canConfirmReceipt: { type: boolean }
+        canDispute:        { type: boolean }
+
+    Address:
+      allOf:
+        - { type: object, properties: { id: { type: string, format: uuid } } }
+        - $ref: '#/components/schemas/AddressInput'
+
+    AddressInput:
+      type: object
+      description: Hybrid structured + informal (D-10). Fees key off `districtId`; free text never enters a calculation.
+      required: [recipientName, phone, provinceCode, districtId, bairro, landmark]
+      properties:
+        label:         { type: string, examples: ['Casa'] }
+        recipientName: { type: string, maxLength: 120 }
+        phone:         { type: string, pattern: '^\+258(8[2-7])[0-9]{7}$' }
+        provinceCode:  { type: string, examples: ['MPM'] }
+        districtId:    { type: string, format: uuid }
+        bairro:        { type: string, maxLength: 120, examples: ['Polana Caniço A'] }
+        quarteirao:    { type: string, maxLength: 60 }
+        houseNumber:   { type: string, maxLength: 30 }
+        landmark:
+          type: string
+          maxLength: 240
+          description: Required — in much of the country this is the field that finds the house.
+          examples: ['Casa azul junto à bomba Petromoc']
+        notes:         { type: string, maxLength: 240 }
+        latitude:      { type: [number, 'null'], description: 'Opt-in only, with explicit consent' }
+        longitude:     { type: [number, 'null'] }
+        isDefault:     { type: boolean }
+
+    Review:
+      type: object
+      properties:
+        id:         { type: string, format: uuid }
+        rating:     { type: integer, minimum: 1, maximum: 5 }
+        comment:    { type: [string, 'null'] }
+        images:
+          type: array
+          items: { $ref: '#/components/schemas/Image' }
+        status:     { type: string, enum: [published, pending_moderation, rejected] }
+        createdAt:  { type: string, format: date-time }
+        author:
+          type: object
+          properties:
+            displayName: { type: string, description: First name plus initial }
+            isVerifiedPurchase: { type: boolean, description: Always true — reviews require a delivered order item }

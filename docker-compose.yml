@@ -1,0 +1,59 @@
+# Local development dependencies only. Production runs RDS, ElastiCache, and
+# OpenSearch Service — see docs/phase-2-architecture/06-infrastructure.md.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nhoga-postgres
+    environment:
+      POSTGRES_USER: nhoga
+      POSTGRES_PASSWORD: nhoga
+      POSTGRES_DB: nhoga
+      # Portuguese collation, so ORDER BY sorts accented names correctly
+      POSTGRES_INITDB_ARGS: '--locale-provider=icu --icu-locale=pt-MZ --encoding=UTF8'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nhoga -d nhoga']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: nhoga-redis
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  opensearch:
+    image: opensearchproject/opensearch:2.17.1
+    container_name: nhoga-opensearch
+    environment:
+      discovery.type: single-node
+      # Local only. Production runs with security enabled inside a private subnet.
+      DISABLE_SECURITY_PLUGIN: 'true'
+      OPENSEARCH_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports:
+      - '9200:9200'
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://localhost:9200/_cluster/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:
+  redis-data:
+  opensearch-data:
