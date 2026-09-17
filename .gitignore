@@ -29,7 +29,12 @@ GoogleService-Info.plist
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
-.terraform.lock.hcl
+# Saved plans can embed resource attribute values, including secrets. Never commit one.
+tfplan
+*.tfplan
+# NOTE: .terraform.lock.hcl is deliberately NOT ignored. It pins provider
+# versions and their checksums, so CI resolves exactly what was planned
+# locally. Ignoring it lets CI drift onto a different provider build.
 
 # Test & coverage
 coverage/
