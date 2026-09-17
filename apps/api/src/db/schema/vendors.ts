@@ -101,10 +101,7 @@ export const kycDocument = pgTable(
       'kyc_document_type_check',
       sql`${table.docType} in ('id_front','id_back','selfie','nuit','alvara','bank_proof')`,
     ),
-    check(
-      'kyc_document_status_check',
-      sql`${table.status} in ('pending','accepted','rejected')`,
-    ),
+    check('kyc_document_status_check', sql`${table.status} in ('pending','accepted','rejected')`),
   ],
 );
 

@@ -24,11 +24,11 @@ Terraform keeps the region and provider replaceable at bounded cost if that calc
 
 ## 2. Environments
 
-| Environment | Purpose | Data | Payments |
-|---|---|---|---|
-| `local` | Development | Docker Compose, seeded | Mock |
-| `staging` | Integration, QA, load testing | Anonymised, production-shaped | Mock → provider sandbox once OQ-7/8 land |
-| `production` | Live | Real | Live |
+| Environment  | Purpose                       | Data                          | Payments                                 |
+| ------------ | ----------------------------- | ----------------------------- | ---------------------------------------- |
+| `local`      | Development                   | Docker Compose, seeded        | Mock                                     |
+| `staging`    | Integration, QA, load testing | Anonymised, production-shaped | Mock → provider sandbox once OQ-7/8 land |
+| `production` | Live                          | Real                          | Live                                     |
 
 Staging is a scaled-down production, **not a different architecture** — same services, same
 Terraform modules, different variable file. A staging environment that differs structurally tests
@@ -94,12 +94,12 @@ Rolling deploys on ECS: `minimumHealthyPercent: 100`, `maximumPercent: 200`, so 
 up and passes health checks before any old task is drained. Circuit breaker enabled with automatic
 rollback on failed deployment.
 
-| Scenario | Rollback |
-|---|---|
-| Failed health check during deploy | Automatic — ECS circuit breaker reverts to the previous task definition |
+| Scenario                          | Rollback                                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Failed health check during deploy | Automatic — ECS circuit breaker reverts to the previous task definition                              |
 | Bad release detected after deploy | `terraform apply` with the previous image tag, or ECS console rollback. **Target: under 5 minutes.** |
-| Bad database migration | **Forward-fix only.** See below |
-| Mobile app release | Staged rollout at 10% → 50% → 100% on Play Console; halt on crash-rate regression |
+| Bad database migration            | **Forward-fix only.** See below                                                                      |
+| Mobile app release                | Staged rollout at 10% → 50% → 100% on Play Console; halt on crash-rate regression                    |
 
 ### Database rollback is deliberately not a thing
 
@@ -107,7 +107,7 @@ Migrations are forward-only. Rolling a schema backwards against a database that 
 writes under the new schema loses data, and losing order or payment data is unrecoverable.
 
 Instead, the two-phase rule from the data model (§8) makes rollback unnecessary: a migration only
-ever *adds*. Application code is deployed to stop writing a column in one release, and the column is
+ever _adds_. Application code is deployed to stop writing a column in one release, and the column is
 dropped in a later one. So rolling back the application is always safe, because the previous version
 runs correctly against the new schema.
 
@@ -116,14 +116,14 @@ of a release that is not reversible.
 
 ## 6. Backups and disaster recovery
 
-| Asset | Backup | Retention | RPO | RTO |
-|---|---|---|---|---|
-| RDS | Automated daily + 5-min PITR | 35 days | 5 min | 1 hour |
-| RDS snapshots | Weekly, cross-region to `eu-west-1` | 90 days | 7 days | 4 hours |
-| S3 | Versioning + cross-region replication | Indefinite | Minutes | Minutes |
-| Redis | Daily snapshot | 7 days | 24h — **acceptable, contents are rebuildable** | Minutes |
-| OpenSearch | Rebuildable from Postgres | — | — | 2 hours |
-| Terraform state | S3 versioned + replicated | Indefinite | — | — |
+| Asset           | Backup                                | Retention  | RPO                                            | RTO     |
+| --------------- | ------------------------------------- | ---------- | ---------------------------------------------- | ------- |
+| RDS             | Automated daily + 5-min PITR          | 35 days    | 5 min                                          | 1 hour  |
+| RDS snapshots   | Weekly, cross-region to `eu-west-1`   | 90 days    | 7 days                                         | 4 hours |
+| S3              | Versioning + cross-region replication | Indefinite | Minutes                                        | Minutes |
+| Redis           | Daily snapshot                        | 7 days     | 24h — **acceptable, contents are rebuildable** | Minutes |
+| OpenSearch      | Rebuildable from Postgres             | —          | —                                              | 2 hours |
+| Terraform state | S3 versioned + replicated             | Indefinite | —                                              | —       |
 
 Cross-region snapshots exist because a region-level failure with no off-region copy is an
 unrecoverable business event, not an outage.
@@ -135,25 +135,25 @@ verifying the data. A backup that has never been restored is a hypothesis.
 
 Launch scale (A-10: ~1,000 orders/day). Monthly, USD, `af-south-1`.
 
-| Component | Spec | Est. |
-|---|---|---|
-| ECS Fargate — api | 2–8 × 0.5 vCPU / 1GB | $70–180 |
-| ECS Fargate — web | 2–6 × 0.5 vCPU / 1GB | $60–150 |
-| ECS Fargate — webhooks | 2 × 0.25 vCPU / 0.5GB | $18 |
-| ECS Fargate — workers | 2–6 × 0.5 vCPU / 1GB | $60–140 |
-| RDS Postgres | `db.t4g.medium` Multi-AZ, 100GB gp3 | $130 |
-| ElastiCache Redis | `cache.t4g.micro` × 2 | $32 |
-| OpenSearch | `t3.small.search` × 2 | $75 |
-| S3 + CloudFront | ~500GB transfer | $45–90 |
-| NAT Gateway | | $38 |
-| ALB | | $22 |
-| Secrets Manager, KMS, CloudWatch | | $30 |
-| **AWS subtotal** | | **$580–905** |
-| Sentry (team) | | $26 |
-| **SMS — see note** | ~15,000/month | **$150–450** |
-| **Total** | | **~$756–1,381** |
+| Component                        | Spec                                | Est.            |
+| -------------------------------- | ----------------------------------- | --------------- |
+| ECS Fargate — api                | 2–8 × 0.5 vCPU / 1GB                | $70–180         |
+| ECS Fargate — web                | 2–6 × 0.5 vCPU / 1GB                | $60–150         |
+| ECS Fargate — webhooks           | 2 × 0.25 vCPU / 0.5GB               | $18             |
+| ECS Fargate — workers            | 2–6 × 0.5 vCPU / 1GB                | $60–140         |
+| RDS Postgres                     | `db.t4g.medium` Multi-AZ, 100GB gp3 | $130            |
+| ElastiCache Redis                | `cache.t4g.micro` × 2               | $32             |
+| OpenSearch                       | `t3.small.search` × 2               | $75             |
+| S3 + CloudFront                  | ~500GB transfer                     | $45–90          |
+| NAT Gateway                      |                                     | $38             |
+| ALB                              |                                     | $22             |
+| Secrets Manager, KMS, CloudWatch |                                     | $30             |
+| **AWS subtotal**                 |                                     | **$580–905**    |
+| Sentry (team)                    |                                     | $26             |
+| **SMS — see note**               | ~15,000/month                       | **$150–450**    |
+| **Total**                        |                                     | **~$756–1,381** |
 
-**SMS is the cost line to watch.** It scales with OTP volume, which scales with *login attempts*
+**SMS is the cost line to watch.** It scales with OTP volume, which scales with _login attempts_
 rather than with orders — and it is the line an attacker can inflate directly. The daily spend cap
 in the security architecture (§3) is a cost control as much as a security control. Model it at
 2–3× your order volume, not 1×.
@@ -167,17 +167,17 @@ Infrastructure alarms (CPU, memory, disk, connection count) page during business
 
 **These page 24/7**, because each one means money is at risk right now:
 
-| Alarm | Threshold |
-|---|---|
-| Payment success rate | < 85% over 15 min |
-| Payments stuck in `awaiting_user` | any > 15 min |
-| Webhook endpoint 5xx | > 1% over 5 min |
-| Reconciliation job failure | any |
-| Settlement batch failure | any |
-| Outbox backlog | > 1,000 unpublished |
-| Checkout error rate | > 5% over 10 min |
-| RDS failover | any |
-| OTP send rate | > hourly pro-rata of the daily budget |
+| Alarm                             | Threshold                             |
+| --------------------------------- | ------------------------------------- |
+| Payment success rate              | < 85% over 15 min                     |
+| Payments stuck in `awaiting_user` | any > 15 min                          |
+| Webhook endpoint 5xx              | > 1% over 5 min                       |
+| Reconciliation job failure        | any                                   |
+| Settlement batch failure          | any                                   |
+| Outbox backlog                    | > 1,000 unpublished                   |
+| Checkout error rate               | > 5% over 10 min                      |
+| RDS failover                      | any                                   |
+| OTP send rate                     | > hourly pro-rata of the daily budget |
 
 Dashboards: business (GMV, orders, payment success by provider, conversion), technical (latency,
 errors, saturation), and cost.
@@ -188,6 +188,7 @@ Prepared now because Apple organisation verification alone can take weeks (OQ-14
 critical path to launch.
 
 ### Both stores
+
 - [ ] Privacy policy and terms of service, published, PT + EN
 - [ ] Support contact reachable in Portuguese
 - [ ] Account deletion available **in-app** — an Apple requirement and a Google requirement
@@ -196,6 +197,7 @@ critical path to launch.
 - [ ] No placeholder content anywhere in the reviewed build
 
 ### Google Play
+
 - [ ] Play Console account (OQ-14)
 - [ ] Data safety form — collection, sharing, and retention declared per data type
 - [ ] Target API level current
@@ -207,6 +209,7 @@ critical path to launch.
 - [ ] Financial features declaration if required by Play policy for marketplace payments
 
 ### Apple App Store
+
 - [ ] Developer Program organisation account + D-U-N-S (OQ-14 — start early)
 - [ ] Privacy nutrition labels
 - [ ] App Tracking Transparency — not needed, we do no cross-app tracking
@@ -234,15 +237,15 @@ Blocking the build phase on this machine:
 
 ## Phase 2 complete
 
-| Document | |
-|---|---|
-| [00 · Stack & Rationale](00-stack-rationale.md) | Every technology choice, justified and with rejections recorded |
-| [01 · System Architecture](01-system-architecture.md) | Context, modules, request paths, caching, failure modes |
-| [02 · Data Model](02-data-model.md) | ERD, core DDL, snapshots, audit, retention |
-| [03 · API Contract](03-api-contract.md) | Conventions + [`openapi.yaml`](../../apps/api/openapi.yaml) |
-| [04 · Payments Architecture](04-payments-architecture.md) | Provider interface, mock, **production swap runbook** |
-| [05 · Security Architecture](05-security-architecture.md) | OWASP coverage, threat model, regulatory flags |
-| 06 · Infrastructure & Delivery | This document |
+| Document                                                  |                                                                 |
+| --------------------------------------------------------- | --------------------------------------------------------------- |
+| [00 · Stack & Rationale](00-stack-rationale.md)           | Every technology choice, justified and with rejections recorded |
+| [01 · System Architecture](01-system-architecture.md)     | Context, modules, request paths, caching, failure modes         |
+| [02 · Data Model](02-data-model.md)                       | ERD, core DDL, snapshots, audit, retention                      |
+| [03 · API Contract](03-api-contract.md)                   | Conventions + [`openapi.yaml`](../../apps/api/openapi.yaml)     |
+| [04 · Payments Architecture](04-payments-architecture.md) | Provider interface, mock, **production swap runbook**           |
+| [05 · Security Architecture](05-security-architecture.md) | OWASP coverage, threat model, regulatory flags                  |
+| 06 · Infrastructure & Delivery                            | This document                                                   |
 
 **Awaiting sign-off before Phase 3 (Build).**
 

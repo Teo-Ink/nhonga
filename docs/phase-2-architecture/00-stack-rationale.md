@@ -10,19 +10,19 @@ practice.
 
 ## 1. Summary
 
-| Layer | Choice | One-line reason |
-|---|---|---|
-| Backend | **TypeScript · NestJS · modular monolith** | One language across the stack; module boundaries without distributed-systems tax |
-| API style | **REST + OpenAPI 3.1** | Cacheable, debuggable on bad networks, trivially consumable by third parties |
-| Database | **PostgreSQL 16** | Transactional integrity for orders, payments, inventory; JSONB covers flexible attributes |
-| Cache / queue | **Redis 7** + **BullMQ** | Sessions, rate limits, read models, and the job queue that drives payment reconciliation |
-| Search | **OpenSearch** | Portuguese analyzer with diacritic folding; faceting the catalogue needs |
-| Object storage | **S3 + CloudFront** | Images, KYC documents, CSV exports |
-| Web | **Next.js 15 (App Router)** | SSR is a requirement, not a preference — see §4 |
-| Mobile | **React Native 0.76+ (New Arch, Hermes)** | Confirmed OQ-3 / D-02 |
-| Shared code | **TypeScript monorepo (pnpm + Turborepo)** | The money-touching logic is written once |
-| Infrastructure | **AWS `af-south-1`**, ECS Fargate, Terraform | Confirmed OQ-2 / D-16 |
-| CI/CD | **GitHub Actions** | |
+| Layer          | Choice                                       | One-line reason                                                                           |
+| -------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Backend        | **TypeScript · NestJS · modular monolith**   | One language across the stack; module boundaries without distributed-systems tax          |
+| API style      | **REST + OpenAPI 3.1**                       | Cacheable, debuggable on bad networks, trivially consumable by third parties              |
+| Database       | **PostgreSQL 16**                            | Transactional integrity for orders, payments, inventory; JSONB covers flexible attributes |
+| Cache / queue  | **Redis 7** + **BullMQ**                     | Sessions, rate limits, read models, and the job queue that drives payment reconciliation  |
+| Search         | **OpenSearch**                               | Portuguese analyzer with diacritic folding; faceting the catalogue needs                  |
+| Object storage | **S3 + CloudFront**                          | Images, KYC documents, CSV exports                                                        |
+| Web            | **Next.js 15 (App Router)**                  | SSR is a requirement, not a preference — see §4                                           |
+| Mobile         | **React Native 0.76+ (New Arch, Hermes)**    | Confirmed OQ-3 / D-02                                                                     |
+| Shared code    | **TypeScript monorepo (pnpm + Turborepo)**   | The money-touching logic is written once                                                  |
+| Infrastructure | **AWS `af-south-1`**, ECS Fargate, Terraform | Confirmed OQ-2 / D-16                                                                     |
+| CI/CD          | **GitHub Actions**                           |                                                                                           |
 
 ## 2. Backend: modular monolith, not microservices
 
@@ -38,7 +38,7 @@ would actively hurt here:
 - **Distributed transactions are the core domain.** Placing an order touches inventory, orders,
   payments, and settlement atomically. In a monolith that is one Postgres transaction. Split across
   services it becomes a saga with compensating actions — and the failure mode of a broken saga is
-  *money in the wrong place*, which is the one failure this product cannot afford.
+  _money in the wrong place_, which is the one failure this product cannot afford.
 - **Team size.** Microservices pay off when independent teams need independent deploy cadences.
   There are no independent teams here. The cost — service discovery, distributed tracing, per-service
   CI, contract testing, on-call surface — is paid immediately; the benefit arrives at an
@@ -48,7 +48,7 @@ would actively hurt here:
 
 ### What we do instead
 
-The boundaries that microservices would give us are enforced *inside* the monolith, so extraction
+The boundaries that microservices would give us are enforced _inside_ the monolith, so extraction
 stays cheap if it is ever warranted:
 
 - Each module exposes a public service interface; cross-module access goes through it, never through
@@ -120,11 +120,11 @@ column.
 
 ### Where we deliberately add non-relational stores
 
-| Store | Purpose | Why not Postgres |
-|---|---|---|
-| **Redis** | Sessions, OTP codes + attempt counters, rate limit buckets, cart read model, hot catalogue fragments | These are ephemeral, extremely high-write, and must not generate Postgres WAL. OTP rate limiting in particular is a per-request write. |
-| **OpenSearch** | Catalogue search and faceting | Postgres full-text cannot do relevance tuning, faceted aggregation, and typo tolerance at once. Portuguese analyzer with diacritic folding matters: a search for `celular` must match `Celular`, and `bebe` must match `bebé`. |
-| **S3** | Images, KYC documents, exports | Obvious |
+| Store          | Purpose                                                                                              | Why not Postgres                                                                                                                                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Redis**      | Sessions, OTP codes + attempt counters, rate limit buckets, cart read model, hot catalogue fragments | These are ephemeral, extremely high-write, and must not generate Postgres WAL. OTP rate limiting in particular is a per-request write.                                                                                         |
+| **OpenSearch** | Catalogue search and faceting                                                                        | Postgres full-text cannot do relevance tuning, faceted aggregation, and typo tolerance at once. Portuguese analyzer with diacritic folding matters: a search for `celular` must match `Celular`, and `bebe` must match `bebé`. |
+| **S3**         | Images, KYC documents, exports                                                                       | Obvious                                                                                                                                                                                                                        |
 
 OpenSearch is a **read model only** — never a source of truth. It is rebuildable from Postgres at
 any time, and if it is down, catalogue browsing degrades to Postgres-backed category listings rather
@@ -134,15 +134,15 @@ than failing.
 
 React Native 0.76+, New Architecture, Hermes. Supporting choices:
 
-| Concern | Choice | Reason |
-|---|---|---|
-| Navigation | React Navigation (native stack) | Native transitions; cheaper on low-end Android |
-| Server state | TanStack Query + persisted cache | Gives us stale-while-revalidate, retry policy, and offline cache in one library — exactly the D-12 model |
-| Local storage | MMKV | Substantially faster than AsyncStorage on entry-level devices |
-| Offline queue | Custom, on MMKV | Must carry idempotency keys and be inspectable; no library matches our semantics |
-| Images | `expo-image` | AVIF/WebP, disk cache, LQIP placeholders |
-| Push | Firebase Cloud Messaging | Android-first (D-03); APNs via FCM for iOS |
-| Build | Expo (prebuild / EAS) | Removes most native build maintenance without giving up native modules |
+| Concern       | Choice                           | Reason                                                                                                   |
+| ------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Navigation    | React Navigation (native stack)  | Native transitions; cheaper on low-end Android                                                           |
+| Server state  | TanStack Query + persisted cache | Gives us stale-while-revalidate, retry policy, and offline cache in one library — exactly the D-12 model |
+| Local storage | MMKV                             | Substantially faster than AsyncStorage on entry-level devices                                            |
+| Offline queue | Custom, on MMKV                  | Must carry idempotency keys and be inspectable; no library matches our semantics                         |
+| Images        | `expo-image`                     | AVIF/WebP, disk cache, LQIP placeholders                                                                 |
+| Push          | Firebase Cloud Messaging         | Android-first (D-03); APNs via FCM for iOS                                                               |
+| Build         | Expo (prebuild / EAS)            | Removes most native build maintenance without giving up native modules                                   |
 
 **Minimum supported:** Android 8 (API 26), iOS 15. Android 8 is deliberately low — it covers the
 long tail of entry-level devices still in daily use here.
@@ -174,14 +174,14 @@ cost money, so they are written once and tested once.
 
 ## 8. What we are explicitly not using
 
-| Rejected | Why |
-|---|---|
-| Kubernetes | ECS Fargate covers this workload with a fraction of the operational surface. Revisit at genuine scale. |
-| Kafka | Postgres-backed outbox + BullMQ handles our event volume. Kafka is an operational commitment we cannot staff. |
-| Serverless functions for the API | Cold starts are latency we cannot afford on an already-slow network, and Postgres connection management under Lambda is a known tax. |
-| A separate BFF layer | The API serves two clients with similar needs. A BFF would be indirection without benefit at this size. |
-| Prisma | Chosen against in favour of **Drizzle** — closer to SQL, materially better at the complex transactional queries in orders and settlements, and no separate query engine binary in the container. |
-| Vercel / Netlify hosting | Keeps rendering in a different region from the database and outside our Terraform definition. |
+| Rejected                         | Why                                                                                                                                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Kubernetes                       | ECS Fargate covers this workload with a fraction of the operational surface. Revisit at genuine scale.                                                                                           |
+| Kafka                            | Postgres-backed outbox + BullMQ handles our event volume. Kafka is an operational commitment we cannot staff.                                                                                    |
+| Serverless functions for the API | Cold starts are latency we cannot afford on an already-slow network, and Postgres connection management under Lambda is a known tax.                                                             |
+| A separate BFF layer             | The API serves two clients with similar needs. A BFF would be indirection without benefit at this size.                                                                                          |
+| Prisma                           | Chosen against in favour of **Drizzle** — closer to SQL, materially better at the complex transactional queries in orders and settlements, and no separate query engine binary in the container. |
+| Vercel / Netlify hosting         | Keeps rendering in a different region from the database and outside our Terraform definition.                                                                                                    |
 
 ---
 

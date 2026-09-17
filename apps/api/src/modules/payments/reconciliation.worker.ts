@@ -9,6 +9,7 @@
  * Four jobs, and the third one is the one that matters most.
  */
 
+import type { Db, Tx } from '../../db/types.js';
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray, lt, lte, sql } from 'drizzle-orm';
 import { applyPaymentEvent, type PaymentStatus } from '@nhonga/shared';
@@ -23,8 +24,7 @@ import type { PaymentProvider, ProviderId } from './payment-provider.interface.j
 import type { NormalisedPaymentEvent, PaymentEventProcessor } from './payment-event.processor.js';
 
 export interface ReconciliationDeps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle db type is schema-generic
-  readonly db: any;
+  readonly db: Db;
   readonly providers: ReadonlyMap<ProviderId, PaymentProvider>;
   readonly processor: PaymentEventProcessor;
   readonly now: () => Date;
@@ -172,8 +172,7 @@ export class ReconciliationWorker {
     let released = 0;
 
     for (const row of dead) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await this.deps.db.transaction(async (tx: any) => {
+      await this.deps.db.transaction(async (tx: Tx) => {
         const items = await tx
           .select({
             variantId: orderItem.variantId,
@@ -313,7 +312,12 @@ export class ReconciliationWorker {
         providerEventId,
         providerTxId: candidate.providerTxId,
         ourReference: candidate.providerRef,
-        status: status.status === 'paid' ? 'paid' : status.status === 'cancelled' ? 'cancelled' : 'failed',
+        status:
+          status.status === 'paid'
+            ? 'paid'
+            : status.status === 'cancelled'
+              ? 'cancelled'
+              : 'failed',
         failureCode: status.code,
         amountCents: Number(status.amountCents ?? candidate.amountCents),
         occurredAt: this.deps.now(),

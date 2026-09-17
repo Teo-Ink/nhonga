@@ -48,7 +48,7 @@ RFC 9457 `application/problem+json`. Two rules that follow from the design work 
 
 - `detail` is **already localised** per `Accept-Language` and is safe to render directly. Clients
   never build error copy from codes.
-- `traceId` is for support and belongs *beneath* the message, never as the message.
+- `traceId` is for support and belongs _beneath_ the message, never as the message.
 
 ### Caching
 
@@ -67,7 +67,7 @@ expect, and the contract has to tolerate that.
 
 ### `POST /checkout` — 202, not 201
 
-The response means *the order exists and payment has been requested*, not *paid*. Mobile-money push
+The response means _the order exists and payment has been requested_, not _paid_. Mobile-money push
 resolves in 10–120 seconds, asynchronously. Returning 201 would imply a completed resource and
 invite clients to treat the order as paid.
 
@@ -84,7 +84,7 @@ returns and never concludes payment state on its own (user flows §2, rule 3).
 ### `POST /payments/{id}/retry` — new attempt, new key
 
 Creates a genuinely new attempt with a fresh idempotency key, so a retry cannot be collapsed into
-the prior one while a *duplicate of the same attempt* still is. It may switch provider, so a failed
+the prior one while a _duplicate of the same attempt_ still is. It may switch provider, so a failed
 M-Pesa attempt can become an e-Mola or COD attempt rather than dropping out of the funnel.
 
 It refuses with 409 if the original payment later reached `paid` — which genuinely happens when
@@ -103,16 +103,16 @@ could be forgotten.
 
 ## 4. Rate limits
 
-| Endpoint group | Limit | Window | Keyed on |
-|---|---|---|---|
-| `POST /auth/otp/request` | 3 | 15 min | phone |
-| `POST /auth/otp/request` | 10 | 1 hour | IP |
-| `POST /auth/otp/request` | global circuit breaker + daily spend cap | — | platform |
-| `POST /auth/otp/verify` | 5 attempts | per challenge | challenge |
-| `POST /checkout` | 5 | 10 min | user |
-| `POST /payments/*/retry` | 5 | 10 min | order |
-| Catalogue reads | 300 | 1 min | IP |
-| Authenticated reads | 600 | 1 min | user |
+| Endpoint group           | Limit                                    | Window        | Keyed on  |
+| ------------------------ | ---------------------------------------- | ------------- | --------- |
+| `POST /auth/otp/request` | 3                                        | 15 min        | phone     |
+| `POST /auth/otp/request` | 10                                       | 1 hour        | IP        |
+| `POST /auth/otp/request` | global circuit breaker + daily spend cap | —             | platform  |
+| `POST /auth/otp/verify`  | 5 attempts                               | per challenge | challenge |
+| `POST /checkout`         | 5                                        | 10 min        | user      |
+| `POST /payments/*/retry` | 5                                        | 10 min        | order     |
+| Catalogue reads          | 300                                      | 1 min         | IP        |
+| Authenticated reads      | 600                                      | 1 min         | user      |
 
 Limits are enforced in Redis at the API edge and again at the WAF. **When Redis is unavailable,
 auth rate limiting fails closed** — login is refused rather than left unprotected (architecture §9).

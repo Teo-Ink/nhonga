@@ -8,8 +8,8 @@ Machine-readable source: [`packages/design-tokens/tokens.json`](../../packages/d
 ## 1. Direction
 
 **Confident, plain, and unhurried.** The category default — saturated red-orange, countdown timers,
-strikethrough prices everywhere, dense stacked badges — communicates *urgency*. We need to
-communicate *reliability*, because the binding constraint is trust, not impulse (product context
+strikethrough prices everywhere, dense stacked badges — communicates _urgency_. We need to
+communicate _reliability_, because the binding constraint is trust, not impulse (product context
 §2.3). A buyer sending mobile money to a stranger for goods that arrive later needs the interface to
 feel like a shop, not like a sale ending in four minutes.
 
@@ -19,12 +19,12 @@ legible on a cracked 720p screen in daylight rather than typography that is clev
 
 ### Principles
 
-1. **Trust is the feature.** If a layout decision trades clarity about *who is selling* and *what
-   happens if it goes wrong* for density or delight, clarity wins.
+1. **Trust is the feature.** If a layout decision trades clarity about _who is selling_ and _what
+   happens if it goes wrong_ for density or delight, clarity wins.
 2. **Every byte is the user's money.** Not a performance metric — a cost we impose on them.
 3. **Degraded is a design state, not a failure.** Offline, slow, stale, and pending each get a
    designed treatment. They are not edge cases here; they are Tuesday.
-4. **One hand, standing, bad light.** The reference posture is a commuter on a *chapa*, not a
+4. **One hand, standing, bad light.** The reference posture is a commuter on a _chapa_, not a
    designer at a desk.
 5. **Colour carries meaning, so spend it carefully.** Green is the brand and the primary action.
    Amber means commerce. Red means loss. Nothing decorative uses these.
@@ -46,15 +46,15 @@ means money is about to move" becomes learnable within a session. Filled amber b
 
 ### Contrast floors (enforced, not aspirational)
 
-| Pair | Ratio | WCAG |
-|---|---|---|
-| `text-primary` on `bg-surface` | 17.4:1 | AAA |
-| `text-secondary` on `bg-surface` | 7.3:1 | AAA |
-| `text-tertiary` on `bg-surface` | 5.1:1 | AA |
-| White on `action-primary` | 8.9:1 | AAA |
-| White on `action-buy` | 4.6:1 | AA |
-| White on `action-destructive` | 6.6:1 | AA |
-| `border-default` on `bg-surface` | 1.9:1 | AA non-text (≥3:1 where a border *is* the control boundary — use `border-strong`) |
+| Pair                             | Ratio  | WCAG                                                                              |
+| -------------------------------- | ------ | --------------------------------------------------------------------------------- |
+| `text-primary` on `bg-surface`   | 17.4:1 | AAA                                                                               |
+| `text-secondary` on `bg-surface` | 7.3:1  | AAA                                                                               |
+| `text-tertiary` on `bg-surface`  | 5.1:1  | AA                                                                                |
+| White on `action-primary`        | 8.9:1  | AAA                                                                               |
+| White on `action-buy`            | 4.6:1  | AA                                                                                |
+| White on `action-destructive`    | 6.6:1  | AA                                                                                |
+| `border-default` on `bg-surface` | 1.9:1  | AA non-text (≥3:1 where a border _is_ the control boundary — use `border-strong`) |
 
 `neutral-400` and lighter are never used for text. `neutral-500` is the lightest permitted, and only
 for tertiary metadata.
@@ -80,17 +80,17 @@ drops them renders Mozambican Portuguese as tofu.
 
 ### Scale
 
-| Token | Size | Use |
-|---|---|---|
-| `4xl` 36 | Desktop page titles only |
-| `3xl` 30 | Mobile page titles, price on PDP |
-| `2xl` 24 | Section headings, cart total |
-| `xl` 20 | Card titles, modal titles |
-| `lg` 18 | Prominent body, product name on PDP |
-| `md` 16 | **Body default.** All form inputs — 16px prevents iOS Safari's auto-zoom on focus |
-| `sm` 14 | Secondary text, labels, product name in grid |
-| `xs` 12 | Metadata, timestamps, legal |
-| `2xs` 11 | Badge text only. Never a sentence. |
+| Token    | Size                                                                              | Use |
+| -------- | --------------------------------------------------------------------------------- | --- |
+| `4xl` 36 | Desktop page titles only                                                          |
+| `3xl` 30 | Mobile page titles, price on PDP                                                  |
+| `2xl` 24 | Section headings, cart total                                                      |
+| `xl` 20  | Card titles, modal titles                                                         |
+| `lg` 18  | Prominent body, product name on PDP                                               |
+| `md` 16  | **Body default.** All form inputs — 16px prevents iOS Safari's auto-zoom on focus |
+| `sm` 14  | Secondary text, labels, product name in grid                                      |
+| `xs` 12  | Metadata, timestamps, legal                                                       |
+| `2xs` 11 | Badge text only. Never a sentence.                                                |
 
 **14px is the floor for anything the user must read.** Portuguese runs 15–25% longer than English
 (D-01), so every component spec below assumes two-line wrapping where English would take one, and
@@ -122,13 +122,13 @@ build and emits `MTn`/`MZN` inconsistently, and inconsistent price rendering dam
 
 **Grid columns by breakpoint** (product grids):
 
-| Breakpoint | Columns | Note |
-|---|---|---|
-| 360–479 | 2 | The reference device |
-| 480–767 | 2 | Larger cards, not more of them — legibility over density |
-| 768–1023 | 3 | |
-| 1024–1279 | 4 | |
-| ≥1280 | 5 | |
+| Breakpoint | Columns | Note                                                     |
+| ---------- | ------- | -------------------------------------------------------- |
+| 360–479    | 2       | The reference device                                     |
+| 480–767    | 2       | Larger cards, not more of them — legibility over density |
+| 768–1023   | 3       |                                                          |
+| 1024–1279  | 4       |                                                          |
+| ≥1280      | 5       |                                                          |
 
 Two columns at 360px gives a 164px card — enough for a readable 14px product name over two lines
 and a 16px price. Three columns at that width, which several competitors use, produces a ~105px
@@ -139,15 +139,18 @@ card where the name truncates and the price shrinks below the legibility floor.
 Twenty-eight components for v1. Each will ship with all states, both themes, and a11y annotations.
 
 ### Primitives
+
 `Button` · `IconButton` · `Input` · `PhoneInput` · `OtpInput` · `Select` · `Checkbox` · `Radio` ·
 `Switch` · `Textarea` · `Badge` · `Chip` · `Avatar` · `Skeleton` · `Spinner` · `Divider`
 
 ### Commerce
+
 `PriceDisplay` · `RatingStars` · `ProductCard` · `ProductGrid` · `VendorCard` · `QuantityStepper` ·
 `VariantSelector` · `StockIndicator` · `DeliveryEstimate` · `OrderStatusTimeline` ·
 `PaymentMethodCard` · `CartVendorGroup`
 
 ### Feedback & structure
+
 `EmptyState` · `ErrorState` · `OfflineBanner` · `Toast` · `BottomSheet` · `Modal` · `Tabs` ·
 `Accordion` · `StickyActionBar` · `SearchField` · `FilterSheet` · `Stepper`
 
@@ -222,17 +225,17 @@ Target: **WCAG 2.1 AA**.
 
 Enforced in CI. A pull request that exceeds them fails.
 
-| Metric | Budget | Reference condition |
-|---|---|---|
-| First screen total transfer (Home) | 500KB | Cold cache |
-| LCP | < 2.5s | Throttled 3G, 400ms RTT |
-| TTI | < 5s | Same |
-| JS bundle, initial route | < 180KB gzip | |
-| Grid thumbnail | 20KB | 320×320 AVIF |
-| PDP hero | 80KB | 1080w |
-| Android app cold start | < 3s | Reference device: 3GB RAM, entry-level SoC |
-| APK download size | < 25MB | Play Store; users pay for this download |
-| Frame rate while scrolling a grid | ≥ 50fps | Reference device |
+| Metric                             | Budget       | Reference condition                        |
+| ---------------------------------- | ------------ | ------------------------------------------ |
+| First screen total transfer (Home) | 500KB        | Cold cache                                 |
+| LCP                                | < 2.5s       | Throttled 3G, 400ms RTT                    |
+| TTI                                | < 5s         | Same                                       |
+| JS bundle, initial route           | < 180KB gzip |                                            |
+| Grid thumbnail                     | 20KB         | 320×320 AVIF                               |
+| PDP hero                           | 80KB         | 1080w                                      |
+| Android app cold start             | < 3s         | Reference device: 3GB RAM, entry-level SoC |
+| APK download size                  | < 25MB       | Play Store; users pay for this download    |
+| Frame rate while scrolling a grid  | ≥ 50fps      | Reference device                           |
 
 The reference device is deliberately a low-end Android (D-03). Budgets validated on flagship
 hardware describe a product our users do not have.
@@ -245,7 +248,7 @@ hardware describe a product our users do not have.
 - Every component laid out with **+25% text expansion headroom** over English.
 - Dates `dd/mm/yyyy`; times 24-hour; timezone `Africa/Maputo` (CAT, UTC+2, no DST).
 - Phone numbers stored E.164 (`+258841234567`), displayed nationally (`84 123 4567`).
-- The locale switch is in Account *and* in the onboarding flow — a user who cannot read the
+- The locale switch is in Account _and_ in the onboarding flow — a user who cannot read the
   interface cannot navigate to the setting that fixes it.
 - Not RTL-ready, and that is a deliberate scope decision rather than an oversight: no planned
   locale requires it, and logical CSS properties are used anyway so it stays cheap if that changes.

@@ -108,7 +108,7 @@ stateDiagram-v2
    confirmation SMS from Vodacom and a "pending" screen is a support ticket; a user whose client
    decided it was paid when it was not is a financial loss.
 4. **Retry always issues a new idempotency key** for a new attempt, so a retry cannot be collapsed
-   into the prior one — while a *duplicate* of the same attempt still is.
+   into the prior one — while a _duplicate_ of the same attempt still is.
 
 ### When the user disappears mid-payment
 
@@ -146,14 +146,14 @@ nonsense ("shipped" when half the order has not been).
 **Notification policy** — each event fires push where available, with SMS fallback for the four
 events that materially affect the buyer's money or plans:
 
-| Event | Push | SMS | Why SMS |
-|---|---|---|---|
-| Pagamento confirmado | ✓ | ✓ | Money left their wallet; they need proof |
-| Vendedor aceitou | ✓ | — | |
-| Expedido | ✓ | ✓ | They may need to be present |
-| Entregue | ✓ | ✓ | Starts the 7-day dispute window |
-| Disputa atualizada | ✓ | ✓ | Money at stake |
-| Promoções | ✓ | — | Never SMS. Marketing SMS burns trust and money. |
+| Event                | Push | SMS | Why SMS                                         |
+| -------------------- | ---- | --- | ----------------------------------------------- |
+| Pagamento confirmado | ✓    | ✓   | Money left their wallet; they need proof        |
+| Vendedor aceitou     | ✓    | —   |                                                 |
+| Expedido             | ✓    | ✓   | They may need to be present                     |
+| Entregue             | ✓    | ✓   | Starts the 7-day dispute window                 |
+| Disputa atualizada   | ✓    | ✓   | Money at stake                                  |
+| Promoções            | ✓    | —   | Never SMS. Marketing SMS burns trust and money. |
 
 SMS costs real money per message, so this table is a budget decision as much as a UX one.
 
@@ -184,7 +184,7 @@ completion sharply. Images are compressed on-device before upload (D-09).
 
 ## 5. Buyer · Dispute
 
-Discoverable from the PDP *before* purchase ("Proteção ao comprador"), not only afterwards.
+Discoverable from the PDP _before_ purchase ("Proteção ao comprador"), not only afterwards.
 
 ```mermaid
 flowchart TD

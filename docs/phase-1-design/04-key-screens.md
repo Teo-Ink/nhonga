@@ -49,7 +49,7 @@ signal, and reopened the app must find the truth immediately rather than hunting
 "Continuar a ver" renders from local cache before any network request completes, so the app is
 never blank on launch — including with no connectivity at all.
 
-*Desktop:* header with mega-menu, 5-column grid, no bottom nav, banner becomes a top strip.
+_Desktop:_ header with mega-menu, 5-column grid, no bottom nav, banner becomes a top strip.
 
 ---
 
@@ -130,7 +130,7 @@ Four decisions worth defending:
   revealed at checkout are the leading cause of cart abandonment, and here they are large relative
   to order value.
 
-*Desktop:* two columns — gallery left, buy panel sticky right, details full-width beneath.
+_Desktop:_ two columns — gallery left, buy panel sticky right, details full-width beneath.
 
 ---
 
@@ -295,7 +295,7 @@ The screen where trust is won or lost. It must be honest, calm, and survivable.
 
 Three deliberate choices:
 
-- **Explicit permission to leave.** The user's battery may die, the *chapa* may enter a tunnel.
+- **Explicit permission to leave.** The user's battery may die, the _chapa_ may enter a tunnel.
   Telling them the payment completes without them removes the fear that leaving loses their money.
 - **No fake progress bar.** The wait is genuinely 10–120s and genuinely unpredictable; a progress
   bar that lies is worse than a timer that admits uncertainty.
@@ -375,9 +375,9 @@ confirmation SMS from Vodacom or Movitel — that reconciliation is a trust ritu
 ```
 
 The dashboard is a to-do list, not a report. Nélia opens this between customers and needs to know
-what to *do* — reports live under Análises for whoever wants them.
+what to _do_ — reports live under Análises for whoever wants them.
 
-*Desktop:* same content, sidebar navigation, wider tables.
+_Desktop:_ same content, sidebar navigation, wider tables.
 
 ---
 
@@ -488,8 +488,8 @@ Checkout, by contrast, is explicitly unavailable offline and says so — see D-1
 ## 14 · Empty states
 
 Every empty state names a cause and offers an action. "Nothing here" is never sufficient — on a
-young marketplace an empty result is far more likely to mean *our catalogue is thin* than *you
-searched wrong*, and the copy should not blame the user for our gap.
+young marketplace an empty result is far more likely to mean _our catalogue is thin_ than _you
+searched wrong_, and the copy should not blame the user for our gap.
 
 ```
 ┌─────────────────────────────────────┐

@@ -22,6 +22,7 @@
  * See docs/phase-2-architecture/01-system-architecture.md §3.
  */
 
+import type { Db, Tx } from '../../db/types.js';
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -103,7 +104,11 @@ export interface CheckoutResult {
   readonly paymentStatus: 'awaiting_user' | 'failed';
   readonly providerTxId: string | null;
   readonly expiresAt: Date;
-  readonly failure: { readonly code: string; readonly message: string; readonly retryable: boolean } | null;
+  readonly failure: {
+    readonly code: string;
+    readonly message: string;
+    readonly retryable: boolean;
+  } | null;
 }
 
 export interface ShippingQuoter {
@@ -124,8 +129,7 @@ export interface OrderNumberGenerator {
 
 /** Narrow surface so this service can be unit-tested without a database. */
 export interface CheckoutDeps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle's db type is generic over the schema
-  readonly db: any;
+  readonly db: Db;
   readonly shipping: ShippingQuoter;
   readonly orderNumbers: OrderNumberGenerator;
   readonly providers: ReadonlyMap<ProviderId, PaymentProvider>;
@@ -180,7 +184,7 @@ export class CheckoutService {
     const payerMsisdn = this.resolvePayerMsisdn(request, provider);
 
     // ── Phase 1: everything that must be atomic ──────────────────────────────
-    const prepared = await this.deps.db.transaction(async (tx: unknown) =>
+    const prepared = await this.deps.db.transaction(async (tx: Tx) =>
       this.prepareOrder(tx, request, payerMsisdn),
     );
 
@@ -242,11 +246,9 @@ export class CheckoutService {
     }
     const normalised = normaliseMzMsisdn(raw);
     if (normalised === null) {
-      throw new CheckoutError(
-        'invalid_msisdn',
-        'O número deve ter 9 dígitos e começar por 8.',
-        { provided: raw },
-      );
+      throw new CheckoutError('invalid_msisdn', 'O número deve ter 9 dígitos e começar por 8.', {
+        provided: raw,
+      });
     }
     return normalised;
   }
@@ -257,8 +259,7 @@ export class CheckoutService {
    * Runs inside `db.transaction`. Every failure here rolls back cleanly, which is why stock can
    * be decremented before we know whether the provider will accept the request.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tx is Drizzle's transaction type
-  private async prepareOrder(tx: any, request: CheckoutRequest, payerMsisdn: string) {
+  private async prepareOrder(tx: Tx, request: CheckoutRequest, payerMsisdn: string) {
     const deliveryAddress = await this.loadAddress(tx, request.userId, request.addressId);
 
     const validated = await this.lockAndValidate(tx, request.cartLines);
@@ -273,10 +274,7 @@ export class CheckoutService {
     // Provisional totals, so shipping can be quoted per vendor against real subtotals.
     const provisional = computeCartTotals(cartLines);
 
-    const shippingQuotes = new Map<
-      string,
-      { feeCents: Cents; minDays: number; maxDays: number }
-    >();
+    const shippingQuotes = new Map<string, { feeCents: Cents; minDays: number; maxDays: number }>();
     for (const group of provisional.groups) {
       const weightGrams = validated
         .filter((line) => line.vendorId === group.vendorId)
@@ -438,9 +436,8 @@ export class CheckoutService {
    * with overlapping carts acquiring locks in different orders deadlock, and a deadlock at
    * checkout surfaces to a buyer as an unexplained failure at the worst possible moment.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async lockAndValidate(
-    tx: any,
+    tx: Tx,
     candidates: readonly CartCandidate[],
   ): Promise<ValidatedLine[]> {
     const variantIds = Array.from(new Set(candidates.map((line) => line.variantId))).sort();
@@ -524,8 +521,7 @@ export class CheckoutService {
     return validated;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async loadAddress(tx: any, userId: string, addressId: string) {
+  private async loadAddress(tx: Tx, userId: string, addressId: string) {
     const rows = await tx
       .select({
         id: addressTable.id,
@@ -577,11 +573,7 @@ export class CheckoutService {
       .where(eq(paymentTable.id, paymentId));
   }
 
-  private async markPaymentFailed(
-    paymentId: string,
-    code: string,
-    message: string,
-  ): Promise<void> {
+  private async markPaymentFailed(paymentId: string, code: string, message: string): Promise<void> {
     await this.deps.db
       .update(paymentTable)
       .set({

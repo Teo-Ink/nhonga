@@ -14,7 +14,11 @@
  */
 
 import { CodProvider } from './providers/cod.provider.js';
-import { MockWalletProvider, type CallbackDelivery, type Scheduler } from './providers/mock-wallet.provider.js';
+import {
+  MockWalletProvider,
+  type CallbackDelivery,
+  type Scheduler,
+} from './providers/mock-wallet.provider.js';
 import type { PaymentProvider, ProviderId } from './payment-provider.interface.js';
 
 export type PaymentsMode = 'mock' | 'live';

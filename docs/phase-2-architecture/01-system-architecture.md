@@ -194,12 +194,12 @@ once delivery means a notification worker will occasionally see the same event t
 
 Directly serves the data-cost constraint (D-09). Four layers:
 
-| Layer | Contents | TTL | Invalidation |
-|---|---|---|---|
-| **Client (RN / SW)** | Catalogue pages, product details, order list | 7 days, stale-while-revalidate | ETag revalidation |
-| **CloudFront** | Images, static assets, SSR catalogue HTML | Images 1 year (content-hashed); HTML 60s + SWR | On-demand invalidation on product publish |
-| **Redis** | Product detail read models, category trees, vendor profiles, homepage feed | 5–60 min | Event-driven purge from the outbox |
-| **Postgres** | Source of truth | — | — |
+| Layer                | Contents                                                                   | TTL                                            | Invalidation                              |
+| -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| **Client (RN / SW)** | Catalogue pages, product details, order list                               | 7 days, stale-while-revalidate                 | ETag revalidation                         |
+| **CloudFront**       | Images, static assets, SSR catalogue HTML                                  | Images 1 year (content-hashed); HTML 60s + SWR | On-demand invalidation on product publish |
+| **Redis**            | Product detail read models, category trees, vendor profiles, homepage feed | 5–60 min                                       | Event-driven purge from the outbox        |
+| **Postgres**         | Source of truth                                                            | —                                              | —                                         |
 
 **Never cached:** cart contents, checkout, payment status, order status transitions, anything under
 `/admin` or `/vendor`. Serving a stale payment status is exactly the failure that loses money.
@@ -245,13 +245,13 @@ flowchart TB
 Sized against A-10 (≈1,000 orders/day at launch) with headroom, and against the actual shape of
 the load — which is spiky around paydays and holidays, not uniform.
 
-| Service | Baseline | Max | Trigger |
-|---|---|---|---|
-| `api` | 2 tasks | 8 | CPU > 65% or p95 latency > 400ms |
-| `web` | 2 | 6 | CPU > 65% |
-| `webhooks` | 2 | 4 | Request count — kept generous; dropping a callback is expensive |
-| `workers` | 2 | 6 | Queue depth > 500 |
-| RDS | `db.t4g.medium` | → `m7g.large` | Vertical first; read replica when read load justifies it |
+| Service    | Baseline        | Max           | Trigger                                                         |
+| ---------- | --------------- | ------------- | --------------------------------------------------------------- |
+| `api`      | 2 tasks         | 8             | CPU > 65% or p95 latency > 400ms                                |
+| `web`      | 2               | 6             | CPU > 65%                                                       |
+| `webhooks` | 2               | 4             | Request count — kept generous; dropping a callback is expensive |
+| `workers`  | 2               | 6             | Queue depth > 500                                               |
+| RDS        | `db.t4g.medium` | → `m7g.large` | Vertical first; read replica when read load justifies it        |
 
 **First bottleneck we expect:** the `SELECT ... FOR UPDATE` on product variants during checkout, if
 a single popular SKU is bought concurrently. Mitigation is ordered lock acquisition by variant ID to
@@ -260,13 +260,13 @@ a hung request.
 
 ## 8. Observability
 
-| Concern | Tool | Note |
-|---|---|---|
-| Structured logs | Pino JSON → CloudWatch | Every log carries `requestId`, `userId`, `orderId` where applicable |
-| Tracing | OpenTelemetry → AWS X-Ray | Provider calls and DB queries spanned separately |
-| Errors | Sentry | Web, mobile, and API, with release tracking |
-| Metrics | CloudWatch + a Grafana dashboard | |
-| Uptime | Health checks on `/health` (liveness) and `/health/ready` (dependencies) | |
+| Concern         | Tool                                                                     | Note                                                                |
+| --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Structured logs | Pino JSON → CloudWatch                                                   | Every log carries `requestId`, `userId`, `orderId` where applicable |
+| Tracing         | OpenTelemetry → AWS X-Ray                                                | Provider calls and DB queries spanned separately                    |
+| Errors          | Sentry                                                                   | Web, mobile, and API, with release tracking                         |
+| Metrics         | CloudWatch + a Grafana dashboard                                         |                                                                     |
+| Uptime          | Health checks on `/health` (liveness) and `/health/ready` (dependencies) |                                                                     |
 
 **Business alarms that page someone**, distinct from infrastructure alarms:
 
@@ -284,15 +284,15 @@ being unable to answer where a specific person's money went.
 
 Designed behaviour when each dependency fails, rather than whatever happens by default:
 
-| Failure | Behaviour |
-|---|---|
-| OpenSearch down | Search degrades to Postgres category listings; a banner says search is limited. Browsing continues. |
-| Redis down | Cache misses fall through to Postgres. **OTP and rate limiting fail closed** — login is refused rather than left unprotected. |
-| One payment provider down | Marked unavailable at checkout; buyers are routed to the other wallet or COD. Circuit breaker opens after 5 consecutive failures, half-open retry after 60s. |
-| Both providers down | COD only, stated plainly on the payment step. |
-| SMS gateway down | Push still delivers; SMS queues with a 24h TTL. **OTP login is blocked** and says so — it cannot silently half-work. |
-| Postgres primary fails | Multi-AZ failover, ~60–120s. API returns 503 with `Retry-After`; clients back off. |
-| Webhook receiver down | Providers retry on their own schedule; our reconciliation workers close the gap via `queryStatus()` regardless. This is why reconciliation does not depend on webhooks. |
+| Failure                   | Behaviour                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenSearch down           | Search degrades to Postgres category listings; a banner says search is limited. Browsing continues.                                                                     |
+| Redis down                | Cache misses fall through to Postgres. **OTP and rate limiting fail closed** — login is refused rather than left unprotected.                                           |
+| One payment provider down | Marked unavailable at checkout; buyers are routed to the other wallet or COD. Circuit breaker opens after 5 consecutive failures, half-open retry after 60s.            |
+| Both providers down       | COD only, stated plainly on the payment step.                                                                                                                           |
+| SMS gateway down          | Push still delivers; SMS queues with a 24h TTL. **OTP login is blocked** and says so — it cannot silently half-work.                                                    |
+| Postgres primary fails    | Multi-AZ failover, ~60–120s. API returns 503 with `Retry-After`; clients back off.                                                                                      |
+| Webhook receiver down     | Providers retry on their own schedule; our reconciliation workers close the gap via `queryStatus()` regardless. This is why reconciliation does not depend on webhooks. |
 
 ---
 

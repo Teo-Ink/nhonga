@@ -287,7 +287,11 @@ export class MockWalletProvider implements PaymentProvider {
     request: PaymentRequest,
     behaviour: MockBehaviour,
   ): void {
-    if (behaviour.kind === 'provider_error' || behaviour.kind === 'reject' || behaviour.kind === 'silent') {
+    if (
+      behaviour.kind === 'provider_error' ||
+      behaviour.kind === 'reject' ||
+      behaviour.kind === 'silent'
+    ) {
       return;
     }
 
@@ -353,7 +357,9 @@ export class MockWalletProvider implements PaymentProvider {
       occurredAt: new Date().toISOString(),
     });
 
-    const secret = input.signWithWrongKey ? `${this.config.callbackSecret}-wrong` : this.config.callbackSecret;
+    const secret = input.signWithWrongKey
+      ? `${this.config.callbackSecret}-wrong`
+      : this.config.callbackSecret;
 
     this.deliver({
       providerId: this.id,

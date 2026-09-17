@@ -7,7 +7,16 @@
  * rounding difference, which is exactly the property we want when the number is a price.
  */
 
-import { add, allocate, applyBasisPoints, cents, multiply, subtract, ZERO, type Cents } from '../money.js';
+import {
+  add,
+  allocate,
+  applyBasisPoints,
+  cents,
+  multiply,
+  subtract,
+  ZERO,
+  type Cents,
+} from '../money.js';
 
 export class PricingError extends Error {
   constructor(message: string) {

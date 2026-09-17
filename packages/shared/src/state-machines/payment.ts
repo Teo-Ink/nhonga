@@ -159,10 +159,7 @@ export function applyPaymentEvent(
   return { changed: false, from: current, reason: 'illegal_transition' };
 }
 
-export function canApplyPaymentEvent(
-  current: PaymentStatus,
-  eventType: PaymentEventType,
-): boolean {
+export function canApplyPaymentEvent(current: PaymentStatus, eventType: PaymentEventType): boolean {
   return PAYMENT_TRANSITIONS[current][eventType] !== undefined;
 }
 

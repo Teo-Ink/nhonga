@@ -13,6 +13,7 @@
  * different implementation to drift.
  */
 
+import type { Db, Tx } from '../../db/types.js';
 import { randomUUID } from 'node:crypto';
 import { and, eq, isNull, max } from 'drizzle-orm';
 import {
@@ -46,8 +47,7 @@ export interface ProcessResult {
 }
 
 export interface ProcessorDeps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Drizzle db type is schema-generic
-  readonly db: any;
+  readonly db: Db;
   readonly now: () => Date;
 }
 
@@ -94,8 +94,7 @@ export class PaymentEventProcessor {
       };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return this.deps.db.transaction(async (tx: any): Promise<ProcessResult> => {
+    return this.deps.db.transaction(async (tx: Tx): Promise<ProcessResult> => {
       const rows = await tx
         .select({
           id: paymentTable.id,
@@ -218,9 +217,8 @@ export class PaymentEventProcessor {
    * blanket UPDATE, so a sub-order already cancelled by an admin is left alone instead of being
    * dragged back into an impossible state.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async advanceSubOrders(
-    tx: any,
+    tx: Tx,
     orderId: string,
     eventType: 'payment_settled' | 'payment_failed',
     now: Date,
@@ -258,19 +256,12 @@ export class PaymentEventProcessor {
     }
   }
 
-  private async markProcessed(
-    rowId: string,
-    error: string | null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tx?: any,
-  ): Promise<void> {
+  private async markProcessed(rowId: string, error: string | null, tx?: Tx): Promise<void> {
     const executor = tx ?? this.deps.db;
     await executor
       .update(paymentEventTable)
       .set({ processedAt: this.deps.now(), processingError: error })
-      .where(
-        and(eq(paymentEventTable.id, rowId), isNull(paymentEventTable.processedAt)),
-      );
+      .where(and(eq(paymentEventTable.id, rowId), isNull(paymentEventTable.processedAt)));
   }
 
   /**
@@ -281,8 +272,7 @@ export class PaymentEventProcessor {
    * violate that unique constraint — which is the correct outcome: the loser retries and gets
    * the next value, rather than two events silently claiming the same position in the stream.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async nextSequence(tx: any, aggregateType: string, aggregateId: string): Promise<number> {
+  private async nextSequence(tx: Tx, aggregateType: string, aggregateId: string): Promise<number> {
     const rows = await tx
       .select({ highest: max(outbox.sequence) })
       .from(outbox)

@@ -202,7 +202,7 @@ CREATE INDEX ON stock_ledger (variant_id, created_at DESC);
 ```
 
 `CHECK (stock_quantity >= 0)` is the point of the design. Overselling becomes a transaction that
-*cannot commit*, rather than a race the application is trusted to avoid.
+_cannot commit_, rather than a race the application is trusted to avoid.
 
 ### orders
 
@@ -462,12 +462,12 @@ Retention: seven years.
 Column-level AES-256-GCM via `pgcrypto`, with keys in AWS KMS, on top of RDS storage encryption.
 Applied to:
 
-| Table.column | Why |
-|---|---|
-| `payment.method_msisdn` | Links a person to a wallet transaction |
-| `vendor.nuit` | Tax identifier |
-| `payout_account.account_number` | Financial identifier |
-| `kyc_document.*` (S3 objects, SSE-KMS) | Identity documents |
+| Table.column                           | Why                                    |
+| -------------------------------------- | -------------------------------------- |
+| `payment.method_msisdn`                | Links a person to a wallet transaction |
+| `vendor.nuit`                          | Tax identifier                         |
+| `payout_account.account_number`        | Financial identifier                   |
+| `kyc_document.*` (S3 objects, SSE-KMS) | Identity documents                     |
 
 **Never stored in any form:** PINs, wallet passwords, card numbers. We hold provider-issued
 references only. There is no code path that could accept a payment credential, which is the only
@@ -475,15 +475,15 @@ reliable way to guarantee we never store one.
 
 ## 7. Deletion and retention
 
-| Data | Policy |
-|---|---|
-| User account | Soft delete; PII anonymised after 30 days. Orders retained — legally and operationally required |
-| Orders, payments, settlements | 7 years |
-| Audit log | 7 years, immutable |
-| KYC documents | 5 years after vendor closure |
-| OTP challenges | Purged after 24 hours |
-| Sessions | Expire naturally |
-| `payment_event` raw payloads | 7 years |
+| Data                          | Policy                                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| User account                  | Soft delete; PII anonymised after 30 days. Orders retained — legally and operationally required |
+| Orders, payments, settlements | 7 years                                                                                         |
+| Audit log                     | 7 years, immutable                                                                              |
+| KYC documents                 | 5 years after vendor closure                                                                    |
+| OTP challenges                | Purged after 24 hours                                                                           |
+| Sessions                      | Expire naturally                                                                                |
+| `payment_event` raw payloads  | 7 years                                                                                         |
 
 Anonymisation replaces name, phone, and email with tombstones while preserving referential integrity
 and the financial record — a deletion that orphaned orders would make the books unauditable, which

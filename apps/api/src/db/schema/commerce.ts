@@ -258,10 +258,7 @@ export const payment = pgTable(
     index('payment_reconcile_idx')
       .on(table.reconcileUntil)
       .where(sql`${table.status} = 'expired'`),
-    check(
-      'payment_provider_check',
-      sql`${table.provider} in ('mpesa','emola','mkesh','cod')`,
-    ),
+    check('payment_provider_check', sql`${table.provider} in ('mpesa','emola','mkesh','cod')`),
     check(
       'payment_status_check',
       sql`${table.status} in ('initiated','awaiting_user','paid','failed','expired','refund_pending','refunded','refund_failed')`,

@@ -5,7 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       // Resolve the workspace package to source, so tests run without a build step.
-      '@nhonga/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)),
+      '@nhonga/shared': fileURLToPath(
+        new URL('../../packages/shared/src/index.ts', import.meta.url),
+      ),
     },
   },
   test: {

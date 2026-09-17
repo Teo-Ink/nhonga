@@ -22,7 +22,7 @@ register and receive sandbox keys. Access requires:
 **I cannot obtain these.** Realistic lead time is 4–12 weeks, and it is the longest pole in the
 project — which is why OQ-7 and OQ-8 asked you to start immediately, before Phase 3 code exists.
 
-This is not a blocker on building. It is a blocker on *going live*. The architecture below is
+This is not a blocker on building. It is a blocker on _going live_. The architecture below is
 designed so the entire checkout experience — including the asynchronous push, the callback, the
 reconciliation, the failure paths, and the refunds — is fully built and fully tested against a mock
 that reproduces the real protocol. The production swap is a configuration change plus credentials,
@@ -37,7 +37,7 @@ would fork the checkout state machine, and a forked state machine is where money
 // apps/api/src/modules/payments/providers/payment-provider.interface.ts
 
 export interface PaymentProvider {
-  readonly id: ProviderId;                  // 'mpesa' | 'emola' | 'mkesh' | 'cod'
+  readonly id: ProviderId; // 'mpesa' | 'emola' | 'mkesh' | 'cod'
   readonly capabilities: ProviderCapabilities;
 
   /** Initiate a push/USSD "request to pay". Returns immediately; the user approves on their handset. */
@@ -60,17 +60,17 @@ export interface ProviderCapabilities {
   supportsRefund: boolean;
   supportsPartialRefund: boolean;
   supportsDisbursement: boolean;
-  requiresUserApproval: boolean;      // false for COD
-  approvalTimeoutSeconds: number;     // 180 for wallets
+  requiresUserApproval: boolean; // false for COD
+  approvalTimeoutSeconds: number; // 180 for wallets
 }
 
 export interface PaymentRequest {
-  paymentId: string;                  // ours
+  paymentId: string; // ours
   idempotencyKey: string;
-  amountCents: Cents;          // branded integer centavos — see D-24, not bigint
+  amountCents: Cents; // branded integer centavos — see D-24, not bigint
   currency: 'MZN';
-  payerMsisdn: string;                // E.164
-  reference: string;                  // shown on the payer's SMS receipt
+  payerMsisdn: string; // E.164
+  reference: string; // shown on the payer's SMS receipt
   description: string;
 }
 
@@ -82,19 +82,24 @@ export type CallbackParseResult =
   | { valid: false; reason: 'bad_signature' | 'malformed' | 'unknown_provider' }
   | {
       valid: true;
-      providerEventId: string;        // for the idempotency constraint
+      providerEventId: string; // for the idempotency constraint
       providerTxId: string;
       ourReference: string;
       status: 'paid' | 'failed' | 'cancelled';
       code?: FailureCode;
-      amountCents: Cents;             // verified against our record before acceptance
+      amountCents: Cents; // verified against our record before acceptance
       occurredAt: Date;
     };
 
 export type FailureCode =
-  | 'insufficient_balance' | 'wrong_pin' | 'user_cancelled'
-  | 'timeout' | 'provider_unavailable' | 'invalid_msisdn'
-  | 'limit_exceeded' | 'unknown';
+  | 'insufficient_balance'
+  | 'wrong_pin'
+  | 'user_cancelled'
+  | 'timeout'
+  | 'provider_unavailable'
+  | 'invalid_msisdn'
+  | 'limit_exceeded'
+  | 'unknown';
 ```
 
 `parseCallback` being **pure** is deliberate. It is the only code that touches an unauthenticated
@@ -107,11 +112,11 @@ cannot be accidentally reordered by a future change.
 // apps/api/src/modules/payments/registry.ts
 
 export function buildProviderRegistry(config: PaymentsConfig): Map<ProviderId, PaymentProvider> {
-  const useMocks = config.mode === 'mock';        // PAYMENTS_MODE env var
+  const useMocks = config.mode === 'mock'; // PAYMENTS_MODE env var
   return new Map<ProviderId, PaymentProvider>([
     ['mpesa', useMocks ? new MockMpesaProvider(config.mock) : new MpesaProvider(config.mpesa)],
     ['emola', useMocks ? new MockEmolaProvider(config.mock) : new EmolaProvider(config.emola)],
-    ['cod',   new CodProvider()],                 // no external dependency, identical in every env
+    ['cod', new CodProvider()], // no external dependency, identical in every env
   ]);
 }
 ```
@@ -145,10 +150,7 @@ Transitions are applied through a single guarded function. There is no code path
 `payment.status` directly:
 
 ```typescript
-export function applyPaymentEvent(
-  current: PaymentStatus,
-  event: PaymentEvent,
-): TransitionResult {
+export function applyPaymentEvent(current: PaymentStatus, event: PaymentEvent): TransitionResult {
   const allowed = PAYMENT_TRANSITIONS[current];
   if (!allowed.includes(event.type)) {
     // Not an error — late/duplicate callbacks are normal and must be inert.
@@ -210,13 +212,13 @@ Five defences, each against a real failure we expect:
 A scheduled worker sweeps payments the webhook has not resolved. This is the difference between a
 system that mostly works and one that is correct.
 
-| Job | Schedule | Action |
-|---|---|---|
-| `payment.reconcile` | 30s, 60s, 180s after initiation, then every 5 min for 1h | `queryStatus()` against the provider; apply the result |
-| `payment.expire` | Every minute | `AWAITING_USER` past `expires_at` → `EXPIRED` |
-| `payment.late-sweep` | Hourly, for 72h after expiry | Catches late approvals — **an expired payment that the provider reports as paid is honoured**, the order is reinstated, and the buyer is notified |
-| `payment.orphan-scan` | Daily | Provider transactions with no matching local payment → operations queue |
-| `settlement.reconcile` | Daily | Disbursements vs. provider statements |
+| Job                    | Schedule                                                 | Action                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `payment.reconcile`    | 30s, 60s, 180s after initiation, then every 5 min for 1h | `queryStatus()` against the provider; apply the result                                                                                            |
+| `payment.expire`       | Every minute                                             | `AWAITING_USER` past `expires_at` → `EXPIRED`                                                                                                     |
+| `payment.late-sweep`   | Hourly, for 72h after expiry                             | Catches late approvals — **an expired payment that the provider reports as paid is honoured**, the order is reinstated, and the buyer is notified |
+| `payment.orphan-scan`  | Daily                                                    | Provider transactions with no matching local payment → operations queue                                                                           |
+| `settlement.reconcile` | Daily                                                    | Disbursements vs. provider statements                                                                                                             |
 
 **`payment.late-sweep` is the job that protects the buyer.** Someone approves on their handset after
 our 3-minute window closed; the money leaves their wallet; our UI said "expired". Without this job
@@ -235,19 +237,19 @@ returns success:
 - Outcomes are driven by the payer MSISDN, so every failure path is reachable in manual testing and
   deterministic in automated testing:
 
-| Test MSISDN | Outcome |
-|---|---|
-| `+258840000001` | Paid after 8s |
-| `+258840000002` | Paid after 75s — near the timeout boundary |
-| `+258840000003` | `insufficient_balance` |
-| `+258840000004` | `wrong_pin` |
-| `+258840000005` | `user_cancelled` |
+| Test MSISDN     | Outcome                                                                     |
+| --------------- | --------------------------------------------------------------------------- |
+| `+258840000001` | Paid after 8s                                                               |
+| `+258840000002` | Paid after 75s — near the timeout boundary                                  |
+| `+258840000003` | `insufficient_balance`                                                      |
+| `+258840000004` | `wrong_pin`                                                                 |
+| `+258840000005` | `user_cancelled`                                                            |
 | `+258840000006` | Never responds → `EXPIRED`, then a **late** callback at 240s (exercises §5) |
-| `+258840000007` | Duplicate callback delivered three times |
-| `+258840000008` | Callback with a mismatched amount — must be rejected and alerted |
-| `+258840000009` | Callback with an invalid signature — must be rejected |
-| `+258840000010` | Provider returns 500 → circuit breaker |
-| Any other | Paid after a random 5–20s |
+| `+258840000007` | Duplicate callback delivered three times                                    |
+| `+258840000008` | Callback with a mismatched amount — must be rejected and alerted            |
+| `+258840000009` | Callback with an invalid signature — must be rejected                       |
+| `+258840000010` | Provider returns 500 → circuit breaker                                      |
+| Any other       | Paid after a random 5–20s                                                   |
 
 - The callback is signed with a mock key using the same algorithm shape, so signature verification is
   genuinely exercised rather than bypassed in development.
@@ -354,27 +356,27 @@ payout pipeline with no human gate is how a compromised admin account empties th
 
 ## 9. Fraud and abuse controls
 
-| Control | Where |
-|---|---|
-| Velocity limits — orders per user per hour, per device, per MSISDN | Checkout |
-| Payment retry cap per order | Payment |
-| First-order value cap for unverified new accounts | Checkout |
-| Payout account changes require OTP + a 24h cooling-off before the next payout | Vendor |
-| Payout holder name must match verified KYC identity | Onboarding |
-| Mismatched callback amounts alert immediately | Webhook |
-| Orphan provider transactions surface to operations daily | Reconciliation |
-| Impossible-velocity detection — same MSISDN, distant districts | Risk worker |
+| Control                                                                       | Where          |
+| ----------------------------------------------------------------------------- | -------------- |
+| Velocity limits — orders per user per hour, per device, per MSISDN            | Checkout       |
+| Payment retry cap per order                                                   | Payment        |
+| First-order value cap for unverified new accounts                             | Checkout       |
+| Payout account changes require OTP + a 24h cooling-off before the next payout | Vendor         |
+| Payout holder name must match verified KYC identity                           | Onboarding     |
+| Mismatched callback amounts alert immediately                                 | Webhook        |
+| Orphan provider transactions surface to operations daily                      | Reconciliation |
+| Impossible-velocity detection — same MSISDN, distant districts                | Risk worker    |
 
 ## 10. Still open
 
-| Item | Blocked on |
-|---|---|
-| Exact M-Pesa API field names and signature algorithm | OQ-7 — the integration PDF arrives after signature |
-| e-Mola API shape | OQ-8 — documentation is thinner; the interface is built to absorb variation |
-| Whether e-Mola supports programmatic disbursement | OQ-8. If not, settlements to Movitel vendors need a manual or bank path — **flag this in your first conversation with them**, as it materially affects vendor payout operations |
-| Who bears the transaction fee | OQ-5 — the `payment_fee_cents` column exists either way |
-| Settlement cadence — daily, weekly, on-demand | OQ-4 follow-up. Recommend weekly at launch, with manual early release for vendors in good standing |
-| mKesh / Tmcel | Deferred. The provider slot exists; add when volume justifies a third merchant agreement |
+| Item                                                 | Blocked on                                                                                                                                                                      |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exact M-Pesa API field names and signature algorithm | OQ-7 — the integration PDF arrives after signature                                                                                                                              |
+| e-Mola API shape                                     | OQ-8 — documentation is thinner; the interface is built to absorb variation                                                                                                     |
+| Whether e-Mola supports programmatic disbursement    | OQ-8. If not, settlements to Movitel vendors need a manual or bank path — **flag this in your first conversation with them**, as it materially affects vendor payout operations |
+| Who bears the transaction fee                        | OQ-5 — the `payment_fee_cents` column exists either way                                                                                                                         |
+| Settlement cadence — daily, weekly, on-demand        | OQ-4 follow-up. Recommend weekly at launch, with manual early release for vendors in good standing                                                                              |
+| mKesh / Tmcel                                        | Deferred. The provider slot exists; add when volume justifies a third merchant agreement                                                                                        |
 
 ---
 

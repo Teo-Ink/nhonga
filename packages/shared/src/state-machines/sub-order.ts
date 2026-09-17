@@ -191,7 +191,12 @@ export function canBuyerConfirmReceipt(status: SubOrderStatus): boolean {
 }
 
 export function canVendorAct(status: SubOrderStatus): boolean {
-  return status === 'confirmed' || status === 'preparing' || status === 'shipped' || status === 'in_transit';
+  return (
+    status === 'confirmed' ||
+    status === 'preparing' ||
+    status === 'shipped' ||
+    status === 'in_transit'
+  );
 }
 
 /** Whether stock reserved for this sub-order should be returned to the catalogue. */
@@ -237,9 +242,7 @@ export function rollupOrderStatus(statuses: readonly SubOrderStatus[]): OrderRol
 
   // Ignore cancelled siblings when judging progress — a cancelled half should not hold the
   // whole order at "confirmed" while the other half is genuinely in transit.
-  const live = statuses.filter(
-    (status) => status !== 'cancelled' && status !== 'refunded',
-  );
+  const live = statuses.filter((status) => status !== 'cancelled' && status !== 'refunded');
   if (live.length === 0) return 'cancelled';
 
   const liveEvery = (predicate: (status: SubOrderStatus) => boolean): boolean =>

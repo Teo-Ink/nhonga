@@ -6,11 +6,11 @@ Phase 1 · Design | Status: awaiting sign-off
 
 ## 1. Three applications, one system
 
-| Surface | Audience | Platform | Rationale |
-|---|---|---|---|
-| **Storefront** | Buyers | Web (Next.js) + Mobile (React Native) | Web must be first-class: it is how people arrive from WhatsApp and Facebook links, and it is how someone browses before they trust the product enough to install an app. |
-| **Vendor console** | Sellers | Responsive web only | See D-02 rationale. A separate vendor native app would double mobile cost for an audience that will accept a good mobile web app. **It must be excellent on a phone** (persona: Nélia), not merely tolerable. |
-| **Admin console** | Platform staff | Responsive web, desktop-optimised | Internal, low user count, high data density. |
+| Surface            | Audience       | Platform                              | Rationale                                                                                                                                                                                                     |
+| ------------------ | -------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Storefront**     | Buyers         | Web (Next.js) + Mobile (React Native) | Web must be first-class: it is how people arrive from WhatsApp and Facebook links, and it is how someone browses before they trust the product enough to install an app.                                      |
+| **Vendor console** | Sellers        | Responsive web only                   | See D-02 rationale. A separate vendor native app would double mobile cost for an audience that will accept a good mobile web app. **It must be excellent on a phone** (persona: Nélia), not merely tolerable. |
+| **Admin console**  | Platform staff | Responsive web, desktop-optimised     | Internal, low user count, high data density.                                                                                                                                                                  |
 
 A fourth implicit surface deserves naming: **the shared link**. Product and vendor pages must
 render correctly as WhatsApp and Facebook previews, because that is the primary discovery channel
@@ -112,7 +112,7 @@ Conta
 
 ### Why the cart is grouped by vendor from the first screen
 
-The cart is where the multi-vendor reality must be made legible, and the *earliest* place it can
+The cart is where the multi-vendor reality must be made legible, and the _earliest_ place it can
 be is the right place. If the buyer first learns at checkout that their four items are three
 separate shipments with three delivery fees arriving on three different days, that is a trust
 failure at the worst possible moment. Grouping in the cart makes shipping fees and delivery windows
@@ -185,20 +185,20 @@ mis-categorise and buyers stop trusting filters.
 
 Twelve level-1 departments, chosen for the local market rather than copied from a global template:
 
-| PT | EN | Note |
-|---|---|---|
-| Telemóveis e Acessórios | Phones & Accessories | Expected to be the highest-volume department |
-| Eletrónica | Electronics | |
-| Moda Feminina | Women's Fashion | |
-| Moda Masculina | Men's Fashion | |
-| Casa e Cozinha | Home & Kitchen | |
-| Beleza e Saúde | Beauty & Health | |
-| Bebé e Criança | Baby & Kids | |
-| Alimentos e Bebidas | Food & Beverages | Non-perishable only in v1 — perishables need cold chain |
-| Ferramentas e Construção | Tools & Construction | Serves the Salvador persona |
-| Agricultura | Agriculture | Genuinely significant locally; usually absent from global templates |
-| Automóvel e Motos | Automotive & Motorcycles | |
-| Desporto e Lazer | Sports & Leisure | |
+| PT                       | EN                       | Note                                                                |
+| ------------------------ | ------------------------ | ------------------------------------------------------------------- |
+| Telemóveis e Acessórios  | Phones & Accessories     | Expected to be the highest-volume department                        |
+| Eletrónica               | Electronics              |                                                                     |
+| Moda Feminina            | Women's Fashion          |                                                                     |
+| Moda Masculina           | Men's Fashion            |                                                                     |
+| Casa e Cozinha           | Home & Kitchen           |                                                                     |
+| Beleza e Saúde           | Beauty & Health          |                                                                     |
+| Bebé e Criança           | Baby & Kids              |                                                                     |
+| Alimentos e Bebidas      | Food & Beverages         | Non-perishable only in v1 — perishables need cold chain             |
+| Ferramentas e Construção | Tools & Construction     | Serves the Salvador persona                                         |
+| Agricultura              | Agriculture              | Genuinely significant locally; usually absent from global templates |
+| Automóvel e Motos        | Automotive & Motorcycles |                                                                     |
+| Desporto e Lazer         | Sports & Leisure         |                                                                     |
 
 Category attributes are typed and per-category (`size`, `colour`, `voltage`, `capacity`), which is
 what makes filters and variants work. Attribute definitions are admin-managed, not hardcoded.
@@ -207,20 +207,20 @@ what makes filters and variants work. Attribute definitions are admin-managed, n
 
 Portuguese slugs, because these URLs are shared on WhatsApp and being readable matters.
 
-| Route | Rendering | Note |
-|---|---|---|
-| `/` | SSR + ISR | |
-| `/c/{cat}/{sub?}/{sub2?}` | SSR + ISR | Category listing |
-| `/produto/{slug}-{id}` | SSR, revalidated | **Must** carry OG tags — primary share target |
-| `/loja/{slug}` | SSR | Vendor storefront, also OG-tagged |
-| `/pesquisa?q=` | SSR | Indexable |
-| `/carrinho` | Client | |
-| `/checkout/{step}` | Client, auth-gated | |
-| `/pedidos`, `/pedidos/{id}` | Client, auth-gated | |
-| `/conta/**` | Client, auth-gated | |
-| `/vender` | SSR | Vendor acquisition landing page — a marketing surface |
-| `/vendor/**` | Client, role-gated | Vendor console |
-| `/admin/**` | Client, role-gated, IP-restricted | Admin console |
+| Route                       | Rendering                         | Note                                                  |
+| --------------------------- | --------------------------------- | ----------------------------------------------------- |
+| `/`                         | SSR + ISR                         |                                                       |
+| `/c/{cat}/{sub?}/{sub2?}`   | SSR + ISR                         | Category listing                                      |
+| `/produto/{slug}-{id}`      | SSR, revalidated                  | **Must** carry OG tags — primary share target         |
+| `/loja/{slug}`              | SSR                               | Vendor storefront, also OG-tagged                     |
+| `/pesquisa?q=`              | SSR                               | Indexable                                             |
+| `/carrinho`                 | Client                            |                                                       |
+| `/checkout/{step}`          | Client, auth-gated                |                                                       |
+| `/pedidos`, `/pedidos/{id}` | Client, auth-gated                |                                                       |
+| `/conta/**`                 | Client, auth-gated                |                                                       |
+| `/vender`                   | SSR                               | Vendor acquisition landing page — a marketing surface |
+| `/vendor/**`                | Client, role-gated                | Vendor console                                        |
+| `/admin/**`                 | Client, role-gated, IP-restricted | Admin console                                         |
 
 Mobile deep links mirror these paths exactly (`nhonga://produto/{slug}-{id}` plus universal/app
 links), so a shared web link opens the app when installed.

@@ -95,14 +95,16 @@ describe('actor authorisation', () => {
   it('distinguishes wrong-person from wrong-time', () => {
     // Wrong person, even though the transition itself is legal here.
     expect(applySubOrderEvent('confirmed', 'vendor_accepted', 'buyer').changed).toBe(false);
-    expect(
-      applySubOrderEvent('confirmed', 'vendor_accepted', 'buyer'),
-    ).toHaveProperty('reason', 'forbidden_actor');
+    expect(applySubOrderEvent('confirmed', 'vendor_accepted', 'buyer')).toHaveProperty(
+      'reason',
+      'forbidden_actor',
+    );
 
     // Right person, wrong time.
-    expect(
-      applySubOrderEvent('delivered', 'vendor_accepted', 'vendor'),
-    ).toHaveProperty('reason', 'illegal_transition');
+    expect(applySubOrderEvent('delivered', 'vendor_accepted', 'vendor')).toHaveProperty(
+      'reason',
+      'illegal_transition',
+    );
   });
 
   it('never throws, for any status, event, and actor', () => {

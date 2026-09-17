@@ -106,7 +106,9 @@ export function min(a: Cents, b: Cents): Cents {
  */
 export function applyBasisPoints(amount: Cents, bps: number): Cents {
   if (!Number.isInteger(bps) || bps < 0 || bps > 10_000) {
-    throw new MoneyError(`Basis points must be a whole number between 0 and 10000, received ${bps}`);
+    throw new MoneyError(
+      `Basis points must be a whole number between 0 and 10000, received ${bps}`,
+    );
   }
   const exact = (amount * bps) / 10_000;
   const rounded = exact < 0 ? -Math.round(-exact) : Math.round(exact);
@@ -134,7 +136,9 @@ export function allocate(total: Cents, weights: readonly number[]): Cents[] {
   let weightSum = 0;
   for (const weight of weights) {
     if (!Number.isFinite(weight) || weight < 0) {
-      throw new MoneyError(`Allocation weights must be non-negative finite numbers, received ${weight}`);
+      throw new MoneyError(
+        `Allocation weights must be non-negative finite numbers, received ${weight}`,
+      );
     }
     weightSum += weight;
   }
@@ -156,7 +160,7 @@ export function allocate(total: Cents, weights: readonly number[]): Cents[] {
   }
 
   let leftover = total - allocated;
-  remainders.sort((a, b) => (b.fraction - a.fraction) || (a.index - b.index));
+  remainders.sort((a, b) => b.fraction - a.fraction || a.index - b.index);
 
   for (const entry of remainders) {
     if (leftover <= 0) break;
@@ -227,10 +231,7 @@ export function formatMZN(amount: Cents, options: FormatOptions = {}): string {
  * prices, and the vendor sees the parsed result formatted back to them before saving.
  */
 export function parseMZNToCents(input: string): Cents | null {
-  const cleaned = input
-    .replace(/MT/gi, '')
-    .replace(/\s/g, '')
-    .trim();
+  const cleaned = input.replace(/MT/gi, '').replace(/\s/g, '').trim();
 
   if (cleaned === '' || !/^-?[\d.,]+$/.test(cleaned)) return null;
 
