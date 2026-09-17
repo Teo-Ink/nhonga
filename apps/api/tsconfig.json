@@ -3,7 +3,12 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "types": ["node"]
+    "types": ["node", "reflect-metadata"],
+    // NestJS dependency injection reads design-time type metadata that the
+    // TypeScript compiler only emits when both of these are on. Scoped to the
+    // API's tsconfig, not the base, so the ESM shared package is unaffected.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   // Consume @nhonga/shared through its emitted declarations, not its source. Vitest still aliases
   // to source (see vitest.config.ts) so tests run without a build step.

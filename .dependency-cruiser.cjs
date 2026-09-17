@@ -44,7 +44,9 @@ module.exports = {
       comment:
         'Production code importing a devDependency fails at runtime in the container. Tests and build-time configs (drizzle.config.ts, vitest.config.ts) are exempt - they never ship.',
       from: { path: '^(apps|packages)', pathNot: [TEST_FILES, CONFIG_FILES] },
-      to: { dependencyTypes: ['npm-dev'] },
+      // type-only imports (import type ...) are erased by the compiler and never
+      // exist in the runtime bundle, so importing @types/* as types is fine.
+      to: { dependencyTypes: ['npm-dev'], dependencyTypesNot: ['type-only'] },
     },
   ],
   options: {

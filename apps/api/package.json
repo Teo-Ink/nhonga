@@ -15,11 +15,19 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@nestjs/common": "^12",
+    "@nestjs/config": "^12",
+    "@nestjs/core": "^12",
+    "@nestjs/platform-express": "^12",
     "@nhonga/shared": "workspace:*",
     "drizzle-orm": "0.45.2",
-    "postgres": "3.4.5"
+    "helmet": "^8.3.0",
+    "postgres": "3.4.5",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "20.16.11",
     "drizzle-kit": "0.31.10",
     "typescript": "5.6.3",
