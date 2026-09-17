@@ -28,10 +28,10 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "nhonga"
-      Layer       = "bootstrap"
-      ManagedBy   = "terraform"
-      Repository  = var.github_repository
+      Project    = "nhonga"
+      Layer      = "bootstrap"
+      ManagedBy  = "terraform"
+      Repository = var.github_repository
     }
   }
 }

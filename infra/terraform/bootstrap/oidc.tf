@@ -8,8 +8,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
 
   # AWS stopped validating this thumbprint for GitHub in 2023 and now uses its
   # own trust store, but the API still requires a non-empty list. This is

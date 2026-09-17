@@ -23,12 +23,12 @@ data "aws_iam_policy_document" "deploy" {
     sid    = "ProvisionApplicationInfrastructure"
     effect = "Allow"
     actions = [
-      "ec2:*",              # VPC, subnets, security groups, NAT
-      "rds:*",              # Postgres
-      "elasticache:*",      # Redis
-      "es:*",               # OpenSearch
-      "ecs:*",              # Fargate services and task definitions
-      "ecr:*",              # container images
+      "ec2:*",         # VPC, subnets, security groups, NAT
+      "rds:*",         # Postgres
+      "elasticache:*", # Redis
+      "es:*",          # OpenSearch
+      "ecs:*",         # Fargate services and task definitions
+      "ecr:*",         # container images
       "elasticloadbalancing:*",
       "application-autoscaling:*",
       "cloudfront:*",
