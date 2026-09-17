@@ -1,0 +1,58 @@
+name: ECS deploy
+description: >
+  Roll an ECS service onto a new image tag by registering a new task definition
+  revision and waiting for the deployment to stabilise. The task definition is
+  owned by this pipeline, not by Terraform (the ecs-service module sets
+  ignore_changes on it), so the image is advanced here.
+inputs:
+  cluster:
+    required: true
+  service:
+    required: true
+  image_tag:
+    required: true
+  region:
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CLUSTER: ${{ inputs.cluster }}
+        SERVICE: ${{ inputs.service }}
+        TAG: ${{ inputs.image_tag }}
+        AWS_REGION: ${{ inputs.region }}
+      run: |
+        set -euo pipefail
+
+        # The task definition family matches the module's naming: project-env-service.
+        FAMILY="${CLUSTER}-${SERVICE}"
+
+        echo "Fetching current task definition for $FAMILY"
+        CURRENT=$(aws ecs describe-task-definition --task-definition "$FAMILY" --query taskDefinition)
+
+        # Point the container at the new image tag; the registry/repo stay as-is.
+        REPO=$(echo "$CURRENT" | jq -r '.containerDefinitions[0].image' | cut -d: -f1)
+        NEW_IMAGE="${REPO}:${TAG}"
+        echo "New image: $NEW_IMAGE"
+
+        # Strip the read-only fields AWS rejects on register, and swap the image.
+        NEW_DEF=$(echo "$CURRENT" | jq --arg IMG "$NEW_IMAGE" '
+          .containerDefinitions[0].image = $IMG
+          | del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
+                .compatibilities, .registeredAt, .registeredBy)')
+
+        NEW_ARN=$(aws ecs register-task-definition \
+          --cli-input-json "$NEW_DEF" \
+          --query taskDefinition.taskDefinitionArn --output text)
+        echo "Registered $NEW_ARN"
+
+        aws ecs update-service \
+          --cluster "$CLUSTER" --service "$SERVICE" \
+          --task-definition "$NEW_ARN" >/dev/null
+        echo "Service updated; waiting for it to stabilise…"
+
+        # The circuit breaker on the service rolls back automatically on a
+        # failed deployment; this wait surfaces that as a failed job.
+        aws ecs wait services-stable --cluster "$CLUSTER" --services "$SERVICE"
+        echo "Deployment stable."

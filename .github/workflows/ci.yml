@@ -155,8 +155,21 @@ jobs:
       - name: Terraform fmt
         run: terraform fmt -check -recursive infra/terraform
 
+      # validate every layer offline (-backend=false makes no AWS calls).
       - name: Terraform validate (bootstrap)
         working-directory: infra/terraform/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (staging)
+        working-directory: infra/terraform/envs/staging
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (production)
+        working-directory: infra/terraform/envs/production
         run: |
           terraform init -backend=false
           terraform validate
