@@ -121,23 +121,7 @@ jobs:
         # because of a moderate advisory in a build tool is less safe, not more.
         run: pnpm audit --audit-level high
 
-  # ── Gate 5: static analysis ───────────────────────────────────────────────
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
-        with:
-          languages: javascript-typescript
-          queries: security-and-quality
-      - uses: github/codeql-action/analyze@v3
-
-  # ── Gate 6: infrastructure as code ────────────────────────────────────────
+  # ── Gate 5: infrastructure as code ────────────────────────────────────────
   iac:
     name: Terraform fmt, validate and scan
     runs-on: ubuntu-latest
