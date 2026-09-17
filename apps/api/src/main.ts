@@ -8,7 +8,11 @@ import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    // Preserve the exact request bytes so webhook signature verification can
+    // run against them (payments webhook receiver).
+    rawBody: true,
+  });
   const log = new Logger('Bootstrap');
 
   app.use(helmet());
