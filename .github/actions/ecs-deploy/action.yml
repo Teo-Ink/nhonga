@@ -6,12 +6,16 @@ description: >
   ignore_changes on it), so the image is advanced here.
 inputs:
   cluster:
+    description: ECS cluster name (e.g. nhonga-staging).
     required: true
   service:
+    description: ECS service name within the cluster (e.g. api).
     required: true
   image_tag:
+    description: Image tag to deploy, typically the commit SHA.
     required: true
   region:
+    description: AWS region the cluster runs in.
     required: true
 runs:
   using: composite
@@ -50,7 +54,7 @@ runs:
         aws ecs update-service \
           --cluster "$CLUSTER" --service "$SERVICE" \
           --task-definition "$NEW_ARN" >/dev/null
-        echo "Service updated; waiting for it to stabilise…"
+        echo "Service updated; waiting for it to stabilise..."
 
         # The circuit breaker on the service rolls back automatically on a
         # failed deployment; this wait surfaces that as a failed job.
