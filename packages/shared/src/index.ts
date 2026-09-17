@@ -1,5 +1,5 @@
 /**
- * @nhoga/shared
+ * @nhonga/shared
  *
  * The logic that must behave identically on the server, the web app, and the mobile app —
  * because it touches money, identity, or order state, and a divergence between two

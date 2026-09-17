@@ -14,7 +14,7 @@
  * See docs/phase-2-architecture/04-payments-architecture.md.
  */
 
-import type { Cents } from '@nhoga/shared';
+import type { Cents } from '@nhonga/shared';
 
 export type ProviderId = 'mpesa' | 'emola' | 'mkesh' | 'cod';
 
@@ -52,7 +52,7 @@ export interface PaymentRequest {
   readonly idempotencyKey: string;
   readonly amountCents: Cents;
   readonly currency: 'MZN';
-  /** E.164, already normalised by `@nhoga/shared`. */
+  /** E.164, already normalised by `@nhonga/shared`. */
   readonly payerMsisdn: string;
   /** Appears on the payer's SMS receipt. Keep it recognisable — buyers reconcile against it. */
   readonly reference: string;

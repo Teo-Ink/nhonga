@@ -1,9 +1,9 @@
 {
-  "name": "@nhoga/api",
+  "name": "@nhonga/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Nhoga API — modular monolith. Phase 3a/3b deliver the payments layer, schema, checkout, and reconciliation; the HTTP layer follows in 3c.",
+  "description": "Nhonga API — modular monolith. Phase 3a/3b deliver the payments layer, schema, checkout, and reconciliation; the HTTP layer follows in 3c.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -15,7 +15,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@nhoga/shared": "workspace:*",
+    "@nhonga/shared": "workspace:*",
     "drizzle-orm": "0.36.4",
     "postgres": "3.4.5"
   },

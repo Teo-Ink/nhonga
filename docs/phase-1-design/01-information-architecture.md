@@ -44,8 +44,8 @@ full-screen overlay when focused.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│ [Nhoga]  [ Pesquisar produtos…            🔍]  PT▾  Conta  🛒 3 │
-│ Categorias ▾ │ Ofertas │ Vender na Nhoga │ Ajuda               │
+│ [Nhonga]  [ Pesquisar produtos…            🔍]  PT▾  Conta  🛒 3 │
+│ Categorias ▾ │ Ofertas │ Vender na Nhonga │ Ajuda               │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -107,7 +107,7 @@ Conta
 ├── Avaliações que escrevi
 ├── Notificações
 ├── Ajuda e suporte  → tickets
-└── Vender na Nhoga → onboarding de vendedor
+└── Vender na Nhonga → onboarding de vendedor
 ```
 
 ### Why the cart is grouped by vendor from the first screen
@@ -222,7 +222,7 @@ Portuguese slugs, because these URLs are shared on WhatsApp and being readable m
 | `/vendor/**` | Client, role-gated | Vendor console |
 | `/admin/**` | Client, role-gated, IP-restricted | Admin console |
 
-Mobile deep links mirror these paths exactly (`nhoga://produto/{slug}-{id}` plus universal/app
+Mobile deep links mirror these paths exactly (`nhonga://produto/{slug}-{id}` plus universal/app
 links), so a shared web link opens the app when installed.
 
 ## 8. Core entity map

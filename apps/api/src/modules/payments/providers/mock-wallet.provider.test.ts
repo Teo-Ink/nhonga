@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { cents } from '@nhoga/shared';
+import { cents } from '@nhonga/shared';
 import {
   MockWalletProvider,
   signPayload,
@@ -61,7 +61,7 @@ function requestFor(msisdn: string, amountCents = 320000): PaymentRequest {
     amountCents: cents(amountCents),
     currency: 'MZN',
     payerMsisdn: msisdn,
-    reference: 'NHOGA-4821',
+    reference: 'NHONGA-4821',
     description: 'Pedido #4821',
   };
 }
@@ -140,7 +140,7 @@ describe('callback delivery', () => {
     if (!parsed.valid) return;
     expect(parsed.status).toBe('paid');
     expect(parsed.amountCents).toBe(320000);
-    expect(parsed.ourReference).toBe('NHOGA-4821');
+    expect(parsed.ourReference).toBe('NHONGA-4821');
   });
 
   it('reports insufficient balance as a failure with a usable code', async () => {
@@ -227,7 +227,7 @@ describe('parseCallback() — the defences', () => {
     const original = JSON.stringify({
       eventId: 'e1',
       providerTxId: 't1',
-      reference: 'NHOGA-4821',
+      reference: 'NHONGA-4821',
       status: 'paid',
       code: null,
       amountCents: 100,
@@ -237,7 +237,7 @@ describe('parseCallback() — the defences', () => {
     const tampered = original.replace('"amountCents":100', '"amountCents":1');
 
     const parsed = harness.provider.parseCallback({
-      headers: { 'x-nhoga-signature': signature },
+      headers: { 'x-nhonga-signature': signature },
       rawBody: tampered,
     });
     expect(parsed.valid).toBe(false);
@@ -265,7 +265,7 @@ describe('parseCallback() — the defences', () => {
   it('refuses malformed JSON', () => {
     const body = 'not json at all';
     const parsed = harness.provider.parseCallback({
-      headers: { 'x-nhoga-signature': signPayload(body, SECRET) },
+      headers: { 'x-nhonga-signature': signPayload(body, SECRET) },
       rawBody: body,
     });
     expect(parsed.valid).toBe(false);
@@ -276,7 +276,7 @@ describe('parseCallback() — the defences', () => {
   it('refuses a well-signed payload missing required fields', () => {
     const body = JSON.stringify({ eventId: 'e1' });
     const parsed = harness.provider.parseCallback({
-      headers: { 'x-nhoga-signature': signPayload(body, SECRET) },
+      headers: { 'x-nhonga-signature': signPayload(body, SECRET) },
       rawBody: body,
     });
     expect(parsed.valid).toBe(false);
@@ -294,18 +294,18 @@ describe('parseCallback() — the defences', () => {
       occurredAt: new Date().toISOString(),
     });
     const parsed = harness.provider.parseCallback({
-      headers: { 'x-nhoga-signature': signPayload(body, SECRET) },
+      headers: { 'x-nhonga-signature': signPayload(body, SECRET) },
       rawBody: body,
     });
     expect(parsed.valid).toBe(false);
   });
 
   it('never throws on hostile input', () => {
-    const inputs = ['', '{}', '[]', 'null', '{"eventId":123}', ' '];
+    const inputs = ['', '{}', '[]', 'null', '{"eventId":123}', '\u0000'];
     for (const rawBody of inputs) {
       expect(() =>
         harness.provider.parseCallback({
-          headers: { 'x-nhoga-signature': signPayload(rawBody, SECRET) },
+          headers: { 'x-nhonga-signature': signPayload(rawBody, SECRET) },
           rawBody,
         }),
       ).not.toThrow();

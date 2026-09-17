@@ -11,7 +11,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { and, eq, inArray, lt, lte, sql } from 'drizzle-orm';
-import { applyPaymentEvent, type PaymentStatus } from '@nhoga/shared';
+import { applyPaymentEvent, type PaymentStatus } from '@nhonga/shared';
 import {
   orderItem,
   payment as paymentTable,

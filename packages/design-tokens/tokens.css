@@ -1,5 +1,5 @@
 /*
- * Nhoga — Design Tokens (CSS custom properties)
+ * Nhonga — Design Tokens (CSS custom properties)
  * Generated from tokens.json. In Phase 3 this file becomes a build artifact
  * (Style Dictionary); for Phase 1 review it is hand-written and authoritative.
  *
@@ -8,7 +8,7 @@
  */
 
 :root {
-  /* ── Primitive: primary (Verde Nhoga) ───────────────────────────── */
+  /* ── Primitive: primary (Verde Nhonga) ───────────────────────────── */
   --color-primary-50:  #EFF9F4;
   --color-primary-100: #D6F0E4;
   --color-primary-200: #A8DEC7;

@@ -14,7 +14,7 @@
  */
 
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { cents, type Cents } from '@nhoga/shared';
+import { cents, type Cents } from '@nhonga/shared';
 import type {
   CallbackParseResult,
   DisbursementRequest,
@@ -179,7 +179,7 @@ export class MockWalletProvider implements PaymentProvider {
   }
 
   parseCallback(raw: RawCallback): CallbackParseResult {
-    const signature = raw.headers['x-nhoga-signature'];
+    const signature = raw.headers['x-nhonga-signature'];
     if (signature === undefined || !this.verifySignature(raw.rawBody, signature)) {
       return { valid: false, reason: 'bad_signature' };
     }
@@ -359,7 +359,7 @@ export class MockWalletProvider implements PaymentProvider {
       providerId: this.id,
       headers: {
         'content-type': 'application/json',
-        'x-nhoga-signature': signPayload(body, secret),
+        'x-nhonga-signature': signPayload(body, secret),
       },
       rawBody: body,
     });

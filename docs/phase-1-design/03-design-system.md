@@ -33,7 +33,7 @@ legible on a cracked 720p screen in daylight rather than typography that is clev
 
 Full palette in `tokens.json`. The decisions that matter:
 
-**Verde Nhoga (`primary-700` `#0A5539`)** anchors brand and primary actions, at 9.1:1 on white.
+**Verde Nhonga (`primary-700` `#0A5539`)** anchors brand and primary actions, at 9.1:1 on white.
 Chosen over the category-standard orange-red both to differentiate and because green reads as safe
 in a product whose main job is feeling safe (D-07).
 

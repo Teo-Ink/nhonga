@@ -267,7 +267,7 @@ What you will have received from Vodacom or Movitel, and exactly what to do with
 Never into a file, never into an environment variable in a task definition, never into git.
 
 ```
-nhoga/prod/payments/mpesa
+nhonga/prod/payments/mpesa
   ├── api_key
   ├── public_key                 (M-Pesa encrypts the session key with this)
   ├── service_provider_code      (your issued short code)
@@ -275,7 +275,7 @@ nhoga/prod/payments/mpesa
   ├── security_credential
   └── callback_shared_secret
 
-nhoga/prod/payments/emola
+nhonga/prod/payments/emola
   ├── client_id
   ├── client_secret
   ├── merchant_id
@@ -301,8 +301,8 @@ provider passes the same tests the mock passes, the integration is correct.
 ### Step 3 — Register callback URLs with the provider
 
 ```
-https://webhooks.nhoga.co.mz/callbacks/mpesa
-https://webhooks.nhoga.co.mz/callbacks/emola
+https://webhooks.nhonga.co.mz/callbacks/mpesa
+https://webhooks.nhonga.co.mz/callbacks/emola
 ```
 
 Give them the NAT gateway's Elastic IP for allowlisting — several providers require a fixed source

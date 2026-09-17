@@ -20,7 +20,7 @@ import {
   applySubOrderEvent,
   type PaymentEventType,
   type PaymentStatus,
-} from '@nhoga/shared';
+} from '@nhonga/shared';
 import {
   payment as paymentTable,
   paymentEvent as paymentEventTable,

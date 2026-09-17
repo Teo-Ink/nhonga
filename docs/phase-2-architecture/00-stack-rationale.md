@@ -150,7 +150,7 @@ long tail of entry-level devices still in daily use here.
 ## 7. Monorepo layout
 
 ```
-nhoga-marketplace/
+nhonga-marketplace/
 ├── apps/
 │   ├── api/                 NestJS modular monolith
 │   ├── webhooks/            Minimal payment-callback receiver (separate deploy)

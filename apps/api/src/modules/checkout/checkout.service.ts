@@ -31,7 +31,7 @@ import {
   normaliseMzMsisdn,
   type CartLine,
   type Cents,
-} from '@nhoga/shared';
+} from '@nhonga/shared';
 import { product, productVariant, stockLedger } from '../../db/schema/catalog.js';
 import {
   order as orderTable,
@@ -314,7 +314,7 @@ export class CheckoutService {
     const orderId = randomUUID();
     const orderNumber = await this.deps.orderNumbers.next();
     const paymentId = randomUUID();
-    const providerRef = `NHOGA-${orderNumber}`;
+    const providerRef = `NHONGA-${orderNumber}`;
     const now = new Date();
     const expiresAt = new Date(now.getTime() + this.deps.approvalTimeoutSeconds * 1000);
 

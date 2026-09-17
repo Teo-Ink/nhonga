@@ -13,7 +13,7 @@ prototype.
 
 ```
 ┌─────────────────────────────────────┐
-│ Nhoga      [🔍 Pesquisar…]    PT ▾ │ ← header 56px, sticky
+│ Nhonga      [🔍 Pesquisar…]    PT ▾ │ ← header 56px, sticky
 ├─────────────────────────────────────┤
 │ ⚠ Pagamento pendente · Pedido #4821 │ ← only when a payment is AWAITING_USER
 │   Toque para ver          [Ver →]   │

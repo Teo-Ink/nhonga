@@ -5,7 +5,7 @@
  * unit (D-11). There is deliberately **no `order.status` column**: a two-vendor order has no
  * single truthful status, and a stored rollup would drift out of sync with its children, showing
  * up as a lie in the buyer's timeline. The rollup is computed by `rollupOrderStatus()` in
- * `@nhoga/shared`.
+ * `@nhonga/shared`.
  */
 
 import { sql } from 'drizzle-orm';
@@ -88,7 +88,7 @@ export const order = pgTable(
     check('order_grand_total_check', sql`${table.grandTotalCents} >= 0`),
     /**
      * Belt and braces: an order whose arithmetic does not add up cannot be written, whatever a
-     * bug in the pricing code does. `computeCartTotals()` in @nhoga/shared enforces the same
+     * bug in the pricing code does. `computeCartTotals()` in @nhonga/shared enforces the same
      * identity, and its test asserts it — this is the layer that holds when that one is wrong.
      */
     check(

@@ -5,7 +5,7 @@
     "outDir": "dist",
     "types": ["node"]
   },
-  // Consume @nhoga/shared through its emitted declarations, not its source. Vitest still aliases
+  // Consume @nhonga/shared through its emitted declarations, not its source. Vitest still aliases
   // to source (see vitest.config.ts) so tests run without a build step.
   "references": [{ "path": "../../packages/shared" }],
   "include": ["src/**/*.ts"],

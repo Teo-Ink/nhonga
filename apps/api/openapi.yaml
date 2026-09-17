@@ -1,7 +1,7 @@
 openapi: 3.1.0
 
 info:
-  title: Nhoga Marketplace API
+  title: Nhonga Marketplace API
   version: 1.0.0-phase2
   description: |
     Multi-vendor marketplace API for Mozambique.
@@ -21,12 +21,12 @@ info:
     - Every mutating request that creates or moves money **must** carry `Idempotency-Key`.
     - Errors follow RFC 9457 (problem+json).
   contact:
-    name: Nhoga Engineering
+    name: Nhonga Engineering
 
 servers:
-  - url: https://api.nhoga.co.mz/v1
+  - url: https://api.nhonga.co.mz/v1
     description: Production
-  - url: https://api.staging.nhoga.co.mz/v1
+  - url: https://api.staging.nhonga.co.mz/v1
     description: Staging
   - url: http://localhost:3000/v1
     description: Local (mock payment providers)
@@ -666,7 +666,7 @@ components:
       description: RFC 9457. `detail` is already localised per `Accept-Language` and is safe to show to the user.
       required: [type, title, status]
       properties:
-        type:     { type: string, examples: ['https://nhoga.co.mz/problems/insufficient-stock'] }
+        type:     { type: string, examples: ['https://nhonga.co.mz/problems/insufficient-stock'] }
         title:    { type: string, examples: ['Stock insuficiente'] }
         status:   { type: integer, examples: [409] }
         detail:   { type: string, examples: ['Restam apenas 2 unidades de "Auscultadores Bluetooth".'] }

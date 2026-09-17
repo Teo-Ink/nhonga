@@ -1,7 +1,7 @@
 /**
  * Money.
  *
- * Every monetary value in Nhoga is an integer number of **centavos**. There are no
+ * Every monetary value in Nhonga is an integer number of **centavos**. There are no
  * floating-point amounts anywhere in the system, and there is exactly one formatter.
  *
  * Why a branded `number` rather than `bigint`: JSON cannot carry `bigint`, and every amount

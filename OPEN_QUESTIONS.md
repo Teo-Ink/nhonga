@@ -21,24 +21,24 @@ Status key: 🔴 blocking next phase · 🟡 needed before launch · 🟢 nice t
 ## Blocked on you (decisions)
 
 ### OQ-1 🟢 — Product name
-**Name chosen by the founder on 2026-09-16: "Nhoga"**, replacing the earlier working codename
-"Banca". Applied across the codebase, docs, package scope (`@nhoga/*`), design tokens, the
-deep-link scheme (`nhoga://`), container names, the database name, and the placeholder domains.
+**Name chosen by the founder on 2026-09-16: "Nhonga"**, replacing the earlier working codename
+"Banca". Applied across the codebase, docs, package scope (`@nhonga/*`), design tokens, the
+deep-link scheme (`nhonga://`), container names, the database name, and the placeholder domains.
 The name is still stored as a token + i18n string and is never hardcoded, so a further change
 stays cheap until Phase 5.
 
-**No meaning is asserted for "Nhoga" anywhere in the documentation.** The previous codename was
+**No meaning is asserted for "Nhonga" anywhere in the documentation.** The previous codename was
 documented as Portuguese for a market stall; that gloss belonged to "Banca" and has been removed
-rather than transferred. If "Nhoga" carries a meaning you want stated publicly, tell me and I
+rather than transferred. If "Nhonga" carries a meaning you want stated publicly, tell me and I
 will add it.
 
 **Still open, and more urgent now the name is committed to code:**
 
 | Check | Why it matters | Status |
 |---|---|---|
-| Trademark search for "Nhoga" in Mozambique, and in any market you plan to enter | A registered conflict forces a rebrand after launch, which is far more expensive than now | Not started |
+| Trademark search for "Nhonga" in Mozambique, and in any market you plan to enter | A registered conflict forces a rebrand after launch, which is far more expensive than now | Not started |
 | Business-register / company-name search | Another entity may already trade under it | Not started |
-| Domain registration: `nhoga.co.mz` | Already referenced in `openapi.yaml` server URLs and webhook callback URLs as a placeholder — **not checked, not registered** | Not started |
+| Domain registration: `nhonga.co.mz` | Already referenced in `openapi.yaml` server URLs and webhook callback URLs as a placeholder — **not checked, not registered** | Not started |
 | App-store name availability (Apple, Google) | See OQ-14; store names are first-come | Not started |
 
 **Blocks:** nothing technically. Cost of change rises sharply after Phase 5 store submission.

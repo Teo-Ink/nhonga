@@ -9,7 +9,7 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env['DATABASE_URL'] ?? 'postgresql://nhoga:nhoga@localhost:5432/nhoga',
+    url: process.env['DATABASE_URL'] ?? 'postgresql://nhonga:nhonga@localhost:5432/nhonga',
   },
   // Forward-only, one migration per pull request, reviewed as code.
   // Migrations are the one part of a release that is not reversible, so they get more scrutiny

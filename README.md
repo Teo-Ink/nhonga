@@ -1,6 +1,6 @@
-# Nhoga — Multi-Vendor Marketplace for Mozambique
+# Nhonga — Multi-Vendor Marketplace for Mozambique
 
-> **Name:** "Nhoga" — chosen 2026-09-16, replacing the earlier codename "Banca". Not yet
+> **Name:** "Nhonga" — chosen 2026-09-16, replacing the earlier codename "Banca". Not yet
 > trademark-cleared — see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) OQ-1. Still cheap to change:
 > it lives in one tokens file and the i18n string bundles.
 
@@ -76,8 +76,8 @@ Run on 2026-09-16, after installing Node 24.19.0 and pnpm 9.12.0.
 | Check | Result |
 |---|---|
 | `pnpm test` (turbo, both packages) | ✅ **171/171 passing** — 145 shared, 26 payments |
-| `tsc --noEmit` on `@nhoga/shared` | ✅ clean |
-| `tsc --noEmit` on `@nhoga/api` | ✅ clean (13 source files) |
+| `tsc --noEmit` on `@nhonga/shared` | ✅ clean |
+| `tsc --noEmit` on `@nhonga/api` | ✅ clean (13 source files) |
 | `drizzle-kit generate` | ✅ 28 tables, 81 CHECK constraints, 700 lines of SQL |
 | `redocly lint openapi.yaml` | ✅ valid — 0 errors, 37 style warnings |
 | Checkout / processor / reconciliation behaviour | ❌ **untested** — needs a live Postgres (no Docker) |
@@ -85,9 +85,9 @@ Run on 2026-09-16, after installing Node 24.19.0 and pnpm 9.12.0.
 Three real defects were found and fixed by running this, all in configuration and contract rather
 than in logic:
 
-1. **`apps/api/tsconfig.json`** aliased `@nhoga/shared` to its source, pulling it into the API's
+1. **`apps/api/tsconfig.json`** aliased `@nhonga/shared` to its source, pulling it into the API's
    own compilation and violating `rootDir`. Replaced with a TypeScript project reference, and
-   `@nhoga/shared` now publishes from `dist`.
+   `@nhonga/shared` now publishes from `dist`.
 2. **`drizzle.config.ts`** pointed at TypeScript source; drizzle-kit's loader cannot resolve the
    `.js` specifiers Node ESM requires. Now generates from compiled output, so migrations come
    from exactly the code that ships.
@@ -116,7 +116,7 @@ account, NUIT/VAT registration, and courier partnerships. All are tracked in `OP
 ## Repository layout (as it will exist by Phase 3)
 
 ```
-nhoga-marketplace/
+nhonga-marketplace/
 ├── docs/                    # Design, architecture, and runbook documentation
 ├── packages/
 │   ├── design-tokens/       # ✅ Exists now — shared source of truth for web + mobile

@@ -51,7 +51,7 @@ handset may already show success.
 sequenceDiagram
     participant U as Comprador
     participant A as App / Web
-    participant API as Nhoga API
+    participant API as Nhonga API
     participant P as Provedor (M-Pesa / e-Mola)
     participant H as Telemóvel (USSD)
 
@@ -212,7 +212,7 @@ platform-wide payout batch cannot selectively withhold one contested item.
 
 ```mermaid
 flowchart TD
-    A[Vender na Nhoga] --> B[Telefone + OTP]
+    A[Vender na Nhonga] --> B[Telefone + OTP]
     B --> C[Tipo: individual ou empresa]
     C --> D1[Individual: BI/passaporte + selfie + NUIT]
     C --> D2[Empresa: NUIT + Alvará + BI do representante]

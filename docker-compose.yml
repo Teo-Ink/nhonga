@@ -4,11 +4,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: nhoga-postgres
+    container_name: nhonga-postgres
     environment:
-      POSTGRES_USER: nhoga
-      POSTGRES_PASSWORD: nhoga
-      POSTGRES_DB: nhoga
+      POSTGRES_USER: nhonga
+      POSTGRES_PASSWORD: nhonga
+      POSTGRES_DB: nhonga
       # Portuguese collation, so ORDER BY sorts accented names correctly
       POSTGRES_INITDB_ARGS: '--locale-provider=icu --icu-locale=pt-MZ --encoding=UTF8'
     ports:
@@ -16,14 +16,14 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U nhoga -d nhoga']
+      test: ['CMD-SHELL', 'pg_isready -U nhonga -d nhonga']
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: nhoga-redis
+    container_name: nhonga-redis
     command: redis-server --appendonly yes
     ports:
       - '6379:6379'
@@ -37,7 +37,7 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:2.17.1
-    container_name: nhoga-opensearch
+    container_name: nhonga-opensearch
     environment:
       discovery.type: single-node
       # Local only. Production runs with security enabled inside a private subnet.

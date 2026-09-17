@@ -38,7 +38,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@nhoga/shared':
+      '@nhonga/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       drizzle-orm:
