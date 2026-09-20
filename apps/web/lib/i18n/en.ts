@@ -146,6 +146,17 @@ export const en: Dictionary = {
     required: 'Please fill in the required fields.',
     empty: 'Add products to your cart before checking out.',
   },
+  seller: {
+    verified: 'Verified shop',
+    products: 'Products',
+    n_products: '{n} products',
+    one_product: '1 product',
+    no_products: 'This shop has no products available yet.',
+    visit_store: 'Visit shop',
+    rating: 'rating',
+    not_found_title: 'Shop not found',
+    not_found_body: "We couldn't find this shop. It may have changed name or is no longer active.",
+  },
   confirmation: {
     title: 'Order confirmed',
     demo_note: 'Demo — no payment was processed and nothing will be shipped.',

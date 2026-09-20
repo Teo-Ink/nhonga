@@ -15,7 +15,9 @@ const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t){d
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getDictionary();
   return (
-    <html lang={locale}>
+    // The no-flash script sets data-theme on <html> before hydration, so the
+    // server markup intentionally differs from the client here.
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

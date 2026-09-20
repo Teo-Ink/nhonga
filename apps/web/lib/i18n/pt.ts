@@ -147,6 +147,17 @@ export const pt = {
     required: 'Preencha os campos obrigatórios assinalados.',
     empty: 'Adicione produtos ao carrinho antes de finalizar a compra.',
   },
+  seller: {
+    verified: 'Loja verificada',
+    products: 'Produtos',
+    n_products: '{n} produtos',
+    one_product: '1 produto',
+    no_products: 'Esta loja ainda não tem produtos disponíveis.',
+    visit_store: 'Ver loja',
+    rating: 'avaliação',
+    not_found_title: 'Loja não encontrada',
+    not_found_body: 'Não encontrámos esta loja. Pode ter mudado de nome ou já não estar activa.',
+  },
   confirmation: {
     title: 'Encomenda confirmada',
     demo_note: 'Demonstração — nenhum pagamento foi processado e nada será enviado.',

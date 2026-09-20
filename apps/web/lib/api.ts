@@ -74,6 +74,18 @@ export async function getProduct(slug: string): Promise<ProductDetail> {
   return get<ProductDetail>(`/catalog/products/${encodeURIComponent(slug)}`);
 }
 
+export async function listProductsByVendor(
+  slug: string,
+): Promise<{ items: ProductListItem[]; vendor: VendorSummary | null }> {
+  const data = await get<{ items: ProductListItem[] }>(
+    `/catalog/products?vendor=${encodeURIComponent(slug)}&limit=48`,
+  );
+  // The vendor header is derived from the products themselves — there is no
+  // vendor-detail endpoint yet, so we only show what the catalogue actually
+  // knows (name, verified, rating). No invented bio or location.
+  return { items: data.items, vendor: data.items[0]?.vendor ?? null };
+}
+
 export interface SearchParams {
   q?: string;
   category?: string;

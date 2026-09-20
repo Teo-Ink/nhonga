@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             ) : null}
           </div>
 
-          <div className="seller">
+          <a className="seller" href={`/loja/${product.vendor.slug}`}>
             <span className="seller__avatar" aria-hidden>
               {product.vendor.displayName.charAt(0)}
             </span>
@@ -83,7 +83,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <Rating value={product.ratingAvg} count={product.ratingCount} />
               </span>
             </span>
-          </div>
+            <span className="seller__cta" aria-hidden="true">
+              {t.seller.visit_store} →
+            </span>
+          </a>
 
           <BuyBox product={product} t={t} />
 
