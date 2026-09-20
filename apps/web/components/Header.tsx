@@ -19,7 +19,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           Nhonga<b>.</b>
         </a>
 
-        <form className="hdr__search" role="search" action="/" method="get">
+        <form className="hdr__search" role="search" action="/pesquisa" method="get">
           <IconSearch width={18} height={18} aria-hidden />
           <label htmlFor="q" className="sr-only" style={{ position: 'absolute', left: -9999 }}>
             {t.common.search_placeholder}

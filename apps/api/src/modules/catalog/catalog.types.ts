@@ -55,7 +55,21 @@ export interface ProductDetail extends ProductListItem {
   readonly options: readonly OptionGroup[];
 }
 
+export type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest';
+
+export interface ProductFilters {
+  readonly q?: string;
+  readonly categorySlug?: string;
+  readonly vendorSlug?: string;
+  readonly minPriceCents?: number;
+  readonly maxPriceCents?: number;
+  readonly inStockOnly?: boolean;
+  readonly sort?: SortKey;
+  readonly limit?: number;
+}
+
 export interface ProductListResponse {
+  readonly total: number;
   readonly items: readonly ProductListItem[];
   readonly page: { readonly cursor: string | null; readonly hasMore: boolean };
 }

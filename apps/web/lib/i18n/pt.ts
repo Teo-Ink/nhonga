@@ -50,6 +50,23 @@ export const pt = {
     demo_notice: 'Ambiente de teste · o botão de compra está desativado até o checkout ser ligado.',
     not_found: 'Produto não encontrado.',
   },
+  search: {
+    results_for: 'Resultados para',
+    n_results: '{n} resultados',
+    no_results_title: 'Sem resultados',
+    no_results_body:
+      'Não encontrámos nada para esta pesquisa. Tente outras palavras ou remova filtros.',
+    clear_filters: 'Limpar filtros',
+    sort: 'Ordenar',
+    sort_relevance: 'Mais relevantes',
+    sort_price_asc: 'Preço: mais baixo',
+    sort_price_desc: 'Preço: mais alto',
+    sort_rating: 'Melhor avaliados',
+    sort_newest: 'Mais recentes',
+    in_stock_only: 'Só em stock',
+    filters: 'Filtros',
+    category: 'Categoria',
+  },
   categories: {
     moda: 'Moda',
     electronica: 'Eletrónica',

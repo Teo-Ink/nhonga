@@ -74,4 +74,29 @@ export async function getProduct(slug: string): Promise<ProductDetail> {
   return get<ProductDetail>(`/catalog/products/${encodeURIComponent(slug)}`);
 }
 
+export interface SearchParams {
+  q?: string;
+  category?: string;
+  sort?: string;
+  inStock?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+export async function searchProducts(
+  p: SearchParams,
+): Promise<{ items: ProductListItem[]; total: number }> {
+  const qs = new URLSearchParams();
+  if (p.q) qs.set('q', p.q);
+  if (p.category) qs.set('category', p.category);
+  if (p.sort) qs.set('sort', p.sort);
+  if (p.inStock) qs.set('inStock', 'true');
+  if (p.minPrice !== undefined) qs.set('minPrice', String(p.minPrice));
+  if (p.maxPrice !== undefined) qs.set('maxPrice', String(p.maxPrice));
+  const data = await get<{ items: ProductListItem[]; total: number }>(
+    `/catalog/products?${qs.toString()}`,
+  );
+  return { items: data.items, total: data.total };
+}
+
 export { API_URL };
