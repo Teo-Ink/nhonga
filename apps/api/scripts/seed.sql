@@ -5,15 +5,36 @@ BEGIN;
 
 TRUNCATE product_image, product_variant, product, category, vendor, district RESTART IDENTITY CASCADE;
 
--- Provinces (districts reference these)
+-- Provinces — all 11 (names match the storefront checkout province list so a
+-- guest order resolves to a real province/district for the address FK).
 INSERT INTO province (code, name) VALUES
   ('MPM', 'Maputo Cidade'),
-  ('MPT', 'Maputo Provincia');
+  ('MPT', 'Maputo Província'),
+  ('GAZ', 'Gaza'),
+  ('INH', 'Inhambane'),
+  ('SOF', 'Sofala'),
+  ('MAN', 'Manica'),
+  ('TET', 'Tete'),
+  ('ZAM', 'Zambézia'),
+  ('NAM', 'Nampula'),
+  ('CDL', 'Cabo Delgado'),
+  ('NIA', 'Niassa')
+ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name;
 
--- Districts
+-- Districts — at least one active district per province (the capital), so any
+-- province the buyer picks has a valid district row for the delivery address.
 INSERT INTO district (id, province_code, name) VALUES
   ('d0000000-0000-4000-8000-000000000001', 'MPM', 'Maputo Cidade'),
-  ('d0000000-0000-4000-8000-000000000002', 'MPT', 'Matola');
+  ('d0000000-0000-4000-8000-000000000002', 'MPT', 'Matola'),
+  ('d0000000-0000-4000-8000-000000000003', 'GAZ', 'Xai-Xai'),
+  ('d0000000-0000-4000-8000-000000000004', 'INH', 'Inhambane'),
+  ('d0000000-0000-4000-8000-000000000005', 'SOF', 'Beira'),
+  ('d0000000-0000-4000-8000-000000000006', 'MAN', 'Chimoio'),
+  ('d0000000-0000-4000-8000-000000000007', 'TET', 'Tete'),
+  ('d0000000-0000-4000-8000-000000000008', 'ZAM', 'Quelimane'),
+  ('d0000000-0000-4000-8000-000000000009', 'NAM', 'Nampula'),
+  ('d0000000-0000-4000-8000-00000000000a', 'CDL', 'Pemba'),
+  ('d0000000-0000-4000-8000-00000000000b', 'NIA', 'Lichinga');
 
 -- Vendors (status 'active' shows as verified in the storefront)
 INSERT INTO vendor (id, slug, legal_name, display_name, vendor_type, district_id, status, rating_avg, rating_count) VALUES

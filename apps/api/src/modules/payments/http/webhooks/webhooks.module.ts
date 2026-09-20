@@ -1,6 +1,7 @@
 import { Module, type Provider } from '@nestjs/common';
 import { PaymentEventProcessor } from '../../payment-event.processor.js';
 import { PaymentProvidersService } from '../../providers.service.js';
+import { MockCallbackWiring } from '../../mock-callback.wiring.js';
 import { DB } from '../../../../db/database.module.js';
 import type { Db } from '../../../../db/types.js';
 import { WebhookIngestionService } from './webhook-ingestion.service.js';
@@ -15,8 +16,18 @@ const processorProvider: Provider = {
     new PaymentEventProcessor({ db, now: () => new Date() }),
 };
 
+// PaymentProvidersService and WebhookIngestionService are exported so the
+// checkout module reuses the SAME instances: the mock wallet provider keeps its
+// initiated transactions in memory, so the object that requests a payment must be
+// the one that later parses the callback.
 @Module({
   controllers: [WebhooksController],
-  providers: [PaymentProvidersService, processorProvider, WebhookIngestionService],
+  providers: [
+    PaymentProvidersService,
+    processorProvider,
+    WebhookIngestionService,
+    MockCallbackWiring,
+  ],
+  exports: [PaymentProvidersService, WebhookIngestionService],
 })
 export class WebhooksModule {}
