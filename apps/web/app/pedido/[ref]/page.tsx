@@ -82,6 +82,27 @@ export default function ConfirmationPage({ params }: { params: Promise<{ ref: st
       </div>
 
       <div className="card">
+        <h2 className="card__title">{t.tracking_title}</h2>
+        <ol className="timeline">
+          {[
+            t.status_placed,
+            t.status_payment,
+            t.status_preparing,
+            t.status_shipped,
+            t.status_delivered,
+          ].map((label, i) => (
+            <li key={label} className={`timeline__step ${i === 0 ? 'is-done' : 'is-pending'}`}>
+              <span className="timeline__dot" aria-hidden="true">
+                {i === 0 ? <IconCheck width={12} height={12} /> : null}
+              </span>
+              <span className="timeline__label">{label}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="sumnote">{t.status_note}</p>
+      </div>
+
+      <div className="card">
         <h2 className="card__title">{t.items_title}</h2>
         <ul className="sumlist">
           {order.items.map((it) => (

@@ -287,6 +287,13 @@ export const pt = {
     continue: 'Continuar a comprar',
     not_found_title: 'Encomenda não encontrada',
     not_found_body: 'Não encontrámos esta referência. Pode já ter começado uma nova compra.',
+    tracking_title: 'Estado da encomenda',
+    status_placed: 'Encomenda recebida',
+    status_payment: 'Pagamento confirmado',
+    status_preparing: 'Em preparação',
+    status_shipped: 'Enviada',
+    status_delivered: 'Entregue',
+    status_note: 'Estados de demonstração — a encomenda não avança porque o pagamento não é real.',
   },
 };
 

@@ -283,5 +283,12 @@ export const en: Dictionary = {
     continue: 'Continue shopping',
     not_found_title: 'Order not found',
     not_found_body: "We couldn't find this reference. You may have started a new purchase.",
+    tracking_title: 'Order status',
+    status_placed: 'Order received',
+    status_payment: 'Payment confirmed',
+    status_preparing: 'Preparing',
+    status_shipped: 'Shipped',
+    status_delivered: 'Delivered',
+    status_note: 'Demo statuses — the order does not advance because the payment is not real.',
   },
 };

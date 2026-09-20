@@ -1763,3 +1763,59 @@ a.seller:focus-visible {
   font-family: var(--font-mono, ui-monospace, monospace);
   color: var(--text-muted);
 }
+
+/* ── Order status timeline ────────────────────────────────────── */
+.timeline {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+.timeline__step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
+}
+.timeline__step:last-child {
+  padding-bottom: 0;
+}
+/* Connector line between dots */
+.timeline__step::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+.timeline__step:last-child::before {
+  display: none;
+}
+.timeline__dot {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: #fff;
+}
+.timeline__step.is-done .timeline__dot {
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+}
+.timeline__step.is-done .timeline__label {
+  font-weight: var(--weight-semibold);
+}
+.timeline__step.is-pending .timeline__label {
+  color: var(--text-muted);
+}
+.timeline__label {
+  font-size: var(--text-sm);
+}
