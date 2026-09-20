@@ -76,6 +76,26 @@ export const pt = {
     telemoveis: 'Telemóveis',
     all: 'Ver todas',
   },
+  cart: {
+    title: 'Carrinho',
+    items_one: '1 artigo',
+    items_many: '{n} artigos',
+    empty_title: 'O seu carrinho está vazio',
+    empty_body: 'Ainda não adicionou nada. Explore os produtos e encontre algo especial.',
+    empty_cta: 'Ver produtos',
+    sold_by: 'Vendido por',
+    qty: 'Quantidade',
+    remove: 'Remover',
+    qty_decrease: 'Diminuir quantidade',
+    qty_increase: 'Aumentar quantidade',
+    subtotal: 'Subtotal',
+    delivery: 'Entrega',
+    delivery_note: 'Calculada na finalização',
+    total: 'Total',
+    checkout: 'Finalizar compra',
+    added: 'Adicionado',
+    choose_options: 'Escolha as opções',
+  },
 };
 
 export type Dictionary = typeof pt;

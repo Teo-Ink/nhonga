@@ -4,6 +4,7 @@ import { Price, Rating, VerifiedBadge } from '../../../components/ui';
 import { IconChevronLeft, IconTruck } from '../../../components/icons';
 import { getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
+import { BuyBox } from '../../../components/cart/BuyBox';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,22 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </span>
           </div>
 
-          {product.options.map((group) => (
-            <div key={group.name} className="optgroup">
-              <span className="optgroup__label">{group.name}</span>
-              <div className="chips" role="group" aria-label={group.name}>
-                {group.values.map((v) => (
-                  <span
-                    key={v.value}
-                    className={v.available ? 'chip' : 'chip chip--off'}
-                    aria-disabled={!v.available}
-                  >
-                    {v.value}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+          <BuyBox product={product} t={t} />
 
           <div className="deliv">
             <IconTruck width={18} height={18} />
@@ -132,15 +118,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {t.pdp.demo_notice}
           </p>
         </div>
-      </div>
-
-      <div className="buybar">
-        <button className="btn btn--ghost" disabled style={{ flex: 1 }}>
-          {t.pdp.add_to_cart}
-        </button>
-        <button className="btn btn--cta" disabled style={{ flex: 1 }}>
-          {t.pdp.buy_now} · {t.pdp.coming_soon}
-        </button>
       </div>
     </article>
   );

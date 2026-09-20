@@ -1,5 +1,6 @@
 import { IconCart, IconSearch, IconUser } from './icons';
 import { LocaleControls } from './LocaleControls';
+import { CartCount } from './cart/CartCount';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 const CATEGORY_KEYS = [
@@ -34,9 +35,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           </a>
           <a className="iconbtn" href="/carrinho" aria-label={t.common.cart}>
             <IconCart />
-            <span className="badge-count" aria-hidden>
-              0
-            </span>
+            <CartCount />
           </a>
         </div>
       </div>
