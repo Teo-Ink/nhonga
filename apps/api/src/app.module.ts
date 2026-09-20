@@ -4,6 +4,7 @@ import { validateEnv } from './config/config.schema.js';
 import { DatabaseModule } from './db/database.module.js';
 import { WebhooksModule } from './modules/payments/http/webhooks/webhooks.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 import { CheckoutModule } from './modules/checkout/checkout.module.js';
 import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
 import { HealthController } from './health/health.controller.js';
@@ -18,6 +19,7 @@ import { HealthController } from './health/health.controller.js';
     }),
     DatabaseModule,
     CatalogModule,
+    AuthModule,
     PaymentsHttpModule,
     WebhooksModule,
     CheckoutModule,
