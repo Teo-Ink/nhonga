@@ -241,6 +241,47 @@ export const pt = {
     switch_to_signin: 'Já tem conta? Entrar',
     back_to_account: 'Voltar à conta',
   },
+  help: {
+    title: 'Ajuda e suporte',
+    subtitle: 'Encontre respostas rápidas ou abra uma reclamação sobre uma encomenda.',
+    demo_note:
+      'Demonstração: o suporte ainda não está ligado. As reclamações não são enviadas nem guardadas.',
+    faq_title: 'Perguntas frequentes',
+    q_payment: 'Como funciona o pagamento?',
+    a_payment:
+      'Pode pagar por M-Pesa, e-Mola ou mKesh, ou escolher dinheiro na entrega. O pagamento por carteira móvel é confirmado no seu telemóvel.',
+    q_delivery: 'Como é feita a entrega?',
+    a_delivery:
+      'A entrega é combinada com o vendedor. Pode escolher entrega ao domicílio ou levantar com o vendedor. Indique sempre um ponto de referência para facilitar.',
+    q_protection: 'O que é a proteção ao comprador?',
+    a_protection:
+      'Se pagar através da plataforma e não receber o produto, tem direito a reembolso. Guarde sempre a referência da encomenda.',
+    q_returns: 'Como devolver ou trocar um produto?',
+    a_returns:
+      'Contacte o vendedor pela área de mensagens até 48 horas após a entrega. Se não chegarem a acordo, abra uma reclamação aqui.',
+    q_sell: 'Como começo a vender?',
+    a_sell:
+      'Crie a sua loja em «Vender no Nhonga», adicione os seus produtos e comece a receber encomendas.',
+    q_privacy: 'Os meus dados estão seguros?',
+    a_privacy:
+      'Os seus dados de pagamento nunca são guardados no dispositivo nem partilhados com outros compradores. O número de telemóvel só é usado para a entrega e o pagamento.',
+    dispute_title: 'Abrir uma reclamação',
+    dispute_subtitle: 'Descreva o problema com a sua encomenda. Cada caso é analisado.',
+    d_order: 'Referência da encomenda',
+    d_order_ph: 'Ex.: NH-260920-4110',
+    d_reason: 'Motivo',
+    d_reason_ph: 'Escolha o motivo',
+    d_r_not_received: 'Não recebi a encomenda',
+    d_r_different: 'Produto diferente do anunciado',
+    d_r_damaged: 'Produto danificado',
+    d_r_other: 'Outro',
+    d_description: 'Descrição',
+    d_description_ph: 'Explique o que aconteceu…',
+    d_submit: 'Enviar reclamação',
+    d_not_wired: 'A reclamação não é enviada nesta demonstração.',
+    d_required: 'Indique o motivo e uma descrição.',
+    d_sent: 'Recebemos a sua reclamação (demonstração).',
+  },
   messages: {
     title: 'Mensagens',
     demo_note: 'Demonstração: as mensagens ainda não estão ligadas. Nada é enviado nem guardado.',

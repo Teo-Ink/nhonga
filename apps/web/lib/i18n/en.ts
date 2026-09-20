@@ -237,6 +237,46 @@ export const en: Dictionary = {
     switch_to_signin: 'Already have an account? Sign in',
     back_to_account: 'Back to account',
   },
+  help: {
+    title: 'Help and support',
+    subtitle: 'Find quick answers or open a dispute about an order.',
+    demo_note: 'Demo: support is not wired yet. Disputes are not sent or stored.',
+    faq_title: 'Frequently asked questions',
+    q_payment: 'How does payment work?',
+    a_payment:
+      'You can pay by M-Pesa, e-Mola or mKesh, or choose cash on delivery. Mobile-wallet payments are confirmed on your phone.',
+    q_delivery: 'How is delivery done?',
+    a_delivery:
+      'Delivery is arranged with the seller. You can choose home delivery or pick-up. Always add a reference point to make it easier.',
+    q_protection: 'What is buyer protection?',
+    a_protection:
+      'If you pay through the platform and do not receive the product, you are entitled to a refund. Always keep your order reference.',
+    q_returns: 'How do I return or exchange a product?',
+    a_returns:
+      'Contact the seller via messages within 48 hours of delivery. If you cannot agree, open a dispute here.',
+    q_sell: 'How do I start selling?',
+    a_sell:
+      'Create your shop under "Sell on Nhonga", add your products and start receiving orders.',
+    q_privacy: 'Is my data safe?',
+    a_privacy:
+      'Your payment details are never stored on your device or shared with other buyers. Your phone number is used only for delivery and payment.',
+    dispute_title: 'Open a dispute',
+    dispute_subtitle: 'Describe the problem with your order. Every case is reviewed.',
+    d_order: 'Order reference',
+    d_order_ph: 'e.g. NH-260920-4110',
+    d_reason: 'Reason',
+    d_reason_ph: 'Choose the reason',
+    d_r_not_received: 'I did not receive the order',
+    d_r_different: 'Product different from the listing',
+    d_r_damaged: 'Product damaged',
+    d_r_other: 'Other',
+    d_description: 'Description',
+    d_description_ph: 'Explain what happened…',
+    d_submit: 'Submit dispute',
+    d_not_wired: 'The dispute is not sent in this demo.',
+    d_required: 'Choose a reason and add a description.',
+    d_sent: 'We received your dispute (demo).',
+  },
   messages: {
     title: 'Messages',
     demo_note: 'Demo: messaging is not wired yet. Nothing is sent or stored.',
