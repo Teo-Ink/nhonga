@@ -144,7 +144,9 @@ export const pt = {
     summary_total_note:
       'A entrega ao domicílio é combinada com o vendedor e não está incluída neste total.',
     place_order: 'Confirmar encomenda',
+    placing: 'A processar…',
     required: 'Preencha os campos obrigatórios assinalados.',
+    error_generic: 'Não foi possível concluir a compra. Tente novamente.',
     empty: 'Adicione produtos ao carrinho antes de finalizar a compra.',
   },
   style: {

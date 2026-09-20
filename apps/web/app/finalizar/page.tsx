@@ -5,12 +5,7 @@ import Image from 'next/image';
 import { cents, formatMZN, isValidMzMsisdn, suggestedWalletFor } from '@nhonga/shared';
 import { useCart } from '../../components/cart/CartProvider';
 import { pt } from '../../lib/i18n/pt';
-import {
-  makeOrderRef,
-  saveDemoOrder,
-  type DeliveryMethod,
-  type PaymentMethod,
-} from '../../lib/order-types';
+import type { DeliveryMethod, PaymentMethod } from '../../lib/order-types';
 
 // Real Mozambican provinces — geographic facts, not demo business data.
 const PROVINCES = [
@@ -54,6 +49,8 @@ export default function CheckoutPage() {
   const [payment, setPayment] = useState<PaymentMethod>('mpesa');
   const [payPhone, setPayPhone] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const isMobileMoney = payment !== 'cod';
   const effectivePayPhone = payPhone.trim() === '' ? phone : payPhone;
@@ -82,39 +79,51 @@ export default function CheckoutPage() {
     );
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
+    setSubmitError('');
     if (!formValid) {
       // Move focus to the first error for keyboard/screen-reader users.
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
       return;
     }
-    const ref = makeOrderRef();
-    saveDemoOrder({
-      ref,
-      placedAt: new Date().toISOString(),
-      name: name.trim(),
-      phone,
-      email: email.trim(),
-      deliveryMethod: method,
-      address:
-        method === 'home'
-          ? {
-              province,
-              district: district.trim(),
-              bairro: bairro.trim(),
-              landmark: landmark.trim(),
-              house: house.trim(),
-            }
-          : null,
-      paymentMethod: payment,
-      payWallet: isMobileMoney ? (WALLET_LABEL[payment] ?? null) : null,
-      items,
-      itemsTotalCents: totalCents,
-    });
-    clear();
-    router.push(`/pedido/${ref}`);
+    setPlacing(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          phone,
+          email: email.trim(),
+          deliveryMethod: method,
+          province,
+          district: district.trim(),
+          bairro: bairro.trim(),
+          landmark: landmark.trim(),
+          house: house.trim(),
+          paymentMethod: payment,
+          payPhone: isMobileMoney ? effectivePayPhone : '',
+          items: items.map((i) => ({ variantId: i.variantId, quantity: i.qty })),
+          expectedTotalCents: totalCents,
+          idempotencyKey: crypto.randomUUID(),
+        }),
+      });
+      if (!res.ok) {
+        // The API returns a localised message for 409s (stock/total); show it.
+        const data = (await res.json().catch(() => ({}))) as { detail?: string; message?: string };
+        setSubmitError(data.detail ?? data.message ?? t.error_generic);
+        setPlacing(false);
+        return;
+      }
+      const data = (await res.json()) as { orderNumber: string };
+      clear();
+      router.push(`/pedido/${data.orderNumber}`);
+    } catch {
+      setSubmitError(t.error_generic);
+      setPlacing(false);
+    }
   }
 
   const err = (id: string, show: boolean, msg: string) =>
@@ -401,9 +410,14 @@ export default function CheckoutPage() {
               {t.required}
             </p>
           ) : null}
+          {submitError ? (
+            <p className="field__error" role="alert">
+              {submitError}
+            </p>
+          ) : null}
 
-          <button type="submit" className="btn btn--cta">
-            {t.place_order}
+          <button type="submit" className="btn btn--cta" disabled={placing} aria-busy={placing}>
+            {placing ? t.placing : t.place_order}
           </button>
         </aside>
       </div>

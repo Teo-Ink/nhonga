@@ -1,30 +1,23 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { pt } from '../../lib/i18n/pt';
-import { readDemoOrder } from '../../lib/order-types';
 import { IconUser, IconCart, IconShield, IconChevronLeft } from '../../components/icons';
 
 // Guest-friendly account. Accounts are not wired yet, so this is honest about
-// its guest state: it offers sign-in (to /entrar), and lets a guest look up the
-// demo order they placed on this device by its reference. No fabricated
-// "signed-in" state, no invented saved data.
+// its guest state: it offers sign-in (to /entrar) and lets anyone look up an
+// order by its reference — the order page fetches it from the API and shows a
+// not-found state if the reference is unknown. No fabricated "signed-in" state.
 export default function AccountPage() {
   const t = pt.account;
+  const router = useRouter();
   const [ref, setRef] = useState('');
-  const [result, setResult] = useState<'idle' | 'found' | 'missing'>('idle');
-  const [foundRef, setFoundRef] = useState('');
 
   function lookup(e: React.FormEvent) {
     e.preventDefault();
     const clean = ref.trim().toUpperCase();
     if (clean === '') return;
-    const order = readDemoOrder(clean);
-    if (order) {
-      setFoundRef(clean);
-      setResult('found');
-    } else {
-      setResult('missing');
-    }
+    router.push(`/pedido/${encodeURIComponent(clean)}`);
   }
 
   return (
@@ -56,30 +49,14 @@ export default function AccountPage() {
             <input
               className="field__input"
               value={ref}
-              onChange={(e) => {
-                setRef(e.target.value);
-                setResult('idle');
-              }}
+              onChange={(e) => setRef(e.target.value)}
               placeholder={t.track_ph}
               inputMode="text"
-              aria-describedby="track-msg"
             />
           </label>
           <button type="submit" className="btn btn--primary">
             {t.track_cta}
           </button>
-
-          <div id="track-msg" aria-live="polite">
-            {result === 'found' ? (
-              <a className="account__found" href={`/pedido/${foundRef}`}>
-                {t.track_view}: <strong>{foundRef}</strong> →
-              </a>
-            ) : result === 'missing' ? (
-              <p className="field__error" role="alert">
-                {t.track_not_found}
-              </p>
-            ) : null}
-          </div>
         </form>
       </div>
 

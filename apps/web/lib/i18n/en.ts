@@ -143,7 +143,9 @@ export const en: Dictionary = {
     summary_total_note:
       'Home delivery is arranged with the seller and is not included in this total.',
     place_order: 'Place order',
+    placing: 'Processing…',
     required: 'Please fill in the required fields.',
+    error_generic: 'We could not complete the purchase. Please try again.',
     empty: 'Add products to your cart before checking out.',
   },
   style: {
