@@ -1334,3 +1334,123 @@ a.seller:focus-visible {
     align-items: start;
   }
 }
+
+/* ── Auth ─────────────────────────────────────────────────────── */
+.auth {
+  min-height: 60vh;
+  display: grid;
+  place-items: start center;
+  padding: var(--space-5) 0 var(--space-6);
+}
+.auth__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.auth__title {
+  font-size: var(--text-2xl, 26px);
+  font-weight: var(--weight-bold);
+  text-align: center;
+}
+.auth__subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: calc(-1 * var(--space-2));
+}
+.auth__social {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+/* Brand buttons keep their mandated colours in both themes. */
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 46px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  border: 1px solid transparent;
+}
+.social-btn--google {
+  background: #fff;
+  color: #1f1f1f;
+  border-color: #747775;
+}
+.social-btn--google:hover {
+  background: #f7f8f8;
+}
+.social-btn--facebook {
+  background: #1877f2;
+  color: #fff;
+}
+.social-btn--facebook:hover {
+  background: #166fe0;
+}
+.auth__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.auth__divider::before,
+.auth__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth__submit {
+  width: 100%;
+  margin-top: var(--space-1);
+}
+.auth__method-toggle {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  background: transparent;
+  border: 0;
+  color: var(--brand);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  min-height: var(--tap-min);
+}
+.auth__method-toggle:hover {
+  text-decoration: underline;
+}
+.auth__notice {
+  background: color-mix(in srgb, var(--rating) 14%, var(--surface));
+  border: 1px solid var(--rating);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+.auth__terms {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.5;
+}
+.auth__switch {
+  background: transparent;
+  border: 0;
+  color: var(--brand);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  min-height: var(--tap-min);
+}
+.auth__switch:hover {
+  text-decoration: underline;
+}
