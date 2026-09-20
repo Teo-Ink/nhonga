@@ -146,6 +146,28 @@ export const en: Dictionary = {
     required: 'Please fill in the required fields.',
     empty: 'Add products to your cart before checking out.',
   },
+  style: {
+    title: 'Design system',
+    subtitle:
+      "Nhonga's visual foundation: colours, typography and components. Toggle light/dark in the header — everything adapts.",
+    contrast_note:
+      'Every text-on-background pairing meets WCAG 2.1 AA (≥ 4.5:1, or ≥ 3:1 for large text).',
+    colors: 'Colours',
+    primary: 'Primary green',
+    accent: 'Terracotta — action',
+    amber: 'Amber — ratings',
+    neutral: 'Warm neutrals',
+    semantic: 'Semantic roles',
+    typography: 'Typography',
+    buttons: 'Buttons',
+    badges: 'Badges',
+    forms: 'Form fields',
+    cards: 'Product card',
+    states: 'States',
+    state_skeleton: 'Loading',
+    state_empty: 'Empty',
+    sample_input: 'Field label',
+  },
   sell: {
     dash_title: 'Seller dashboard',
     demo_note:

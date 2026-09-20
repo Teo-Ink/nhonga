@@ -147,6 +147,28 @@ export const pt = {
     required: 'Preencha os campos obrigatórios assinalados.',
     empty: 'Adicione produtos ao carrinho antes de finalizar a compra.',
   },
+  style: {
+    title: 'Sistema de design',
+    subtitle:
+      'A base visual do Nhonga: cores, tipografia e componentes. Alterne entre claro e escuro no cabeçalho — tudo se adapta.',
+    contrast_note:
+      'Todas as combinações de texto sobre fundo cumprem WCAG 2.1 AA (≥ 4.5:1, ou ≥ 3:1 para texto grande).',
+    colors: 'Cores',
+    primary: 'Verde primário',
+    accent: 'Terracota — ação',
+    amber: 'Âmbar — avaliações',
+    neutral: 'Neutros quentes',
+    semantic: 'Papéis semânticos',
+    typography: 'Tipografia',
+    buttons: 'Botões',
+    badges: 'Distintivos',
+    forms: 'Campos de formulário',
+    cards: 'Cartão de produto',
+    states: 'Estados',
+    state_skeleton: 'A carregar',
+    state_empty: 'Vazio',
+    sample_input: 'Etiqueta do campo',
+  },
   sell: {
     dash_title: 'Painel do vendedor',
     demo_note:
