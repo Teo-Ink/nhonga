@@ -1,6 +1,7 @@
-import { IconCart, IconSearch, IconUser } from './icons';
+import { IconCart, IconSearch } from './icons';
 import { LocaleControls } from './LocaleControls';
 import { CartCount } from './cart/CartCount';
+import { AccountLink } from './auth/AccountLink';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 const CATEGORY_KEYS = [
@@ -30,9 +31,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
 
         <div className="hdr__actions">
           <LocaleControls locale={locale} />
-          <a className="iconbtn" href="/conta" aria-label={t.common.account}>
-            <IconUser />
-          </a>
+          <AccountLink label={t.common.account} />
           <a className="iconbtn" href="/carrinho" aria-label={t.common.cart}>
             <IconCart />
             <CartCount />

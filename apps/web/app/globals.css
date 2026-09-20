@@ -1997,3 +1997,82 @@ a.seller:focus-visible {
 .reviewlist strong {
   text-align: right;
 }
+
+/* ── Auth/account additions ───────────────────────────────────── */
+.iconbtn--account {
+  width: auto;
+  padding: 0 var(--space-2);
+  gap: 6px;
+}
+.iconbtn__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth__code {
+  font-size: var(--text-2xl, 24px);
+  letter-spacing: 0.4em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.account__hello {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+}
+.orderlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+.orderlist li {
+  border-bottom: 1px solid var(--border);
+}
+.orderlist li:last-child {
+  border-bottom: 0;
+}
+.orderrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+  min-height: var(--tap-min);
+}
+.orderrow:hover {
+  background: var(--surface-sunken);
+}
+.orderrow__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.orderrow__ref {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+.orderrow__meta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.orderrow__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+}
+.orderrow__total {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--brand);
+}

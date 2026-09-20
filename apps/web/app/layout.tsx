@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Header } from '../components/Header';
 import { CartProvider } from '../components/cart/CartProvider';
+import { SessionProvider } from '../components/auth/SessionProvider';
 import { getDictionary } from '../lib/i18n/index';
 import './globals.css';
 
@@ -25,12 +26,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <a href="#main" className="skip-link">
           {locale === 'pt' ? 'Saltar para o conteúdo' : 'Skip to content'}
         </a>
-        <CartProvider>
-          <Header t={t} locale={locale} />
-          <main id="main" className="container">
-            {children}
-          </main>
-        </CartProvider>
+        <SessionProvider>
+          <CartProvider>
+            <Header t={t} locale={locale} />
+            <main id="main" className="container">
+              {children}
+            </main>
+          </CartProvider>
+        </SessionProvider>
       </body>
     </html>
   );
