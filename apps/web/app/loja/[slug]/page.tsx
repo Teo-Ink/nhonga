@@ -60,6 +60,12 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
             <span className="store__count">{countLabel}</span>
           </div>
         </div>
+        <a
+          className="btn btn--ghost store__contact"
+          href={`/mensagens/novo?loja=${encodeURIComponent(slug)}&nome=${encodeURIComponent(name)}`}
+        >
+          {t.messages.contact_seller}
+        </a>
       </header>
 
       <section className="section" aria-label={t.seller.products}>
