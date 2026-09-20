@@ -147,6 +147,25 @@ export const pt = {
     required: 'Preencha os campos obrigatórios assinalados.',
     empty: 'Adicione produtos ao carrinho antes de finalizar a compra.',
   },
+  account: {
+    title: 'A minha conta',
+    demo_note:
+      'Demonstração: as contas ainda não estão ligadas. As encomendas ficam guardadas apenas neste dispositivo e navegador.',
+    guest_title: 'Ainda não iniciou sessão',
+    guest_body:
+      'Entre ou crie uma conta para guardar moradas, seguir encomendas e comprar mais depressa.',
+    sign_in: 'Entrar ou criar conta',
+    track_title: 'Seguir uma encomenda',
+    track_body: 'Introduza a referência que recebeu ao finalizar a compra.',
+    track_ph: 'Ex.: NH-260920-4110',
+    track_cta: 'Procurar',
+    track_view: 'Ver encomenda',
+    track_not_found: 'Não encontrámos nenhuma encomenda com essa referência neste dispositivo.',
+    links_title: 'Atalhos',
+    link_cart: 'O meu carrinho',
+    link_help: 'Ajuda e suporte',
+    link_sell: 'Vender no Nhonga',
+  },
   seller: {
     verified: 'Loja verificada',
     products: 'Produtos',

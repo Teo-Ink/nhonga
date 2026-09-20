@@ -1237,3 +1237,100 @@ a.seller:focus-visible {
 .store__count {
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Account ──────────────────────────────────────────────────── */
+.account {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-4) 0 var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.account__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+.account__signin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.account__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-500) 16%, var(--surface));
+  color: var(--brand);
+}
+.account__muted {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.account__signin .btn,
+.account form .btn {
+  margin-top: var(--space-2);
+  align-self: flex-start;
+  min-width: 200px;
+}
+.account__found {
+  display: inline-block;
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--brand);
+  text-decoration: none;
+}
+.account__found:hover {
+  text-decoration: underline;
+}
+.account__links {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+.account__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  min-height: var(--tap-min);
+}
+.account__link:last-child {
+  border-bottom: 0;
+}
+.account__link:hover {
+  background: var(--surface-sunken);
+}
+.account__link > span {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+.account__link-arrow {
+  transform: rotate(180deg);
+  color: var(--text-muted);
+}
+.account__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring) inset;
+}
+
+@media (min-width: 720px) {
+  .account__grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}

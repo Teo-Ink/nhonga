@@ -146,6 +146,25 @@ export const en: Dictionary = {
     required: 'Please fill in the required fields.',
     empty: 'Add products to your cart before checking out.',
   },
+  account: {
+    title: 'My account',
+    demo_note:
+      'Demo: accounts are not wired yet. Orders are stored only on this device and browser.',
+    guest_title: 'You are not signed in',
+    guest_body:
+      'Sign in or create an account to save addresses, track orders and check out faster.',
+    sign_in: 'Sign in or register',
+    track_title: 'Track an order',
+    track_body: 'Enter the reference you received at checkout.',
+    track_ph: 'e.g. NH-260920-4110',
+    track_cta: 'Search',
+    track_view: 'View order',
+    track_not_found: 'We found no order with that reference on this device.',
+    links_title: 'Shortcuts',
+    link_cart: 'My cart',
+    link_help: 'Help and support',
+    link_sell: 'Sell on Nhonga',
+  },
   seller: {
     verified: 'Verified shop',
     products: 'Products',
