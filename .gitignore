@@ -60,3 +60,7 @@ desktop.ini
 *.log
 npm-debug.log*
 pnpm-debug.log*
+apps/web/.next/
+apps/web/next-env.d.ts
+apps/web/.next/
+apps/web/*.tsbuildinfo

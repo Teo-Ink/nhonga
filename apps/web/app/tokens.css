@@ -1,0 +1,246 @@
+/*
+ * Nhonga — Design Tokens (CSS custom properties)
+ * Generated from tokens.json. In Phase 3 this file becomes a build artifact
+ * (Style Dictionary); for Phase 1 review it is hand-written and authoritative.
+ *
+ * Dark mode follows the system preference but can be forced with
+ * data-theme="light" | "dark" on :root.
+ */
+
+:root {
+  /* ── Primitive: primary (Verde Nhonga) ───────────────────────────── */
+  --color-primary-50:  #EFF9F4;
+  --color-primary-100: #D6F0E4;
+  --color-primary-200: #A8DEC7;
+  --color-primary-300: #6AC4A1;
+  --color-primary-400: #2BA378;
+  --color-primary-500: #12855C;
+  --color-primary-600: #0E6B4A;
+  --color-primary-700: #0A5539;
+  --color-primary-800: #08422F;
+  --color-primary-900: #052E22;
+
+  /* ── Primitive: accent (Âmbar — commerce only) ──────────────────── */
+  --color-accent-50:  #FFF7EB;
+  --color-accent-100: #FFECCC;
+  --color-accent-200: #FFD894;
+  --color-accent-300: #FFB340;
+  --color-accent-400: #F59300;
+  --color-accent-500: #E07A00;
+  --color-accent-600: #B35F00;
+  --color-accent-700: #8A4B00;
+
+  /* ── Primitive: neutral (warm) ──────────────────────────────────── */
+  --color-neutral-0:   #FFFFFF;
+  --color-neutral-25:  #FCFCFB;
+  --color-neutral-50:  #F7F7F5;
+  --color-neutral-100: #EFEFEC;
+  --color-neutral-200: #E2E2DE;
+  --color-neutral-300: #C9C9C3;
+  --color-neutral-400: #A3A39C;
+  --color-neutral-500: #6E6E66;
+  --color-neutral-600: #57574F;
+  --color-neutral-700: #3F3F39;
+  --color-neutral-800: #2A2A26;
+  --color-neutral-900: #1A1A17;
+
+  /* ── Primitive: status ──────────────────────────────────────────── */
+  --color-success-50:  #ECFDF3;
+  --color-success-100: #D1FADF;
+  --color-success-500: #12B76A;
+  --color-success-600: #039855;
+  --color-success-700: #027A48;
+  --color-warning-50:  #FFFAEB;
+  --color-warning-100: #FEF0C7;
+  --color-warning-500: #F79009;
+  --color-warning-600: #DC6803;
+  --color-warning-700: #B54708;
+  --color-danger-50:   #FEF3F2;
+  --color-danger-100:  #FEE4E2;
+  --color-danger-500:  #D92D20;
+  --color-danger-600:  #B42318;
+  --color-danger-700:  #912018;
+  --color-info-50:     #EFF8FF;
+  --color-info-100:    #D1E9FF;
+  --color-info-500:    #2E90FA;
+  --color-info-600:    #175CD3;
+  --color-info-700:    #1849A9;
+
+  /* ── Semantic (light) ───────────────────────────────────────────── */
+  --bg-page:            var(--color-neutral-50);
+  --bg-surface:         var(--color-neutral-0);
+  --bg-surface-sunken:  var(--color-neutral-100);
+  --bg-inverse:         var(--color-neutral-900);
+  --text-primary:       var(--color-neutral-900);
+  --text-secondary:     var(--color-neutral-600);
+  --text-tertiary:      var(--color-neutral-500);
+  --text-on-brand:      var(--color-neutral-0);
+  --text-price:         var(--color-neutral-900);
+  --text-price-sale:    var(--color-danger-600);
+  --text-link:          var(--color-primary-700);
+  --border-subtle:      var(--color-neutral-200);
+  --border-default:     var(--color-neutral-300);
+  --border-strong:      var(--color-neutral-400);
+  --border-focus:       var(--color-primary-500);
+  --action-primary:       var(--color-primary-700);
+  --action-primary-hover: var(--color-primary-800);
+  --action-buy:           var(--color-accent-600);
+  --action-buy-hover:     var(--color-accent-700);
+  --action-destructive:   var(--color-danger-600);
+  --rating-star:        var(--color-accent-400);
+  --badge-verified:     var(--color-primary-600);
+  --badge-sale:         var(--color-accent-600);
+  --skeleton-base:      var(--color-neutral-100);
+  --skeleton-shine:     var(--color-neutral-200);
+  --offline-banner:     var(--color-neutral-800);
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-sans: 'Inter var', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', monospace;
+
+  --text-2xs: 11px;
+  --text-xs:  12px;
+  --text-sm:  14px;
+  --text-md:  16px;
+  --text-lg:  18px;
+  --text-xl:  20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+
+  /* ── Spacing (4px grid) ─────────────────────────────────────────── */
+  --space-0: 0px;   --space-1: 2px;   --space-2: 4px;   --space-3: 8px;
+  --space-4: 12px;  --space-5: 16px;  --space-6: 20px;  --space-7: 24px;
+  --space-8: 32px;  --space-9: 40px;  --space-10: 48px; --space-11: 64px;
+  --gutter: 16px;
+
+  /* ── Radii ──────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Elevation (overlays only — D-08) ───────────────────────────── */
+  --elevation-sticky:  0 -1px 0 0 rgba(26,26,23,0.08), 0 -4px 12px -4px rgba(26,26,23,0.06);
+  --elevation-overlay: 0 8px 24px -6px rgba(26,26,23,0.16), 0 2px 6px -2px rgba(26,26,23,0.08);
+  --elevation-modal:   0 24px 48px -12px rgba(26,26,23,0.24);
+
+  /* ── Sizing ─────────────────────────────────────────────────────── */
+  --touch-min: 48px;
+  --touch-spacing: 8px;
+  --icon-sm: 16px; --icon-md: 20px; --icon-lg: 24px;
+  --control-sm: 36px; --control-md: 48px; --control-lg: 56px;
+  --bottom-nav-h: 60px;
+  --header-h: 56px;
+
+  /* ── Motion ─────────────────────────────────────────────────────── */
+  --duration-instant: 80ms;
+  --duration-fast:    120ms;
+  --duration-normal:  200ms;
+  --duration-slow:    300ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter:    cubic-bezier(0, 0, 0, 1);
+  --ease-exit:     cubic-bezier(0.3, 0, 1, 1);
+
+  /* ── Layers ─────────────────────────────────────────────────────── */
+  --z-sticky: 100;
+  --z-bottom-nav: 200;
+  --z-header: 300;
+  --z-overlay: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-offline-banner: 700;
+}
+
+@media (min-width: 768px) { :root { --gutter: 24px; --header-h: 72px; } }
+@media (min-width: 1280px) { :root { --gutter: 32px; } }
+
+/* ── Dark mode ────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page:           #121210;
+    --bg-surface:        #1C1C19;
+    --bg-surface-sunken: #0C0C0B;
+    --bg-inverse:        var(--color-neutral-50);
+    --text-primary:      #F2F2EF;
+    --text-secondary:    #B8B8B0;
+    --text-tertiary:     #93938B;
+    --text-price:        #F2F2EF;
+    --text-price-sale:   #FF7A6B;
+    --text-link:         var(--color-primary-300);
+    --border-subtle:     #2E2E29;
+    --border-default:    #3F3F39;
+    --border-strong:     #57574F;
+    --border-focus:      var(--color-primary-400);
+    --action-primary:       var(--color-primary-500);
+    --action-primary-hover: var(--color-primary-400);
+    --action-buy:           var(--color-accent-400);
+    --action-buy-hover:     var(--color-accent-300);
+    --action-destructive:   var(--color-danger-500);
+    --rating-star:       var(--color-accent-300);
+    --badge-verified:    var(--color-primary-400);
+    --badge-sale:        var(--color-accent-400);
+    --skeleton-base:     #262622;
+    --skeleton-shine:    #33332E;
+    --offline-banner:    #33332E;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-page:           #121210;
+  --bg-surface:        #1C1C19;
+  --bg-surface-sunken: #0C0C0B;
+  --bg-inverse:        var(--color-neutral-50);
+  --text-primary:      #F2F2EF;
+  --text-secondary:    #B8B8B0;
+  --text-tertiary:     #93938B;
+  --text-price:        #F2F2EF;
+  --text-price-sale:   #FF7A6B;
+  --text-link:         var(--color-primary-300);
+  --border-subtle:     #2E2E29;
+  --border-default:    #3F3F39;
+  --border-strong:     #57574F;
+  --border-focus:      var(--color-primary-400);
+  --action-primary:       var(--color-primary-500);
+  --action-primary-hover: var(--color-primary-400);
+  --action-buy:           var(--color-accent-400);
+  --action-buy-hover:     var(--color-accent-300);
+  --action-destructive:   var(--color-danger-500);
+  --rating-star:       var(--color-accent-300);
+  --badge-verified:    var(--color-primary-400);
+  --badge-sale:        var(--color-accent-400);
+  --skeleton-base:     #262622;
+  --skeleton-shine:    #33332E;
+  --offline-banner:    #33332E;
+}
+
+/* ── Global accessibility baseline ────────────────────────────────── */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

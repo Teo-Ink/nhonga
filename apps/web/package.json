@@ -1,0 +1,25 @@
+{
+  "name": "@nhonga/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nhonga storefront — Next.js App Router. Phase 3d read-only catalogue slice.",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nhonga/shared": "workspace:*",
+    "next": "15.5.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.11",
+    "@types/react": "19.1.1",
+    "@types/react-dom": "19.1.1",
+    "typescript": "5.6.3"
+  }
+}

@@ -12,7 +12,8 @@
     "lint": "eslint src",
     "db:generate": "tsc -p tsconfig.json && drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f scripts/seed.sql"
   },
   "dependencies": {
     "@nestjs/common": "^12",
