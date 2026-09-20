@@ -98,7 +98,7 @@ export default function AccountPage() {
           <span>{t.link_help}</span>
           <IconChevronLeft width={16} height={16} className="account__link-arrow" />
         </a>
-        <a className="account__link" href="/vender">
+        <a className="account__link" href="/vender/comecar">
           <IconUser width={20} height={20} />
           <span>{t.link_sell}</span>
           <IconChevronLeft width={16} height={16} className="account__link-arrow" />
