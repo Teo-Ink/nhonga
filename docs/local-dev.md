@@ -43,6 +43,7 @@ Open <http://localhost:3001>.
 ## What works, and what does not
 
 **Works, against real Postgres data:**
+
 - `GET /health/live`, `GET /health/ready` (pings the DB)
 - `GET /catalog/products` and `GET /catalog/products/:idOrSlug`
 - The storefront: product grid and product detail, Portuguese-first, mobile-first,
@@ -52,8 +53,9 @@ Open <http://localhost:3001>.
 **Deliberately not wired** — these need services that are not built (auth, KMS
 field cipher, shipping quotes, the job queue), so they are absent rather than
 faked:
+
 - cart, checkout, orders
-- the "Adicionar ao carrinho" button (disabled, labelled *em breve*)
+- the "Adicionar ao carrinho" button (disabled, labelled _em breve_)
 
 **Payments** run in `mock` mode. `GET /payments/:id` and the webhook receiver
 work; no real M-Pesa/e-Mola until the merchant agreements land (OQ-7/OQ-8).
