@@ -31,6 +31,12 @@ Two terminals (the web reads the API server-side):
 ```bash
 # Terminal 1 — API on :3000
 export DATABASE_URL="postgresql://nhonga:nhonga@127.0.0.1:5432/nhonga"
+# Checkout encrypts the payer phone before storing it, so a 32-byte key is
+# required (base64 or hex). Generate a dev one:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+export FIELD_ENCRYPTION_KEY="<32-byte base64 or hex>"
+# Optional: shorten the mock wallet approval delay to watch settlement quickly.
+export MOCK_PAYMENT_MIN_DELAY_MS=2500 MOCK_PAYMENT_MAX_DELAY_MS=5000
 PAYMENTS_MODE=mock MOCK_CALLBACK_SECRET=dev-only-not-a-real-secret \
   pnpm --filter @nhonga/api start   # or: node apps/api/dist/main.js
 
