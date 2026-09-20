@@ -1,0 +1,63 @@
+import type { Dictionary } from './pt';
+
+// English — secondary locale, same shape as pt.ts.
+export const en: Dictionary = {
+  common: {
+    brand: 'Nhonga',
+    search_placeholder: 'Search products, brands and shops…',
+    all_categories: 'All categories',
+    account: 'Account',
+    cart: 'Cart',
+    menu: 'Menu',
+    loading: 'Loading…',
+    retry: 'Try again',
+    back: 'Back',
+    see_all: 'See all',
+    verified: 'Verified',
+    from: 'From',
+    sold_out: 'Sold out',
+    off: 'off',
+    language: 'Language',
+    theme: 'Theme',
+  },
+  trust: {
+    buyer_protection: 'Buyer protection',
+    buyer_protection_desc: 'Refund if your item never arrives',
+    secure_payment: 'Secure payment',
+    secure_payment_desc: 'M-Pesa, e-Mola, mKesh and more',
+    delivery: 'Nationwide delivery',
+    delivery_desc: 'Track your order in real time',
+  },
+  home: {
+    categories: 'Categories',
+    deals: 'Deals',
+    featured: 'Featured',
+    demo_notice:
+      'Test environment · demo catalogue. Checkout, accounts and payments are not wired yet.',
+    empty: 'No products published yet.',
+    load_error: 'Could not load products.',
+  },
+  pdp: {
+    add_to_cart: 'Add to cart',
+    coming_soon: 'coming soon',
+    buy_now: 'Buy now',
+    sold_by: 'Sold by',
+    delivery_estimate: 'Estimated delivery',
+    delivery_tbc: 'Calculated at checkout',
+    in_stock: 'In stock',
+    only_left: 'Only {n} left',
+    ratings: '{n} reviews',
+    specifications: 'Specifications',
+    demo_notice: 'Test environment · the buy button is disabled until checkout is wired.',
+    not_found: 'Product not found.',
+  },
+  categories: {
+    moda: 'Fashion',
+    electronica: 'Electronics',
+    casa: 'Home & Kitchen',
+    alimentacao: 'Food',
+    beleza: 'Beauty',
+    telemoveis: 'Phones',
+    all: 'See all',
+  },
+};

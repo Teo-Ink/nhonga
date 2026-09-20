@@ -1,246 +1,193 @@
-/*
- * Nhonga — Design Tokens (CSS custom properties)
- * Generated from tokens.json. In Phase 3 this file becomes a build artifact
- * (Style Dictionary); for Phase 1 review it is hand-written and authoritative.
+/**
+ * Nhonga design tokens — "Cozy Modern".
+ * One source of truth. Components consume these; no hardcoded hex or spacing.
  *
- * Dark mode follows the system preference but can be forced with
- * data-theme="light" | "dark" on :root.
+ * Palette rationale: deep green primary (brand continuity, credibility),
+ * terracotta accent for calls to action (Mozambican clay/earth warmth), warm
+ * cream neutrals instead of stark white, amber ratings. Every text/background
+ * pair below meets WCAG 2.1 AA — ratios verified, see design-system docs.
+ *
+ * Dark mode is a deliberate token set, not an inversion. It activates via
+ * [data-theme="dark"] or prefers-color-scheme when no explicit theme is set.
  */
 
 :root {
-  /* ── Primitive: primary (Verde Nhonga) ───────────────────────────── */
-  --color-primary-50:  #EFF9F4;
-  --color-primary-100: #D6F0E4;
-  --color-primary-200: #A8DEC7;
-  --color-primary-300: #6AC4A1;
-  --color-primary-400: #2BA378;
-  --color-primary-500: #12855C;
-  --color-primary-600: #0E6B4A;
-  --color-primary-700: #0A5539;
-  --color-primary-800: #08422F;
-  --color-primary-900: #052E22;
+  /* ── Brand: deep green ─────────────────────────────────────── */
+  --color-primary-50: #e8f2ec;
+  --color-primary-100: #cbe3d5;
+  --color-primary-200: #9fcbb0;
+  --color-primary-300: #66ac86;
+  --color-primary-400: #2f9a68;
+  --color-primary-500: #12855c; /* base */
+  --color-primary-600: #0e6b4a;
+  --color-primary-700: #0b5138; /* header / brand ink — white on it 9.3:1 */
+  --color-primary-800: #083c2a;
+  --color-primary-900: #05281c;
 
-  /* ── Primitive: accent (Âmbar — commerce only) ──────────────────── */
-  --color-accent-50:  #FFF7EB;
-  --color-accent-100: #FFECCC;
-  --color-accent-200: #FFD894;
-  --color-accent-300: #FFB340;
-  --color-accent-400: #F59300;
-  --color-accent-500: #E07A00;
-  --color-accent-600: #B35F00;
-  --color-accent-700: #8A4B00;
+  /* ── Accent: terracotta (CTAs) ─────────────────────────────── */
+  --color-accent-50: #fbede7;
+  --color-accent-100: #f6d6c8;
+  --color-accent-200: #edb49c;
+  --color-accent-300: #e18f6d;
+  --color-accent-400: #d5734a;
+  --color-accent-500: #c0562e; /* CTA surface — white text 4.55:1 (large/bold) */
+  --color-accent-600: #b0491f; /* CTA text-safe / hover — white text 5.5:1 */
+  --color-accent-700: #8f3a18;
 
-  /* ── Primitive: neutral (warm) ──────────────────────────────────── */
-  --color-neutral-0:   #FFFFFF;
-  --color-neutral-25:  #FCFCFB;
-  --color-neutral-50:  #F7F7F5;
-  --color-neutral-100: #EFEFEC;
-  --color-neutral-200: #E2E2DE;
-  --color-neutral-300: #C9C9C3;
-  --color-neutral-400: #A3A39C;
-  --color-neutral-500: #6E6E66;
-  --color-neutral-600: #57574F;
-  --color-neutral-700: #3F3F39;
-  --color-neutral-800: #2A2A26;
-  --color-neutral-900: #1A1A17;
+  /* ── Amber: ratings / highlights ───────────────────────────── */
+  --color-amber-400: #f0b429;
+  --color-amber-500: #e8a317;
+  --color-amber-700: #8a6d00; /* rating text on cream 4.6:1 */
 
-  /* ── Primitive: status ──────────────────────────────────────────── */
-  --color-success-50:  #ECFDF3;
-  --color-success-100: #D1FADF;
-  --color-success-500: #12B76A;
-  --color-success-600: #039855;
-  --color-success-700: #027A48;
-  --color-warning-50:  #FFFAEB;
-  --color-warning-100: #FEF0C7;
-  --color-warning-500: #F79009;
-  --color-warning-600: #DC6803;
-  --color-warning-700: #B54708;
-  --color-danger-50:   #FEF3F2;
-  --color-danger-100:  #FEE4E2;
-  --color-danger-500:  #D92D20;
-  --color-danger-600:  #B42318;
-  --color-danger-700:  #912018;
-  --color-info-50:     #EFF8FF;
-  --color-info-100:    #D1E9FF;
-  --color-info-500:    #2E90FA;
-  --color-info-600:    #175CD3;
-  --color-info-700:    #1849A9;
+  /* ── Warm neutrals (cream, not grey) ───────────────────────── */
+  --color-neutral-0: #ffffff;
+  --color-neutral-25: #faf7f2; /* app background (warm off-white) */
+  --color-neutral-50: #f5f1ea;
+  --color-neutral-100: #ede7dd;
+  --color-neutral-200: #ded6c8;
+  --color-neutral-300: #c4b9a8;
+  --color-neutral-400: #a99e8c;
+  --color-neutral-500: #8a7f6e;
+  --color-neutral-600: #6e6456; /* muted text on cream 5.4:1 */
+  --color-neutral-700: #514a3e;
+  --color-neutral-800: #3a352c;
+  --color-neutral-900: #2b2620; /* body text on cream 14:1 */
 
-  /* ── Semantic (light) ───────────────────────────────────────────── */
-  --bg-page:            var(--color-neutral-50);
-  --bg-surface:         var(--color-neutral-0);
-  --bg-surface-sunken:  var(--color-neutral-100);
-  --bg-inverse:         var(--color-neutral-900);
-  --text-primary:       var(--color-neutral-900);
-  --text-secondary:     var(--color-neutral-600);
-  --text-tertiary:      var(--color-neutral-500);
-  --text-on-brand:      var(--color-neutral-0);
-  --text-price:         var(--color-neutral-900);
-  --text-price-sale:    var(--color-danger-600);
-  --text-link:          var(--color-primary-700);
-  --border-subtle:      var(--color-neutral-200);
-  --border-default:     var(--color-neutral-300);
-  --border-strong:      var(--color-neutral-400);
-  --border-focus:       var(--color-primary-500);
-  --action-primary:       var(--color-primary-700);
-  --action-primary-hover: var(--color-primary-800);
-  --action-buy:           var(--color-accent-600);
-  --action-buy-hover:     var(--color-accent-700);
-  --action-destructive:   var(--color-danger-600);
-  --rating-star:        var(--color-accent-400);
-  --badge-verified:     var(--color-primary-600);
-  --badge-sale:         var(--color-accent-600);
-  --skeleton-base:      var(--color-neutral-100);
-  --skeleton-shine:     var(--color-neutral-200);
-  --offline-banner:     var(--color-neutral-800);
+  /* ── Semantic ──────────────────────────────────────────────── */
+  --color-success-50: #e7f3ec;
+  --color-success-500: #1e7a4d;
+  --color-success-700: #145735;
+  --color-warning-50: #fdf3e2;
+  --color-warning-500: #c77800;
+  --color-warning-700: #8a5400;
+  --color-error-50: #fbeae8;
+  --color-error-500: #b23328;
+  --color-error-700: #85251d;
+  --color-info-50: #e7f0f5;
+  --color-info-500: #2c6e8f;
 
-  /* ── Typography ─────────────────────────────────────────────────── */
-  --font-sans: 'Inter var', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', monospace;
+  /* ── Semantic surface roles (what components reference) ─────── */
+  --bg: var(--color-neutral-25);
+  --bg-subtle: var(--color-neutral-50);
+  --surface: var(--color-neutral-0);
+  --surface-sunken: var(--color-neutral-100);
+  --border: var(--color-neutral-200);
+  --border-strong: var(--color-neutral-300);
+  --text: var(--color-neutral-900);
+  --text-muted: var(--color-neutral-600);
+  --text-on-primary: #ffffff;
+  --text-on-accent: #ffffff;
+  --brand: var(--color-primary-700);
+  --brand-500: var(--color-primary-500);
+  --cta: var(--color-accent-500);
+  --cta-hover: var(--color-accent-600);
+  --cta-text: #ffffff;
+  --rating: var(--color-amber-500);
+  --rating-text: var(--color-amber-700);
+  --focus-ring: var(--color-accent-500);
 
-  --text-2xs: 11px;
-  --text-xs:  12px;
-  --text-sm:  14px;
-  --text-md:  16px;
-  --text-lg:  18px;
-  --text-xl:  20px;
-  --text-2xl: 24px;
-  --text-3xl: 30px;
-  --text-4xl: 36px;
+  /* ── Typography ────────────────────────────────────────────── */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Roboto Mono', monospace;
 
-  --weight-regular:  400;
-  --weight-medium:   500;
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 — mobile body floor */
+  --text-base: 1rem; /* 16 */
+  --text-lg: 1.125rem; /* 18 */
+  --text-xl: 1.25rem; /* 20 */
+  --text-2xl: 1.5rem; /* 24 */
+  --text-3xl: 2rem; /* 32 */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
   --weight-semibold: 600;
-  --weight-bold:     700;
+  --weight-bold: 700;
 
-  --leading-tight:   1.2;
-  --leading-snug:    1.35;
-  --leading-normal:  1.5;
-  --leading-relaxed: 1.65;
+  /* ── Spacing (4px base) ────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
 
-  --tracking-tight:  -0.02em;
-  --tracking-normal: 0;
-  --tracking-wide:   0.04em;
+  /* ── Radius ────────────────────────────────────────────────── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
 
-  /* ── Spacing (4px grid) ─────────────────────────────────────────── */
-  --space-0: 0px;   --space-1: 2px;   --space-2: 4px;   --space-3: 8px;
-  --space-4: 12px;  --space-5: 16px;  --space-6: 20px;  --space-7: 24px;
-  --space-8: 32px;  --space-9: 40px;  --space-10: 48px; --space-11: 64px;
-  --gutter: 16px;
+  /* ── Elevation (soft, low-opacity, warm-tinted) ────────────── */
+  --shadow-sm: 0 1px 2px rgba(43, 38, 32, 0.06);
+  --shadow-md: 0 2px 8px rgba(43, 38, 32, 0.08);
+  --shadow-lg: 0 8px 24px rgba(43, 38, 32, 0.12);
 
-  /* ── Radii ──────────────────────────────────────────────────────── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
+  /* ── Motion ────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 250ms;
 
-  /* ── Elevation (overlays only — D-08) ───────────────────────────── */
-  --elevation-sticky:  0 -1px 0 0 rgba(26,26,23,0.08), 0 -4px 12px -4px rgba(26,26,23,0.06);
-  --elevation-overlay: 0 8px 24px -6px rgba(26,26,23,0.16), 0 2px 6px -2px rgba(26,26,23,0.08);
-  --elevation-modal:   0 24px 48px -12px rgba(26,26,23,0.24);
-
-  /* ── Sizing ─────────────────────────────────────────────────────── */
-  --touch-min: 48px;
-  --touch-spacing: 8px;
-  --icon-sm: 16px; --icon-md: 20px; --icon-lg: 24px;
-  --control-sm: 36px; --control-md: 48px; --control-lg: 56px;
-  --bottom-nav-h: 60px;
+  /* ── Layout ────────────────────────────────────────────────── */
+  --container-max: 1200px;
   --header-h: 56px;
-
-  /* ── Motion ─────────────────────────────────────────────────────── */
-  --duration-instant: 80ms;
-  --duration-fast:    120ms;
-  --duration-normal:  200ms;
-  --duration-slow:    300ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-enter:    cubic-bezier(0, 0, 0, 1);
-  --ease-exit:     cubic-bezier(0.3, 0, 1, 1);
-
-  /* ── Layers ─────────────────────────────────────────────────────── */
-  --z-sticky: 100;
-  --z-bottom-nav: 200;
-  --z-header: 300;
-  --z-overlay: 400;
-  --z-modal: 500;
-  --z-toast: 600;
-  --z-offline-banner: 700;
+  --tap-min: 44px; /* minimum touch target */
 }
 
-@media (min-width: 768px) { :root { --gutter: 24px; --header-h: 72px; } }
-@media (min-width: 1280px) { :root { --gutter: 32px; } }
+/* ── Dark mode: explicit, deliberate ─────────────────────────── */
+:root[data-theme='dark'] {
+  --bg: #1a1712;
+  --bg-subtle: #201c16;
+  --surface: #241f18;
+  --surface-sunken: #2b261e;
+  --border: #38312728;
+  --border: #3a3327;
+  --border-strong: #4a4133;
+  --text: #ede6da; /* 14.4:1 on bg */
+  --text-muted: #a99e8c; /* 6.8:1 on bg */
+  --text-on-primary: #05140d;
+  --brand: #3fb27e; /* lightened green, 6.7:1 */
+  --brand-500: #3fb27e;
+  --cta: #d5734a; /* lightened terracotta surface */
+  --cta-hover: #e18f6d;
+  --cta-text: #1a0f08;
+  --rating: #f0b429;
+  --rating-text: #f0b429; /* 9.6:1 on dark */
+  --focus-ring: #e8916a;
 
-/* ── Dark mode ────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-page:           #121210;
-    --bg-surface:        #1C1C19;
-    --bg-surface-sunken: #0C0C0B;
-    --bg-inverse:        var(--color-neutral-50);
-    --text-primary:      #F2F2EF;
-    --text-secondary:    #B8B8B0;
-    --text-tertiary:     #93938B;
-    --text-price:        #F2F2EF;
-    --text-price-sale:   #FF7A6B;
-    --text-link:         var(--color-primary-300);
-    --border-subtle:     #2E2E29;
-    --border-default:    #3F3F39;
-    --border-strong:     #57574F;
-    --border-focus:      var(--color-primary-400);
-    --action-primary:       var(--color-primary-500);
-    --action-primary-hover: var(--color-primary-400);
-    --action-buy:           var(--color-accent-400);
-    --action-buy-hover:     var(--color-accent-300);
-    --action-destructive:   var(--color-danger-500);
-    --rating-star:       var(--color-accent-300);
-    --badge-verified:    var(--color-primary-400);
-    --badge-sale:        var(--color-accent-400);
-    --skeleton-base:     #262622;
-    --skeleton-shine:    #33332E;
-    --offline-banner:    #33332E;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg-page:           #121210;
-  --bg-surface:        #1C1C19;
-  --bg-surface-sunken: #0C0C0B;
-  --bg-inverse:        var(--color-neutral-50);
-  --text-primary:      #F2F2EF;
-  --text-secondary:    #B8B8B0;
-  --text-tertiary:     #93938B;
-  --text-price:        #F2F2EF;
-  --text-price-sale:   #FF7A6B;
-  --text-link:         var(--color-primary-300);
-  --border-subtle:     #2E2E29;
-  --border-default:    #3F3F39;
-  --border-strong:     #57574F;
-  --border-focus:      var(--color-primary-400);
-  --action-primary:       var(--color-primary-500);
-  --action-primary-hover: var(--color-primary-400);
-  --action-buy:           var(--color-accent-400);
-  --action-buy-hover:     var(--color-accent-300);
-  --action-destructive:   var(--color-danger-500);
-  --rating-star:       var(--color-accent-300);
-  --badge-verified:    var(--color-primary-400);
-  --badge-sale:        var(--color-accent-400);
-  --skeleton-base:     #262622;
-  --skeleton-shine:    #33332E;
-  --offline-banner:    #33332E;
-}
-
-/* ── Global accessibility baseline ────────────────────────────────── */
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  :root:not([data-theme='light']) {
+    --bg: #1a1712;
+    --bg-subtle: #201c16;
+    --surface: #241f18;
+    --surface-sunken: #2b261e;
+    --border: #3a3327;
+    --border-strong: #4a4133;
+    --text: #ede6da;
+    --text-muted: #a99e8c;
+    --text-on-primary: #05140d;
+    --brand: #3fb27e;
+    --brand-500: #3fb27e;
+    --cta: #d5734a;
+    --cta-hover: #e18f6d;
+    --cta-text: #1a0f08;
+    --rating: #f0b429;
+    --rating-text: #f0b429;
+    --focus-ring: #e8916a;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
   }
 }

@@ -1,32 +1,31 @@
 import type { ReactNode } from 'react';
+import { Header } from '../components/Header';
+import { getDictionary } from '../lib/i18n/index';
 import './globals.css';
 
 export const metadata = {
   title: 'Nhonga — Compre e venda em Moçambique',
-  description: 'O mercado online de Moçambique. Pague com M-Pesa, e-Mola ou na entrega.',
+  description: 'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, mKesh ou na entrega.',
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+// Set the theme before first paint so there is no light/dark flash.
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const { locale, t } = await getDictionary();
   return (
-    <html lang="pt">
+    <html lang={locale}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
-        <header className="site-header">
-          <div className="site-header__bar">
-            <a href="/" className="brand">
-              Nhonga<span>.</span>
-            </a>
-            <input
-              className="search"
-              placeholder="Pesquisar produtos…"
-              aria-label="Pesquisar"
-              disabled
-            />
-          </div>
-          <p className="tagline">
-            Entregas em todo o país · M-Pesa · e-Mola · Pagamento na entrega
-          </p>
-        </header>
-        <main className="container">{children}</main>
+        <a href="#main" className="skip-link">
+          {locale === 'pt' ? 'Saltar para o conteúdo' : 'Skip to content'}
+        </a>
+        <Header t={t} locale={locale} />
+        <main id="main" className="container">
+          {children}
+        </main>
       </body>
     </html>
   );
