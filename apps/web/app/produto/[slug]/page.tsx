@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Price, Rating, VerifiedBadge } from '../../../components/ui';
-import { IconChevronLeft, IconTruck } from '../../../components/icons';
+import { IconTruck, IconReturn, IconShield } from '../../../components/icons';
 import { getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 import { BuyBox } from '../../../components/cart/BuyBox';
@@ -25,9 +25,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <article className="pdp">
-      <a className="pdp__back" href="/">
-        <IconChevronLeft /> {t.common.back}
-      </a>
+      <nav className="crumbs" aria-label="breadcrumb">
+        <span className="crumbs__item">
+          <a href="/">{t.common.brand}</a>
+          <span className="crumbs__sep" aria-hidden="true">
+            /
+          </span>
+        </span>
+        <span className="crumbs__item">
+          <a href={`/loja/${product.vendor.slug}`}>{product.vendor.displayName}</a>
+          <span className="crumbs__sep" aria-hidden="true">
+            /
+          </span>
+        </span>
+        <span className="crumbs__item">
+          <span aria-current="page">{product.title}</span>
+        </span>
+      </nav>
 
       <div className="pdp__layout">
         <div>
@@ -90,12 +104,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
           <BuyBox product={product} t={t} />
 
-          <div className="deliv">
-            <IconTruck width={18} height={18} />
-            <span>
-              {t.pdp.delivery_estimate}: <strong>{t.pdp.delivery_tbc}</strong>
-            </span>
-          </div>
+          <ul className="assurances">
+            <li className="assurance">
+              <IconTruck width={20} height={20} />
+              <span className="assurance__body">
+                <strong>{t.pdp.info_delivery}</strong>
+                <span>{t.pdp.info_delivery_desc}</span>
+              </span>
+            </li>
+            <li className="assurance">
+              <IconReturn width={20} height={20} />
+              <span className="assurance__body">
+                <strong>{t.pdp.info_returns}</strong>
+                <span>{t.pdp.info_returns_desc}</span>
+              </span>
+            </li>
+            <li className="assurance">
+              <IconShield width={20} height={20} />
+              <span className="assurance__body">
+                <strong>{t.pdp.info_protection}</strong>
+                <span>{t.pdp.info_protection_desc}</span>
+              </span>
+            </li>
+          </ul>
 
           {product.description ? <p className="desc">{product.description}</p> : null}
 

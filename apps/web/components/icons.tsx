@@ -126,6 +126,13 @@ export const IconFacebook = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconReturn = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M9 14l-4-4 4-4" />
+    <path d="M5 10h9a5 5 0 0 1 5 5v2" />
+  </svg>
+);
+
 // Category glyphs for the home tiles (outline set).
 export const IconShirt = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
