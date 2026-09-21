@@ -1,7 +1,8 @@
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
 import { CategoryCards, type CategoryCard } from '../components/CategoryCards';
-import { HeroCarousel, type Slide } from '../components/HeroCarousel';
+import { HomeHero } from '../components/home/HomeHero';
+import type { Slide } from '../components/HeroCarousel';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
 import { listProducts, searchProducts, type ProductListItem } from '../lib/api';
@@ -67,14 +68,9 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroCarousel
-        slides={slides}
-        prevLabel={t.home.carousel_prev}
-        nextLabel={t.home.carousel_next}
-        gotoLabel={t.home.carousel_goto}
-      />
+      {/* Three-column landing hero: category rail + carousel + account card */}
+      <HomeHero t={t} slides={slides} />
 
-      {/* Amazon-style category cards, pulled up over the carousel */}
       <CategoryCards t={t} cards={cards} />
 
       <TrustStrip t={t} />

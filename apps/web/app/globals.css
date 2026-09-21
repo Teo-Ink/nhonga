@@ -2992,3 +2992,164 @@ a.seller:focus-visible {
   margin-top: var(--space-4);
   align-self: flex-start;
 }
+
+/* == Promo bar (thin top strip) == */
+.promobar {
+  background: color-mix(in srgb, #000 20%, var(--brand));
+  color: #fff;
+}
+.promobar__inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 6px var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  flex-wrap: wrap;
+}
+.promobar__cta {
+  color: var(--color-accent-200);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+.promobar__cta:hover {
+  text-decoration: underline;
+}
+
+/* == Three-column landing hero == */
+.homehero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.homehero__banner {
+  display: flex;
+  min-width: 0;
+}
+.homehero__banner .hcar {
+  margin-top: 0;
+  flex: 1;
+}
+.homehero__banner .hcar__viewport {
+  height: 100%;
+}
+
+/* Category rail */
+.homehero__cats {
+  display: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+.homehero__cats-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  padding: 0 var(--space-2) var(--space-2);
+}
+.homehero__cats ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.homehero__cats a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 8px var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  min-height: 40px;
+}
+.homehero__cats a:hover {
+  background: color-mix(in srgb, var(--brand-500) 12%, var(--surface));
+  color: var(--brand);
+}
+.homehero__cats a svg {
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+
+/* Right account/benefits card */
+.herocard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.herocard__account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.herocard__avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-500) 16%, var(--surface));
+  color: var(--brand);
+}
+.herocard__title,
+.herocard__hi {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+}
+.herocard__body {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.herocard__btn {
+  width: 100%;
+  margin-top: 2px;
+}
+.herocard__benefits {
+  list-style: none;
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.herocard__benefits li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text);
+}
+.herocard__benefits svg {
+  color: var(--brand-500);
+  flex: 0 0 auto;
+}
+
+/* Cards no longer overlap a full-bleed jumbo */
+.catcards {
+  margin-top: 0;
+}
+
+@media (min-width: 900px) {
+  .homehero {
+    grid-template-columns: 200px 1fr 264px;
+    align-items: stretch;
+  }
+  .homehero__cats {
+    display: block;
+  }
+  .homehero__banner .hcar__viewport {
+    min-height: 320px;
+  }
+}
