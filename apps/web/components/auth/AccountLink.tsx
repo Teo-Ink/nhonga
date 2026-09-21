@@ -2,16 +2,29 @@
 import { IconUser } from '../icons';
 import { useSession } from './SessionProvider';
 
-// Header account control. Shows the signed-in user's first name next to the
-// icon; otherwise it is just the account icon linking to /conta (which offers
-// sign-in). Purely presentational — auth state comes from the session.
-export function AccountLink({ label }: { label: string }) {
+// Header account control (Amazon-structured two-line label, Nhonga's look):
+// "Olá, {name}" / "Conta" when signed in, "Olá, Entrar" / "Conta" otherwise.
+// Auth state comes from the session; the whole control links to /conta.
+export function AccountLink({
+  label,
+  hello,
+  signIn,
+}: {
+  label: string;
+  hello: string;
+  signIn: string;
+}) {
   const { user } = useSession();
   const firstName = user ? (user.displayName.split(' ')[0] ?? '') : '';
   return (
     <a className="iconbtn iconbtn--account" href="/conta" aria-label={label}>
       <IconUser />
-      {firstName ? <span className="iconbtn__name">{firstName}</span> : null}
+      <span className="account-link__text">
+        <span className="account-link__hi">
+          {hello}, {firstName || signIn}
+        </span>
+        <span className="account-link__label">{label}</span>
+      </span>
     </a>
   );
 }

@@ -1,27 +1,20 @@
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
+import { CategoryCards, type CategoryCard } from '../components/CategoryCards';
 import { EmptyState, TrustStrip } from '../components/ui';
-import {
-  IconBox,
-  IconShirt,
-  IconDevice,
-  IconPhone,
-  IconHome,
-  IconCup,
-  IconSparkle,
-} from '../components/icons';
-import { listProducts, type ProductListItem } from '../lib/api';
+import { IconBox } from '../components/icons';
+import { listProducts, searchProducts, type ProductListItem } from '../lib/api';
 import { getDictionary } from '../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
 
-const CATEGORY_TILES = [
-  { slug: 'moda', Icon: IconShirt },
-  { slug: 'electronica', Icon: IconDevice },
-  { slug: 'telemoveis', Icon: IconPhone },
-  { slug: 'casa', Icon: IconHome },
-  { slug: 'alimentacao', Icon: IconCup },
-  { slug: 'beleza', Icon: IconSparkle },
+const CATEGORY_KEYS = [
+  'moda',
+  'electronica',
+  'telemoveis',
+  'casa',
+  'alimentacao',
+  'beleza',
 ] as const;
 
 export default async function HomePage() {
@@ -35,44 +28,41 @@ export default async function HomePage() {
     failed = true;
   }
 
+  // Per-category product sets power the Amazon-style landing cards.
+  const perCategory = await Promise.all(
+    CATEGORY_KEYS.map(async (slug): Promise<CategoryCard> => {
+      try {
+        const r = await searchProducts({ category: slug });
+        return { slug, label: t.categories[slug], items: r.items };
+      } catch {
+        return { slug, label: t.categories[slug], items: [] };
+      }
+    }),
+  );
+  const cards = perCategory.filter((c) => c.items.length > 0);
+
   const deals = products.filter((p) => p.discountPercent);
 
   return (
     <>
-      {/* Hero */}
-      <section className="hero">
-        <div className="hero__content">
-          <h1 className="hero__title">{t.home.hero_title}</h1>
-          <p className="hero__subtitle">{t.home.hero_subtitle}</p>
-          <div className="hero__actions">
+      {/* Jumbotron */}
+      <section className="jumbo">
+        <div className="jumbo__content">
+          <h1 className="jumbo__title">{t.home.hero_title}</h1>
+          <p className="jumbo__subtitle">{t.home.hero_subtitle}</p>
+          <div className="jumbo__actions">
             <a className="btn btn--cta" href="/pesquisa">
               {t.home.hero_cta}
             </a>
-            <a className="btn btn--ghost hero__sell" href="/vender/comecar">
+            <a className="btn btn--ghost jumbo__sell" href="/vender/comecar">
               {t.home.hero_sell}
             </a>
           </div>
         </div>
       </section>
 
-      {/* Category tiles */}
-      <section className="section" aria-labelledby="cats">
-        <div className="section__head">
-          <h2 className="section__title" id="cats">
-            {t.home.shop_by_category}
-          </h2>
-        </div>
-        <div className="cattiles">
-          {CATEGORY_TILES.map(({ slug, Icon }) => (
-            <a className="cattile" key={slug} href={`/categoria/${slug}`}>
-              <span className="cattile__icon" aria-hidden="true">
-                <Icon width={26} height={26} />
-              </span>
-              <span className="cattile__label">{t.categories[slug]}</span>
-            </a>
-          ))}
-        </div>
-      </section>
+      {/* Amazon-style category cards, pulled up over the jumbotron */}
+      <CategoryCards t={t} cards={cards} />
 
       <TrustStrip t={t} />
 
