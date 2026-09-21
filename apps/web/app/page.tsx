@@ -1,6 +1,7 @@
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
 import { CategoryCards, type CategoryCard } from '../components/CategoryCards';
+import { HeroCarousel, type Slide } from '../components/HeroCarousel';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
 import { listProducts, searchProducts, type ProductListItem } from '../lib/api';
@@ -43,25 +44,37 @@ export default async function HomePage() {
 
   const deals = products.filter((p) => p.discountPercent);
 
+  const slides: Slide[] = [
+    {
+      title: t.home.hero_title,
+      subtitle: t.home.hero_subtitle,
+      cta: t.home.hero_cta,
+      href: '/pesquisa',
+    },
+    {
+      title: t.home.slide2_title,
+      subtitle: t.home.slide2_sub,
+      cta: t.home.slide2_cta,
+      href: '/pesquisa?sort=price_asc',
+    },
+    {
+      title: t.home.slide3_title,
+      subtitle: t.home.slide3_sub,
+      cta: t.home.slide3_cta,
+      href: '/vender/comecar',
+    },
+  ];
+
   return (
     <>
-      {/* Jumbotron */}
-      <section className="jumbo">
-        <div className="jumbo__content">
-          <h1 className="jumbo__title">{t.home.hero_title}</h1>
-          <p className="jumbo__subtitle">{t.home.hero_subtitle}</p>
-          <div className="jumbo__actions">
-            <a className="btn btn--cta" href="/pesquisa">
-              {t.home.hero_cta}
-            </a>
-            <a className="btn btn--ghost jumbo__sell" href="/vender/comecar">
-              {t.home.hero_sell}
-            </a>
-          </div>
-        </div>
-      </section>
+      <HeroCarousel
+        slides={slides}
+        prevLabel={t.home.carousel_prev}
+        nextLabel={t.home.carousel_next}
+        gotoLabel={t.home.carousel_goto}
+      />
 
-      {/* Amazon-style category cards, pulled up over the jumbotron */}
+      {/* Amazon-style category cards, pulled up over the carousel */}
       <CategoryCards t={t} cards={cards} />
 
       <TrustStrip t={t} />
