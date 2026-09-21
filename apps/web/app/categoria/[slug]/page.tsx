@@ -1,4 +1,4 @@
-import { SearchResults } from '../../../components/SearchResults';
+import { SearchResults, type ActiveChip } from '../../../components/SearchResults';
 import { searchProducts, type ProductListItem } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 import type { Dictionary } from '../../../lib/i18n/index';
@@ -19,18 +19,49 @@ export default async function CategoryPage({
   const { slug } = await params;
   const sp = await searchParams;
   const { t } = await getDictionary();
-  const sort = Array.isArray(sp.sort) ? sp.sort[0] : sp.sort;
-  const inStock = (Array.isArray(sp.inStock) ? sp.inStock[0] : sp.inStock) === 'true';
+  const one = (v: string | string[] | undefined): string | undefined =>
+    Array.isArray(v) ? v[0] : v;
+  const sort = one(sp.sort);
+  const minPrice = one(sp.minPrice);
+  const maxPrice = one(sp.maxPrice);
+  const inStock = one(sp.inStock) === 'true';
 
   let items: ProductListItem[] = [];
   let total = 0;
   try {
-    const r = await searchProducts({ category: slug, ...(sort ? { sort } : {}), inStock });
+    const r = await searchProducts({
+      category: slug,
+      ...(sort ? { sort } : {}),
+      ...(minPrice ? { minPrice: Number(minPrice) } : {}),
+      ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
+      inStock,
+    });
     items = r.items;
     total = r.total;
   } catch {
     /* empty */
   }
+
+  const base = `/categoria/${slug}`;
+  const keep = (drop: string): string => {
+    const p = new URLSearchParams();
+    if (sort && drop !== 'sort') p.set('sort', sort);
+    if (inStock && drop !== 'inStock') p.set('inStock', 'true');
+    if (minPrice && drop !== 'price') p.set('minPrice', minPrice);
+    if (maxPrice && drop !== 'price') p.set('maxPrice', maxPrice);
+    const s = p.toString();
+    return s ? `${base}?${s}` : base;
+  };
+  const mt = (c: string): string => String(Math.round(Number(c) / 100));
+
+  const chips: ActiveChip[] = [];
+  if (minPrice || maxPrice) {
+    chips.push({
+      label: `${minPrice ? mt(minPrice) : '0'}–${maxPrice ? mt(maxPrice) : '∞'} MT`,
+      removeHref: keep('price'),
+    });
+  }
+  if (inStock) chips.push({ label: t.search.in_stock_only, removeHref: keep('inStock') });
 
   const label = isCat(slug) ? (t.categories as Dictionary['categories'])[slug] : slug;
   return (
@@ -39,8 +70,14 @@ export default async function CategoryPage({
       title={label}
       items={items}
       total={total}
-      chips={inStock ? [{ label: t.search.in_stock_only, removeHref: `/categoria/${slug}` }] : []}
-      clearHref={`/categoria/${slug}`}
+      chips={chips}
+      clearHref={base}
+      lockedCategory={slug}
+      crumbs={[
+        { label: t.common.brand, href: '/' },
+        { label: t.search.categories, href: '/' },
+        { label },
+      ]}
     />
   );
 }
