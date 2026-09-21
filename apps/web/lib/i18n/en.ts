@@ -30,6 +30,12 @@ export const en: Dictionary = {
   },
   home: {
     categories: 'Categories',
+    hero_title: 'Buy and sell across Mozambique',
+    hero_subtitle:
+      'Pay with M-Pesa, e-Mola, mKesh or on delivery. Delivery arranged with the seller.',
+    hero_cta: 'Explore products',
+    hero_sell: 'Sell on Nhonga',
+    shop_by_category: 'Shop by category',
     deals: 'Deals',
     featured: 'Featured',
     demo_notice:

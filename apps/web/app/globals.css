@@ -2258,3 +2258,131 @@ a.seller:focus-visible {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* ── Home hero ────────────────────────────────────────────────── */
+.hero {
+  margin: var(--space-4) 0;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    color-mix(in srgb, var(--brand) 70%, var(--cta)) 100%
+  );
+  color: #fff;
+  padding: var(--space-6) var(--space-5);
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -60px;
+  top: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+.hero__content {
+  position: relative;
+  max-width: 640px;
+}
+.hero__title {
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.hero__subtitle {
+  margin-top: var(--space-3);
+  font-size: var(--text-base);
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 48ch;
+}
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.hero__actions .btn {
+  max-width: 220px;
+}
+.hero__sell {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.hero__sell:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ── Category tiles ───────────────────────────────────────────── */
+.cattiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.cattile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  text-align: center;
+  transition:
+    transform var(--dur-base, 150ms) var(--ease-out, ease),
+    border-color var(--dur-base, 150ms) var(--ease-out, ease);
+}
+.cattile:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand-500);
+}
+.cattile__icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--brand-500) 14%, var(--surface));
+  color: var(--brand);
+}
+.cattile__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Product rail (horizontal) ────────────────────────────────── */
+.rail {
+  padding: var(--space-4) 0;
+}
+.rail__track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 160px;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: var(--space-2);
+  scrollbar-width: thin;
+}
+.rail__item {
+  scroll-snap-align: start;
+}
+.rail__item .card {
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .cattiles {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .rail__track {
+    grid-auto-columns: 200px;
+  }
+}

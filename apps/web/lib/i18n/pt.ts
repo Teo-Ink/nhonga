@@ -29,6 +29,12 @@ export const pt = {
   },
   home: {
     categories: 'Categorias',
+    hero_title: 'Compre e venda em Moçambique',
+    hero_subtitle:
+      'Pague com M-Pesa, e-Mola, mKesh ou na entrega. Entrega combinada com o vendedor.',
+    hero_cta: 'Explorar produtos',
+    hero_sell: 'Vender no Nhonga',
+    shop_by_category: 'Comprar por categoria',
     deals: 'Promoções',
     featured: 'Em destaque',
     demo_notice:

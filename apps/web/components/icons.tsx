@@ -125,3 +125,40 @@ export const IconFacebook = (p: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
+
+// Category glyphs for the home tiles (outline set).
+export const IconShirt = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M8 3l4 2 4-2 4 4-3 2v10H7V9L4 7z" />
+  </svg>
+);
+export const IconDevice = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="12" rx="1.5" />
+    <path d="M2 21h20" />
+  </svg>
+);
+export const IconPhone = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="7" y="2" width="10" height="20" rx="2.5" />
+    <path d="M11 18h2" />
+  </svg>
+);
+export const IconHome = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M3 11l9-7 9 7" />
+    <path d="M5 10v10h14V10" />
+  </svg>
+);
+export const IconCup = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M5 8h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5z" />
+    <path d="M16 9h2.5a2.5 2.5 0 0 1 0 5H16" />
+    <path d="M6 3v2M10 3v2M14 3v2" />
+  </svg>
+);
+export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
+  </svg>
+);
