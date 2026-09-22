@@ -24,7 +24,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>
+      {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) mutate body
+          before hydration; suppress the resulting attribute mismatch. */}
+      <body suppressHydrationWarning>
         <span id="top" />
         <a href="#main" className="skip-link">
           {locale === 'pt' ? 'Saltar para o conteúdo' : 'Skip to content'}

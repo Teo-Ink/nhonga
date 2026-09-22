@@ -3382,3 +3382,54 @@ a.seller:focus-visible {
 .rail__item .lcard {
   height: 100%;
 }
+
+/* == Jumbotron refinements: keep arrows off the text == */
+.hcar__slide {
+  padding: var(--space-6) var(--space-5) calc(var(--space-6) + 44px);
+}
+.hcar__content {
+  max-width: 560px;
+}
+.hcar__title {
+  font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.25);
+}
+.hcar__subtitle {
+  max-width: 42ch;
+}
+.hcar__arrow {
+  width: 36px;
+  height: 36px;
+  font-size: 22px;
+  background: rgba(255, 255, 255, 0.16);
+  display: none;
+}
+.hcar__arrow--prev {
+  left: 8px;
+}
+.hcar__arrow--next {
+  right: 8px;
+}
+@media (min-width: 768px) {
+  .hcar__arrow {
+    display: grid;
+  }
+  .hcar__slide {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
+
+/* == Card polish: stronger price, aligned meta == */
+.lcard__price {
+  font-size: var(--text-xl);
+}
+.lcard__title {
+  color: var(--text-muted);
+  min-height: 2.6em;
+}
+.lcard__meta {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+  margin-top: var(--space-1);
+}
