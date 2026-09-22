@@ -24,15 +24,15 @@
   --color-primary-800: #083c2a;
   --color-primary-900: #05281c;
 
-  /* ── Accent: terracotta (CTAs) ─────────────────────────────── */
-  --color-accent-50: #fbede7;
-  --color-accent-100: #f6d6c8;
-  --color-accent-200: #edb49c;
-  --color-accent-300: #e18f6d;
-  --color-accent-400: #d5734a;
-  --color-accent-500: #c0562e; /* CTA surface — white text 4.55:1 (large/bold) */
-  --color-accent-600: #b0491f; /* CTA text-safe / hover — white text 5.5:1 */
-  --color-accent-700: #8f3a18;
+  /* ── Accent: yellow / gold (CTAs) — black text, not white ──── */
+  --color-accent-50: #fff8e1;
+  --color-accent-100: #ffefb3;
+  --color-accent-200: #ffe485;
+  --color-accent-300: #ffd84d;
+  --color-accent-400: #fbc91f;
+  --color-accent-500: #f2b705; /* CTA surface — black text ~10:1 */
+  --color-accent-600: #d9a300; /* hover */
+  --color-accent-700: #8a6600;
 
   /* ── Amber: ratings / highlights ───────────────────────────── */
   --color-amber-400: #f0b429;
@@ -76,15 +76,15 @@
   --text: var(--color-neutral-900);
   --text-muted: var(--color-neutral-600);
   --text-on-primary: #ffffff;
-  --text-on-accent: #ffffff;
+  --text-on-accent: #171717;
   --brand: var(--color-primary-700);
   --brand-500: var(--color-primary-500);
   --cta: var(--color-accent-500);
   --cta-hover: var(--color-accent-600);
-  --cta-text: #ffffff;
+  --cta-text: #171717;
   --rating: var(--color-amber-500);
   --rating-text: var(--color-amber-700);
-  --focus-ring: var(--color-accent-500);
+  --focus-ring: var(--color-primary-500);
 
   /* ── Typography ────────────────────────────────────────────── */
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
@@ -155,12 +155,12 @@
   --text-on-primary: #05140d;
   --brand: #3fb27e; /* lightened green, 6.7:1 */
   --brand-500: #3fb27e;
-  --cta: #d5734a; /* lightened terracotta surface */
-  --cta-hover: #e18f6d;
-  --cta-text: #1a0f08;
+  --cta: #f7c81f; /* yellow, slightly lighter for dark mode */
+  --cta-hover: #fbc91f;
+  --cta-text: #171717;
   --rating: #f0b429;
   --rating-text: #f0b429; /* 9.6:1 on dark */
-  --focus-ring: #e8916a;
+  --focus-ring: #3fb27e;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -180,12 +180,12 @@
     --text-on-primary: #05140d;
     --brand: #3fb27e;
     --brand-500: #3fb27e;
-    --cta: #d5734a;
-    --cta-hover: #e18f6d;
-    --cta-text: #1a0f08;
+    --cta: #f7c81f;
+    --cta-hover: #fbc91f;
+    --cta-text: #171717;
     --rating: #f0b429;
     --rating-text: #f0b429;
-    --focus-ring: #e8916a;
+    --focus-ring: #3fb27e;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);

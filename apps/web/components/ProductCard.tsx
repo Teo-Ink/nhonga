@@ -36,11 +36,13 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
         {!p.inStock ? <span className="lcard__soldout">{t.common.sold_out}</span> : null}
       </div>
       <div className="lcard__body">
-        <span className="lcard__price">{formatMZN(cents(p.priceCents))}</span>
-        {p.compareAtCents ? (
-          <span className="lcard__was">{formatMZN(cents(p.compareAtCents))}</span>
-        ) : null}
         <span className="lcard__title">{p.title}</span>
+        <span className="lcard__pricerow">
+          <span className="lcard__price">{formatMZN(cents(p.priceCents))}</span>
+          {p.compareAtCents ? (
+            <span className="lcard__was">{formatMZN(cents(p.compareAtCents))}</span>
+          ) : null}
+        </span>
         <div className="lcard__meta">
           <span className="lcard__loc">
             <IconMapPin width={13} height={13} aria-hidden />
