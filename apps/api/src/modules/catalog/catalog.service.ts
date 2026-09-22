@@ -3,6 +3,7 @@ import { and, asc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import { category, product, productImage, productVariant } from '../../db/schema/catalog.js';
 import { vendor } from '../../db/schema/vendors.js';
+import { district } from '../../db/schema/identity.js';
 import type { Db } from '../../db/types.js';
 import {
   buildOptions,
@@ -62,10 +63,12 @@ export class CatalogService {
         vSlug: vendor.slug,
         vName: vendor.displayName,
         vStatus: vendor.status,
+        vLocation: district.name,
       })
       .from(product)
       .innerJoin(vendor, eq(product.vendorId, vendor.id))
       .innerJoin(category, eq(product.categoryId, category.id))
+      .leftJoin(district, eq(vendor.districtId, district.id))
       .where(and(...conds));
 
     const ids = rows.map((p) => p.id);
@@ -82,6 +85,7 @@ export class CatalogService {
           titleEn: p.titleEn,
           ratingAvg: p.ratingAvg,
           ratingCount: p.ratingCount,
+          postedAt: p.publishedAt,
           vendor: {
             id: p.vId,
             slug: p.vSlug,
@@ -89,6 +93,7 @@ export class CatalogService {
             status: p.vStatus,
             ratingAvg: null,
             ratingCount: 0,
+            location: p.vLocation,
           },
           variants: variantsByProduct.get(p.id) ?? [],
           primaryImage: imagesByProduct.get(p.id) ?? null,
@@ -124,13 +129,16 @@ export class CatalogService {
         attributes: product.attributes,
         ratingAvg: product.ratingAvg,
         ratingCount: product.ratingCount,
+        publishedAt: product.publishedAt,
         vId: vendor.id,
         vSlug: vendor.slug,
         vName: vendor.displayName,
         vStatus: vendor.status,
+        vLocation: district.name,
       })
       .from(product)
       .innerJoin(vendor, eq(product.vendorId, vendor.id))
+      .leftJoin(district, eq(vendor.districtId, district.id))
       .where(
         and(
           eq(product.status, 'active'),
@@ -154,6 +162,7 @@ export class CatalogService {
         titleEn: p.titleEn,
         ratingAvg: p.ratingAvg,
         ratingCount: p.ratingCount,
+        postedAt: p.publishedAt,
         vendor: {
           id: p.vId,
           slug: p.vSlug,
@@ -161,6 +170,7 @@ export class CatalogService {
           status: p.vStatus,
           ratingAvg: null,
           ratingCount: 0,
+          location: p.vLocation,
         },
         variants,
         primaryImage: images[0] ?? null,

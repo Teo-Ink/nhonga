@@ -140,6 +140,9 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000015', '/ph?c=beleza&t=Sabonete%20Karite', 600, 600, 'Sabonete artesanal', 0),
   ('e0000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000016', '/ph?c=beleza&t=Manteiga%20Karite', 600, 600, 'Manteiga de karité', 0);
 
+-- Stagger publish dates so the "recent ads" feed shows a realistic spread.
+UPDATE product SET published_at = now() - (floor(random() * 20) || ' days')::interval;
+
 COMMIT;
 
 SELECT

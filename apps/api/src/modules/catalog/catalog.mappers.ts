@@ -96,6 +96,7 @@ export interface ListItemInput {
   readonly titleEn: string | null;
   readonly ratingAvg: string | null; // numeric comes back as string from pg
   readonly ratingCount: number;
+  readonly postedAt: Date | null;
   readonly vendor: {
     id: string;
     slug: string;
@@ -103,6 +104,7 @@ export interface ListItemInput {
     status: string;
     ratingAvg: string | null;
     ratingCount: number;
+    location: string | null;
   };
   readonly variants: readonly VariantRow[];
   readonly primaryImage: ImageRow | null;
@@ -125,6 +127,8 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     ratingCount: input.ratingCount,
     inStock: active.some((v) => v.stockQuantity > 0),
     freeDelivery: false, // shipping logic is not built; never claim free delivery we cannot honour
+    location: input.vendor.location,
+    postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
     vendor: {
       id: input.vendor.id,
       slug: input.vendor.slug,

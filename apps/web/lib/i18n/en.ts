@@ -28,6 +28,16 @@ export const en: Dictionary = {
     nav_deals: 'Deals',
     nav_sell: 'Sell',
     nav_help: 'Help',
+    post_ad: 'Post ad',
+  },
+  listing: {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    days_ago: '{n} days ago',
+    weeks_ago: '{n} wk ago',
+    months_ago: '{n} mo ago',
+    save: 'Save ad',
+    featured: 'Featured',
   },
   footer: {
     tagline: "Mozambique's online marketplace. Buy and sell safely.",
@@ -87,6 +97,10 @@ export const en: Dictionary = {
     promo_text: "Welcome to Nhonga — Mozambique's online marketplace.",
     promo_cta: 'Start selling',
     shop_by_category: 'Shop by category',
+    recent_title: 'Recent ads',
+    near_you: 'Near you',
+    post_free: 'Post a free ad',
+    post_free_sub: "Sell what you no longer use. It's quick and free.",
     deals: 'Deals',
     featured: 'Featured',
     demo_notice:

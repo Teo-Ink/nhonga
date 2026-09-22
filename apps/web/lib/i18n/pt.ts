@@ -27,6 +27,16 @@ export const pt = {
     nav_deals: 'Promoções',
     nav_sell: 'Vender',
     nav_help: 'Ajuda',
+    post_ad: 'Anunciar',
+  },
+  listing: {
+    today: 'Hoje',
+    yesterday: 'Ontem',
+    days_ago: 'há {n} dias',
+    weeks_ago: 'há {n} sem.',
+    months_ago: 'há {n} meses',
+    save: 'Guardar anúncio',
+    featured: 'Destaque',
   },
   footer: {
     tagline: 'O mercado online de Moçambique. Compre e venda com segurança.',
@@ -86,6 +96,10 @@ export const pt = {
     promo_text: 'Bem-vindo ao Nhonga — o mercado online de Moçambique.',
     promo_cta: 'Começar a vender',
     shop_by_category: 'Comprar por categoria',
+    recent_title: 'Anúncios recentes',
+    near_you: 'Perto de si',
+    post_free: 'Anunciar grátis',
+    post_free_sub: 'Venda o que já não usa. É rápido e grátis.',
     deals: 'Promoções',
     featured: 'Em destaque',
     demo_notice:

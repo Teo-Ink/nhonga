@@ -69,6 +69,7 @@ describe('catalog mappers', () => {
       titleEn: null,
       ratingAvg: null,
       ratingCount: 0,
+      postedAt: new Date('2026-01-02T00:00:00Z'),
       vendor: {
         id: 'x',
         slug: 'x',
@@ -76,6 +77,7 @@ describe('catalog mappers', () => {
         status: 'active',
         ratingAvg: null,
         ratingCount: 0,
+        location: 'Maputo Cidade',
       },
       variants: [v({ priceCents: 1200, stockQuantity: 2 })],
       primaryImage: null,
@@ -84,6 +86,8 @@ describe('catalog mappers', () => {
     expect(item.freeDelivery).toBe(false);
     expect(item.priceCents).toBe(1200);
     expect(item.inStock).toBe(true);
+    expect(item.location).toBe('Maputo Cidade');
+    expect(item.postedAt).toBe('2026-01-02T00:00:00.000Z');
     expect(item.vendor.isVerified).toBe(true);
   });
 });

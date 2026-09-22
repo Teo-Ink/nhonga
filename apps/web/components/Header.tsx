@@ -59,6 +59,9 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
             <IconCart />
             <CartCount />
           </a>
+          <a className="hdr__postad" href="/vender/novo">
+            {t.common.post_ad}
+          </a>
         </div>
       </div>
 

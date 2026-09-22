@@ -1,16 +1,29 @@
 import Image from 'next/image';
-import { DealBadge, Price, Rating } from './ui';
-import { IconCheck } from './icons';
+import { cents, formatMZN } from '@nhonga/shared';
+import { IconMapPin } from './icons';
 import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
 
-// Fixed aspect ratio + object-fit keeps inconsistent seller photos orderly.
-// next/image gives responsive srcset, lazy-loading, and reserved space (no CLS).
+// Relative "posted" label from an ISO date, using the dictionary's words.
+function postedLabel(iso: string | null, l: Dictionary['listing']): string {
+  if (!iso) return '';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return l.today;
+  if (days === 1) return l.yesterday;
+  if (days < 14) return l.days_ago.replace('{n}', String(days));
+  if (days < 60) return l.weeks_ago.replace('{n}', String(Math.floor(days / 7)));
+  return l.months_ago.replace('{n}', String(Math.floor(days / 30)));
+}
+
+// Classifieds-style listing card (OLX-structured, Nhonga's look): image, price
+// first and bold, then the title, then a location + posted-date row. next/image
+// gives responsive srcset, lazy-loading and reserved space (no CLS).
 export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
+  const posted = postedLabel(p.postedAt, t.listing);
   return (
-    <a className="card" href={`/produto/${p.slug}`}>
-      <div className="card__media">
-        {p.discountPercent ? <DealBadge percent={p.discountPercent} /> : null}
+    <a className="lcard" href={`/produto/${p.slug}`}>
+      <div className="lcard__media">
+        {p.discountPercent ? <span className="lcard__badge">-{p.discountPercent}%</span> : null}
         {p.image ? (
           <Image
             src={p.image.url}
@@ -20,18 +33,21 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
             style={{ objectFit: 'cover' }}
           />
         ) : null}
+        {!p.inStock ? <span className="lcard__soldout">{t.common.sold_out}</span> : null}
       </div>
-      <div className="card__body">
-        <span className="card__title">{p.title}</span>
-        <Price now={p.priceCents} was={p.compareAtCents} />
-        <span className="card__vendor">
-          <Rating value={p.ratingAvg} />
-          <span>{p.vendor.displayName}</span>
-          {p.vendor.isVerified ? (
-            <IconCheck width={12} height={12} aria-label={t.common.verified} />
-          ) : null}
-          {!p.inStock ? <span className="badge badge--soldout">{t.common.sold_out}</span> : null}
-        </span>
+      <div className="lcard__body">
+        <span className="lcard__price">{formatMZN(cents(p.priceCents))}</span>
+        {p.compareAtCents ? (
+          <span className="lcard__was">{formatMZN(cents(p.compareAtCents))}</span>
+        ) : null}
+        <span className="lcard__title">{p.title}</span>
+        <div className="lcard__meta">
+          <span className="lcard__loc">
+            <IconMapPin width={13} height={13} aria-hidden />
+            {p.location ?? p.vendor.displayName}
+          </span>
+          {posted ? <span className="lcard__date">{posted}</span> : null}
+        </div>
       </div>
     </a>
   );

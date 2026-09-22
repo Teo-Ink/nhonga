@@ -30,6 +30,8 @@ export interface ProductListItem {
   ratingCount: number;
   inStock: boolean;
   freeDelivery: boolean;
+  location: string | null;
+  postedAt: string | null;
   vendor: VendorSummary;
 }
 export interface ProductVariant {

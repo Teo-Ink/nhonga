@@ -29,6 +29,10 @@ export interface ProductListItem {
   readonly ratingCount: number;
   readonly inStock: boolean;
   readonly freeDelivery: boolean;
+  /** Seller location (district), for the classifieds-style listing card. */
+  readonly location: string | null;
+  /** When the listing was published (ISO), for the "posted" line. */
+  readonly postedAt: string | null;
   readonly vendor: VendorSummaryDto;
 }
 
