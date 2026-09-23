@@ -1,7 +1,8 @@
 -- Nhonga local test seed. Truncates catalogue tables then inserts a small but
 -- fuller Mozambican-market catalogue across all six categories. Product images
--- are self-generated branded placeholders served by the web app at /ph (a clean
--- gradient tile with a monogram) rather than random stock photos.
+-- are real, subject-matched CC-licensed photos (Flickr, via the Openverse API)
+-- used as representative demo images — see docs/image-credits.md for licensing.
+-- The /ph route still exists as a branded fallback placeholder generator.
 BEGIN;
 
 TRUNCATE product_image, product_variant, product, category, vendor, district RESTART IDENTITY CASCADE;
@@ -117,28 +118,28 @@ INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_
 
 -- Images (branded /ph placeholders: gradient tile + monogram, per category)
 INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
-  ('e0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', '/ph?c=moda&t=Capulana%20Tradicional', 600, 600, 'Capulana tradicional', 0),
-  ('e0000000-0000-4000-8000-000000000005', 'a0000000-0000-4000-8000-000000000005', '/ph?c=moda&t=Camisola%20Selecao', 600, 600, 'Camisola da selecção', 0),
-  ('e0000000-0000-4000-8000-000000000007', 'a0000000-0000-4000-8000-000000000007', '/ph?c=moda&t=Sandalias%20Couro', 600, 600, 'Sandálias de couro', 0),
-  ('e0000000-0000-4000-8000-000000000008', 'a0000000-0000-4000-8000-000000000008', '/ph?c=moda&t=Vestido%20Capulana', 600, 600, 'Vestido em capulana', 0),
-  ('e0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002', '/ph?c=electronica&t=Smartphone%20Android', 600, 600, 'Smartphone', 0),
-  ('e0000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-000000000003', '/ph?c=electronica&t=Carregador%20Solar', 600, 600, 'Carregador solar', 0),
-  ('e0000000-0000-4000-8000-000000000009', 'a0000000-0000-4000-8000-000000000009', '/ph?c=electronica&t=Coluna%20Bluetooth', 600, 600, 'Coluna Bluetooth', 0),
-  ('e0000000-0000-4000-8000-00000000000a', 'a0000000-0000-4000-8000-00000000000a', '/ph?c=electronica&t=Power%20Bank', 600, 600, 'Power bank', 0),
-  ('e0000000-0000-4000-8000-00000000000b', 'a0000000-0000-4000-8000-00000000000b', '/ph?c=telemoveis&t=Telemovel%20Basico', 600, 600, 'Telemóvel básico', 0),
-  ('e0000000-0000-4000-8000-00000000000c', 'a0000000-0000-4000-8000-00000000000c', '/ph?c=telemoveis&t=Capa%20Telemovel', 600, 600, 'Capa de telemóvel', 0),
-  ('e0000000-0000-4000-8000-00000000000d', 'a0000000-0000-4000-8000-00000000000d', '/ph?c=telemoveis&t=Carregador%20Rapido', 600, 600, 'Carregador rápido', 0),
-  ('e0000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-000000000004', '/ph?c=casa&t=Panela%20Barro', 600, 600, 'Panela de barro', 0),
-  ('e0000000-0000-4000-8000-00000000000e', 'a0000000-0000-4000-8000-00000000000e', '/ph?c=casa&t=Jogo%20Panelas', 600, 600, 'Jogo de panelas', 0),
-  ('e0000000-0000-4000-8000-00000000000f', 'a0000000-0000-4000-8000-00000000000f', '/ph?c=casa&t=Candeeiro%20Solar', 600, 600, 'Candeeiro solar', 0),
-  ('e0000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000010', '/ph?c=casa&t=Esteira%20Palha', 600, 600, 'Esteira de palha', 0),
-  ('e0000000-0000-4000-8000-000000000006', 'a0000000-0000-4000-8000-000000000006', '/ph?c=alimentacao&t=Cafe%20Gorongosa', 600, 600, 'Café de Gorongosa', 0),
-  ('e0000000-0000-4000-8000-000000000011', 'a0000000-0000-4000-8000-000000000011', '/ph?c=alimentacao&t=Castanha%20Caju', 600, 600, 'Castanha de caju', 0),
-  ('e0000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000012', '/ph?c=alimentacao&t=Piri%20Piri', 600, 600, 'Molho de piri-piri', 0),
-  ('e0000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000013', '/ph?c=alimentacao&t=Mel%20Natural', 600, 600, 'Mel natural', 0),
-  ('e0000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000014', '/ph?c=beleza&t=Oleo%20Coco', 600, 600, 'Óleo de coco', 0),
-  ('e0000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000015', '/ph?c=beleza&t=Sabonete%20Karite', 600, 600, 'Sabonete artesanal', 0),
-  ('e0000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000016', '/ph?c=beleza&t=Manteiga%20Karite', 600, 600, 'Manteiga de karité', 0);
+  ('e0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000001', 'https://live.staticflickr.com/2680/4277873044_9680cb5df3_b.jpg', 600, 600, 'Capulana tradicional', 0),
+  ('e0000000-0000-4000-8000-000000000005', 'a0000000-0000-4000-8000-000000000005', 'https://live.staticflickr.com/3004/3037107861_bac7121f7c_m.jpg', 600, 600, 'Camisola da selecção', 0),
+  ('e0000000-0000-4000-8000-000000000007', 'a0000000-0000-4000-8000-000000000007', 'https://live.staticflickr.com/158/389493829_8c239833f0.jpg', 600, 600, 'Sandálias de couro', 0),
+  ('e0000000-0000-4000-8000-000000000008', 'a0000000-0000-4000-8000-000000000008', 'https://live.staticflickr.com/5553/14676634562_532dcd5f17_b.jpg', 600, 600, 'Vestido em capulana', 0),
+  ('e0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000002', 'https://live.staticflickr.com/671/21135682726_f8f6da6372_b.jpg', 600, 600, 'Smartphone', 0),
+  ('e0000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-000000000003', 'https://live.staticflickr.com/3868/14676487111_86e3d70288_b.jpg', 600, 600, 'Carregador solar', 0),
+  ('e0000000-0000-4000-8000-000000000009', 'a0000000-0000-4000-8000-000000000009', 'https://live.staticflickr.com/4010/4526603240_3e8ef506d5_b.jpg', 600, 600, 'Coluna Bluetooth', 0),
+  ('e0000000-0000-4000-8000-00000000000a', 'a0000000-0000-4000-8000-00000000000a', 'https://live.staticflickr.com/7554/15266648003_847cc1565a.jpg', 600, 600, 'Power bank', 0),
+  ('e0000000-0000-4000-8000-00000000000b', 'a0000000-0000-4000-8000-00000000000b', 'https://live.staticflickr.com/65535/52783153788_f3b4a2c228_b.jpg', 600, 600, 'Telemóvel básico', 0),
+  ('e0000000-0000-4000-8000-00000000000c', 'a0000000-0000-4000-8000-00000000000c', 'https://live.staticflickr.com/8031/7937955100_20426c348c_b.jpg', 600, 600, 'Capa de telemóvel', 0),
+  ('e0000000-0000-4000-8000-00000000000d', 'a0000000-0000-4000-8000-00000000000d', 'https://live.staticflickr.com/3897/14568522934_4012aae180_b.jpg', 600, 600, 'Carregador rápido', 0),
+  ('e0000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-000000000004', 'https://live.staticflickr.com/51/143090034_275b9def6e_b.jpg', 600, 600, 'Panela de barro', 0),
+  ('e0000000-0000-4000-8000-00000000000e', 'a0000000-0000-4000-8000-00000000000e', 'https://live.staticflickr.com/4106/5023481258_8baff1be2b_b.jpg', 600, 600, 'Jogo de panelas', 0),
+  ('e0000000-0000-4000-8000-00000000000f', 'a0000000-0000-4000-8000-00000000000f', 'https://live.staticflickr.com/3481/3243961726_704b9163e9_b.jpg', 600, 600, 'Candeeiro solar', 0),
+  ('e0000000-0000-4000-8000-000000000010', 'a0000000-0000-4000-8000-000000000010', 'https://live.staticflickr.com/8120/29616096525_4977eca05b_b.jpg', 600, 600, 'Esteira de palha', 0),
+  ('e0000000-0000-4000-8000-000000000006', 'a0000000-0000-4000-8000-000000000006', 'https://live.staticflickr.com/6083/6149598235_7ff5ee3354_b.jpg', 600, 600, 'Café de Gorongosa', 0),
+  ('e0000000-0000-4000-8000-000000000011', 'a0000000-0000-4000-8000-000000000011', 'https://live.staticflickr.com/2432/3602288203_f9b43b1e55_b.jpg', 600, 600, 'Castanha de caju', 0),
+  ('e0000000-0000-4000-8000-000000000012', 'a0000000-0000-4000-8000-000000000012', 'https://live.staticflickr.com/8019/7698343400_966335843b_b.jpg', 600, 600, 'Molho de piri-piri', 0),
+  ('e0000000-0000-4000-8000-000000000013', 'a0000000-0000-4000-8000-000000000013', 'https://live.staticflickr.com/130/411317929_1a62e5343d_b.jpg', 600, 600, 'Mel natural', 0),
+  ('e0000000-0000-4000-8000-000000000014', 'a0000000-0000-4000-8000-000000000014', 'https://live.staticflickr.com/2756/4404443713_af1af58731_b.jpg', 600, 600, 'Óleo de coco', 0),
+  ('e0000000-0000-4000-8000-000000000015', 'a0000000-0000-4000-8000-000000000015', 'https://live.staticflickr.com/8018/7468313382_01dca95e64_m.jpg', 600, 600, 'Sabonete artesanal', 0),
+  ('e0000000-0000-4000-8000-000000000016', 'a0000000-0000-4000-8000-000000000016', 'https://live.staticflickr.com/2564/3760127384_9eee5a4e89_b.jpg', 600, 600, 'Manteiga de karité', 0);
 
 -- Stagger publish dates so the "recent ads" feed shows a realistic spread.
 UPDATE product SET published_at = now() - (floor(random() * 20) || ' days')::interval;

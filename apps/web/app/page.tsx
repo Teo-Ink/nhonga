@@ -57,18 +57,21 @@ export default async function HomePage() {
       subtitle: t.home.hero_subtitle,
       cta: t.home.hero_cta,
       href: '/pesquisa',
+      image: 'https://live.staticflickr.com/2680/4277873044_9680cb5df3_b.jpg',
     },
     {
       title: t.home.slide2_title,
       subtitle: t.home.slide2_sub,
       cta: t.home.slide2_cta,
       href: '/pesquisa?sort=price_asc',
+      image: 'https://live.staticflickr.com/671/21135682726_f8f6da6372_b.jpg',
     },
     {
       title: t.home.slide3_title,
       subtitle: t.home.slide3_sub,
       cta: t.home.slide3_cta,
       href: '/vender/novo',
+      image: 'https://live.staticflickr.com/6083/6149598235_7ff5ee3354_b.jpg',
     },
   ];
 

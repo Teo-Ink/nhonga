@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
 export interface Slide {
@@ -6,6 +7,8 @@ export interface Slide {
   subtitle: string;
   cta: string;
   href: string;
+  /** Optional background photo; a scrim keeps the text readable over it. */
+  image?: string;
 }
 
 // Rotating jumbotron (Amazon-style hero carousel, Nhonga's look). Auto-advances
@@ -54,9 +57,23 @@ export function HeroCarousel({
         {slides.map((s, idx) => (
           <div
             key={idx}
-            className={`hcar__slide hcar__slide--${idx % 3} ${idx === i ? 'is-active' : ''}`}
+            className={`hcar__slide hcar__slide--${idx % 3} ${s.image ? 'hcar__slide--photo' : ''} ${idx === i ? 'is-active' : ''}`}
             aria-hidden={idx !== i}
           >
+            {s.image ? (
+              // Decorative background photo; empty alt and a scrim over it keep
+              // the heading and CTA legible.
+              <Image
+                className="hcar__img"
+                src={s.image}
+                alt=""
+                aria-hidden="true"
+                fill
+                sizes="100vw"
+                priority={idx === 0}
+                style={{ objectFit: 'cover' }}
+              />
+            ) : null}
             <div className="hcar__content">
               <h1 className="hcar__title">{s.title}</h1>
               <p className="hcar__subtitle">{s.subtitle}</p>
