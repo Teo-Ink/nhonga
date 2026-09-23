@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { PromoBar } from '../components/PromoBar';
+import { BottomNav } from '../components/BottomNav';
 import { CartProvider } from '../components/cart/CartProvider';
 import { SessionProvider } from '../components/auth/SessionProvider';
 import { getDictionary } from '../lib/i18n/index';
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               {children}
             </main>
             <Footer t={t} />
+            <BottomNav t={t} />
           </CartProvider>
         </SessionProvider>
       </body>

@@ -126,6 +126,34 @@ export const IconFacebook = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconHeart = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 20s-7-4.35-7-9.5a4 4 0 0 1 7-2.6 4 4 0 0 1 7 2.6C19 15.65 12 20 12 20z" />
+  </svg>
+);
+export const IconHeartFilled = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)} fill="currentColor" stroke="none">
+    <path d="M12 20s-7-4.35-7-9.5a4 4 0 0 1 7-2.6 4 4 0 0 1 7 2.6C19 15.65 12 20 12 20z" />
+  </svg>
+);
+export const IconChat = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M4 5h16v11H8l-4 4z" />
+  </svg>
+);
+export const IconPlus = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+export const IconGrid = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="4" y="4" width="7" height="7" rx="1.5" />
+    <rect x="13" y="4" width="7" height="7" rx="1.5" />
+    <rect x="4" y="13" width="7" height="7" rx="1.5" />
+    <rect x="13" y="13" width="7" height="7" rx="1.5" />
+  </svg>
+);
 export const IconMapPin = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z" />

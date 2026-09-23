@@ -1,4 +1,4 @@
-import { IconCart, IconSearch, IconMapPin } from './icons';
+import { IconSearch, IconHeart, IconChat, IconCart, IconPlus, IconGrid } from './icons';
 import { LocaleControls } from './LocaleControls';
 import { CartCount } from './cart/CartCount';
 import { AccountLink } from './auth/AccountLink';
@@ -13,75 +13,63 @@ const CATEGORY_KEYS = [
   'beleza',
 ] as const;
 
-// Two-tier marketplace header (Amazon-structured, Nhonga's own look): a top bar
-// with brand, deliver-to, a department-scoped search, locale/account/cart; and a
-// secondary nav bar of categories plus deals/sell/help.
+// Clean, modern marketplace header (Wallapop-structured UX, Nhonga's own brand):
+// a rounded pill search front and centre, compact action icons, a prominent
+// yellow "Vender" button, and a text category nav below. The mobile experience
+// is carried by the bottom tab bar, so this collapses gracefully on phones.
 export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
-    <header className="hdr">
-      <div className="hdr__top">
-        <a href="/" className="hdr__brand" aria-label={t.common.brand}>
+    <header className="wlhdr">
+      <div className="wlhdr__bar">
+        <a href="/" className="wlhdr__brand" aria-label={t.common.brand}>
           Nhonga<b>.</b>
         </a>
 
-        <a href="/" className="hdr__deliver" aria-label={t.common.deliver_to}>
-          <IconMapPin width={18} height={18} />
-          <span className="hdr__deliver-text">
-            <span className="hdr__deliver-label">{t.common.deliver_to}</span>
-          </span>
-        </a>
-
-        <form className="hdr__search" role="search" action="/pesquisa" method="get">
-          <label htmlFor="hdr-cat" className="sr-only">
-            {t.search.category}
-          </label>
-          <select id="hdr-cat" name="category" className="hdr__scope" defaultValue="">
-            <option value="">{t.common.search_scope_all}</option>
-            {CATEGORY_KEYS.map((k) => (
-              <option key={k} value={k}>
-                {t.categories[k]}
-              </option>
-            ))}
-          </select>
+        <form className="wlsearch" role="search" action="/pesquisa" method="get">
+          <IconSearch width={20} height={20} aria-hidden />
           <label htmlFor="q" className="sr-only">
             {t.common.search_placeholder}
           </label>
           <input id="q" name="q" placeholder={t.common.search_placeholder} autoComplete="off" />
-          <button type="submit" className="hdr__search-btn" aria-label={t.common.search_button}>
-            <IconSearch width={20} height={20} />
-          </button>
         </form>
 
-        <div className="hdr__actions">
+        <div className="wlhdr__actions">
           <LocaleControls locale={locale} />
-          <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
-          <a className="iconbtn" href="/carrinho" aria-label={t.common.cart}>
-            <IconCart />
-            <CartCount />
+          <a className="wlact wlact--hide-sm" href="/favoritos" aria-label={t.common.favorites}>
+            <IconHeart width={22} height={22} />
+            <span className="wlact__label">{t.common.favorites}</span>
           </a>
-          <a className="hdr__postad" href="/vender/novo">
-            {t.common.post_ad}
+          <a className="wlact wlact--hide-sm" href="/mensagens" aria-label={t.common.messages}>
+            <IconChat width={22} height={22} />
+            <span className="wlact__label">{t.common.messages}</span>
+          </a>
+          <a className="wlact" href="/carrinho" aria-label={t.common.cart}>
+            <span className="wlact__cart">
+              <IconCart width={22} height={22} />
+              <CartCount />
+            </span>
+            <span className="wlact__label wlact__label--hide-sm">{t.common.cart}</span>
+          </a>
+          <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
+          <a className="wlsell" href="/vender/novo">
+            <IconPlus width={18} height={18} />
+            <span>{t.common.sell}</span>
           </a>
         </div>
       </div>
 
-      <nav className="hdr__nav" aria-label={t.home.categories}>
-        <a className="hdr__nav-link hdr__nav-link--all" href="/pesquisa">
+      <nav className="wlnav" aria-label={t.home.categories}>
+        <a className="wlnav__all" href="/pesquisa">
+          <IconGrid width={16} height={16} aria-hidden />
           {t.common.nav_all}
         </a>
         {CATEGORY_KEYS.map((k) => (
-          <a className="hdr__nav-link" key={k} href={`/categoria/${k}`}>
+          <a className="wlnav__link" key={k} href={`/categoria/${k}`}>
             {t.categories[k]}
           </a>
         ))}
-        <a className="hdr__nav-link hdr__nav-link--accent" href="/pesquisa?sort=price_asc">
+        <a className="wlnav__link wlnav__link--accent" href="/pesquisa?sort=price_asc">
           {t.common.nav_deals}
-        </a>
-        <a className="hdr__nav-link" href="/vender/comecar">
-          {t.common.nav_sell}
-        </a>
-        <a className="hdr__nav-link" href="/ajuda">
-          {t.common.nav_help}
         </a>
       </nav>
     </header>
