@@ -25,8 +25,15 @@ export default function NewListingPage() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
+  const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
   const [submitted, setSubmitted] = useState(false);
   const [notice, setNotice] = useState(false);
+
+  const plans = [
+    { id: 'free' as const, name: t.plan_free, desc: t.plan_free_desc },
+    { id: 'destaque' as const, name: t.plan_destaque, desc: t.plan_destaque_desc },
+    { id: 'turbo' as const, name: t.plan_turbo, desc: t.plan_turbo_desc },
+  ];
 
   const priceNum = Number(price.replace(',', '.'));
   const priceValid = price.trim() !== '' && Number.isFinite(priceNum) && priceNum > 0;
@@ -134,8 +141,33 @@ export default function NewListingPage() {
             <span className="field__hint">{t.f_photos_hint}</span>
           </div>
 
+          {/* Listing plan (MercadoLivre-style step; Gumtree-style boosts) */}
+          <div className="field">
+            <span className="field__label-row">
+              <span className="field__label">{t.plan_title}</span>
+              <a className="field__link" href="/vender/planos">
+                {t.plan_see_all} →
+              </a>
+            </span>
+            <div className="planpick">
+              {plans.map((pl) => (
+                <label key={pl.id} className={`planpick__opt ${plan === pl.id ? 'is-on' : ''}`}>
+                  <input
+                    type="radio"
+                    name="plan"
+                    checked={plan === pl.id}
+                    onChange={() => setPlan(pl.id)}
+                  />
+                  <span className="planpick__name">{pl.name}</span>
+                  <span className="planpick__desc">{pl.desc}</span>
+                </label>
+              ))}
+            </div>
+            <span className="field__hint">{t.plan_hint}</span>
+          </div>
+
           <button type="submit" className="btn btn--cta auth__submit">
-            {t.publish}
+            {plan === 'free' ? t.publish_free : t.publish_paid}
           </button>
 
           {submitted && !valid ? (
@@ -158,6 +190,9 @@ export default function NewListingPage() {
           ) : (
             <div className="card preview-card">
               <div className="card__media">
+                {plan !== 'free' ? (
+                  <span className="preview-card__badge">{t.badge_destaque}</span>
+                ) : null}
                 <span className="preview-card__ph" aria-hidden="true">
                   <IconBox />
                 </span>

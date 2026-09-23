@@ -47,9 +47,14 @@ export default async function SellerDashboard() {
             </p>
           ) : null}
         </div>
-        <a className="btn btn--cta" href="/vender/novo">
-          {t.sell.new_listing}
-        </a>
+        <div className="dash__actions">
+          <a className="btn btn--ghost" href="/vender/planos">
+            {t.plans.title}
+          </a>
+          <a className="btn btn--cta" href="/vender/novo">
+            {t.sell.new_listing}
+          </a>
+        </div>
       </div>
 
       <p className="demo-banner" role="note">
