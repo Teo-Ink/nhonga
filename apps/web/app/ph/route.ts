@@ -34,18 +34,21 @@ export function GET(req: Request): Response {
   const mono = esc(monogram(title));
   const id = Math.random().toString(36).slice(2, 8);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img" aria-label="${esc(title)}">
+  // 4:3 tile so it maps 1:1 onto the card media box (aspect-ratio 4/3) with no
+  // object-fit cropping — the monogram then reads as proportionate, not a giant
+  // cropped letter.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="${esc(title)}">
   <defs>
     <linearGradient id="g${id}" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="${c1}"/>
       <stop offset="1" stop-color="${c2}"/>
     </linearGradient>
   </defs>
-  <rect width="600" height="600" fill="url(#g${id})"/>
-  <circle cx="500" cy="90" r="220" fill="#ffffff" opacity="0.08"/>
-  <circle cx="90" cy="520" r="160" fill="#000000" opacity="0.08"/>
-  <text x="300" y="300" text-anchor="middle" dominant-baseline="central"
-    font-family="Inter, system-ui, sans-serif" font-size="220" font-weight="800"
+  <rect width="640" height="480" fill="url(#g${id})"/>
+  <circle cx="560" cy="70" r="170" fill="#ffffff" opacity="0.08"/>
+  <circle cx="80" cy="430" r="130" fill="#000000" opacity="0.08"/>
+  <text x="320" y="240" text-anchor="middle" dominant-baseline="central"
+    font-family="Inter, system-ui, sans-serif" font-size="150" font-weight="800"
     fill="${fg}" opacity="0.95">${mono}</text>
 </svg>`;
 

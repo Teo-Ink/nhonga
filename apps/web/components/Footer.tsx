@@ -1,8 +1,9 @@
+import { IconMapPin } from './icons';
 import type { Dictionary } from '../lib/i18n/index';
 
-// Site footer (Amazon-structured: back-to-top bar + link columns + brand/payments
-// strip), in Nhonga's own look. Server component; the back-to-top uses a plain
-// fragment link so no client JS is needed.
+// Site footer, Wallapop-structured in Nhonga's own green/black/yellow: a brand
+// block (wordmark + tagline + payment methods) beside the link columns, then a
+// slim legal bar with a back-to-top link. Server component, no client JS.
 export function Footer({ t }: { t: Dictionary }) {
   const f = t.footer;
   const columns = [
@@ -39,37 +40,50 @@ export function Footer({ t }: { t: Dictionary }) {
     },
   ];
 
+  const wallets = f.payments
+    .replace(/^[^:]*:\s*/, '')
+    .split('·')
+    .map((w) => w.trim());
+
   return (
-    <footer className="ftr">
-      <a className="ftr__top" href="#top">
-        {f.back_to_top}
-      </a>
+    <footer className="wlftr">
+      <div className="wlftr__inner">
+        <div className="wlftr__brandcol">
+          <span className="wlftr__brand">
+            Nhonga<b>.</b>
+          </span>
+          <p className="wlftr__tagline">{f.tagline}</p>
+          <ul className="wlftr__pay" aria-label={f.payments}>
+            {wallets.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
 
-      <div className="ftr__cols">
-        {columns.map((col) => (
-          <nav className="ftr__col" key={col.title} aria-label={col.title}>
-            <h2 className="ftr__col-title">{col.title}</h2>
-            <ul>
-              {col.links.map((l) => (
-                <li key={l.label}>
-                  <a href={l.href}>{l.label}</a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
+        <div className="wlftr__cols">
+          {columns.map((col) => (
+            <nav className="wlftr__col" key={col.title} aria-label={col.title}>
+              <h2 className="wlftr__col-title">{col.title}</h2>
+              <ul>
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    <a href={l.href}>{l.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
       </div>
 
-      <div className="ftr__brandbar">
-        <span className="ftr__brand">
-          Nhonga<b>.</b>
+      <div className="wlftr__bar">
+        <span className="wlftr__country">
+          <IconMapPin width={14} height={14} aria-hidden /> Moçambique
         </span>
-        <span className="ftr__tagline">{f.tagline}</span>
-      </div>
-
-      <div className="ftr__legal">
-        <span>{f.payments}</span>
-        <span>{f.rights}</span>
+        <span className="wlftr__rights">{f.rights}</span>
+        <a className="wlftr__top" href="#top">
+          {f.back_to_top} ↑
+        </a>
       </div>
     </footer>
   );

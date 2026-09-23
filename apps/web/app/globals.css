@@ -3689,3 +3689,117 @@ a.seller:focus-visible {
     padding-bottom: 66px;
   }
 }
+
+/* ══ Wallapop-style footer (Nhonga green/black/yellow) ══════════ */
+.wlftr {
+  margin-top: var(--space-8);
+  background: #141414;
+  color: #e7e7e7;
+}
+.wlftr__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4) var(--space-6);
+}
+@media (min-width: 720px) {
+  .wlftr__inner {
+    grid-template-columns: minmax(240px, 1fr) 2fr;
+    gap: var(--space-8);
+  }
+}
+.wlftr__brand {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+.wlftr__brand b {
+  color: var(--cta);
+}
+.wlftr__tagline {
+  margin: var(--space-2) 0 var(--space-4);
+  color: #b9b9b9;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 34ch;
+}
+.wlftr__pay {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wlftr__pay li {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: var(--weight-medium);
+  color: #d7d7d7;
+}
+.wlftr__cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6) var(--space-4);
+}
+@media (min-width: 720px) {
+  .wlftr__cols {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.wlftr__col-title {
+  margin: 0 0 var(--space-3);
+  font-size: 0.8rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+.wlftr__col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.wlftr__col a {
+  color: #b9b9b9;
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.wlftr__col a:hover {
+  color: var(--cta);
+}
+.wlftr__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-4);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.75rem;
+  color: #9a9a9a;
+}
+.wlftr__country {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #d7d7d7;
+}
+.wlftr__top {
+  margin-left: auto;
+  color: var(--cta);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+.wlftr__top:hover {
+  text-decoration: underline;
+}
