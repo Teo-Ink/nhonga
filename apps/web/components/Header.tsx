@@ -1,8 +1,9 @@
-import { IconSearch, IconHeart, IconChat, IconCart, IconPlus, IconGrid } from './icons';
+import { IconSearch, IconHeart, IconChat, IconCart, IconGrid } from './icons';
 import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
 import { CartCount } from './cart/CartCount';
 import { AccountLink } from './auth/AccountLink';
+import { SellButton } from './auth/SellButton';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 const CATEGORY_KEYS = [
@@ -52,10 +53,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
             <span className="wlact__label wlact__label--hide-sm">{t.common.cart}</span>
           </a>
           <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
-          <a className="wlsell" href="/vender/novo">
-            <IconPlus width={18} height={18} />
-            <span>{t.common.sell}</span>
-          </a>
+          <SellButton label={t.common.sell} />
         </div>
       </div>
 

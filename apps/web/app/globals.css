@@ -3532,15 +3532,15 @@ a.seller:focus-visible {
   min-height: 44px;
   margin-left: var(--space-2);
   border-radius: var(--radius-pill);
-  background: var(--cta);
-  color: var(--cta-text);
+  background: var(--logo-green);
+  color: #ffffff;
   font-weight: var(--weight-bold);
   font-size: var(--text-sm);
   white-space: nowrap;
   text-decoration: none;
 }
 .wlsell:hover {
-  background: var(--cta-hover);
+  background: var(--logo-green-hover);
 }
 
 /* Category nav */
@@ -3664,8 +3664,8 @@ a.seller:focus-visible {
     margin-top: -18px;
     margin-bottom: 2px;
     border-radius: 50%;
-    background: var(--cta);
-    color: var(--cta-text);
+    background: var(--logo-green);
+    color: #ffffff;
     border: 3px solid var(--surface);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
   }

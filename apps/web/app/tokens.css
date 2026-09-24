@@ -79,6 +79,10 @@
   --text-on-accent: #171717;
   --brand: var(--color-primary-700);
   --brand-500: var(--color-primary-500);
+  /* Exact logo green (branding/logo). Used for the "Vender" button so it
+     matches the wordmark; white text on it clears WCAG AA. */
+  --logo-green: #007a5e;
+  --logo-green-hover: #00654e;
   --cta: var(--color-accent-500);
   --cta-hover: var(--color-accent-600);
   --cta-text: #171717;

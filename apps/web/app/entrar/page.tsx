@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isValidMzMsisdn } from '@nhonga/shared';
 import { pt } from '../../lib/i18n/pt';
@@ -13,7 +13,19 @@ type Step = 'phone' | 'code';
 export default function AuthPage() {
   const t = pt.auth;
   const router = useRouter();
-  const { refresh } = useSession();
+  const { refresh, user, loading } = useSession();
+
+  // After sign-in, continue to `?next=` (internal paths only) or the account.
+  const destination = (): string => {
+    if (typeof window === 'undefined') return '/conta';
+    const next = new URLSearchParams(window.location.search).get('next');
+    return next && next.startsWith('/') && !next.startsWith('//') ? next : '/conta';
+  };
+
+  // Already signed in? Skip the form and go straight to the destination.
+  useEffect(() => {
+    if (!loading && user) router.replace(destination());
+  }, [loading, user, router]);
 
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
@@ -80,7 +92,7 @@ export default function AuthPage() {
         return;
       }
       await refresh();
-      router.push('/conta');
+      router.push(destination());
     } catch {
       setError(t.error_generic);
     } finally {
