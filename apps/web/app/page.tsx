@@ -2,6 +2,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
 import { CategoryStrip } from '../components/home/CategoryStrip';
 import { PostAdBanner } from '../components/home/PostAdBanner';
+import { AppPromo } from '../components/home/AppPromo';
 import { HeroCarousel, type Slide } from '../components/HeroCarousel';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
@@ -124,6 +125,8 @@ export default async function HomePage() {
           </section>
         </>
       )}
+
+      <AppPromo t={t} />
 
       <TrustStrip t={t} />
 
