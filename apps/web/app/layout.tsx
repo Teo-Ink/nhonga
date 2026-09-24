@@ -6,6 +6,7 @@ import { PromoBar } from '../components/PromoBar';
 import { BottomNav } from '../components/BottomNav';
 import { CartProvider } from '../components/cart/CartProvider';
 import { SessionProvider } from '../components/auth/SessionProvider';
+import { ChatWidget } from '../components/support/ChatWidget';
 import { getDictionary } from '../lib/i18n/index';
 import './globals.css';
 
@@ -58,6 +59,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </main>
             <Footer t={t} />
             <BottomNav t={t} />
+            <ChatWidget t={t.assistant} />
           </CartProvider>
         </SessionProvider>
       </body>

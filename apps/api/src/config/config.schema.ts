@@ -22,6 +22,10 @@ export interface AppConfig {
   readonly mockCallbackSecret: string;
   readonly paymentApprovalTimeoutSeconds: number;
   readonly paymentLateSweepHours: number;
+  // AI customer-service assistant (Anthropic/Claude). Optional: without a key
+  // the assistant reports itself as not configured instead of failing boot.
+  readonly assistantApiKey: string | null;
+  readonly assistantModel: string;
 }
 
 class ConfigError extends Error {
@@ -100,6 +104,10 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
         : (raw['MOCK_CALLBACK_SECRET'] ?? 'dev-only-not-a-real-secret'),
     paymentApprovalTimeoutSeconds: requireInt(raw, 'PAYMENT_APPROVAL_TIMEOUT_SECONDS', 180),
     paymentLateSweepHours: requireInt(raw, 'PAYMENT_LATE_SWEEP_HOURS', 72),
+    assistantApiKey: raw['ANTHROPIC_API_KEY']?.trim() ? raw['ANTHROPIC_API_KEY']!.trim() : null,
+    assistantModel: raw['ANTHROPIC_MODEL']?.trim()
+      ? raw['ANTHROPIC_MODEL']!.trim()
+      : 'claude-sonnet-5',
   };
 
   return config;

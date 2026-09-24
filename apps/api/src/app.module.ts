@@ -7,6 +7,7 @@ import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { CheckoutModule } from './modules/checkout/checkout.module.js';
 import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
+import { AssistantModule } from './modules/assistant/assistant.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -23,6 +24,7 @@ import { HealthController } from './health/health.controller.js';
     PaymentsHttpModule,
     WebhooksModule,
     CheckoutModule,
+    AssistantModule,
   ],
   controllers: [HealthController],
 })

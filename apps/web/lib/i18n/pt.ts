@@ -428,6 +428,20 @@ export const pt = {
     how_3: 'Pague por M-Pesa, e-Mola ou mKesh (em breve).',
     back_sell: 'Voltar ao painel',
   },
+  assistant: {
+    launcher: 'Ajuda',
+    title: 'Assistente Nhonga',
+    subtitle: 'Apoio ao cliente · IA',
+    greeting:
+      'Olá! Sou o assistente do Nhonga. Posso ajudar com pagamentos, entregas, encomendas ou como vender. Em que posso ajudar?',
+    placeholder: 'Escreve a tua pergunta…',
+    send: 'Enviar',
+    thinking: 'A escrever…',
+    error: 'Ocorreu um erro. Tenta novamente.',
+    open: 'Abrir assistente',
+    close: 'Fechar assistente',
+    disclaimer: 'Assistente de IA — pode cometer erros. Não partilhes palavras-passe nem códigos.',
+  },
   auth: {
     title_signin: 'Entrar',
     title_register: 'Criar conta',

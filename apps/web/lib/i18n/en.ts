@@ -425,6 +425,20 @@ export const en: Dictionary = {
     how_3: 'Pay via M-Pesa, e-Mola or mKesh (coming soon).',
     back_sell: 'Back to dashboard',
   },
+  assistant: {
+    launcher: 'Help',
+    title: 'Nhonga Assistant',
+    subtitle: 'Customer support · AI',
+    greeting:
+      "Hi! I'm the Nhonga assistant. I can help with payments, delivery, orders or how to sell. How can I help?",
+    placeholder: 'Type your question…',
+    send: 'Send',
+    thinking: 'Typing…',
+    error: 'Something went wrong. Please try again.',
+    open: 'Open assistant',
+    close: 'Close assistant',
+    disclaimer: 'AI assistant — may make mistakes. Never share passwords or codes.',
+  },
   auth: {
     title_signin: 'Sign in',
     title_register: 'Create account',

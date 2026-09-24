@@ -37,6 +37,10 @@ export DATABASE_URL="postgresql://nhonga:nhonga@127.0.0.1:5432/nhonga"
 export FIELD_ENCRYPTION_KEY="<32-byte base64 or hex>"
 # Optional: shorten the mock wallet approval delay to watch settlement quickly.
 export MOCK_PAYMENT_MIN_DELAY_MS=2500 MOCK_PAYMENT_MAX_DELAY_MS=5000
+# Optional: enable the AI customer-service assistant (Claude). Without a key the
+# assistant answers with a "not configured" notice. Never commit this key.
+export ANTHROPIC_API_KEY="<your Anthropic API key>"
+export ANTHROPIC_MODEL="claude-sonnet-5"   # optional; this is the default
 PAYMENTS_MODE=mock MOCK_CALLBACK_SECRET=dev-only-not-a-real-secret \
   pnpm --filter @nhonga/api start   # or: node apps/api/dist/main.js
 
