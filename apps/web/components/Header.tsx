@@ -1,4 +1,5 @@
 import { IconSearch, IconHeart, IconChat, IconCart, IconPlus, IconGrid } from './icons';
+import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
 import { CartCount } from './cart/CartCount';
 import { AccountLink } from './auth/AccountLink';
@@ -21,8 +22,8 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
     <header className="wlhdr">
       <div className="wlhdr__bar">
-        <a href="/" className="wlhdr__brand" aria-label={t.common.brand}>
-          Nhonga<b>.</b>
+        <a href="/" className="wlhdr__brand">
+          <Logo variant="auto" label={t.common.brand} />
         </a>
 
         <form className="wlsearch" role="search" action="/pesquisa" method="get">

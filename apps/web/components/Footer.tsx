@@ -1,4 +1,5 @@
 import { IconMapPin } from './icons';
+import { Logo } from './Logo';
 import type { Dictionary } from '../lib/i18n/index';
 
 // Site footer, Wallapop-structured in Nhonga's own green/black/yellow: a brand
@@ -49,9 +50,7 @@ export function Footer({ t }: { t: Dictionary }) {
     <footer className="wlftr">
       <div className="wlftr__inner">
         <div className="wlftr__brandcol">
-          <span className="wlftr__brand">
-            Nhonga<b>.</b>
-          </span>
+          <Logo variant="invertido" className="wlftr__brand" />
           <p className="wlftr__tagline">{f.tagline}</p>
           <ul className="wlftr__pay" aria-label={f.payments}>
             {wallets.map((w) => (

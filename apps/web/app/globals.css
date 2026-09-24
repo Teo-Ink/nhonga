@@ -4164,3 +4164,57 @@ a.seller:focus-visible {
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+
+/* ══ Brand logo lockup (branding/logo → /brand) ════════════════════ */
+.brandlogo {
+  display: inline-flex;
+  align-items: center;
+}
+.brandlogo__img {
+  display: block;
+  height: 28px;
+  width: auto;
+}
+/* auto variant: colour on light theme, white on dark theme (mirrors the
+   token light/dark strategy in tokens.css). */
+.brandlogo__img--dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .brandlogo__img--light {
+    display: none;
+  }
+  :root:not([data-theme='light']) .brandlogo__img--dark {
+    display: block;
+  }
+}
+:root[data-theme='dark'] .brandlogo__img--light {
+  display: none;
+}
+:root[data-theme='dark'] .brandlogo__img--dark {
+  display: block;
+}
+:root[data-theme='light'] .brandlogo__img--light {
+  display: block;
+}
+:root[data-theme='light'] .brandlogo__img--dark {
+  display: none;
+}
+
+/* Header: the brand link now holds the logo lockup. */
+.wlhdr__brand {
+  display: inline-flex;
+  align-items: center;
+}
+.wlhdr__brand .brandlogo__img {
+  height: 30px;
+}
+@media (max-width: 767px) {
+  .wlhdr__brand .brandlogo__img {
+    height: 26px;
+  }
+}
+/* Footer lockup (invertido, on the dark footer). */
+.wlftr__brand .brandlogo__img {
+  height: 32px;
+}
