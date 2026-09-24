@@ -3711,8 +3711,21 @@ a.seller:focus-visible {
 /* ══ Wallapop-style footer (Nhonga green/black/yellow) ══════════ */
 .wlftr {
   margin-top: var(--space-8);
+  /* Light theme: brand green. Dark theme: a dark green-black so the footer
+     matches the dark UI (overrides below mirror the token light/dark strategy). */
   background: linear-gradient(160deg, #0b5138 0%, #083b28 100%);
   color: #e7e7e7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wlftr {
+    background: linear-gradient(160deg, #10231a 0%, #0a1712 100%);
+  }
+}
+:root[data-theme='dark'] .wlftr {
+  background: linear-gradient(160deg, #10231a 0%, #0a1712 100%);
+}
+:root[data-theme='light'] .wlftr {
+  background: linear-gradient(160deg, #0b5138 0%, #083b28 100%);
 }
 .wlftr__inner {
   display: grid;
