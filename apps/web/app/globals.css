@@ -3693,7 +3693,7 @@ a.seller:focus-visible {
 /* ══ Wallapop-style footer (Nhonga green/black/yellow) ══════════ */
 .wlftr {
   margin-top: var(--space-8);
-  background: #141414;
+  background: linear-gradient(160deg, #0b5138 0%, #083b28 100%);
   color: #e7e7e7;
 }
 .wlftr__inner {
