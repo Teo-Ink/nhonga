@@ -20,6 +20,16 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
 }
+/* Headings use the display face (Ubuntu); body, prices and product names stay
+   on the sans face (Inter). */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
 a {
   color: inherit;
   text-decoration: none;

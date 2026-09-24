@@ -91,8 +91,10 @@
   --focus-ring: var(--color-primary-500);
 
   /* ── Typography ────────────────────────────────────────────── */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  /* Display face for headings/brand — Ubuntu, falling back to the body stack. */
+  --font-display: var(--font-ubuntu), 'Ubuntu', var(--font-sans);
   --font-mono: ui-monospace, 'Cascadia Code', 'Roboto Mono', monospace;
 
   --text-xs: 0.75rem; /* 12 */

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Inter, Ubuntu } from 'next/font/google';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { PromoBar } from '../components/PromoBar';
@@ -7,6 +8,22 @@ import { CartProvider } from '../components/cart/CartProvider';
 import { SessionProvider } from '../components/auth/SessionProvider';
 import { getDictionary } from '../lib/i18n/index';
 import './globals.css';
+
+// Type system: Inter for body/UI (legibility for prices, forms, dense lists)
+// and Ubuntu for headings/display (warmth + local character). next/font
+// self-hosts both (no runtime request to Google) and exposes them via CSS
+// variables that tokens.css maps to --font-sans / --font-display.
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+const ubuntu = Ubuntu({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-ubuntu',
+});
 
 export const metadata = {
   title: 'Nhonga — Compre e venda em Moçambique',
@@ -21,7 +38,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     // The no-flash script sets data-theme on <html> before hydration, so the
     // server markup intentionally differs from the client here.
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} className={`${inter.variable} ${ubuntu.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
