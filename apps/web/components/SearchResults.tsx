@@ -1,4 +1,6 @@
+import { Fragment } from 'react';
 import { ProductCard } from './ProductCard';
+import { AdSlot } from './AdSlot';
 import { EmptyState } from './ui';
 import { SearchControls } from './SearchControls';
 import { SearchFilters } from './SearchFilters';
@@ -57,6 +59,8 @@ export function SearchResults({
         </nav>
       ) : null}
 
+      <AdSlot t={t} placement="leaderboard" />
+
       <div className="results__head">
         <h1 className="section__title" id="results">
           {title}
@@ -103,8 +107,11 @@ export function SearchResults({
             </EmptyState>
           ) : (
             <div className="grid grid--results">
-              {items.map((p) => (
-                <ProductCard key={p.id} p={p} t={t} />
+              {items.map((p, i) => (
+                <Fragment key={p.id}>
+                  {i === 4 && items.length > 4 ? <AdSlot t={t} placement="inline" /> : null}
+                  <ProductCard p={p} t={t} />
+                </Fragment>
               ))}
             </div>
           )}

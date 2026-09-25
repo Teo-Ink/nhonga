@@ -1,0 +1,103 @@
+import type { Metadata } from 'next';
+import { cents, formatMZN } from '@nhonga/shared';
+import { IconMapPin, IconGrid, IconSparkle } from '../../components/icons';
+import { getDictionary } from '../../lib/i18n/index';
+
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return { title: `${t.ads.page_title} — ${t.common.brand}`, description: t.ads.page_subtitle };
+}
+
+// "Advertise on Nhonga" — the display-ad side of the revenue model. Example
+// spaces and prices (clearly a demo). Private sellers are pointed to the
+// self-serve boosts instead, so the two revenue streams stay distinct.
+export default async function AdvertisePage() {
+  const { t } = await getDictionary();
+  const a = t.ads;
+
+  const why = [
+    { Icon: IconMapPin, title: a.why_reach, desc: a.why_reach_desc },
+    { Icon: IconGrid, title: a.why_targeting, desc: a.why_targeting_desc },
+    { Icon: IconSparkle, title: a.why_formats, desc: a.why_formats_desc },
+  ];
+  // Example weekly rates (demo only), in cents.
+  const formats = [
+    { title: a.fmt_leaderboard, desc: a.fmt_leaderboard_desc, priceCents: 250000 },
+    { title: a.fmt_inline, desc: a.fmt_inline_desc, priceCents: 150000 },
+    { title: a.fmt_mpu, desc: a.fmt_mpu_desc, priceCents: 100000 },
+  ];
+
+  return (
+    <section className="section adpage" aria-labelledby="adpage-title">
+      <nav className="crumbs" aria-label="breadcrumb">
+        <span className="crumbs__item">
+          <a href="/">{t.common.brand}</a>
+          <span className="crumbs__sep" aria-hidden="true">
+            /
+          </span>
+        </span>
+        <span className="crumbs__item">
+          <span aria-current="page">{a.page_title}</span>
+        </span>
+      </nav>
+
+      <h1 className="section__title" id="adpage-title">
+        {a.page_title}
+      </h1>
+      <p className="adpage__lead">{a.page_subtitle}</p>
+      <p className="notice" role="note">
+        {a.demo_note}
+      </p>
+
+      <h2 className="adpage__h2">{a.why_title}</h2>
+      <ul className="adpage__why">
+        {why.map((w, i) => (
+          <li className="adwhy" key={i}>
+            <span className="adwhy__icon" aria-hidden="true">
+              <w.Icon width={22} height={22} />
+            </span>
+            <span className="adwhy__body">
+              <strong>{w.title}</strong>
+              <span>{w.desc}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <h2 className="adpage__h2">{a.formats_title}</h2>
+      <div className="adformats">
+        {formats.map((f, i) => (
+          <div className="adfmt" key={i}>
+            <div className={`adfmt__preview adfmt__preview--${i}`} aria-hidden="true">
+              <span className="adslot__label">{a.label}</span>
+            </div>
+            <h3 className="adfmt__title">{f.title}</h3>
+            <p className="adfmt__desc">{f.desc}</p>
+            <p className="adfmt__price">
+              <span className="adfmt__from">{a.from_price}</span> {formatMZN(cents(f.priceCents))}
+              <span className="adfmt__per">{a.per_week}</span>
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="adcta">
+        <a className="btn btn--primary" href="/ajuda">
+          {a.cta_contact}
+        </a>
+      </div>
+
+      <div className="adboost">
+        <div>
+          <strong>{a.seller_boost_title}</strong>
+          <p>{a.seller_boost_body}</p>
+        </div>
+        <a className="btn btn--ghost" href="/vender/promover">
+          {a.seller_boost_cta}
+        </a>
+      </div>
+    </section>
+  );
+}

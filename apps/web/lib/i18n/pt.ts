@@ -461,6 +461,52 @@ export const pt = {
     cta_quote: 'Pedir orçamento pelo WhatsApp',
     wa_quote: 'Olá! Vi o serviço «{title}» no Nhonga e gostaria de um orçamento.',
   },
+
+  // Display-ad slots (house ads) + the "advertise with us" page. The revenue
+  // model alongside seller-paid boosts. Slots are always labelled "Publicidade".
+  ads: {
+    label: 'Publicidade',
+    advertise: {
+      title: 'Anuncie o seu negócio aqui',
+      body: 'Alcance milhares de moçambicanos que compram e vendem no Nhonga.',
+      cta: 'Quero anunciar',
+    },
+    promote: {
+      title: 'Destaque o seu anúncio',
+      body: 'Apareça no topo dos resultados e receba mais contactos.',
+      cta: 'Promover anúncio',
+    },
+    sell: {
+      title: 'Venda mais rápido no Nhonga',
+      body: 'Publicar um anúncio é grátis. Comece agora.',
+      cta: 'Publicar anúncio',
+    },
+    page_title: 'Anuncie no Nhonga',
+    page_subtitle: 'Coloque a sua marca à frente de quem já está a comprar e a vender.',
+    demo_note:
+      'Demonstração: os espaços e preços abaixo são exemplos. Nada é cobrado e nenhum pedido é enviado.',
+    why_title: 'Porquê anunciar no Nhonga?',
+    why_reach: 'Público local',
+    why_reach_desc: 'Compradores e vendedores em todo o Moçambique, todos os dias.',
+    why_targeting: 'No sítio certo',
+    why_targeting_desc: 'Escolha a categoria — Viaturas, Imóveis, Empregos e muito mais.',
+    why_formats: 'Vários formatos',
+    why_formats_desc: 'Banner de topo, destaque na lista ou espaço lateral.',
+    formats_title: 'Espaços disponíveis',
+    fmt_leaderboard: 'Banner de topo',
+    fmt_leaderboard_desc: 'Faixa grande no topo dos resultados e da página inicial.',
+    fmt_inline: 'Destaque na lista',
+    fmt_inline_desc: 'Um cartão em destaque no meio dos resultados.',
+    fmt_mpu: 'Espaço lateral',
+    fmt_mpu_desc: 'Retângulo ao lado dos anúncios.',
+    from_price: 'A partir de',
+    per_week: '/ semana',
+    cta_contact: 'Falar com a equipa comercial',
+    seller_boost_title: 'É vendedor particular?',
+    seller_boost_body:
+      'Não precisa de comprar publicidade — destaque o seu próprio anúncio a partir de um plano simples.',
+    seller_boost_cta: 'Ver planos de destaque',
+  },
   promote: {
     title: 'Promover um anúncio',
     subtitle: 'Dê mais visibilidade ao seu anúncio e receba mais contactos.',

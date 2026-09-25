@@ -1,6 +1,7 @@
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
 import { CategoryStrip } from '../components/home/CategoryStrip';
+import { AdSlot } from '../components/AdSlot';
 import { PostAdBanner } from '../components/home/PostAdBanner';
 import { AppPromo } from '../components/home/AppPromo';
 import { HeroCarousel, type Slide } from '../components/HeroCarousel';
@@ -94,6 +95,10 @@ export default async function HomePage() {
       />
 
       <PostAdBanner t={t} />
+
+      <section className="section">
+        <AdSlot t={t} placement="leaderboard" />
+      </section>
 
       {failed ? (
         <section className="section">
