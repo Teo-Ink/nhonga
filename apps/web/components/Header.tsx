@@ -6,6 +6,11 @@ import { SellButton } from './auth/SellButton';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 const CATEGORY_KEYS = [
+  'viaturas',
+  'imoveis',
+  'empregos',
+  'servicos',
+  'agro',
   'moda',
   'electronica',
   'telemoveis',
