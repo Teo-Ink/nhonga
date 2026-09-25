@@ -26,6 +26,7 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
     <div className="lcard">
       <a className="lcard__link" href={`/produto/${p.slug}`}>
         <div className="lcard__media">
+          {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
           {p.discountPercent ? <span className="lcard__badge">-{p.discountPercent}%</span> : null}
           {p.image ? (
             <Image

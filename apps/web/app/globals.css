@@ -4673,3 +4673,28 @@ a.seller:focus-visible {
   line-height: 1.4;
   color: var(--text-muted);
 }
+
+/* Featured (Destaque) badge on listing cards — paid visibility (E). */
+.lcard__featured {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 1;
+  background: var(--logo-green, #007a5e);
+  color: #ffffff;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.02em;
+}
+.lcard__featured + .lcard__badge {
+  top: calc(var(--space-2) + 26px);
+}
+
+/* Promote-a-listing page container (paid visibility, E). */
+.promote {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-8);
+}

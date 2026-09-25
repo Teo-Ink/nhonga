@@ -40,6 +40,7 @@ export interface ProductListItem {
   freeDelivery: boolean;
   location: string | null;
   postedAt: string | null;
+  featured: boolean;
   vendor: VendorSummary;
 }
 export interface ProductVariant {

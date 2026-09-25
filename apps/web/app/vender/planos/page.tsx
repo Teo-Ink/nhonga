@@ -19,6 +19,7 @@ export default async function PlansPage() {
       benefits: [p.free_b1, p.free_b2, p.free_b3],
       popular: false,
       cta: p.start_free,
+      href: '/vender/comecar',
     },
     {
       name: p.destaque_name,
@@ -28,6 +29,7 @@ export default async function PlansPage() {
       benefits: [p.destaque_b1, p.destaque_b2, p.destaque_b3],
       popular: true,
       cta: p.choose,
+      href: '/vender/promover',
     },
     {
       name: p.turbo_name,
@@ -37,6 +39,7 @@ export default async function PlansPage() {
       benefits: [p.turbo_b1, p.turbo_b2, p.turbo_b3],
       popular: false,
       cta: p.choose,
+      href: '/vender/promover',
     },
   ];
 
@@ -103,7 +106,7 @@ export default async function PlansPage() {
             </ul>
             <a
               className={`btn ${tier.popular ? 'btn--cta' : 'btn--ghost'} plancard__cta`}
-              href="/vender/novo"
+              href={tier.href}
             >
               {tier.cta}
             </a>
