@@ -14,7 +14,16 @@ export interface ChatReply {
   readonly configured: boolean;
 }
 
+export interface TokenUsage {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+}
+export interface CompletionResult {
+  readonly text: string;
+  readonly usage: TokenUsage;
+}
+
 /** A pluggable completion backend (Anthropic today; Bedrock/etc. later). */
 export interface AssistantProvider {
-  complete(system: string, messages: readonly ChatMessage[]): Promise<string>;
+  complete(system: string, messages: readonly ChatMessage[]): Promise<CompletionResult>;
 }

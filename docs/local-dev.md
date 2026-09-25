@@ -41,6 +41,10 @@ export MOCK_PAYMENT_MIN_DELAY_MS=2500 MOCK_PAYMENT_MAX_DELAY_MS=5000
 # assistant answers with a "not configured" notice. Never commit this key.
 export ANTHROPIC_API_KEY="<your Anthropic API key>"
 export ANTHROPIC_MODEL="claude-sonnet-5"   # optional; this is the default
+# Cost/abuse guards (optional): per-client chat requests per minute, and a
+# monthly token budget (0 = no cap). Usage + a rough cost estimate are logged.
+export ASSISTANT_RATE_PER_MIN=15
+export ASSISTANT_MONTHLY_TOKEN_CAP=0
 PAYMENTS_MODE=mock MOCK_CALLBACK_SECRET=dev-only-not-a-real-secret \
   pnpm --filter @nhonga/api start   # or: node apps/api/dist/main.js
 

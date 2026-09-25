@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/config.schema.js';
 import { AnthropicProvider } from './anthropic.provider.js';
@@ -7,7 +7,7 @@ import type { AssistantProvider, ChatMessage, ChatReply } from './assistant.type
 export class AssistantError extends Error {
   constructor(
     message: string,
-    readonly code: 'invalid_input' | 'upstream',
+    readonly code: 'invalid_input' | 'upstream' | 'rate_limited',
   ) {
     super(message);
     this.name = 'AssistantError';
@@ -16,6 +16,30 @@ export class AssistantError extends Error {
 
 const MAX_MESSAGES = 20;
 const MAX_CONTENT = 2000;
+const RATE_WINDOW_MS = 60_000;
+
+// Rough Claude pricing for cost logging only (USD per 1M tokens; not billed by
+// us). Order-of-magnitude is enough to spot runaway usage.
+const USD_PER_M_INPUT = 3;
+const USD_PER_M_OUTPUT = 15;
+
+/** Per-client sliding-window limiter. In-memory: fine for a single instance;
+ *  a multi-instance deployment would move this to Redis. */
+class RateLimiter {
+  private readonly hits = new Map<string, number[]>();
+  constructor(private readonly perMinute: number) {}
+  allow(clientId: string): boolean {
+    const now = Date.now();
+    const recent = (this.hits.get(clientId) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+    if (recent.length >= this.perMinute) {
+      this.hits.set(clientId, recent);
+      return false;
+    }
+    recent.push(now);
+    this.hits.set(clientId, recent);
+    return true;
+  }
+}
 
 // Grounds the bot in Nhonga's real model so it doesn't invent policies. Kept
 // factual and honest about the demo. Portuguese-first, but it mirrors the
@@ -40,19 +64,29 @@ Regras importantes:
 
 @Injectable()
 export class AssistantService {
+  private readonly log = new Logger('Assistant');
   private readonly provider: AssistantProvider | null;
+  private readonly limiter: RateLimiter;
+  private readonly monthlyTokenCap: number;
+  private monthKey = AssistantService.monthKey();
+  private monthTokens = 0;
 
   constructor(config: ConfigService<AppConfig, true>) {
     const key = config.get('assistantApiKey', { infer: true });
     const model = config.get('assistantModel', { infer: true });
     this.provider = key ? new AnthropicProvider(key, model) : null;
+    this.limiter = new RateLimiter(config.get('assistantRatePerMin', { infer: true }));
+    this.monthlyTokenCap = config.get('assistantMonthlyTokenCap', { infer: true });
   }
 
   get configured(): boolean {
     return this.provider !== null;
   }
 
-  async chat(messages: readonly ChatMessage[]): Promise<ChatReply> {
+  async chat(messages: readonly ChatMessage[], clientId = 'anon'): Promise<ChatReply> {
+    if (!this.limiter.allow(clientId)) {
+      throw new AssistantError('Too many requests — try again shortly', 'rate_limited');
+    }
     this.validate(messages);
 
     if (!this.provider) {
@@ -63,15 +97,54 @@ export class AssistantService {
       };
     }
 
-    try {
-      const reply = await this.provider.complete(SYSTEM_PROMPT, messages);
+    if (this.overMonthlyCap()) {
+      this.log.warn(`Monthly token cap (${this.monthlyTokenCap}) reached; serving capacity notice`);
       return {
-        reply: reply || 'Desculpa, não consegui responder agora. Tenta reformular a pergunta.',
+        reply:
+          'O assistente está muito ocupado neste momento. Tenta mais tarde ou consulta a página de Ajuda (/ajuda).',
+        configured: true,
+      };
+    }
+
+    try {
+      const { text, usage } = await this.provider.complete(SYSTEM_PROMPT, messages);
+      this.record(usage.inputTokens, usage.outputTokens);
+      return {
+        reply: text || 'Desculpa, não consegui responder agora. Tenta reformular a pergunta.',
         configured: true,
       };
     } catch (e) {
       throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
     }
+  }
+
+  private overMonthlyCap(): boolean {
+    if (this.monthlyTokenCap <= 0) return false;
+    this.rollMonth();
+    return this.monthTokens >= this.monthlyTokenCap;
+  }
+
+  /** Log usage + a rough cost estimate, and accrue the monthly total. */
+  private record(inputTokens: number, outputTokens: number): void {
+    this.rollMonth();
+    this.monthTokens += inputTokens + outputTokens;
+    const costUsd = (inputTokens * USD_PER_M_INPUT + outputTokens * USD_PER_M_OUTPUT) / 1_000_000;
+    this.log.log(
+      `usage in=${inputTokens} out=${outputTokens} ~$${costUsd.toFixed(4)} monthTotal=${this.monthTokens}`,
+    );
+  }
+
+  private rollMonth(): void {
+    const key = AssistantService.monthKey();
+    if (key !== this.monthKey) {
+      this.monthKey = key;
+      this.monthTokens = 0;
+    }
+  }
+
+  private static monthKey(): string {
+    const d = new Date();
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
   }
 
   private validate(messages: readonly ChatMessage[]): void {

@@ -1,4 +1,4 @@
-import type { AssistantProvider, ChatMessage } from './assistant.types.js';
+import type { AssistantProvider, ChatMessage, CompletionResult } from './assistant.types.js';
 
 interface AnthropicTextBlock {
   type: string;
@@ -6,6 +6,7 @@ interface AnthropicTextBlock {
 }
 interface AnthropicResponse {
   content?: AnthropicTextBlock[];
+  usage?: { input_tokens?: number; output_tokens?: number };
 }
 
 /**
@@ -22,7 +23,7 @@ export class AnthropicProvider implements AssistantProvider {
     private readonly maxTokens = 700,
   ) {}
 
-  async complete(system: string, messages: readonly ChatMessage[]): Promise<string> {
+  async complete(system: string, messages: readonly ChatMessage[]): Promise<CompletionResult> {
     const res = await fetch(AnthropicProvider.ENDPOINT, {
       method: 'POST',
       headers: {
@@ -49,6 +50,12 @@ export class AnthropicProvider implements AssistantProvider {
       .map((b) => b.text)
       .join('')
       .trim();
-    return text;
+    return {
+      text,
+      usage: {
+        inputTokens: data.usage?.input_tokens ?? 0,
+        outputTokens: data.usage?.output_tokens ?? 0,
+      },
+    };
   }
 }

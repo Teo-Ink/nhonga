@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Ip,
   Post,
 } from '@nestjs/common';
 import { AssistantError, AssistantService } from './assistant.service.js';
@@ -40,15 +41,19 @@ export class AssistantController {
 
   @Post('chat')
   @HttpCode(200)
-  async chat(@Body() body: ChatBody): Promise<ChatReply> {
+  async chat(@Body() body: ChatBody, @Ip() ip: string): Promise<ChatReply> {
     const messages = parseMessages(body.messages);
     try {
-      return await this.assistant.chat(messages);
+      return await this.assistant.chat(messages, ip || 'anon');
     } catch (e) {
       if (e instanceof AssistantError) {
         throw new HttpException(
           { message: e.message },
-          e.code === 'invalid_input' ? HttpStatus.BAD_REQUEST : HttpStatus.BAD_GATEWAY,
+          e.code === 'invalid_input'
+            ? HttpStatus.BAD_REQUEST
+            : e.code === 'rate_limited'
+              ? HttpStatus.TOO_MANY_REQUESTS
+              : HttpStatus.BAD_GATEWAY,
         );
       }
       throw e;

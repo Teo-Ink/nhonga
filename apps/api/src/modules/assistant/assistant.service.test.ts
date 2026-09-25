@@ -4,11 +4,19 @@ import type { AppConfig } from '../../config/config.schema.js';
 import { AssistantError, AssistantService } from './assistant.service.js';
 import type { ChatMessage } from './assistant.types.js';
 
-// Minimal ConfigService double: only the two keys the service reads.
-function fakeConfig(apiKey: string | null): ConfigService<AppConfig, true> {
-  return {
-    get: (key: string) => (key === 'assistantApiKey' ? apiKey : 'claude-sonnet-5'),
-  } as unknown as ConfigService<AppConfig, true>;
+// Minimal ConfigService double for the keys the service reads.
+function fakeConfig(
+  apiKey: string | null,
+  ratePerMin = 15,
+  cap = 0,
+): ConfigService<AppConfig, true> {
+  const values: Record<string, unknown> = {
+    assistantApiKey: apiKey,
+    assistantModel: 'claude-sonnet-5',
+    assistantRatePerMin: ratePerMin,
+    assistantMonthlyTokenCap: cap,
+  };
+  return { get: (key: string) => values[key] } as unknown as ConfigService<AppConfig, true>;
 }
 
 const user = (content: string): ChatMessage => ({ role: 'user', content });
@@ -49,5 +57,14 @@ describe('AssistantService', () => {
   it('rejects an empty message body', async () => {
     const svc = new AssistantService(fakeConfig(null));
     await expect(svc.chat([user('   ')])).rejects.toMatchObject({ code: 'invalid_input' });
+  });
+
+  it('rate-limits a client after the per-minute allowance', async () => {
+    const svc = new AssistantService(fakeConfig(null, 2)); // 2 requests / minute
+    await svc.chat([user('1')], '1.2.3.4');
+    await svc.chat([user('2')], '1.2.3.4');
+    await expect(svc.chat([user('3')], '1.2.3.4')).rejects.toMatchObject({ code: 'rate_limited' });
+    // A different client is unaffected.
+    await expect(svc.chat([user('a')], '5.6.7.8')).resolves.toMatchObject({ configured: false });
   });
 });

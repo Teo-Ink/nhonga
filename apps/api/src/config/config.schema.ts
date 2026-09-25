@@ -26,6 +26,10 @@ export interface AppConfig {
   // the assistant reports itself as not configured instead of failing boot.
   readonly assistantApiKey: string | null;
   readonly assistantModel: string;
+  /** Per-client chat requests allowed per minute. */
+  readonly assistantRatePerMin: number;
+  /** Monthly token budget; 0 disables the cap. */
+  readonly assistantMonthlyTokenCap: number;
 }
 
 class ConfigError extends Error {
@@ -108,6 +112,8 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
     assistantModel: raw['ANTHROPIC_MODEL']?.trim()
       ? raw['ANTHROPIC_MODEL']!.trim()
       : 'claude-sonnet-5',
+    assistantRatePerMin: requireInt(raw, 'ASSISTANT_RATE_PER_MIN', 15),
+    assistantMonthlyTokenCap: requireInt(raw, 'ASSISTANT_MONTHLY_TOKEN_CAP', 0),
   };
 
   return config;
