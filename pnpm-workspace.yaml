@@ -1,3 +1,6 @@
 packages:
   - "apps/*"
   - "packages/*"
+  # The Expo (React Native) app manages its own dependencies with npm, per Expo's
+  # convention; keeping it out of the pnpm workspace avoids hoisting conflicts.
+  - "!apps/mobile"
