@@ -228,3 +228,41 @@ export const IconShare = (p: SVGProps<SVGSVGElement>) => (
     <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
   </svg>
 );
+
+// Classifieds vertical icons (Viaturas, Imóveis, Serviços, Empregos, Agro).
+export const IconCar = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11" />
+    <path d="M3 15v-2.5A1.5 1.5 0 0 1 4.5 11h15A1.5 1.5 0 0 1 21 12.5V15a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1H4a1 1 0 0 1-1-1z" />
+    <circle cx="7.5" cy="13.5" r="0.6" />
+    <circle cx="16.5" cy="13.5" r="0.6" />
+  </svg>
+);
+
+export const IconKey = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <circle cx="7.5" cy="15.5" r="3.5" />
+    <path d="M10 13L20 3M17 6l2 2M14 9l2 2" />
+  </svg>
+);
+
+export const IconTools = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M14.5 5.5a3.5 3.5 0 0 0 4.6 4.6L21 12l-3 3-1.9-1.9a3.5 3.5 0 0 0-4.6-4.6z" />
+    <path d="M12.5 11.5L4 20l-1 1M9 8l-5.5 5.5" />
+  </svg>
+);
+
+export const IconBriefcase = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <rect x="3" y="7" width="18" height="12" rx="2" />
+    <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18" />
+  </svg>
+);
+
+export const IconLeaf = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M4 20c0-8 6-14 16-14 0 10-6 16-14 16" />
+    <path d="M4 20c3-4 6-6 10-8" />
+  </svg>
+);

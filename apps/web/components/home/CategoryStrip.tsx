@@ -1,7 +1,26 @@
-import { IconShirt, IconDevice, IconPhone, IconHome, IconCup, IconSparkle } from '../icons';
+import {
+  IconShirt,
+  IconDevice,
+  IconPhone,
+  IconHome,
+  IconCup,
+  IconSparkle,
+  IconCar,
+  IconKey,
+  IconBriefcase,
+  IconTools,
+  IconLeaf,
+} from '../icons';
 import type { Dictionary } from '../../lib/i18n/index';
 
+// Classifieds verticals lead (Viaturas/Imóveis/Empregos/Serviços/Agro, in the
+// spirit of an OLX/Gumtree top nav), then the "for sale" retail categories.
 const CATS = [
+  { slug: 'viaturas', Icon: IconCar },
+  { slug: 'imoveis', Icon: IconKey },
+  { slug: 'empregos', Icon: IconBriefcase },
+  { slug: 'servicos', Icon: IconTools },
+  { slug: 'agro', Icon: IconLeaf },
   { slug: 'moda', Icon: IconShirt },
   { slug: 'electronica', Icon: IconDevice },
   { slug: 'telemoveis', Icon: IconPhone },

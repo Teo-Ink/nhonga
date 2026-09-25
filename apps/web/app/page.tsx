@@ -12,6 +12,11 @@ import { getDictionary } from '../lib/i18n/index';
 export const dynamic = 'force-dynamic';
 
 const CATEGORY_KEYS = [
+  'viaturas',
+  'imoveis',
+  'empregos',
+  'servicos',
+  'agro',
   'moda',
   'electronica',
   'telemoveis',

@@ -188,6 +188,11 @@ export const en: Dictionary = {
     alimentacao: 'Food',
     beleza: 'Beauty',
     telemoveis: 'Phones',
+    viaturas: 'Vehicles',
+    imoveis: 'Property',
+    empregos: 'Jobs',
+    servicos: 'Services',
+    agro: 'Agriculture & Animals',
     all: 'See all',
   },
   cart: {

@@ -188,6 +188,11 @@ export const pt = {
     alimentacao: 'Alimentação',
     beleza: 'Beleza',
     telemoveis: 'Telemóveis',
+    viaturas: 'Viaturas',
+    imoveis: 'Imóveis',
+    empregos: 'Empregos',
+    servicos: 'Serviços',
+    agro: 'Agro e Animais',
     all: 'Ver todas',
   },
   cart: {

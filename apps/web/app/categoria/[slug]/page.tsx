@@ -7,23 +7,8 @@ import {
   type ProductListItem,
 } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
-import type { Dictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
-
-const CAT_KEYS = ['moda', 'electronica', 'telemoveis', 'casa', 'alimentacao', 'beleza'] as const;
-type CatKey = (typeof CAT_KEYS)[number];
-const isCat = (s: string): s is CatKey => (CAT_KEYS as readonly string[]).includes(s);
-
-// Display names for the classifieds verticals (pt-first). The retail categories
-// come from the dictionary; the verticals are named here until they earn i18n keys.
-const VERTICAL_LABELS: Record<string, string> = {
-  viaturas: 'Viaturas',
-  imoveis: 'Imóveis',
-  servicos: 'Serviços',
-  empregos: 'Empregos',
-  agro: 'Agro e Animais',
-};
 
 export default async function CategoryPage({
   params,
@@ -121,9 +106,7 @@ export default async function CategoryPage({
   }
   if (inStock) chips.push({ label: t.search.in_stock_only, removeHref: hrefWithout(['inStock']) });
 
-  const label = isCat(slug)
-    ? (t.categories as Dictionary['categories'])[slug]
-    : (VERTICAL_LABELS[slug] ?? slug);
+  const label = (t.categories as Record<string, string>)[slug] ?? slug;
   return (
     <SearchResults
       t={t}
