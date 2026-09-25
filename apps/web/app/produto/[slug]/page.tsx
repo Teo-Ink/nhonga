@@ -1,12 +1,45 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { cents, formatMZN } from '@nhonga/shared';
 import { Price, Rating, VerifiedBadge } from '../../../components/ui';
 import { IconTruck, IconReturn, IconShield } from '../../../components/icons';
 import { getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
-import { BuyBox } from '../../../components/cart/BuyBox';
+import { ContactSeller } from '../../../components/ContactSeller';
 
 export const dynamic = 'force-dynamic';
+
+// Open Graph tags so a listing shared on WhatsApp shows a photo, title, price
+// and city preview. Runs on the server; the image is the absolute /ph or CDN url.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  try {
+    const p = await getProduct(slug);
+    const price = formatMZN(cents(p.priceCents));
+    const where = p.location ? ` · ${p.location}` : '';
+    const title = `${p.title} — ${price}${where}`;
+    const description = p.description?.slice(0, 160) || `${p.title} no Nhonga${where}`;
+    const image = p.images[0]?.url ?? p.image?.url;
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        ...(image ? { images: [{ url: image }] } : {}),
+      },
+      twitter: { card: image ? 'summary_large_image' : 'summary', title, description },
+    };
+  } catch {
+    return { title: 'Nhonga' };
+  }
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -102,7 +135,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </span>
           </a>
 
-          <BuyBox product={product} t={t} />
+          <ContactSeller
+            slug={product.slug}
+            title={product.title}
+            priceLabel={formatMZN(cents(product.priceCents))}
+            whatsapp={product.vendor.whatsapp ?? null}
+            phone={product.vendor.phone ?? null}
+            t={t.contact}
+          />
 
           <ul className="assurances">
             <li className="assurance">

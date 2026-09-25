@@ -439,6 +439,15 @@ export const en: Dictionary = {
     close: 'Close assistant',
     disclaimer: 'AI assistant — may make mistakes. Never share passwords or codes.',
   },
+  contact: {
+    whatsapp: 'Contact on WhatsApp',
+    call: 'Call',
+    share: 'Share',
+    no_contact: 'This seller left no contact.',
+    safety:
+      'Safety tip: meet in a public place and check the item before paying. Never send money in advance or share codes or PINs.',
+    wa_message: 'Hi! I am interested in your “{title}” ({price}) listing on Nhonga.',
+  },
   auth: {
     title_signin: 'Sign in',
     title_register: 'Create account',

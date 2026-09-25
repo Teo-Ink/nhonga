@@ -17,6 +17,14 @@ export interface VendorSummary {
   isVerified: boolean;
   ratingAvg: number | null;
   ratingCount: number;
+  /** Contact channels — only populated on the product detail; null when hidden. */
+  whatsapp?: string | null;
+  phone?: string | null;
+}
+export interface ListingStats {
+  views: number;
+  contacts: number;
+  shares: number;
 }
 export interface ProductListItem {
   id: string;
@@ -53,6 +61,7 @@ export interface ProductDetail extends ProductListItem {
   images: Image[];
   variants: ProductVariant[];
   options: OptionGroup[];
+  stats: ListingStats;
 }
 
 async function get<T>(path: string): Promise<T> {

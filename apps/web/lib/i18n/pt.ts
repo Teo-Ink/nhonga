@@ -442,6 +442,15 @@ export const pt = {
     close: 'Fechar assistente',
     disclaimer: 'Assistente de IA — pode cometer erros. Não partilhes palavras-passe nem códigos.',
   },
+  contact: {
+    whatsapp: 'Contactar pelo WhatsApp',
+    call: 'Ligar',
+    share: 'Partilhar',
+    no_contact: 'Este vendedor não deixou contacto.',
+    safety:
+      'Dica de segurança: encontre-se num local público e verifique o produto antes de pagar. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
+    wa_message: 'Olá! Tenho interesse no anúncio «{title}» ({price}) no Nhonga.',
+  },
   auth: {
     title_signin: 'Entrar',
     title_register: 'Criar conta',

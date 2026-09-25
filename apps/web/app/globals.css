@@ -4615,3 +4615,61 @@ a.seller:focus-visible {
     height: calc(100vh - 66px - 150px);
   }
 }
+
+/* ══ Classifieds contact block (WhatsApp / call / share) ═══════════ */
+.contactbox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.contactbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-base);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+}
+.contactbtn--wa {
+  background: #25d366;
+  color: #ffffff;
+  border: none;
+}
+.contactbtn--wa:hover {
+  background: #1eb457;
+}
+.contactbtn--call {
+  background: var(--logo-green, #007a5e);
+  color: #ffffff;
+  border: none;
+}
+.contactbtn--call:hover {
+  background: var(--logo-green-hover, #00654e);
+}
+.contactbtn--share {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.contactbtn--share:hover {
+  background: var(--surface-sunken);
+}
+.contactbox__none {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.contactbox__safe {
+  margin-top: var(--space-1);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
