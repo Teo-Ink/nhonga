@@ -3534,7 +3534,7 @@ a.seller:focus-visible {
   color: var(--brand);
 }
 .wlact__label {
-  font-size: 0.66rem;
+  font-size: 0.78rem;
   font-weight: var(--weight-medium);
   white-space: nowrap;
 }
