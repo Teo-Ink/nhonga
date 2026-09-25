@@ -204,6 +204,36 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000105', 'a0000000-0000-4000-8000-000000000105', '/ph?c=servicos&t=Canalizador', 640, 480, 'Canalizador', 0),
   ('e0000000-0000-4000-8000-000000000106', 'a0000000-0000-4000-8000-000000000106', '/ph?c=servicos&t=Aulas%20Ingles', 640, 480, 'Aulas de inglês', 0);
 
+-- ── Empregos (jobs, integrated vertical) + Agro e Animais (substitutes Pets) ──
+INSERT INTO category (id, slug, name_pt, name_en, level, sort_order) VALUES
+  ('c0000000-0000-4000-8000-000000000010', 'empregos', 'Empregos', 'Jobs', 1, 10),
+  ('c0000000-0000-4000-8000-000000000011', 'agro', 'Agro e Animais', 'Agriculture & Animals', 1, 11);
+
+INSERT INTO category_attribute (id, category_id, key, label_pt, label_en, data_type, options, is_variant_axis, is_filterable, is_required, sort_order) VALUES
+  ('f0000000-0000-4000-8000-000000000031', 'c0000000-0000-4000-8000-000000000010', 'tipo_contrato', 'Tipo de contrato', 'Contract type', 'enum', '["Tempo inteiro","Meio período","Freelance","Estágio","Temporário"]', false, true, true, 1),
+  ('f0000000-0000-4000-8000-000000000032', 'c0000000-0000-4000-8000-000000000010', 'area', 'Área', 'Sector', 'enum', '["Vendas","Administração","TI","Construção","Saúde","Educação","Restauração","Transporte","Outra"]', false, true, true, 2),
+  ('f0000000-0000-4000-8000-000000000033', 'c0000000-0000-4000-8000-000000000010', 'local', 'Local', 'Location', 'text', NULL, false, true, false, 3),
+  ('f0000000-0000-4000-8000-000000000041', 'c0000000-0000-4000-8000-000000000011', 'tipo', 'Tipo', 'Type', 'enum', '["Gado","Aves","Animais de estimação","Produtos agrícolas","Equipamento agrícola"]', false, true, true, 1),
+  ('f0000000-0000-4000-8000-000000000042', 'c0000000-0000-4000-8000-000000000011', 'zona', 'Zona', 'Area', 'text', NULL, false, true, false, 2);
+
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  ('a0000000-0000-4000-8000-000000000107', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000010', 'programador-web-maputo', 'Programador Web (Maputo)', 'Web Developer (Maputo)', 'Vaga para programador web júnior/pleno. React e Node.js. Contrato a tempo inteiro. Envie o seu CV pelo contacto.', '{"tipo_contrato":"Tempo inteiro","area":"TI","local":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000108', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000010', 'empregada-domestica-matola', 'Empregada doméstica (Matola)', 'Domestic worker (Matola)', 'Procura-se empregada doméstica com experiência e referências. Meio período, bairro da Matola.', '{"tipo_contrato":"Meio período","area":"Outra","local":"Matola"}', 'active', NULL, NULL, 0, now() - interval '4 days'),
+  ('a0000000-0000-4000-8000-000000000109', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000011', 'cabritos-boane', 'Cabritos para venda (Boane)', 'Goats for sale (Boane)', 'Cabritos saudáveis, criados localmente. Preço por cabeça, negociável para quantidade.', '{"tipo":"Gado","zona":"Boane"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000110', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000011', 'milho-chokwe', 'Sacos de milho 50kg (Chókwè)', 'Maize 50kg sacks (Chókwè)', 'Milho seco de qualidade, saco de 50 kg. Entrega combinada com o comprador.', '{"tipo":"Produtos agrícolas","zona":"Chókwè"}', 'active', NULL, NULL, 0, now() - interval '7 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000207', 'a0000000-0000-4000-8000-000000000107', 'EMP-107', '{}', 4500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000208', 'a0000000-0000-4000-8000-000000000108', 'EMP-108', '{}', 800000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000209', 'a0000000-0000-4000-8000-000000000109', 'AGR-109', '{}', 350000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000210', 'a0000000-0000-4000-8000-000000000110', 'AGR-110', '{}', 250000, NULL, 1, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000107', 'a0000000-0000-4000-8000-000000000107', '/ph?c=empregos&t=Programador', 640, 480, 'Vaga de programador', 0),
+  ('e0000000-0000-4000-8000-000000000108', 'a0000000-0000-4000-8000-000000000108', '/ph?c=empregos&t=Domestica', 640, 480, 'Vaga doméstica', 0),
+  ('e0000000-0000-4000-8000-000000000109', 'a0000000-0000-4000-8000-000000000109', '/ph?c=agro&t=Cabritos', 640, 480, 'Cabritos', 0),
+  ('e0000000-0000-4000-8000-000000000110', 'a0000000-0000-4000-8000-000000000110', '/ph?c=agro&t=Milho', 640, 480, 'Sacos de milho', 0);
+
 COMMIT;
 
 SELECT
