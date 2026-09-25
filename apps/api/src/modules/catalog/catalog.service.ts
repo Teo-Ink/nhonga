@@ -168,6 +168,9 @@ export class CatalogService {
         contactCount: product.contactCount,
         shareCount: product.shareCount,
         featuredUntil: product.featuredUntil,
+        cSlug: category.slug,
+        cNamePt: category.namePt,
+        cNameEn: category.nameEn,
         vId: vendor.id,
         vSlug: vendor.slug,
         vName: vendor.displayName,
@@ -179,6 +182,7 @@ export class CatalogService {
         vShowPhone: vendor.showPhone,
       })
       .from(product)
+      .innerJoin(category, eq(product.categoryId, category.id))
       .innerJoin(vendor, eq(product.vendorId, vendor.id))
       .leftJoin(district, eq(vendor.districtId, district.id))
       .where(
@@ -235,6 +239,7 @@ export class CatalogService {
           showPhone: p.vShowPhone,
         }),
       },
+      category: { slug: p.cSlug, name: pickText(p.cNamePt, p.cNameEn, lang) },
       description: pickText(p.descPt ?? '', p.descEn, lang),
       attributes: p.attributes,
       images: images.map(toImageDto),

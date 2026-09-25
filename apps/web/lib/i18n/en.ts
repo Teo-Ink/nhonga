@@ -146,12 +146,13 @@ export const en: Dictionary = {
     specifications: 'Specifications',
     demo_notice: 'Test environment · demo catalogue (photos and products are samples).',
     not_found: 'Product not found.',
-    info_delivery: 'Delivery',
-    info_delivery_desc: 'Arranged with the seller — home delivery or pick-up.',
-    info_returns: 'Returns',
-    info_returns_desc: 'Contact the seller within 48h of delivery.',
-    info_protection: 'Buyer protection',
-    info_protection_desc: 'Refund if you pay via the platform and it never arrives.',
+    info_delivery: 'Delivery arranged',
+    info_delivery_desc: 'Delivery is arranged directly with the seller.',
+    // Two honest safety rows (Nhonga has no escrow / protected payment).
+    info_returns: 'Check before you pay',
+    info_returns_desc: 'Confirm the item’s condition before handing over any money.',
+    info_protection: 'Meet safely',
+    info_protection_desc: 'Agree on a public, busy place to meet.',
   },
   search: {
     results_for: 'Results for',
@@ -447,6 +448,10 @@ export const en: Dictionary = {
     safety:
       'Safety tip: meet in a public place and check the item before paying. Never send money in advance or share codes or PINs.',
     wa_message: 'Hi! I am interested in your “{title}” ({price}) listing on Nhonga.',
+    cta_apply: 'Apply on WhatsApp',
+    wa_apply: 'Hi! I saw the “{title}” job on Nhonga and would like to apply.',
+    cta_quote: 'Request a quote on WhatsApp',
+    wa_quote: 'Hi! I saw the “{title}” service on Nhonga and would like a quote.',
   },
   promote: {
     title: 'Promote a listing',
@@ -526,12 +531,12 @@ export const en: Dictionary = {
     q_delivery: 'How is delivery done?',
     a_delivery:
       'Delivery is arranged with the seller. You can choose home delivery or pick-up. Always add a reference point to make it easier.',
-    q_protection: 'What is buyer protection?',
+    q_protection: 'How do I buy safely?',
     a_protection:
-      'If you pay through the platform and do not receive the product, you are entitled to a refund. Always keep your order reference.',
-    q_returns: 'How do I return or exchange a product?',
+      'Nhonga connects buyers and sellers but does not process payments or hold funds. Meet in a public place, check the item, and only pay once you have confirmed it. Never send money in advance.',
+    q_returns: 'What if there is a problem with a listing or seller?',
     a_returns:
-      'Contact the seller via messages within 48 hours of delivery. If you cannot agree, open a dispute here.',
+      'Deals are made directly between the two parties, so agree the terms clearly before paying. You can report a suspicious listing by opening a dispute here.',
     q_sell: 'How do I start selling?',
     a_sell:
       'Create your shop under "Sell on Nhonga", add your products and start receiving orders.',

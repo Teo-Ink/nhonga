@@ -64,6 +64,8 @@ export interface OptionGroup {
 }
 
 export interface ProductDetail extends ProductListItem {
+  /** The listing's category — drives per-vertical labels and call-to-actions. */
+  readonly category: { readonly slug: string; readonly name: string };
   readonly description: string;
   readonly attributes: Record<string, string>;
   readonly images: readonly ImageDto[];

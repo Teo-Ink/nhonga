@@ -3,8 +3,8 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { cents, formatMZN } from '@nhonga/shared';
 import { Price, Rating, VerifiedBadge } from '../../../components/ui';
-import { IconTruck, IconReturn, IconShield } from '../../../components/icons';
-import { getProduct, type ProductDetail } from '../../../lib/api';
+import { IconTruck, IconCheck, IconShield } from '../../../components/icons';
+import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 import { ContactSeller } from '../../../components/ContactSeller';
 
@@ -54,7 +54,27 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   }
 
   const hero = product.images[0] ?? product.image;
+
+  // Human labels for the attribute keys (marca → "Marca"), from the category's
+  // own attribute definitions. Falls back to the raw key if a label is missing.
+  const catSlug = product.category?.slug;
+  const attrDefs = catSlug ? await getCategoryAttributes(catSlug) : [];
+  const labelOf = new Map(attrDefs.map((a) => [a.key, a.label]));
   const specs = Object.entries(product.attributes);
+
+  // Category-aware call-to-action: jobs "apply", services "request a quote".
+  const ctaLabel =
+    catSlug === 'empregos'
+      ? t.contact.cta_apply
+      : catSlug === 'servicos'
+        ? t.contact.cta_quote
+        : undefined;
+  const waMessage =
+    catSlug === 'empregos'
+      ? t.contact.wa_apply
+      : catSlug === 'servicos'
+        ? t.contact.wa_quote
+        : undefined;
 
   return (
     <article className="pdp">
@@ -142,6 +162,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             whatsapp={product.vendor.whatsapp ?? null}
             phone={product.vendor.phone ?? null}
             t={t.contact}
+            ctaLabel={ctaLabel}
+            waMessage={waMessage}
           />
 
           <ul className="assurances">
@@ -153,7 +175,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </span>
             </li>
             <li className="assurance">
-              <IconReturn width={20} height={20} />
+              <IconCheck width={20} height={20} />
               <span className="assurance__body">
                 <strong>{t.pdp.info_returns}</strong>
                 <span>{t.pdp.info_returns_desc}</span>
@@ -179,7 +201,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 <tbody>
                   {specs.map(([k, v]) => (
                     <tr key={k}>
-                      <th scope="row">{k}</th>
+                      <th scope="row">{labelOf.get(k) ?? k}</th>
                       <td>{v}</td>
                     </tr>
                   ))}

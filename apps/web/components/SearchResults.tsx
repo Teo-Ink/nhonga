@@ -3,7 +3,7 @@ import { EmptyState } from './ui';
 import { SearchControls } from './SearchControls';
 import { SearchFilters } from './SearchFilters';
 import { IconSearch } from './icons';
-import type { ProductListItem } from '../lib/api';
+import type { CategoryAttribute, ProductListItem } from '../lib/api';
 import { fill, type Dictionary } from '../lib/i18n/index';
 
 export interface ActiveChip {
@@ -28,6 +28,7 @@ export function SearchResults({
   clearHref,
   crumbs,
   lockedCategory,
+  attributes,
 }: {
   t: Dictionary;
   title: string;
@@ -37,6 +38,7 @@ export function SearchResults({
   clearHref: string;
   crumbs?: Crumb[];
   lockedCategory?: string;
+  attributes?: CategoryAttribute[];
 }) {
   return (
     <section className="section" aria-labelledby="results">
@@ -66,7 +68,7 @@ export function SearchResults({
       </div>
 
       <div className="searchlayout">
-        <SearchFilters t={t} lockedCategory={lockedCategory} />
+        <SearchFilters t={t} lockedCategory={lockedCategory} attributes={attributes} />
 
         <div className="searchlayout__main">
           {chips.length > 0 ? (

@@ -57,12 +57,21 @@ export interface OptionGroup {
   values: { value: string; available: boolean }[];
 }
 export interface ProductDetail extends ProductListItem {
+  category: { slug: string; name: string };
   description: string;
   attributes: Record<string, string>;
   images: Image[];
   variants: ProductVariant[];
   options: OptionGroup[];
   stats: ListingStats;
+}
+
+/** A filterable, typed field defined for a category (e.g. Viaturas → marca). */
+export interface CategoryAttribute {
+  key: string;
+  label: string;
+  dataType: 'text' | 'number' | 'boolean' | 'enum';
+  options: string[] | null;
 }
 
 async function get<T>(path: string): Promise<T> {
@@ -98,6 +107,9 @@ export async function listProductsByVendor(
   return { items: data.items, vendor: data.items[0]?.vendor ?? null };
 }
 
+/** A per-attribute filter value: an exact string (text/enum) or a numeric range. */
+export type AttributeFilter = string | { min?: number; max?: number };
+
 export interface SearchParams {
   q?: string;
   category?: string;
@@ -105,6 +117,8 @@ export interface SearchParams {
   inStock?: boolean;
   minPrice?: number;
   maxPrice?: number;
+  /** Per-category attribute filters, e.g. { marca: 'Honda', ano: { min: 2015 } }. */
+  attributes?: Record<string, AttributeFilter>;
 }
 
 export async function searchProducts(
@@ -117,10 +131,24 @@ export async function searchProducts(
   if (p.inStock) qs.set('inStock', 'true');
   if (p.minPrice !== undefined) qs.set('minPrice', String(p.minPrice));
   if (p.maxPrice !== undefined) qs.set('maxPrice', String(p.maxPrice));
+  if (p.attributes && Object.keys(p.attributes).length > 0) {
+    qs.set('attributes', JSON.stringify(p.attributes));
+  }
   const data = await get<{ items: ProductListItem[]; total: number }>(
     `/catalog/products?${qs.toString()}`,
   );
   return { items: data.items, total: data.total };
+}
+
+/** Filterable attributes for a category — drives the per-vertical filter rail. */
+export async function getCategoryAttributes(slug: string): Promise<CategoryAttribute[]> {
+  try {
+    return await get<CategoryAttribute[]>(
+      `/catalog/categories/${encodeURIComponent(slug)}/attributes`,
+    );
+  } catch {
+    return [];
+  }
 }
 
 export { API_URL };

@@ -145,12 +145,13 @@ export const pt = {
     specifications: 'Especificações',
     demo_notice: 'Ambiente de teste · catálogo de demonstração (fotos e produtos são exemplos).',
     not_found: 'Produto não encontrado.',
-    info_delivery: 'Entrega',
-    info_delivery_desc: 'Combinada com o vendedor — ao domicílio ou levantamento.',
-    info_returns: 'Devoluções',
-    info_returns_desc: 'Contacte o vendedor até 48h após a entrega.',
-    info_protection: 'Proteção ao comprador',
-    info_protection_desc: 'Reembolso se pagar pela plataforma e não receber.',
+    info_delivery: 'Entrega combinada',
+    info_delivery_desc: 'A entrega é combinada diretamente com o vendedor.',
+    // Two honest safety rows (Nhonga não tem pagamento protegido/escrow).
+    info_returns: 'Verifique antes de pagar',
+    info_returns_desc: 'Confirme o estado do produto antes de entregar o dinheiro.',
+    info_protection: 'Encontro seguro',
+    info_protection_desc: 'Combine um local público e movimentado para o encontro.',
   },
   search: {
     results_for: 'Resultados para',
@@ -450,6 +451,10 @@ export const pt = {
     safety:
       'Dica de segurança: encontre-se num local público e verifique o produto antes de pagar. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
     wa_message: 'Olá! Tenho interesse no anúncio «{title}» ({price}) no Nhonga.',
+    cta_apply: 'Candidatar-me pelo WhatsApp',
+    wa_apply: 'Olá! Vi a vaga «{title}» no Nhonga e gostaria de me candidatar.',
+    cta_quote: 'Pedir orçamento pelo WhatsApp',
+    wa_quote: 'Olá! Vi o serviço «{title}» no Nhonga e gostaria de um orçamento.',
   },
   promote: {
     title: 'Promover um anúncio',
@@ -530,12 +535,12 @@ export const pt = {
     q_delivery: 'Como é feita a entrega?',
     a_delivery:
       'A entrega é combinada com o vendedor. Pode escolher entrega ao domicílio ou levantar com o vendedor. Indique sempre um ponto de referência para facilitar.',
-    q_protection: 'O que é a proteção ao comprador?',
+    q_protection: 'Como comprar em segurança?',
     a_protection:
-      'Se pagar através da plataforma e não receber o produto, tem direito a reembolso. Guarde sempre a referência da encomenda.',
-    q_returns: 'Como devolver ou trocar um produto?',
+      'O Nhonga liga compradores e vendedores, mas não processa pagamentos nem retém valores. Combine um local público, verifique o produto e pague só depois de confirmar. Nunca envie dinheiro adiantado.',
+    q_returns: 'E se tiver um problema com um anúncio ou vendedor?',
     a_returns:
-      'Contacte o vendedor pela área de mensagens até 48 horas após a entrega. Se não chegarem a acordo, abra uma reclamação aqui.',
+      'O negócio é feito diretamente entre as partes, por isso combine bem as condições antes de pagar. Pode denunciar um anúncio suspeito abrindo uma reclamação aqui.',
     q_sell: 'Como começo a vender?',
     a_sell:
       'Crie a sua loja em «Vender no Nhonga», adicione os seus produtos e comece a receber encomendas.',

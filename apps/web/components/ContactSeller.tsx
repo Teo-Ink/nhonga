@@ -12,6 +12,8 @@ export function ContactSeller({
   whatsapp,
   phone,
   t,
+  ctaLabel,
+  waMessage,
 }: {
   slug: string;
   title: string;
@@ -19,6 +21,10 @@ export function ContactSeller({
   whatsapp: string | null;
   phone: string | null;
   t: Dictionary['contact'];
+  /** Overrides the WhatsApp button label (e.g. "Candidatar-me" for jobs). */
+  ctaLabel?: string;
+  /** Overrides the pre-filled WhatsApp message template ({title}/{price}). */
+  waMessage?: string;
 }) {
   function track(type: 'contact' | 'share') {
     void fetch('/api/track', {
@@ -30,9 +36,10 @@ export function ContactSeller({
   }
 
   const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const messageTpl = waMessage ?? t.wa_message;
   const waHref = whatsapp
     ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-        `${t.wa_message.replace('{title}', title).replace('{price}', priceLabel)} ${pageUrl}`,
+        `${messageTpl.replace('{title}', title).replace('{price}', priceLabel)} ${pageUrl}`,
       )}`
     : null;
 
@@ -66,7 +73,7 @@ export function ContactSeller({
           rel="noopener noreferrer"
           onClick={() => track('contact')}
         >
-          <IconWhatsApp width={20} height={20} /> {t.whatsapp}
+          <IconWhatsApp width={20} height={20} /> {ctaLabel ?? t.whatsapp}
         </a>
       ) : null}
       {phone ? (
