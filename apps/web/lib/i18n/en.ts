@@ -570,6 +570,8 @@ export const en: Dictionary = {
     track_not_found: 'We found no order with that reference on this device.',
     links_title: 'Shortcuts',
     link_cart: 'My cart',
+    link_favorites: 'My favourites',
+    link_messages: 'Messages',
     link_help: 'Help and support',
     link_sell: 'Sell on Nhonga',
     greeting: 'Hi, {name}!',

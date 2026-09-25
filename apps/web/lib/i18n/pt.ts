@@ -574,6 +574,8 @@ export const pt = {
     track_not_found: 'Não encontrámos nenhuma encomenda com essa referência neste dispositivo.',
     links_title: 'Atalhos',
     link_cart: 'O meu carrinho',
+    link_favorites: 'Os meus favoritos',
+    link_messages: 'Mensagens',
     link_help: 'Ajuda e suporte',
     link_sell: 'Vender no Nhonga',
     greeting: 'Olá, {name}!',

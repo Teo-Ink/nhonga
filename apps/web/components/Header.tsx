@@ -1,7 +1,6 @@
-import { IconSearch, IconHeart, IconChat, IconCart, IconGrid } from './icons';
+import { IconSearch, IconHeart, IconChat, IconGrid } from './icons';
 import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
-import { CartCount } from './cart/CartCount';
 import { AccountLink } from './auth/AccountLink';
 import { SellButton } from './auth/SellButton';
 import type { Dictionary, Locale } from '../lib/i18n/index';
@@ -44,13 +43,6 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           <a className="wlact wlact--hide-sm" href="/mensagens" aria-label={t.common.messages}>
             <IconChat width={22} height={22} />
             <span className="wlact__label">{t.common.messages}</span>
-          </a>
-          <a className="wlact" href="/carrinho" aria-label={t.common.cart}>
-            <span className="wlact__cart">
-              <IconCart width={22} height={22} />
-              <CartCount />
-            </span>
-            <span className="wlact__label wlact__label--hide-sm">{t.common.cart}</span>
           </a>
           <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
           <SellButton label={t.common.sell} />
