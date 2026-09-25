@@ -1,4 +1,14 @@
-import { Controller, Get, Headers, Param, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { CatalogService } from './catalog.service.js';
 import type {
   Lang,
@@ -50,6 +60,20 @@ export class CatalogController {
     @Headers('accept-language') acceptLanguage: string | undefined,
   ): Promise<ProductDetail> {
     return this.catalog.getProduct(idOrSlug, langOf(acceptLanguage));
+  }
+
+  /** Record an engagement event (contact / share / view) on a listing. */
+  @Post('products/:idOrSlug/events')
+  @HttpCode(204)
+  async event(
+    @Param('idOrSlug') idOrSlug: string,
+    @Body() body: { type?: unknown },
+  ): Promise<void> {
+    const type = body.type;
+    if (type !== 'contact' && type !== 'share' && type !== 'view') {
+      throw new BadRequestException({ message: 'type must be contact, share or view' });
+    }
+    await this.catalog.recordEvent(idOrSlug, type);
   }
 }
 

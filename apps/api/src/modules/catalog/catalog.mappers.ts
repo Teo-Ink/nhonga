@@ -136,6 +136,22 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
       isVerified: input.vendor.status === 'active',
       ratingAvg: input.vendor.ratingAvg === null ? null : Number(input.vendor.ratingAvg),
       ratingCount: input.vendor.ratingCount,
+      // Contact channels are exposed only on the product detail, never in lists.
+      whatsapp: null,
+      phone: null,
     },
+  };
+}
+
+/** Apply the seller's contact channels, honouring their visibility flags. */
+export function sellerContact(v: {
+  whatsapp: string | null;
+  contactPhone: string | null;
+  showWhatsapp: boolean;
+  showPhone: boolean;
+}): { whatsapp: string | null; phone: string | null } {
+  return {
+    whatsapp: v.showWhatsapp ? v.whatsapp : null,
+    phone: v.showPhone ? v.contactPhone : null,
   };
 }

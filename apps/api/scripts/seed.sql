@@ -43,6 +43,11 @@ INSERT INTO vendor (id, slug, legal_name, display_name, vendor_type, district_id
   ('11111111-0000-4000-8000-000000000002', 'mama-rosa', 'Rosa Mabjaia', 'Mama Rosa', 'individual', 'd0000000-0000-4000-8000-000000000002', 'active', 4.9, 54),
   ('11111111-0000-4000-8000-000000000003', 'artes-da-beira', 'Artes da Beira', 'Artes da Beira', 'individual', 'd0000000-0000-4000-8000-000000000005', 'active', 4.7, 39);
 
+-- Classifieds contact numbers (demo). E.164 Mozambique (+258).
+UPDATE vendor SET whatsapp = '258841234567', contact_phone = '258841234567' WHERE slug = 'lojas-xitique';
+UPDATE vendor SET whatsapp = '258821112233', contact_phone = '258821112233' WHERE slug = 'mama-rosa';
+UPDATE vendor SET whatsapp = '258843334455', contact_phone = '258843334455', show_phone = false WHERE slug = 'artes-da-beira';
+
 -- Root categories (all six)
 INSERT INTO category (id, slug, name_pt, name_en, level, sort_order) VALUES
   ('c0000000-0000-4000-8000-000000000001', 'moda', 'Moda', 'Fashion', 1, 1),

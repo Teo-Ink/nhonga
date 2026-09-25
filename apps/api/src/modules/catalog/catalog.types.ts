@@ -15,6 +15,16 @@ export interface VendorSummaryDto {
   readonly isVerified: boolean;
   readonly ratingAvg: number | null;
   readonly ratingCount: number;
+  /** Classifieds contact — null when the seller hides the channel or has no
+   *  number. E.164 (2588…). Only populated on the product detail. */
+  readonly whatsapp: string | null;
+  readonly phone: string | null;
+}
+
+export interface ListingStats {
+  readonly views: number;
+  readonly contacts: number;
+  readonly shares: number;
 }
 
 export interface ProductListItem {
@@ -57,6 +67,7 @@ export interface ProductDetail extends ProductListItem {
   readonly images: readonly ImageDto[];
   readonly variants: readonly ProductVariantDto[];
   readonly options: readonly OptionGroup[];
+  readonly stats: ListingStats;
 }
 
 export type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest';

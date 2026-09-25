@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, asc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import { category, product, productImage, productVariant } from '../../db/schema/catalog.js';
 import { vendor } from '../../db/schema/vendors.js';
@@ -9,6 +9,7 @@ import {
   buildOptions,
   headlineVariant,
   pickText,
+  sellerContact,
   toImageDto,
   toListItem,
   toVariantDto,
@@ -130,11 +131,18 @@ export class CatalogService {
         ratingAvg: product.ratingAvg,
         ratingCount: product.ratingCount,
         publishedAt: product.publishedAt,
+        viewCount: product.viewCount,
+        contactCount: product.contactCount,
+        shareCount: product.shareCount,
         vId: vendor.id,
         vSlug: vendor.slug,
         vName: vendor.displayName,
         vStatus: vendor.status,
         vLocation: district.name,
+        vWhatsapp: vendor.whatsapp,
+        vContactPhone: vendor.contactPhone,
+        vShowWhatsapp: vendor.showWhatsapp,
+        vShowPhone: vendor.showPhone,
       })
       .from(product)
       .innerJoin(vendor, eq(product.vendorId, vendor.id))
@@ -183,12 +191,35 @@ export class CatalogService {
 
     return {
       ...base,
+      vendor: {
+        ...base.vendor,
+        ...sellerContact({
+          whatsapp: p.vWhatsapp,
+          contactPhone: p.vContactPhone,
+          showWhatsapp: p.vShowWhatsapp,
+          showPhone: p.vShowPhone,
+        }),
+      },
       description: pickText(p.descPt ?? '', p.descEn, lang),
       attributes: p.attributes,
       images: images.map(toImageDto),
       variants: active.map(toVariantDto),
       options: buildOptions(active),
+      stats: { views: p.viewCount, contacts: p.contactCount, shares: p.shareCount },
     };
+  }
+
+  /** Record an engagement event on a listing, bumping the matching counter.
+   *  Fire-and-forget from the client; best-effort. */
+  async recordEvent(idOrSlug: string, event: 'contact' | 'share' | 'view'): Promise<void> {
+    const where = or(eq(product.slug, idOrSlug), eq(product.id, asUuidOrNil(idOrSlug)));
+    const set =
+      event === 'contact'
+        ? { contactCount: sql`${product.contactCount} + 1` }
+        : event === 'share'
+          ? { shareCount: sql`${product.shareCount} + 1` }
+          : { viewCount: sql`${product.viewCount} + 1` };
+    await this.db.update(product).set(set).where(where);
   }
 
   private async variantsFor(productIds: string[]): Promise<Map<string, VariantRow[]>> {

@@ -45,6 +45,13 @@ export const vendor = pgTable(
     /** Drives the "responde em ~2h" trust signal on the product page. */
     medianResponseMinutes: integer('median_response_minutes'),
 
+    /** Classifieds contact channels. The seller can hide either one; a null
+     *  number simply means the channel is unavailable. E.164 (2588…). */
+    whatsapp: text('whatsapp'),
+    contactPhone: text('contact_phone'),
+    showWhatsapp: boolean('show_whatsapp').notNull().default(true),
+    showPhone: boolean('show_phone').notNull().default(true),
+
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
   },

@@ -99,6 +99,11 @@ export const product = pgTable(
     /** Denormalised from review, maintained by a worker. */
     ratingAvg: numeric('rating_avg', { precision: 2, scale: 1 }),
     ratingCount: integer('rating_count').notNull().default(0),
+    /** Classifieds engagement counters (views, WhatsApp/phone contacts, shares).
+     *  Incremented per event; per-week breakdowns come later from an events table. */
+    viewCount: integer('view_count').notNull().default(0),
+    contactCount: integer('contact_count').notNull().default(0),
+    shareCount: integer('share_count').notNull().default(0),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
