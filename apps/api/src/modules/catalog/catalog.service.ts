@@ -1,7 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
-import { category, product, productImage, productVariant } from '../../db/schema/catalog.js';
+import {
+  category,
+  categoryAttribute,
+  product,
+  productImage,
+  productVariant,
+} from '../../db/schema/catalog.js';
 import { vendor } from '../../db/schema/vendors.js';
 import { district } from '../../db/schema/identity.js';
 import type { Db } from '../../db/types.js';
@@ -17,6 +23,7 @@ import {
   type VariantRow,
 } from './catalog.mappers.js';
 import type {
+  CategoryAttributeDto,
   Lang,
   ProductDetail,
   ProductFilters,
@@ -59,6 +66,7 @@ export class CatalogService {
         titleEn: product.titleEn,
         ratingAvg: product.ratingAvg,
         ratingCount: product.ratingCount,
+        attributes: product.attributes,
         publishedAt: product.publishedAt,
         featuredUntil: product.featuredUntil,
         bumpedAt: product.bumpedAt,
@@ -106,6 +114,7 @@ export class CatalogService {
       ),
       // A bump surfaces the listing in "newest"/"relevance" as if just posted.
       publishedAt: recency(p.publishedAt, p.bumpedAt),
+      attributes: p.attributes,
     }));
 
     if (filters.inStockOnly) mapped = mapped.filter((m) => m.item.inStock);
@@ -113,6 +122,23 @@ export class CatalogService {
       mapped = mapped.filter((m) => m.item.priceCents >= filters.minPriceCents!);
     if (filters.maxPriceCents !== undefined)
       mapped = mapped.filter((m) => m.item.priceCents <= filters.maxPriceCents!);
+
+    // Per-category attribute filters: exact match for text/enum, min/max for
+    // numbers. Values live in the product.attributes jsonb as strings.
+    if (filters.attributes) {
+      for (const [key, cond] of Object.entries(filters.attributes)) {
+        mapped = mapped.filter((m) => {
+          const raw = (m.attributes ?? {})[key];
+          if (raw === undefined) return false;
+          if (typeof cond === 'string') return raw === cond;
+          const n = Number(raw);
+          if (!Number.isFinite(n)) return false;
+          if (cond.min !== undefined && n < cond.min) return false;
+          if (cond.max !== undefined && n > cond.max) return false;
+          return true;
+        });
+      }
+    }
 
     mapped.sort(sorter(filters.sort ?? 'relevance'));
     // Featured (Destaque) listings rank above the rest, preserving the order
@@ -216,6 +242,28 @@ export class CatalogService {
       options: buildOptions(active),
       stats: { views: p.viewCount, contacts: p.contactCount, shares: p.shareCount },
     };
+  }
+
+  /** The filterable attributes defined for a category (for the filter UI). */
+  async categoryAttributes(slug: string, lang: Lang): Promise<CategoryAttributeDto[]> {
+    const rows = await this.db
+      .select({
+        key: categoryAttribute.key,
+        labelPt: categoryAttribute.labelPt,
+        labelEn: categoryAttribute.labelEn,
+        dataType: categoryAttribute.dataType,
+        options: categoryAttribute.options,
+      })
+      .from(categoryAttribute)
+      .innerJoin(category, eq(categoryAttribute.categoryId, category.id))
+      .where(and(eq(category.slug, slug), eq(categoryAttribute.isFilterable, true)))
+      .orderBy(asc(categoryAttribute.sortOrder));
+    return rows.map((r) => ({
+      key: r.key,
+      label: lang === 'en' ? r.labelEn : r.labelPt,
+      dataType: r.dataType as CategoryAttributeDto['dataType'],
+      options: r.options ?? null,
+    }));
   }
 
   /** Record an engagement event on a listing, bumping the matching counter.

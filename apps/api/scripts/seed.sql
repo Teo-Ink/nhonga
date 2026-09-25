@@ -5,7 +5,7 @@
 -- The /ph route still exists as a branded fallback placeholder generator.
 BEGIN;
 
-TRUNCATE product_image, product_variant, product, category, vendor, district RESTART IDENTITY CASCADE;
+TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, vendor, district RESTART IDENTITY CASCADE;
 
 -- Provinces — all 11 (names match the storefront checkout province list so a
 -- guest order resolves to a real province/district for the address FK).
@@ -158,6 +158,51 @@ INSERT INTO promotion_plan (code, name_pt, name_en, kind, price_cents, duration_
 -- Demo: two listings currently featured, so ranking is visibly different.
 UPDATE product SET featured_until = now() + interval '7 days', bumped_at = now()
   WHERE slug IN ('smartphone-android-x8', 'capulana-tradicional');
+
+-- ── Classifieds verticals: Viaturas, Imóveis, Serviços (G) ─────────────
+INSERT INTO category (id, slug, name_pt, name_en, level, sort_order) VALUES
+  ('c0000000-0000-4000-8000-000000000007', 'viaturas', 'Viaturas', 'Vehicles', 1, 7),
+  ('c0000000-0000-4000-8000-000000000008', 'imoveis', 'Imóveis', 'Real estate', 1, 8),
+  ('c0000000-0000-4000-8000-000000000009', 'servicos', 'Serviços', 'Services', 1, 9);
+
+-- Typed, per-category attributes that drive the filters and the detail fields.
+INSERT INTO category_attribute (id, category_id, key, label_pt, label_en, data_type, options, is_variant_axis, is_filterable, is_required, sort_order) VALUES
+  ('f0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000007', 'marca', 'Marca', 'Make', 'enum', '["Toyota","Honda","Nissan","Mercedes","Hyundai","Mitsubishi","Outra"]', false, true, true, 1),
+  ('f0000000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000007', 'modelo', 'Modelo', 'Model', 'text', NULL, false, true, false, 2),
+  ('f0000000-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000007', 'ano', 'Ano', 'Year', 'number', NULL, false, true, true, 3),
+  ('f0000000-0000-4000-8000-000000000004', 'c0000000-0000-4000-8000-000000000007', 'km', 'Quilometragem', 'Mileage', 'number', NULL, false, true, false, 4),
+  ('f0000000-0000-4000-8000-000000000005', 'c0000000-0000-4000-8000-000000000007', 'combustivel', 'Combustível', 'Fuel', 'enum', '["Gasolina","Diesel","Elétrico","Híbrido"]', false, true, false, 5),
+  ('f0000000-0000-4000-8000-000000000006', 'c0000000-0000-4000-8000-000000000007', 'caixa', 'Caixa', 'Gearbox', 'enum', '["Manual","Automática"]', false, true, false, 6),
+  ('f0000000-0000-4000-8000-000000000011', 'c0000000-0000-4000-8000-000000000008', 'negocio', 'Tipo', 'Type', 'enum', '["Venda","Arrendar"]', false, true, true, 1),
+  ('f0000000-0000-4000-8000-000000000012', 'c0000000-0000-4000-8000-000000000008', 'quartos', 'Quartos', 'Bedrooms', 'number', NULL, false, true, false, 2),
+  ('f0000000-0000-4000-8000-000000000013', 'c0000000-0000-4000-8000-000000000008', 'area', 'Área (m²)', 'Area (m²)', 'number', NULL, false, true, false, 3),
+  ('f0000000-0000-4000-8000-000000000021', 'c0000000-0000-4000-8000-000000000009', 'categoria_servico', 'Tipo de serviço', 'Service type', 'text', NULL, false, true, false, 1),
+  ('f0000000-0000-4000-8000-000000000022', 'c0000000-0000-4000-8000-000000000009', 'zona', 'Zona', 'Area', 'text', NULL, false, true, false, 2);
+
+-- Sample listings for the new verticals (single-price classifieds ads).
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  ('a0000000-0000-4000-8000-000000000101', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000007', 'toyota-corolla-2016', 'Toyota Corolla 2016', 'Toyota Corolla 2016', 'Corolla 1.6, único dono, livro de revisões completo. Ar condicionado, vidros elétricos.', '{"marca":"Toyota","modelo":"Corolla","ano":"2016","km":"120000","combustivel":"Gasolina","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000102', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000007', 'honda-fit-2014', 'Honda Fit 2014', 'Honda Fit 2014', 'Fit automático, económico, pronto a andar. Pneus novos.', '{"marca":"Honda","modelo":"Fit","ano":"2014","km":"95000","combustivel":"Gasolina","caixa":"Automática"}', 'active', NULL, NULL, 0, now() - interval '5 days'),
+  ('a0000000-0000-4000-8000-000000000103', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000008', 't3-arrendar-sommerschield', 'T3 para arrendar em Sommerschield', 'T3 for rent in Sommerschield', 'Apartamento T3 mobilado, 2 casas de banho, varanda com vista. Condomínio com segurança.', '{"negocio":"Arrendar","quartos":"3","area":"140"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000104', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000008', 'terreno-matola', 'Terreno à venda na Matola', 'Land for sale in Matola', 'Terreno murado, com DUAT, ideal para construção. Acesso fácil.', '{"negocio":"Venda","quartos":"0","area":"800"}', 'active', NULL, NULL, 0, now() - interval '8 days'),
+  ('a0000000-0000-4000-8000-000000000105', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000009', 'canalizador-24h', 'Canalizador 24h', 'Plumber 24h', 'Serviços de canalização ao domicílio, urgências 24h. Orçamento grátis.', '{"categoria_servico":"Canalização","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '3 days'),
+  ('a0000000-0000-4000-8000-000000000106', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000009', 'aulas-ingles', 'Aulas de inglês', 'English lessons', 'Explicador de inglês, todos os níveis. Ao domicílio ou online.', '{"categoria_servico":"Educação","zona":"Matola"}', 'active', NULL, NULL, 0, now() - interval '6 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000201', 'a0000000-0000-4000-8000-000000000101', 'VIA-101', '{}', 75000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000202', 'a0000000-0000-4000-8000-000000000102', 'VIA-102', '{}', 62000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000203', 'a0000000-0000-4000-8000-000000000103', 'IMO-103', '{}', 4500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000204', 'a0000000-0000-4000-8000-000000000104', 'IMO-104', '{}', 120000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000205', 'a0000000-0000-4000-8000-000000000105', 'SER-105', '{}', 50000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000206', 'a0000000-0000-4000-8000-000000000106', 'SER-106', '{}', 80000, NULL, 1, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000101', 'a0000000-0000-4000-8000-000000000101', '/ph?c=viaturas&t=Toyota%20Corolla', 640, 480, 'Toyota Corolla', 0),
+  ('e0000000-0000-4000-8000-000000000102', 'a0000000-0000-4000-8000-000000000102', '/ph?c=viaturas&t=Honda%20Fit', 640, 480, 'Honda Fit', 0),
+  ('e0000000-0000-4000-8000-000000000103', 'a0000000-0000-4000-8000-000000000103', '/ph?c=imoveis&t=T3%20Arrendar', 640, 480, 'Apartamento T3', 0),
+  ('e0000000-0000-4000-8000-000000000104', 'a0000000-0000-4000-8000-000000000104', '/ph?c=imoveis&t=Terreno', 640, 480, 'Terreno', 0),
+  ('e0000000-0000-4000-8000-000000000105', 'a0000000-0000-4000-8000-000000000105', '/ph?c=servicos&t=Canalizador', 640, 480, 'Canalizador', 0),
+  ('e0000000-0000-4000-8000-000000000106', 'a0000000-0000-4000-8000-000000000106', '/ph?c=servicos&t=Aulas%20Ingles', 640, 480, 'Aulas de inglês', 0);
 
 COMMIT;
 

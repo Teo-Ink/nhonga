@@ -74,6 +74,16 @@ export interface ProductDetail extends ProductListItem {
 
 export type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest';
 
+export interface CategoryAttributeDto {
+  readonly key: string;
+  readonly label: string;
+  readonly dataType: 'text' | 'number' | 'boolean' | 'enum';
+  readonly options: string[] | null;
+}
+
+/** A per-attribute filter: an exact value (text/enum/boolean) or a numeric range. */
+export type AttributeFilter = string | { min?: number; max?: number };
+
 export interface ProductFilters {
   readonly q?: string;
   readonly categorySlug?: string;
@@ -81,6 +91,7 @@ export interface ProductFilters {
   readonly minPriceCents?: number;
   readonly maxPriceCents?: number;
   readonly inStockOnly?: boolean;
+  readonly attributes?: Record<string, AttributeFilter>;
   readonly sort?: SortKey;
   readonly limit?: number;
 }

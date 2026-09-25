@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { CatalogService } from './catalog.service.js';
 import type {
+  AttributeFilter,
+  CategoryAttributeDto,
   Lang,
   ProductDetail,
   ProductFilters,
@@ -36,11 +38,13 @@ export class CatalogController {
     @Query('inStock') inStock?: string,
     @Query('sort') sort?: string,
     @Query('limit') limit?: string,
+    @Query('attributes') attributes?: string,
   ): Promise<ProductListResponse> {
     const min = intOrUndef(minPrice);
     const max = intOrUndef(maxPrice);
     const lim = intOrUndef(limit);
     const s2 = sort && (SORTS as readonly string[]).includes(sort) ? (sort as SortKey) : undefined;
+    const attrs = parseAttributes(attributes);
     const filters: ProductFilters = {
       ...(q ? { q } : {}),
       ...(category ? { categorySlug: category } : {}),
@@ -48,10 +52,20 @@ export class CatalogController {
       ...(min !== undefined ? { minPriceCents: min } : {}),
       ...(max !== undefined ? { maxPriceCents: max } : {}),
       ...(inStock === 'true' ? { inStockOnly: true } : {}),
+      ...(attrs ? { attributes: attrs } : {}),
       ...(s2 !== undefined ? { sort: s2 } : {}),
       ...(lim !== undefined ? { limit: lim } : {}),
     };
     return this.catalog.listProducts(langOf(acceptLanguage), filters);
+  }
+
+  /** Filterable attributes for a category (drives the per-category filter UI). */
+  @Get('categories/:slug/attributes')
+  categoryAttributes(
+    @Param('slug') slug: string,
+    @Headers('accept-language') acceptLanguage: string | undefined,
+  ): Promise<CategoryAttributeDto[]> {
+    return this.catalog.categoryAttributes(slug, langOf(acceptLanguage));
   }
 
   @Get('products/:idOrSlug')
@@ -75,6 +89,32 @@ export class CatalogController {
     }
     await this.catalog.recordEvent(idOrSlug, type);
   }
+}
+
+/** Parse the `attributes` query param: a JSON map of {key: "value"} (exact) or
+ *  {key: {min,max}} (numeric range). Malformed input is ignored, not fatal. */
+function parseAttributes(raw: string | undefined): Record<string, AttributeFilter> | undefined {
+  if (!raw) return undefined;
+  let obj: unknown;
+  try {
+    obj = JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+  if (typeof obj !== 'object' || obj === null) return undefined;
+  const out: Record<string, AttributeFilter> = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    if (typeof v === 'string') {
+      if (v.trim() !== '') out[k] = v;
+    } else if (typeof v === 'object' && v !== null) {
+      const range = v as { min?: unknown; max?: unknown };
+      const f: { min?: number; max?: number } = {};
+      if (typeof range.min === 'number' && Number.isFinite(range.min)) f.min = range.min;
+      if (typeof range.max === 'number' && Number.isFinite(range.max)) f.max = range.max;
+      if (f.min !== undefined || f.max !== undefined) out[k] = f;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
 }
 
 function intOrUndef(v: string | undefined): number | undefined {
