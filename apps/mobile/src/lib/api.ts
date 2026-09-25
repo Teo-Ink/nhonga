@@ -24,6 +24,19 @@ export interface ProductListItem {
   location: string | null;
   vendor: { displayName: string };
 }
+export interface ProductVariant {
+  id: string;
+  sku: string;
+  options: Record<string, string>;
+  priceCents: number;
+  compareAtCents?: number;
+  stockQuantity: number;
+  inStock: boolean;
+}
+export interface OptionGroup {
+  name: string;
+  values: { value: string; available: boolean }[];
+}
 export interface ProductDetail extends ProductListItem {
   description: string | null;
   images: ProductImage[];
@@ -31,6 +44,48 @@ export interface ProductDetail extends ProductListItem {
   ratingAvg: number;
   ratingCount: number;
   vendor: { displayName: string; slug: string };
+  variants: ProductVariant[];
+  options: OptionGroup[];
+}
+
+export type PaymentMethod = 'mpesa' | 'emola' | 'mkesh' | 'cod';
+export interface CheckoutInput {
+  name: string;
+  phone: string;
+  paymentMethod: PaymentMethod;
+  expectedTotalCents: number;
+  items: { variantId: string; quantity: number }[];
+  email?: string;
+  deliveryMethod?: 'home' | 'pickup';
+  province?: string;
+  district?: string;
+  bairro?: string;
+  landmark?: string;
+  house?: string;
+  payPhone?: string;
+}
+export interface CheckoutResult {
+  orderNumber: string;
+  orderId: string;
+  paymentStatus: string;
+  failure: { code: string; message: string; retryable: boolean } | null;
+}
+export interface OrderView {
+  orderNumber: string;
+  placedAt: string;
+  grandTotalCents: number;
+  itemsTotalCents: number;
+  paymentStatus: string;
+  paymentProvider: string;
+  deliveryMethod: string;
+  items: {
+    title: string;
+    optionsLabel: string;
+    imageUrl: string | null;
+    unitPriceCents: number;
+    quantity: number;
+    lineTotalCents: number;
+  }[];
 }
 export interface AuthUser {
   id: string;
@@ -116,6 +171,12 @@ export function me(): Promise<{ user: AuthUser | null }> {
 }
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; configured: boolean }> {
   return post('/assistant/chat', { messages });
+}
+export function placeOrder(input: CheckoutInput): Promise<CheckoutResult> {
+  return post('/checkout', input);
+}
+export function getOrder(orderNumber: string): Promise<OrderView> {
+  return get(`/checkout/orders/${encodeURIComponent(orderNumber)}`);
 }
 
 export function formatMZN(cents: number): string {
