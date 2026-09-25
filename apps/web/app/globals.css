@@ -150,6 +150,18 @@ button {
 .iconbtn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
+/* Language switch: globe + readable language code (e.g. "PT") side by side,
+   instead of a tiny badge over the globe. */
+.iconbtn--lang {
+  width: auto;
+  padding: 0 var(--space-2);
+  gap: 4px;
+}
+.iconbtn__lang {
+  font-size: 0.8rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+}
 .badge-count {
   position: absolute;
   top: 4px;

@@ -24,15 +24,13 @@ export function LocaleControls({ locale }: { locale: 'pt' | 'en' }) {
   return (
     <>
       <button
-        className="iconbtn"
+        className="iconbtn iconbtn--lang"
         onClick={() => setLocale(locale === 'pt' ? 'en' : 'pt')}
         aria-label={locale === 'pt' ? 'Mudar para Inglês' : 'Switch to Portuguese'}
         title={locale.toUpperCase()}
       >
         <IconGlobe />
-        <span style={{ position: 'absolute', bottom: 3, fontSize: '0.55rem', fontWeight: 700 }}>
-          {locale.toUpperCase()}
-        </span>
+        <span className="iconbtn__lang">{locale.toUpperCase()}</span>
       </button>
       <button className="iconbtn" onClick={toggleTheme} aria-label="Alternar tema claro/escuro">
         <IconSun />
