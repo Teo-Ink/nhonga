@@ -97,6 +97,7 @@ export interface ListItemInput {
   readonly ratingAvg: string | null; // numeric comes back as string from pg
   readonly ratingCount: number;
   readonly postedAt: Date | null;
+  readonly featuredUntil: Date | null;
   readonly vendor: {
     id: string;
     slug: string;
@@ -129,6 +130,7 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     freeDelivery: false, // shipping logic is not built; never claim free delivery we cannot honour
     location: input.vendor.location,
     postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
+    featured: input.featuredUntil !== null && input.featuredUntil.getTime() > Date.now(),
     vendor: {
       id: input.vendor.id,
       slug: input.vendor.slug,

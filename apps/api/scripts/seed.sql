@@ -149,6 +149,16 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
 -- Stagger publish dates so the "recent ads" feed shows a realistic spread.
 UPDATE product SET published_at = now() - (floor(random() * 20) || ' days')::interval;
 
+-- Paid visibility plans (admin-set pricing). Prices in cents (MT).
+INSERT INTO promotion_plan (code, name_pt, name_en, kind, price_cents, duration_days, sort_order) VALUES
+  ('destaque', 'Destaque', 'Featured', 'feature', 15000, 7, 1),
+  ('turbo', 'Turbo', 'Turbo', 'feature', 35000, 14, 2),
+  ('subir', 'Subir para o topo', 'Bump to top', 'bump', 5000, 0, 3);
+
+-- Demo: two listings currently featured, so ranking is visibly different.
+UPDATE product SET featured_until = now() + interval '7 days', bumped_at = now()
+  WHERE slug IN ('smartphone-android-x8', 'capulana-tradicional');
+
 COMMIT;
 
 SELECT

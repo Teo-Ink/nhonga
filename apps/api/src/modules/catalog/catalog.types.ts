@@ -43,6 +43,8 @@ export interface ProductListItem {
   readonly location: string | null;
   /** When the listing was published (ISO), for the "posted" line. */
   readonly postedAt: string | null;
+  /** Paid-visibility: currently featured (Destaque). Ranked above the rest. */
+  readonly featured: boolean;
   readonly vendor: VendorSummaryDto;
 }
 

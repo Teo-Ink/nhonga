@@ -60,6 +60,8 @@ export class CatalogService {
         ratingAvg: product.ratingAvg,
         ratingCount: product.ratingCount,
         publishedAt: product.publishedAt,
+        featuredUntil: product.featuredUntil,
+        bumpedAt: product.bumpedAt,
         vId: vendor.id,
         vSlug: vendor.slug,
         vName: vendor.displayName,
@@ -87,6 +89,7 @@ export class CatalogService {
           ratingAvg: p.ratingAvg,
           ratingCount: p.ratingCount,
           postedAt: p.publishedAt,
+          featuredUntil: p.featuredUntil,
           vendor: {
             id: p.vId,
             slug: p.vSlug,
@@ -101,7 +104,8 @@ export class CatalogService {
         },
         lang,
       ),
-      publishedAt: p.publishedAt,
+      // A bump surfaces the listing in "newest"/"relevance" as if just posted.
+      publishedAt: recency(p.publishedAt, p.bumpedAt),
     }));
 
     if (filters.inStockOnly) mapped = mapped.filter((m) => m.item.inStock);
@@ -111,6 +115,9 @@ export class CatalogService {
       mapped = mapped.filter((m) => m.item.priceCents <= filters.maxPriceCents!);
 
     mapped.sort(sorter(filters.sort ?? 'relevance'));
+    // Featured (Destaque) listings rank above the rest, preserving the order
+    // within each group (stable sort). Price sorts keep featured-first too.
+    mapped.sort((a, b) => Number(b.item.featured) - Number(a.item.featured));
 
     const total = mapped.length;
     const page = mapped.slice(0, limit).map((m) => m.item);
@@ -134,6 +141,7 @@ export class CatalogService {
         viewCount: product.viewCount,
         contactCount: product.contactCount,
         shareCount: product.shareCount,
+        featuredUntil: product.featuredUntil,
         vId: vendor.id,
         vSlug: vendor.slug,
         vName: vendor.displayName,
@@ -171,6 +179,7 @@ export class CatalogService {
         ratingAvg: p.ratingAvg,
         ratingCount: p.ratingCount,
         postedAt: p.publishedAt,
+        featuredUntil: p.featuredUntil,
         vendor: {
           id: p.vId,
           slug: p.vSlug,
@@ -287,6 +296,13 @@ export class CatalogService {
 }
 
 type Sortable = { item: ProductListItem; publishedAt: Date | null };
+
+/** The more recent of publishedAt and bumpedAt — a bump counts as fresh. */
+function recency(publishedAt: Date | null, bumpedAt: Date | null): Date | null {
+  if (!bumpedAt) return publishedAt;
+  if (!publishedAt) return bumpedAt;
+  return bumpedAt.getTime() > publishedAt.getTime() ? bumpedAt : publishedAt;
+}
 
 /** Comparator per sort key. relevance keeps the SQL order (stable). */
 function sorter(key: SortKey): (a: Sortable, b: Sortable) => number {

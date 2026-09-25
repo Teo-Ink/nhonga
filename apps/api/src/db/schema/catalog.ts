@@ -104,6 +104,10 @@ export const product = pgTable(
     viewCount: integer('view_count').notNull().default(0),
     contactCount: integer('contact_count').notNull().default(0),
     shareCount: integer('share_count').notNull().default(0),
+    /** Paid visibility: featured until this time (null or past = not featured);
+     *  bumpedAt is the last "subir para o topo" time. Both drive search order. */
+    featuredUntil: timestamp('featured_until', { withTimezone: true }),
+    bumpedAt: timestamp('bumped_at', { withTimezone: true }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),

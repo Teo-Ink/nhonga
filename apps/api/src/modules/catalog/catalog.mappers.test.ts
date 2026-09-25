@@ -70,6 +70,7 @@ describe('catalog mappers', () => {
       ratingAvg: null,
       ratingCount: 0,
       postedAt: new Date('2026-01-02T00:00:00Z'),
+      featuredUntil: null,
       vendor: {
         id: 'x',
         slug: 'x',
@@ -89,5 +90,33 @@ describe('catalog mappers', () => {
     expect(item.location).toBe('Maputo Cidade');
     expect(item.postedAt).toBe('2026-01-02T00:00:00.000Z');
     expect(item.vendor.isVerified).toBe(true);
+    expect(item.featured).toBe(false);
+  });
+
+  it('marks a listing featured only while featuredUntil is in the future', () => {
+    const base = {
+      id: 'p',
+      slug: 'p',
+      titlePt: 'P',
+      titleEn: null,
+      ratingAvg: null,
+      ratingCount: 0,
+      postedAt: null,
+      vendor: {
+        id: 'x',
+        slug: 'x',
+        displayName: 'Loja',
+        status: 'active',
+        ratingAvg: null,
+        ratingCount: 0,
+        location: null,
+      },
+      variants: [v({ priceCents: 1000, stockQuantity: 1 })],
+      primaryImage: null,
+    };
+    const future = toListItem({ ...base, featuredUntil: new Date(Date.now() + 60_000) }, 'pt');
+    const past = toListItem({ ...base, featuredUntil: new Date(Date.now() - 60_000) }, 'pt');
+    expect(future.featured).toBe(true);
+    expect(past.featured).toBe(false);
   });
 });

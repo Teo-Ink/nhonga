@@ -12,3 +12,4 @@ export * from './vendors.js';
 export * from './catalog.js';
 export * from './commerce.js';
 export * from './platform.js';
+export * from './promotions.js';
