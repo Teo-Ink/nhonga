@@ -43,49 +43,10 @@ export interface ProductDetail extends ProductListItem {
   attributes: Record<string, string>;
   ratingAvg: number;
   ratingCount: number;
-  vendor: { displayName: string; slug: string };
+  vendor: { displayName: string; slug: string; whatsapp: string | null; phone: string | null };
   variants: ProductVariant[];
   options: OptionGroup[];
-}
-
-export type PaymentMethod = 'mpesa' | 'emola' | 'mkesh' | 'cod';
-export interface CheckoutInput {
-  name: string;
-  phone: string;
-  paymentMethod: PaymentMethod;
-  expectedTotalCents: number;
-  items: { variantId: string; quantity: number }[];
-  email?: string;
-  deliveryMethod?: 'home' | 'pickup';
-  province?: string;
-  district?: string;
-  bairro?: string;
-  landmark?: string;
-  house?: string;
-  payPhone?: string;
-}
-export interface CheckoutResult {
-  orderNumber: string;
-  orderId: string;
-  paymentStatus: string;
-  failure: { code: string; message: string; retryable: boolean } | null;
-}
-export interface OrderView {
-  orderNumber: string;
-  placedAt: string;
-  grandTotalCents: number;
-  itemsTotalCents: number;
-  paymentStatus: string;
-  paymentProvider: string;
-  deliveryMethod: string;
-  items: {
-    title: string;
-    optionsLabel: string;
-    imageUrl: string | null;
-    unitPriceCents: number;
-    quantity: number;
-    lineTotalCents: number;
-  }[];
+  stats: { views: number; contacts: number; shares: number };
 }
 export interface AuthUser {
   id: string;
@@ -172,11 +133,13 @@ export function me(): Promise<{ user: AuthUser | null }> {
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; configured: boolean }> {
   return post('/assistant/chat', { messages });
 }
-export function placeOrder(input: CheckoutInput): Promise<CheckoutResult> {
-  return post('/checkout', input);
-}
-export function getOrder(orderNumber: string): Promise<OrderView> {
-  return get(`/checkout/orders/${encodeURIComponent(orderNumber)}`);
+/** Record an engagement event on a listing (contact / share). Best-effort. */
+export function recordEvent(slug: string, type: 'contact' | 'share' | 'view'): void {
+  void fetch(`${API_URL}/catalog/products/${encodeURIComponent(slug)}/events`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ type }),
+  }).catch(() => {});
 }
 
 export function formatMZN(cents: number): string {
