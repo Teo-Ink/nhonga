@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import { ProductCard } from '../../../components/ProductCard';
+import { SellerReviews } from '../../../components/SellerReviews';
 import { EmptyState, Rating, VerifiedBadge } from '../../../components/ui';
 import { IconBox } from '../../../components/icons';
-import { listProductsByVendor } from '../../../lib/api';
+import { getVendorReviews, listProductsByVendor, type VendorReviewList } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,9 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
       </div>
     );
   }
+
+  let reviews: VendorReviewList = { items: [], summary: { ratingAvg: null, ratingCount: 0 } };
+  if (vendor) reviews = await getVendorReviews(vendor.id);
 
   const name = vendor?.displayName ?? slug;
   const count = items.length;
@@ -79,6 +83,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           </div>
         )}
       </section>
+
+      {vendor ? <SellerReviews vendorId={vendor.id} initial={reviews} t={t.reviews} /> : null}
     </>
   );
 }

@@ -140,6 +140,28 @@ export async function searchProducts(
   return { items: data.items, total: data.total };
 }
 
+export interface VendorReview {
+  id: string;
+  author: string;
+  rating: number;
+  comment: string | null;
+  productSlug: string | null;
+  createdAt: string;
+}
+export interface VendorReviewList {
+  items: VendorReview[];
+  summary: { ratingAvg: number | null; ratingCount: number };
+}
+
+/** Published reviews + rating summary for a vendor. */
+export async function getVendorReviews(vendorId: string): Promise<VendorReviewList> {
+  try {
+    return await get<VendorReviewList>(`/vendors/${encodeURIComponent(vendorId)}/reviews`);
+  } catch {
+    return { items: [], summary: { ratingAvg: null, ratingCount: 0 } };
+  }
+}
+
 /** Filterable attributes for a category — drives the per-vertical filter rail. */
 export async function getCategoryAttributes(slug: string): Promise<CategoryAttribute[]> {
   try {

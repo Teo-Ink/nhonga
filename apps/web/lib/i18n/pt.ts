@@ -507,6 +507,25 @@ export const pt = {
       'Não precisa de comprar publicidade — destaque o seu próprio anúncio a partir de um plano simples.',
     seller_boost_cta: 'Ver planos de destaque',
   },
+
+  // Seller reviews (B).
+  reviews: {
+    title: 'Avaliações',
+    none: 'Ainda sem avaliações. Seja o primeiro a avaliar depois de contactar.',
+    count_one: '1 avaliação',
+    count_other: '{n} avaliações',
+    leave_title: 'Deixe a sua avaliação',
+    your_rating: 'A sua nota',
+    comment_ph: 'Como foi a sua experiência com este vendedor?',
+    submit: 'Publicar avaliação',
+    submitting: 'A publicar…',
+    signin_prompt: 'Inicie sessão para avaliar este vendedor.',
+    signin_cta: 'Entrar',
+    success: 'Obrigado! A sua avaliação foi publicada.',
+    error: 'Não foi possível publicar. Tente novamente.',
+    edit_note: 'Pode atualizar a sua avaliação a qualquer momento.',
+    about: 'sobre',
+  },
   promote: {
     title: 'Promover um anúncio',
     subtitle: 'Dê mais visibilidade ao seu anúncio e receba mais contactos.',
