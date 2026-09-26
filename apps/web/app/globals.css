@@ -5308,3 +5308,49 @@ a.seller:focus-visible {
 .storestat--ok strong {
   color: var(--brand-500);
 }
+
+/* ── Safety centre (B) ──────────────────────────────────────────── */
+.safetygrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+.safetycard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-4);
+}
+.safetycard__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+  color: var(--brand-500);
+}
+.safetylist {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+}
+.safetywarn {
+  margin-top: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  padding: var(--space-4);
+}
+.safetywarn p {
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+@media (max-width: 640px) {
+  .safetygrid {
+    grid-template-columns: 1fr;
+  }
+}

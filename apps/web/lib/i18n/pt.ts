@@ -67,6 +67,7 @@ export const pt = {
     link_dashboard: 'Painel do vendedor',
     link_new_listing: 'Criar anúncio',
     link_help: 'Ajuda e suporte',
+    link_safety: 'Segurança',
     link_messages: 'Mensagens',
     link_account: 'A minha conta',
     link_signin: 'Entrar',
@@ -182,6 +183,25 @@ export const pt = {
     crumb: 'Pesquisa',
     save_search: 'Guardar pesquisa',
     search_saved: 'Pesquisa guardada',
+  },
+  // Safety screen (B).
+  safety: {
+    title: 'Comprar e vender em segurança',
+    subtitle: 'O Nhonga liga compradores e vendedores. O negócio é combinado entre as partes, por isso siga estas dicas.',
+    buyers_title: 'Para quem compra',
+    b1: 'Encontre-se num local público e movimentado, de dia.',
+    b2: 'Veja e teste o produto antes de entregar o dinheiro.',
+    b3: 'Nunca envie dinheiro adiantado para reservar um artigo.',
+    b4: 'Desconfie de preços bons demais para ser verdade.',
+    sellers_title: 'Para quem vende',
+    s1: 'Combine a entrega num local seguro.',
+    s2: 'Confirme que recebeu o pagamento antes de entregar.',
+    s3: 'Não partilhe códigos de confirmação recebidos por SMS.',
+    never_title: 'Nunca partilhe',
+    never_body: 'A sua palavra-passe, código OTP, PIN ou dados do cartão. O Nhonga nunca lhe pede estes dados.',
+    report_title: 'Viu algo suspeito?',
+    report_body: 'Denuncie o anúncio ou o vendedor e ajude a manter o Nhonga seguro.',
+    report_cta: 'Abrir uma reclamação',
   },
   // Referral (H).
   refer: {

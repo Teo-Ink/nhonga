@@ -28,6 +28,7 @@ export function Footer({ t }: { t: Dictionary }) {
       title: f.col_help,
       links: [
         { label: f.link_help, href: '/ajuda' },
+        { label: f.link_safety, href: '/seguranca' },
         { label: f.link_messages, href: '/mensagens' },
         { label: f.link_design, href: '/estilo' },
       ],
