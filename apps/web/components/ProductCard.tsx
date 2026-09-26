@@ -30,14 +30,23 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
           {p.discountPercent ? <span className="lcard__badge">-{p.discountPercent}%</span> : null}
           {(() => {
             const src = p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`;
-            return (
+            const alt = p.image?.alt ?? p.title;
+            // Generated /ph placeholders paint as a CSS background (reliable, never
+            // unloads); real photos go through next/image for optimisation.
+            return src.startsWith('/ph') ? (
+              <span
+                className="ph-bg"
+                role="img"
+                aria-label={alt}
+                style={{ backgroundImage: `url("${src.replace(/["\\]/g, encodeURIComponent)}")` }}
+              />
+            ) : (
               <Image
                 src={src}
-                alt={p.image?.alt ?? p.title}
+                alt={alt}
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 style={{ objectFit: 'cover' }}
-                unoptimized={src.startsWith('/ph')}
               />
             );
           })()}

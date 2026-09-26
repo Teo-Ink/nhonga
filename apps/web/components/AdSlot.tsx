@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { getAd } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
 
@@ -48,21 +47,17 @@ export async function AdSlot({
     <aside className={`adslot adslot--${placement}`} aria-label={t.ads.label}>
       <span className="adslot__label">{t.ads.label}</span>
       {ad ? (
+        // The creative is a CSS background image, not an <img>: it has no load-
+        // state management, lazy-unload or next/image involvement, so it renders
+        // immediately and never "disappears".
         <a
           className="adslot__banner"
           href={`/api/ads/${ad.id}/click`}
           target="_blank"
           rel="noopener noreferrer sponsored"
-        >
-          <Image
-            src={ad.imageUrl}
-            alt={ad.headline ?? ad.advertiser}
-            fill
-            sizes="(max-width: 1200px) 100vw, 300px"
-            style={{ objectFit: 'cover' }}
-            unoptimized
-          />
-        </a>
+          aria-label={ad.headline ?? ad.advertiser}
+          style={{ backgroundImage: `url("${ad.imageUrl.replace(/["\\]/g, encodeURIComponent)}")` }}
+        />
       ) : (
         <HousePromo t={t} placement={placement} variant={variant} />
       )}

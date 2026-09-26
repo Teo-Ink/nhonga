@@ -5414,7 +5414,10 @@ a.seller:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--surface-sunken);
+  background-color: var(--surface-sunken);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 /* Fixed heights on the container so next/image fill has a box and a slow/broken
    creative never collapses the slot to 0. */
@@ -5508,4 +5511,14 @@ a.seller:focus-visible {
 .pill--active {
   background: color-mix(in srgb, var(--brand) 16%, var(--surface));
   color: var(--brand);
+}
+
+/* Generated /ph placeholder painted as a CSS background — reliable, no <img>
+   load-state to stall or unload (used by cards when a listing has no photo). */
+.ph-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }

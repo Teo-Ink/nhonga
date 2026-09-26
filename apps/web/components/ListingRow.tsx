@@ -24,14 +24,21 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
           {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
           {(() => {
             const src = p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`;
-            return (
+            const alt = p.image?.alt ?? p.title;
+            return src.startsWith('/ph') ? (
+              <span
+                className="ph-bg"
+                role="img"
+                aria-label={alt}
+                style={{ backgroundImage: `url("${src.replace(/["\\]/g, encodeURIComponent)}")` }}
+              />
+            ) : (
               <Image
                 src={src}
-                alt={p.image?.alt ?? p.title}
+                alt={alt}
                 fill
                 sizes="(max-width: 768px) 40vw, 220px"
                 style={{ objectFit: 'cover' }}
-                unoptimized={src.startsWith('/ph')}
               />
             );
           })()}
