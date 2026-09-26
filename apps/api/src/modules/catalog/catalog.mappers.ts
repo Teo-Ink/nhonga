@@ -98,6 +98,7 @@ export interface ListItemInput {
   readonly ratingCount: number;
   readonly postedAt: Date | null;
   readonly featuredUntil: Date | null;
+  readonly attributes: Record<string, string>;
   readonly vendor: {
     id: string;
     slug: string;
@@ -131,6 +132,7 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     location: input.vendor.location,
     postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
     featured: input.featuredUntil !== null && input.featuredUntil.getTime() > Date.now(),
+    attributes: input.attributes,
     vendor: {
       id: input.vendor.id,
       slug: input.vendor.slug,

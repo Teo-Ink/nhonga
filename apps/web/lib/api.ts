@@ -41,6 +41,7 @@ export interface ProductListItem {
   location: string | null;
   postedAt: string | null;
   featured: boolean;
+  attributes: Record<string, string>;
   vendor: VendorSummary;
 }
 export interface ProductVariant {

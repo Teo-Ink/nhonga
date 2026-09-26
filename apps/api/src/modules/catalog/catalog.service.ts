@@ -100,6 +100,7 @@ export class CatalogService {
           ratingCount: p.ratingCount,
           postedAt: p.publishedAt,
           featuredUntil: p.featuredUntil,
+          attributes: p.attributes,
           vendor: {
             id: p.vId,
             slug: p.vSlug,
@@ -214,6 +215,7 @@ export class CatalogService {
         ratingCount: p.ratingCount,
         postedAt: p.publishedAt,
         featuredUntil: p.featuredUntil,
+        attributes: p.attributes,
         vendor: {
           id: p.vId,
           slug: p.vSlug,

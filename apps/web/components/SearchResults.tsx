@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { ProductCard } from './ProductCard';
+import { ListingRow } from './ListingRow';
 import { AdSlot } from './AdSlot';
 import { EmptyState } from './ui';
 import { SearchControls } from './SearchControls';
@@ -106,11 +106,11 @@ export function SearchResults({
               </a>
             </EmptyState>
           ) : (
-            <div className="grid grid--results">
+            <div className="lrows">
               {items.map((p, i) => (
                 <Fragment key={p.id}>
                   {i === 4 && items.length > 4 ? <AdSlot t={t} placement="inline" /> : null}
-                  <ProductCard p={p} t={t} />
+                  <ListingRow p={p} t={t} />
                 </Fragment>
               ))}
             </div>

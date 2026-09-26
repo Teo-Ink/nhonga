@@ -45,6 +45,8 @@ export interface ProductListItem {
   readonly postedAt: string | null;
   /** Paid-visibility: currently featured (Destaque). Ranked above the rest. */
   readonly featured: boolean;
+  /** Typed attribute values (verticals), for the list-view summary line. */
+  readonly attributes: Record<string, string>;
   readonly vendor: VendorSummaryDto;
 }
 

@@ -6,7 +6,7 @@ import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
 
 // Relative "posted" label from an ISO date, using the dictionary's words.
-function postedLabel(iso: string | null, l: Dictionary['listing']): string {
+export function postedLabel(iso: string | null, l: Dictionary['listing']): string {
   if (!iso) return '';
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   if (days <= 0) return l.today;
