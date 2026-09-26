@@ -9,6 +9,7 @@ import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
 import { AssistantModule } from './modules/assistant/assistant.module.js';
 import { PromotionsModule } from './modules/promotions/promotions.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
+import { AdsModule } from './modules/ads/ads.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -27,6 +28,7 @@ import { HealthController } from './health/health.controller.js';
     AssistantModule,
     PromotionsModule,
     ReviewsModule,
+    AdsModule,
   ],
   controllers: [HealthController],
 })

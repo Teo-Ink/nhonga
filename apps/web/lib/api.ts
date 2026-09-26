@@ -180,6 +180,25 @@ export async function getVendorReviews(vendorId: string): Promise<VendorReviewLi
   }
 }
 
+export interface ServedAd {
+  id: string;
+  imageUrl: string;
+  headline: string | null;
+  advertiser: string;
+}
+
+/** Serve a live ad creative for a slot (counts an impression). Null → house ad. */
+export async function getAd(placement: string, category?: string): Promise<ServedAd | null> {
+  try {
+    const qs = new URLSearchParams({ placement });
+    if (category) qs.set('category', category);
+    const data = await get<{ ad: ServedAd | null }>(`/ads?${qs.toString()}`);
+    return data.ad;
+  } catch {
+    return null;
+  }
+}
+
 /** Filterable attributes for a category — drives the per-vertical filter rail. */
 export async function getCategoryAttributes(slug: string): Promise<CategoryAttribute[]> {
   try {

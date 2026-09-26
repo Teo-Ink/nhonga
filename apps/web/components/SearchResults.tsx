@@ -60,7 +60,7 @@ export function SearchResults({
         </nav>
       ) : null}
 
-      <AdSlot t={t} placement="leaderboard" />
+      <AdSlot t={t} placement="leaderboard" category={lockedCategory} />
 
       <div className="results__head">
         <h1 className="section__title" id="results">
@@ -115,7 +115,9 @@ export function SearchResults({
             <div className="lrows">
               {items.map((p, i) => (
                 <Fragment key={p.id}>
-                  {i === 4 && items.length > 4 ? <AdSlot t={t} placement="inline" /> : null}
+                  {i === 4 && items.length > 4 ? (
+                    <AdSlot t={t} placement="inline" category={lockedCategory} />
+                  ) : null}
                   <ListingRow p={p} t={t} />
                 </Fragment>
               ))}
@@ -125,8 +127,8 @@ export function SearchResults({
 
         {/* Right ad rail — desktop only (hidden on tablet/phone by CSS). */}
         <aside className="searchlayout__ads" aria-label={t.ads.label}>
-          <AdSlot t={t} placement="mpu" variant="advertise" />
-          <AdSlot t={t} placement="mpu" variant="promote" />
+          <AdSlot t={t} placement="mpu" category={lockedCategory} variant="advertise" />
+          <AdSlot t={t} placement="mpu" category={lockedCategory} variant="promote" />
         </aside>
       </div>
     </section>

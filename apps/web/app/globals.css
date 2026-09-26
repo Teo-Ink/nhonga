@@ -5406,3 +5406,29 @@ a.seller:focus-visible {
     top: var(--space-4);
   }
 }
+
+/* ── Served ad creative (real campaign banner) ──────────────────── */
+.adslot__banner {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.adslot__banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.adslot--leaderboard .adslot__banner img {
+  max-height: 130px;
+  object-fit: cover;
+}
+.adslot--mpu .adslot__banner img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.adslot--inline .adslot__banner img {
+  max-height: 140px;
+  object-fit: cover;
+}

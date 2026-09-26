@@ -5,7 +5,7 @@
 -- The /ph route still exists as a branded fallback placeholder generator.
 BEGIN;
 
-TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, review, app_user, vendor, district RESTART IDENTITY CASCADE;
+TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, review, app_user, vendor, district, ad_campaign RESTART IDENTITY CASCADE;
 
 -- Provinces — all 11 (names match the storefront checkout province list so a
 -- guest order resolves to a real province/district for the address FK).
@@ -258,6 +258,11 @@ FROM (
   FROM review WHERE status = 'published' GROUP BY vendor_id
 ) s
 WHERE v.id = s.vendor_id;
+
+-- ── Display-ad campaigns (house-ads monetisation) — 2 active demo campaigns ──
+INSERT INTO ad_campaign (id, advertiser_name, image_url, click_url, headline, placement, category_slug, starts_at, ends_at, price_cents, status) VALUES
+  ('aaaa1111-0000-4000-8000-000000000001', 'Banco Exemplo', '/ph?c=viaturas&t=Banco%20Exemplo', 'https://www.example.com', 'Banco Exemplo — crédito para a sua viatura', 'leaderboard', NULL, now() - interval '1 day', now() + interval '30 days', 1500000, 'active'),
+  ('aaaa1111-0000-4000-8000-000000000002', 'Escola de Condução Xitique', '/ph?c=servicos&t=Carta%20de%20Conducao', 'https://www.example.com', 'Tire a sua carta de condução', 'mpu', 'viaturas', now() - interval '1 day', now() + interval '30 days', 900000, 'active');
 
 COMMIT;
 
