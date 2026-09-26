@@ -9,16 +9,32 @@ import type { Dictionary } from '../lib/i18n/index';
 // in production these slots would be filled from a house-ads table or a vetted
 // ad partner. Always labelled "Publicidade" so it is never mistaken for a listing.
 type Placement = 'leaderboard' | 'mpu' | 'inline';
+type Variant = 'advertise' | 'promote' | 'sell';
 
-// Which house promo each placement carries, and where it links.
-const PROMO: Record<Placement, { kind: 'advertise' | 'promote' | 'sell'; href: string }> = {
+// Which house promo each placement carries by default, and where it links.
+const PROMO: Record<Placement, { kind: Variant; href: string }> = {
   leaderboard: { kind: 'advertise', href: '/anunciar' },
   mpu: { kind: 'promote', href: '/vender/promover' },
   inline: { kind: 'promote', href: '/vender/promover' },
 };
+const HREF: Record<Variant, string> = {
+  advertise: '/anunciar',
+  promote: '/vender/promover',
+  sell: '/vender/novo',
+};
 
-export function AdSlot({ t, placement }: { t: Dictionary; placement: Placement }) {
-  const { kind, href } = PROMO[placement];
+export function AdSlot({
+  t,
+  placement,
+  variant,
+}: {
+  t: Dictionary;
+  placement: Placement;
+  /** Overrides the default house promo for this placement (e.g. a second MPU). */
+  variant?: Variant;
+}) {
+  const kind = variant ?? PROMO[placement].kind;
+  const href = variant ? HREF[variant] : PROMO[placement].href;
   const ad = t.ads[kind];
   return (
     <aside className={`adslot adslot--${placement}`} aria-label={t.ads.label}>

@@ -122,6 +122,12 @@ export function SearchResults({
             </div>
           )}
         </div>
+
+        {/* Right ad rail — desktop only (hidden on tablet/phone by CSS). */}
+        <aside className="searchlayout__ads" aria-label={t.ads.label}>
+          <AdSlot t={t} placement="mpu" variant="advertise" />
+          <AdSlot t={t} placement="mpu" variant="promote" />
+        </aside>
       </div>
     </section>
   );
