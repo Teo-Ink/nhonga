@@ -75,16 +75,33 @@ export interface CategoryAttribute {
   options: string[] | null;
 }
 
+const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+// Server-side fetch with a single retry on a *transient* failure (a network
+// error or a 5xx — e.g. the API briefly restarting), so a one-off blip doesn't
+// blank a whole page. A 4xx (like 404) is a definitive answer and is surfaced
+// immediately; the "API 404 for …" message shape is relied on by callers.
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'accept-language': 'pt' },
-    // Always fresh in the local test env; production would cache per D-09.
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    throw new Error(`API ${res.status} for ${path}`);
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}${path}`, {
+        headers: { 'accept-language': 'pt' },
+        // Always fresh in the local test env; production would cache per D-09.
+        cache: 'no-store',
+      });
+    } catch (e) {
+      lastErr = e; // connection error — the API may be restarting
+      if (attempt === 0) await sleep(250);
+      continue;
+    }
+    if (res.ok) return (await res.json()) as T;
+    if (res.status < 500) throw new Error(`API ${res.status} for ${path}`);
+    lastErr = new Error(`API ${res.status} for ${path}`);
+    if (attempt === 0) await sleep(250);
   }
-  return (await res.json()) as T;
+  throw lastErr;
 }
 
 export async function listProducts(): Promise<ProductListItem[]> {
