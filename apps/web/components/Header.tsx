@@ -5,19 +5,15 @@ import { AccountLink } from './auth/AccountLink';
 import { SellButton } from './auth/SellButton';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
-const CATEGORY_KEYS = [
-  'viaturas',
-  'imoveis',
-  'empregos',
-  'servicos',
-  'eventos',
-  'moda',
-  'electronica',
-  'telemoveis',
-  'casa',
-  'alimentacao',
-  'beleza',
-] as const;
+// Gumtree-style pillars: the verticals stand alone, everyday goods live under a
+// single "Compra e Vendas" (For Sale) section at /compra-e-vendas.
+const PILLARS = [
+  { href: '/categoria/viaturas', key: 'viaturas' as const },
+  { href: '/compra-e-vendas', key: 'compra_vendas' as const },
+  { href: '/categoria/servicos', key: 'servicos' as const },
+  { href: '/categoria/empregos', key: 'empregos' as const },
+  { href: '/categoria/eventos', key: 'eventos' as const },
+];
 
 // Clean, modern marketplace header (Wallapop-structured UX, Nhonga's own brand):
 // a rounded pill search front and centre, compact action icons, a prominent
@@ -59,9 +55,9 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           <IconGrid width={16} height={16} aria-hidden />
           {t.common.nav_all}
         </a>
-        {CATEGORY_KEYS.map((k) => (
-          <a className="wlnav__link" key={k} href={`/categoria/${k}`}>
-            {t.categories[k]}
+        {PILLARS.map((p) => (
+          <a className="wlnav__link" key={p.key} href={p.href}>
+            {t.categories[p.key]}
           </a>
         ))}
         <a className="wlnav__link wlnav__link--accent" href="/pesquisa?sort=price_asc">

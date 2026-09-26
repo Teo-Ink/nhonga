@@ -247,7 +247,12 @@ export const en: Dictionary = {
     empregos: 'Jobs',
     servicos: 'Services',
     eventos: 'Events',
+    compra_vendas: 'For Sale',
     all: 'See all',
+  },
+  forsale: {
+    title: 'For Sale',
+    subtitle: 'Everything bought and sold on Nhonga, by category.',
   },
   cart: {
     title: 'Cart',

@@ -250,7 +250,13 @@ export const pt = {
     empregos: 'Empregos',
     servicos: 'Serviços',
     eventos: 'Eventos',
+    compra_vendas: 'Compra e Vendas',
     all: 'Ver todas',
+  },
+  // "For Sale" section hub (grouped nav).
+  forsale: {
+    title: 'Compra e Vendas',
+    subtitle: 'Tudo o que se compra e vende no Nhonga, por categoria.',
   },
   cart: {
     title: 'Carrinho',

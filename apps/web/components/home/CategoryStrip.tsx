@@ -1,45 +1,26 @@
-import {
-  IconShirt,
-  IconDevice,
-  IconPhone,
-  IconHome,
-  IconCup,
-  IconSparkle,
-  IconCar,
-  IconKey,
-  IconBriefcase,
-  IconTools,
-  IconTicket,
-} from '../icons';
+import { IconCar, IconBag, IconTools, IconBriefcase, IconTicket } from '../icons';
 import type { Dictionary } from '../../lib/i18n/index';
 
-// Classifieds verticals lead (Viaturas/Imóveis/Empregos/Serviços/Eventos, in the
-// spirit of an OLX/Gumtree top nav), then the "for sale" retail categories.
-const CATS = [
-  { slug: 'viaturas', Icon: IconCar },
-  { slug: 'imoveis', Icon: IconKey },
-  { slug: 'empregos', Icon: IconBriefcase },
-  { slug: 'servicos', Icon: IconTools },
-  { slug: 'eventos', Icon: IconTicket },
-  { slug: 'moda', Icon: IconShirt },
-  { slug: 'electronica', Icon: IconDevice },
-  { slug: 'telemoveis', Icon: IconPhone },
-  { slug: 'casa', Icon: IconHome },
-  { slug: 'alimentacao', Icon: IconCup },
-  { slug: 'beleza', Icon: IconSparkle },
+// Gumtree-style pillar launcher: the verticals stand alone and everyday goods
+// sit under one "Compra e Vendas" (For Sale) tile → /compra-e-vendas.
+// Horizontally scrollable on phones.
+const PILLARS = [
+  { key: 'viaturas', href: '/categoria/viaturas', Icon: IconCar },
+  { key: 'compra_vendas', href: '/compra-e-vendas', Icon: IconBag },
+  { key: 'servicos', href: '/categoria/servicos', Icon: IconTools },
+  { key: 'empregos', href: '/categoria/empregos', Icon: IconBriefcase },
+  { key: 'eventos', href: '/categoria/eventos', Icon: IconTicket },
 ] as const;
 
-// Round category-icon strip (OLX-structured, Nhonga's look): the classifieds
-// home's category launcher, horizontally scrollable on phones.
 export function CategoryStrip({ t }: { t: Dictionary }) {
   return (
     <nav className="catstrip" aria-label={t.home.shop_by_category}>
-      {CATS.map(({ slug, Icon }) => (
-        <a className="catstrip__item" key={slug} href={`/categoria/${slug}`}>
+      {PILLARS.map(({ key, href, Icon }) => (
+        <a className="catstrip__item" key={key} href={href}>
           <span className="catstrip__icon" aria-hidden="true">
             <Icon width={26} height={26} />
           </span>
-          <span className="catstrip__label">{t.categories[slug]}</span>
+          <span className="catstrip__label">{t.categories[key]}</span>
         </a>
       ))}
     </nav>
