@@ -43,7 +43,7 @@ export default function SavedSearchesPage() {
       <div className="section__head">
         <h1 className="section__title">{t.title}</h1>
       </div>
-      <p className="adpage__lead">{t.subtitle}</p>
+      <p className="spotpage__lead">{t.subtitle}</p>
       <p className="notice" role="note">
         {t.alerts_note}
       </p>

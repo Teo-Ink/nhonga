@@ -49,7 +49,7 @@ export function AdBookingForm({
     }
     setState('saving');
     try {
-      const res = await fetch('/api/ads', {
+      const res = await fetch('/api/spot', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -82,16 +82,16 @@ export function AdBookingForm({
       year: 'numeric',
     });
     return (
-      <div className="card adbooked" role="status">
-        <strong className="adbooked__title">{t.done_title}</strong>
+      <div className="card spotbooked" role="status">
+        <strong className="spotbooked__title">{t.done_title}</strong>
         <p>{t.done_body.replace('{date}', date)}</p>
       </div>
     );
   }
 
   return (
-    <form className="card adbook" onSubmit={submit} noValidate>
-      <h2 className="adpage__h2" style={{ marginTop: 0 }}>
+    <form className="card spotbook" onSubmit={submit} noValidate>
+      <h2 className="spotpage__h2" style={{ marginTop: 0 }}>
         {t.book_title}
       </h2>
       <p className="notice" role="note">
@@ -166,7 +166,7 @@ export function AdBookingForm({
         </label>
       </div>
 
-      <div className="adbook__total">
+      <div className="spotbook__total">
         <span>{t.total}</span>
         <strong>{formatMZN(cents(totalCents))}</strong>
       </div>

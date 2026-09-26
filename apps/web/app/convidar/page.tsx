@@ -48,11 +48,11 @@ export default function InvitePage() {
   }
 
   return (
-    <section className="section adpage">
+    <section className="section spotpage">
       <div className="section__head">
         <h1 className="section__title">{t.title}</h1>
       </div>
-      <p className="adpage__lead">{t.subtitle}</p>
+      <p className="spotpage__lead">{t.subtitle}</p>
       <p className="notice" role="note">
         {t.demo_note}
       </p>
@@ -75,7 +75,7 @@ export default function InvitePage() {
         </a>
       </div>
 
-      <h2 className="adpage__h2">{t.how_title}</h2>
+      <h2 className="spotpage__h2">{t.how_title}</h2>
       <ol className="refer__steps">
         <li>{t.step1}</li>
         <li>{t.step2}</li>

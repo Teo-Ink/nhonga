@@ -4661,11 +4661,11 @@ a.seller:focus-visible {
 }
 
 /* ── Advertising slots (house ads) + advertise-with-us page ─────── */
-.adslot {
+.spotbox {
   position: relative;
   display: block;
 }
-.adslot__label {
+.spotbox__label {
   display: inline-block;
   font-size: var(--text-xs);
   letter-spacing: 0.04em;
@@ -4673,7 +4673,7 @@ a.seller:focus-visible {
   color: var(--text-muted);
   margin-bottom: 6px;
 }
-.adslot__promo {
+.spotbox__promo {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4686,66 +4686,66 @@ a.seller:focus-visible {
     border-color 0.15s ease,
     background 0.15s ease;
 }
-.adslot__promo:hover {
+.spotbox__promo:hover {
   border-color: var(--brand);
 }
-.adslot__title {
+.spotbox__title {
   display: block;
   font-family: var(--font-display);
   color: var(--text);
 }
-.adslot__body {
+.spotbox__body {
   display: block;
   color: var(--text-muted);
   font-size: var(--text-sm);
   margin-top: 2px;
 }
-.adslot__cta {
+.spotbox__cta {
   flex-shrink: 0;
   color: var(--brand-500);
   font-weight: 600;
   white-space: nowrap;
 }
-.adslot--leaderboard {
+.spotbox--leaderboard {
   margin: var(--space-4) 0;
 }
-.adslot--leaderboard .adslot__promo {
+.spotbox--leaderboard .spotbox__promo {
   min-height: 88px;
 }
-.adslot--inline {
+.spotbox--inline {
   grid-column: 1 / -1;
   margin: var(--space-2) 0;
 }
-.adslot--mpu .adslot__promo {
+.spotbox--mpu .spotbox__promo {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
 }
 @media (max-width: 640px) {
-  .adslot__promo {
+  .spotbox__promo {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-2);
   }
 }
 
-.adpage__lead {
+.spotpage__lead {
   color: var(--text-muted);
   max-width: 60ch;
   margin-top: var(--space-2);
 }
-.adpage__h2 {
+.spotpage__h2 {
   margin-top: var(--space-6);
   margin-bottom: var(--space-3);
 }
-.adpage__why {
+.spotpage__why {
   list-style: none;
   padding: 0;
   display: grid;
   gap: var(--space-3);
   grid-template-columns: repeat(3, 1fr);
 }
-.adwhy {
+.spotwhy {
   display: flex;
   gap: var(--space-3);
   background: var(--surface);
@@ -4753,28 +4753,28 @@ a.seller:focus-visible {
   border-radius: var(--radius-md);
   padding: var(--space-4);
 }
-.adwhy__icon {
+.spotwhy__icon {
   color: var(--brand-500);
 }
-.adwhy__body strong {
+.spotwhy__body strong {
   display: block;
 }
-.adwhy__body span {
+.spotwhy__body span {
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
-.adformats {
+.spotformats {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: repeat(3, 1fr);
 }
-.adfmt {
+.spotfmt {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
   background: var(--surface);
 }
-.adfmt__preview {
+.spotfmt__preview {
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-sunken);
@@ -4783,38 +4783,38 @@ a.seller:focus-visible {
   padding: var(--space-2);
   margin-bottom: var(--space-3);
 }
-.adfmt__preview--0 {
+.spotfmt__preview--0 {
   height: 56px;
 }
-.adfmt__preview--1 {
+.spotfmt__preview--1 {
   height: 72px;
 }
-.adfmt__preview--2 {
+.spotfmt__preview--2 {
   height: 96px;
   width: 60%;
 }
-.adfmt__title {
+.spotfmt__title {
   font-size: var(--text-lg);
 }
-.adfmt__desc {
+.spotfmt__desc {
   color: var(--text-muted);
   font-size: var(--text-sm);
   margin-top: 4px;
 }
-.adfmt__price {
+.spotfmt__price {
   margin-top: var(--space-3);
   font-weight: 700;
 }
-.adfmt__from,
-.adfmt__per {
+.spotfmt__from,
+.spotfmt__per {
   color: var(--text-muted);
   font-weight: 400;
   font-size: var(--text-sm);
 }
-.adcta {
+.spotcta {
   margin-top: var(--space-5);
 }
-.adboost {
+.spotboost {
   margin-top: var(--space-5);
   display: flex;
   align-items: center;
@@ -4825,17 +4825,17 @@ a.seller:focus-visible {
   border-radius: var(--radius-md);
   padding: var(--space-4);
 }
-.adboost p {
+.spotboost p {
   color: var(--text-muted);
   font-size: var(--text-sm);
   margin-top: 2px;
 }
 @media (max-width: 720px) {
-  .adpage__why,
-  .adformats {
+  .spotpage__why,
+  .spotformats {
     grid-template-columns: 1fr;
   }
-  .adboost {
+  .spotboost {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -5391,14 +5391,14 @@ a.seller:focus-visible {
 }
 
 /* ── Right ad rail on results (desktop only) ────────────────────── */
-.searchlayout__ads {
+.searchlayout__side {
   display: none;
 }
 @media (min-width: 1200px) {
   .searchlayout {
     grid-template-columns: 232px 1fr 300px;
   }
-  .searchlayout__ads {
+  .searchlayout__side {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
@@ -5408,7 +5408,7 @@ a.seller:focus-visible {
 }
 
 /* ── Served ad creative (real campaign banner) ──────────────────── */
-.adslot__banner {
+.spotbox__media {
   position: relative;
   display: block;
   border: 1px solid var(--border);
@@ -5421,25 +5421,25 @@ a.seller:focus-visible {
 }
 /* Fixed heights on the container so next/image fill has a box and a slow/broken
    creative never collapses the slot to 0. */
-.adslot--leaderboard .adslot__banner {
+.spotbox--leaderboard .spotbox__media {
   height: 100px;
 }
-.adslot--mpu .adslot__banner {
+.spotbox--mpu .spotbox__media {
   height: 200px;
 }
-.adslot--inline .adslot__banner {
+.spotbox--inline .spotbox__media {
   height: 110px;
 }
-.adslot__banner img {
+.spotbox__media img {
   object-fit: cover;
 }
 
 /* ── Ad self-serve booking (house-ads) ──────────────────────────── */
-.adbook {
+.spotbook {
   margin-top: var(--space-5);
   max-width: 620px;
 }
-.adbook__total {
+.spotbook__total {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -5448,12 +5448,12 @@ a.seller:focus-visible {
   margin: var(--space-2) 0 var(--space-3);
   font-size: var(--text-lg);
 }
-.adbooked {
+.spotbooked {
   max-width: 620px;
   margin-top: var(--space-5);
   border-left: 3px solid var(--brand);
 }
-.adbooked__title {
+.spotbooked__title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   color: var(--brand-500);

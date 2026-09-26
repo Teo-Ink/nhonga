@@ -38,7 +38,7 @@ export default async function AdvertisePage() {
   ];
 
   return (
-    <section className="section adpage" aria-labelledby="adpage-title">
+    <section className="section spotpage" aria-labelledby="spotpage-title">
       <nav className="crumbs" aria-label="breadcrumb">
         <span className="crumbs__item">
           <a href="/">{t.common.brand}</a>
@@ -51,10 +51,10 @@ export default async function AdvertisePage() {
         </span>
       </nav>
 
-      <h1 className="section__title" id="adpage-title">
+      <h1 className="section__title" id="spotpage-title">
         {a.page_title}
       </h1>
-      <p className="adpage__lead">{a.page_subtitle}</p>
+      <p className="spotpage__lead">{a.page_subtitle}</p>
       <p>
         <a className="section__link" href="/anunciar/painel">
           {a.panel_link} →
@@ -64,14 +64,14 @@ export default async function AdvertisePage() {
         {a.demo_note}
       </p>
 
-      <h2 className="adpage__h2">{a.why_title}</h2>
-      <ul className="adpage__why">
+      <h2 className="spotpage__h2">{a.why_title}</h2>
+      <ul className="spotpage__why">
         {why.map((w, i) => (
-          <li className="adwhy" key={i}>
-            <span className="adwhy__icon" aria-hidden="true">
+          <li className="spotwhy" key={i}>
+            <span className="spotwhy__icon" aria-hidden="true">
               <w.Icon width={22} height={22} />
             </span>
-            <span className="adwhy__body">
+            <span className="spotwhy__body">
               <strong>{w.title}</strong>
               <span>{w.desc}</span>
             </span>
@@ -79,19 +79,19 @@ export default async function AdvertisePage() {
         ))}
       </ul>
 
-      <h2 className="adpage__h2">{a.formats_title}</h2>
-      <div className="adformats">
+      <h2 className="spotpage__h2">{a.formats_title}</h2>
+      <div className="spotformats">
         {formats.map((f, i) => (
-          <div className="adfmt" key={i}>
-            <div className={`adfmt__preview adfmt__preview--${i}`} aria-hidden="true">
-              <span className="adslot__label">{a.label}</span>
+          <div className="spotfmt" key={i}>
+            <div className={`spotfmt__preview spotfmt__preview--${i}`} aria-hidden="true">
+              <span className="spotbox__label">{a.label}</span>
             </div>
-            <h3 className="adfmt__title">{f.title}</h3>
-            <p className="adfmt__desc">{f.desc}</p>
-            <p className="adfmt__price">
-              <span className="adfmt__from">{a.from_price}</span>{' '}
+            <h3 className="spotfmt__title">{f.title}</h3>
+            <p className="spotfmt__desc">{f.desc}</p>
+            <p className="spotfmt__price">
+              <span className="spotfmt__from">{a.from_price}</span>{' '}
               {formatMZN(cents(plans[f.key] ?? 0))}
-              <span className="adfmt__per">{a.per_day}</span>
+              <span className="spotfmt__per">{a.per_day}</span>
             </p>
           </div>
         ))}
@@ -99,7 +99,7 @@ export default async function AdvertisePage() {
 
       <AdBookingForm t={a} plans={plans} categories={cats} />
 
-      <div className="adboost">
+      <div className="spotboost">
         <div>
           <strong>{a.seller_boost_title}</strong>
           <p>{a.seller_boost_body}</p>

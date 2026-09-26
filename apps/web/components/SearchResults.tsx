@@ -126,7 +126,7 @@ export function SearchResults({
         </div>
 
         {/* Right ad rail — desktop only (hidden on tablet/phone by CSS). */}
-        <aside className="searchlayout__ads" aria-label={t.ads.label}>
+        <aside className="searchlayout__side" aria-label={t.ads.label}>
           <AdSlot t={t} placement="mpu" category={lockedCategory} variant="advertise" />
           <AdSlot t={t} placement="mpu" variant="promote" houseOnly />
         </aside>

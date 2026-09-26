@@ -29,7 +29,7 @@ export default async function CampaignsPanel() {
     imp > 0 ? `${((clk / imp) * 100).toFixed(1)}%` : '—';
 
   return (
-    <section className="section adpage" aria-labelledby="panel-title">
+    <section className="section spotpage" aria-labelledby="panel-title">
       <nav className="crumbs" aria-label="breadcrumb">
         <span className="crumbs__item">
           <a href="/anunciar">{a.page_title}</a>
@@ -45,7 +45,7 @@ export default async function CampaignsPanel() {
       <h1 className="section__title" id="panel-title">
         {a.panel_title}
       </h1>
-      <p className="adpage__lead">{a.panel_subtitle}</p>
+      <p className="spotpage__lead">{a.panel_subtitle}</p>
       <p className="notice" role="note">
         {a.panel_note}
       </p>

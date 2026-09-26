@@ -44,15 +44,15 @@ export async function AdSlot({
   const ad = houseOnly ? null : await getAd(placement, category);
 
   return (
-    <aside className={`adslot adslot--${placement}`} aria-label={t.ads.label}>
-      <span className="adslot__label">{t.ads.label}</span>
+    <aside className={`spotbox spotbox--${placement}`} aria-label={t.ads.label}>
+      <span className="spotbox__label">{t.ads.label}</span>
       {ad ? (
         // The creative is a CSS background image, not an <img>: it has no load-
         // state management, lazy-unload or next/image involvement, so it renders
         // immediately and never "disappears".
         <a
-          className="adslot__banner"
-          href={`/api/ads/${ad.id}/click`}
+          className="spotbox__media"
+          href={`/api/spot/${ad.id}/click`}
           target="_blank"
           rel="noopener noreferrer sponsored"
           aria-label={ad.headline ?? ad.advertiser}
@@ -78,12 +78,12 @@ function HousePromo({
   const href = variant ? HREF[variant] : PROMO[placement].href;
   const ad = t.ads[kind];
   return (
-    <a className="adslot__promo" href={href}>
-      <span className="adslot__text">
-        <strong className="adslot__title">{ad.title}</strong>
-        <span className="adslot__body">{ad.body}</span>
+    <a className="spotbox__promo" href={href}>
+      <span className="spotbox__text">
+        <strong className="spotbox__title">{ad.title}</strong>
+        <span className="spotbox__body">{ad.body}</span>
       </span>
-      <span className="adslot__cta">{ad.cta} →</span>
+      <span className="spotbox__cta">{ad.cta} →</span>
     </a>
   );
 }

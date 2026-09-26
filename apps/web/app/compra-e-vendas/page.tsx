@@ -50,7 +50,7 @@ export default async function ForSalePage() {
       <h1 className="section__title" id="forsale-title">
         {t.forsale.title}
       </h1>
-      <p className="adpage__lead">{t.forsale.subtitle}</p>
+      <p className="spotpage__lead">{t.forsale.subtitle}</p>
 
       <div className="hubgrid">
         {FORSALE_KEYS.map((k) => {

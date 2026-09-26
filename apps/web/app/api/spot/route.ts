@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 
-// Self-serve ad booking: forwards the campaign to the API (book → mock pay →
-// activate). Keeps API_URL server-side.
+// Self-serve promo booking: forwards the campaign to the API (book → mock pay →
+// activate). Path is /api/spot (not /api/ads) so ad blockers don't block it.
 export async function POST(req: Request): Promise<Response> {
   let body: unknown;
   try {

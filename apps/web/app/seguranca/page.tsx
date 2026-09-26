@@ -16,14 +16,14 @@ export default async function SafetyPage() {
   const s = t.safety;
 
   return (
-    <section className="section adpage" aria-labelledby="safety-title">
+    <section className="section spotpage" aria-labelledby="safety-title">
       <span className="invite__badge" aria-hidden="true" style={{ marginTop: 0 }}>
         <IconShield width={36} height={36} />
       </span>
       <h1 className="section__title" id="safety-title">
         {s.title}
       </h1>
-      <p className="adpage__lead">{s.subtitle}</p>
+      <p className="spotpage__lead">{s.subtitle}</p>
 
       <div className="safetygrid">
         <div className="safetycard">
@@ -54,7 +54,7 @@ export default async function SafetyPage() {
         <p>{s.never_body}</p>
       </div>
 
-      <div className="adboost">
+      <div className="spotboost">
         <div>
           <strong>{s.report_title}</strong>
           <p>{s.report_body}</p>
