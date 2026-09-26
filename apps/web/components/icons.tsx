@@ -280,3 +280,11 @@ export const IconBell = (p: SVGProps<SVGSVGElement>) => (
     <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
   </svg>
 );
+
+export const IconGift = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+    <path d="M3 7h18v4H3zM12 7v14" />
+    <path d="M12 7S10.5 3 8 4.2C6 5 7 7 9.5 7zM12 7s1.5-4 4-2.8C18 5 17 7 14.5 7z" />
+  </svg>
+);

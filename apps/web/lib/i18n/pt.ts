@@ -183,6 +183,29 @@ export const pt = {
     save_search: 'Guardar pesquisa',
     search_saved: 'Pesquisa guardada',
   },
+  // Referral (H).
+  refer: {
+    title: 'Convide amigos',
+    subtitle: 'Partilhe o Nhonga e ajude a sua comunidade a comprar e vender.',
+    your_link: 'O seu link de convite',
+    copy: 'Copiar',
+    copied: 'Copiado!',
+    share_wa: 'Partilhar no WhatsApp',
+    wa_text: 'Estou a usar o Nhonga para comprar e vender em Moçambique. Junta-te por aqui:',
+    how_title: 'Como funciona',
+    step1: 'Partilhe o seu link com amigos.',
+    step2: 'Eles criam conta no Nhonga.',
+    step3: 'Ganham destaque para os vossos anúncios.',
+    demo_note:
+      'Demonstração: os convites e recompensas ainda não são registados. O link é gerado a partir da sua conta.',
+    signin_prompt: 'Inicie sessão para obter o seu link de convite.',
+    signin_cta: 'Entrar',
+    landing_title: 'Foi convidado para o Nhonga',
+    landing_body: 'Crie a sua conta gratuita e comece a comprar e vender em Moçambique.',
+    landing_cta: 'Criar conta',
+    landing_code: 'Código de convite',
+    landing_note: 'Demonstração: o convite não é registado nem atribuído a ninguém.',
+  },
   // Saved searches (C).
   saved: {
     title: 'Pesquisas guardadas',
@@ -685,6 +708,7 @@ export const pt = {
     link_cart: 'O meu carrinho',
     link_favorites: 'Os meus favoritos',
     link_saved: 'Pesquisas guardadas',
+    link_invite: 'Convidar amigos',
     link_messages: 'Mensagens',
     link_help: 'Ajuda e suporte',
     link_sell: 'Vender no Nhonga',

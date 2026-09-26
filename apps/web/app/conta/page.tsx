@@ -8,6 +8,7 @@ import {
   IconHeart,
   IconChat,
   IconBell,
+  IconGift,
 } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
 
@@ -104,6 +105,7 @@ function Shortcuts() {
     { href: '/favoritos', icon: <IconHeart width={20} height={20} />, label: t.link_favorites },
     { href: '/pesquisas', icon: <IconBell width={20} height={20} />, label: t.link_saved },
     { href: '/mensagens', icon: <IconChat width={20} height={20} />, label: t.link_messages },
+    { href: '/convidar', icon: <IconGift width={20} height={20} />, label: t.link_invite },
     { href: '/ajuda', icon: <IconShield width={20} height={20} />, label: t.link_help },
   ];
   return (
