@@ -22,6 +22,13 @@
       "when": 1790351396604,
       "tag": "0002_pink_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790385541629,
+      "tag": "0003_hot_skaar",
+      "breakpoints": true
     }
   ]
 }

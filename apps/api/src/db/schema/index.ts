@@ -13,3 +13,4 @@ export * from './catalog.js';
 export * from './commerce.js';
 export * from './platform.js';
 export * from './promotions.js';
+export * from './reviews.js';

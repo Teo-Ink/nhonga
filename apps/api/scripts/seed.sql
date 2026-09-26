@@ -5,7 +5,7 @@
 -- The /ph route still exists as a branded fallback placeholder generator.
 BEGIN;
 
-TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, vendor, district RESTART IDENTITY CASCADE;
+TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, review, app_user, vendor, district RESTART IDENTITY CASCADE;
 
 -- Provinces — all 11 (names match the storefront checkout province list so a
 -- guest order resolves to a real province/district for the address FK).
@@ -233,6 +233,30 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000108', 'a0000000-0000-4000-8000-000000000108', '/ph?c=empregos&t=Domestica', 640, 480, 'Vaga doméstica', 0),
   ('e0000000-0000-4000-8000-000000000109', 'a0000000-0000-4000-8000-000000000109', '/ph?c=agro&t=Cabritos', 640, 480, 'Cabritos', 0),
   ('e0000000-0000-4000-8000-000000000110', 'a0000000-0000-4000-8000-000000000110', '/ph?c=agro&t=Milho', 640, 480, 'Sacos de milho', 0);
+
+-- ── Seller reviews (B) — real reviewers + reviews; vendor ratings derived below ──
+INSERT INTO app_user (id, phone_e164, phone_verified_at, display_name, status) VALUES
+  ('99990000-0000-4000-8000-000000000001', '+258842000001', now(), 'Ana C.', 'active'),
+  ('99990000-0000-4000-8000-000000000002', '+258843000002', now(), 'João M.', 'active'),
+  ('99990000-0000-4000-8000-000000000003', '+258844000003', now(), 'Rita S.', 'active');
+
+INSERT INTO review (id, vendor_id, product_id, author_user_id, author_name, rating, comment, created_at) VALUES
+  ('77770000-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002', '99990000-0000-4000-8000-000000000001', 'Ana C.', 5, 'Vendedor rápido e honesto. O produto estava tal como no anúncio.', now() - interval '3 days'),
+  ('77770000-0000-4000-8000-000000000002', '11111111-0000-4000-8000-000000000001', NULL, '99990000-0000-4000-8000-000000000002', 'João M.', 4, 'Boa comunicação pelo WhatsApp e entrega combinada sem problemas.', now() - interval '8 days'),
+  ('77770000-0000-4000-8000-000000000003', '11111111-0000-4000-8000-000000000002', NULL, '99990000-0000-4000-8000-000000000001', 'Ana C.', 5, 'A Mama Rosa é impecável, capulanas lindas e atendimento simpático.', now() - interval '2 days'),
+  ('77770000-0000-4000-8000-000000000004', '11111111-0000-4000-8000-000000000002', NULL, '99990000-0000-4000-8000-000000000003', 'Rita S.', 5, 'Recomendo! Respondeu rápido e o preço foi justo.', now() - interval '12 days'),
+  ('77770000-0000-4000-8000-000000000005', '11111111-0000-4000-8000-000000000003', NULL, '99990000-0000-4000-8000-000000000002', 'João M.', 4, 'Trabalho bem feito e no prazo combinado.', now() - interval '5 days'),
+  ('77770000-0000-4000-8000-000000000006', '11111111-0000-4000-8000-000000000003', NULL, '99990000-0000-4000-8000-000000000003', 'Rita S.', 5, 'Muito profissional, voltarei a contactar.', now() - interval '20 days');
+
+-- Vendor rating now reflects the real review rows above (replaces demo aggregates).
+UPDATE vendor v SET
+  rating_count = s.cnt,
+  rating_avg = s.avg
+FROM (
+  SELECT vendor_id, count(*)::int AS cnt, round(avg(rating)::numeric, 1) AS avg
+  FROM review WHERE status = 'published' GROUP BY vendor_id
+) s
+WHERE v.id = s.vendor_id;
 
 COMMIT;
 
