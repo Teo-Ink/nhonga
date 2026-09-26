@@ -5354,3 +5354,36 @@ a.seller:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── AI-assisted posting helper (D) ─────────────────────────────── */
+.aihelper {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.aihelper__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-500);
+  margin-bottom: 4px;
+}
+.aihelper__hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-2);
+}
+.aihelper__btn {
+  margin-top: var(--space-2);
+}
+.aihelper__note {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.aihelper__note--err {
+  color: var(--color-danger-600, #c0392b);
+}

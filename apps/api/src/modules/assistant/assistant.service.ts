@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/config.schema.js';
 import { AnthropicProvider } from './anthropic.provider.js';
-import type { AssistantProvider, ChatMessage, ChatReply } from './assistant.types.js';
+import type {
+  AssistantProvider,
+  ChatMessage,
+  ChatReply,
+  ListingDraft,
+} from './assistant.types.js';
 
 export class AssistantError extends Error {
   constructor(
@@ -48,19 +53,33 @@ const SYSTEM_PROMPT = `És o assistente de apoio ao cliente do Nhonga, o mercado
 
 Estilo: simpático, claro e breve. Responde no idioma do cliente (português de Moçambique por omissão; se escreverem em inglês, responde em inglês). Usa "tu"/linguagem próxima. Não inventes políticas nem dados; se não souberes, diz que não sabes e encaminha para a página de Ajuda (/ajuda) ou para contactar o vendedor.
 
-O que sabes sobre o Nhonga:
-- Pagamentos: M-Pesa, e-Mola, mKesh, ou dinheiro na entrega. Os pagamentos por carteira móvel confirmam-se no telemóvel do cliente.
-- Entrega: combinada com o vendedor (ao domicílio ou levantamento). Não há tabela de portes fixa.
-- Proteção ao comprador: reembolso se pagar pela plataforma e não receber o produto.
+O que sabes sobre o Nhonga (mercado de classificados — as pessoas contactam-se e combinam o negócio diretamente):
+- Comprar: contacta-se o vendedor pelo anúncio (botão de WhatsApp ou telefone). Não há carrinho nem checkout na plataforma.
+- Pagamento e entrega: combinados diretamente entre comprador e vendedor. Formas comuns: M-Pesa, e-Mola, mKesh ou dinheiro em mãos; a entrega é ao domicílio ou levantamento, sem tabela de portes.
+- Segurança: o Nhonga NÃO processa pagamentos nem retém valores (não há pagamento protegido). Aconselha encontro em local público, verificar o produto antes de pagar e nunca pagar adiantado — ver /seguranca.
 - Vender: é preciso conta (criar conta ou entrar por código no telemóvel), depois o onboarding cria a loja. Anunciar é grátis; há destaques pagos (Destaque, Turbo) e uma subscrição Loja Pro — ver /vender/planos.
-- Seguimento de encomenda: pela referência da encomenda (formato NH-AAMMDD-XXXXX) em /conta ou na página do pedido.
-- Categorias: Moda, Eletrónica, Telemóveis, Casa e Cozinha, Alimentação, Beleza.
+- Categorias: Viaturas, Imóveis, Empregos, Serviços, Eventos, além de Moda, Eletrónica, Telemóveis, Casa e Cozinha, Alimentação e Beleza.
 
 Regras importantes:
 - NUNCA peças nem trates palavras-passe, códigos OTP, PIN, ou dados de cartão. Se o cliente os partilhar, avisa-o para não o fazer.
 - Isto é uma demonstração: se perguntarem por algo que ainda não está ligado (apps móveis, login social), sê honesto.
 - Não prometas prazos, preços ou reembolsos específicos que não conheças.
 - Mantém as respostas curtas (2 a 5 frases) a menos que peçam passos detalhados.`;
+
+// Drafts a classifieds listing from the seller's rough notes. Honest: never
+// invents features the seller did not mention; no misleading claims. Returns
+// strict JSON so the web form can fill the title and description fields.
+const LISTING_PROMPT = `És um assistente que ajuda vendedores do Nhonga (mercado de classificados de Moçambique) a escrever anúncios claros e honestos.
+
+Regras:
+- Escreve em português de Moçambique, tom simpático e direto.
+- Usa APENAS a informação que o vendedor deu. NÃO inventes marca, estado, medidas, garantias nem preços que não foram indicados.
+- Nada de linguagem enganosa ou exagerada ("melhor do mundo", "100% garantido").
+- Título: no máximo 60 caracteres, específico e sem MAIÚSCULAS a gritar.
+- Descrição: 2 a 4 frases úteis para o comprador; podes sugerir que combine a visita/entrega e que verifique o artigo.
+
+Responde SÓ com JSON válido, sem texto à volta, no formato:
+{"title": "…", "description": "…"}`;
 
 @Injectable()
 export class AssistantService {
@@ -118,6 +137,39 @@ export class AssistantService {
     }
   }
 
+  /** AI-assisted posting (D): draft a title + description from the seller's notes. */
+  async draftListing(
+    input: { category?: string; details: string },
+    clientId = 'anon',
+  ): Promise<ListingDraft> {
+    if (!this.limiter.allow(clientId)) {
+      throw new AssistantError('Too many requests — try again shortly', 'rate_limited');
+    }
+    const details = (input.details ?? '').trim();
+    if (details.length < 3) {
+      throw new AssistantError('Descreva o artigo em poucas palavras.', 'invalid_input');
+    }
+    if (details.length > MAX_CONTENT) {
+      throw new AssistantError(`too long (max ${MAX_CONTENT} chars)`, 'invalid_input');
+    }
+    if (!this.provider) return { title: '', description: '', configured: false };
+    if (this.overMonthlyCap()) {
+      throw new AssistantError('O assistente está muito ocupado. Tenta mais tarde.', 'upstream');
+    }
+
+    const category = (input.category ?? '').trim() || 'geral';
+    const user = `Categoria: ${category}\nNotas do vendedor: ${details}`;
+    try {
+      const { text, usage } = await this.provider.complete(LISTING_PROMPT, [
+        { role: 'user', content: user },
+      ]);
+      this.record(usage.inputTokens, usage.outputTokens);
+      return { ...parseDraft(text), configured: true };
+    } catch (e) {
+      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+    }
+  }
+
   private overMonthlyCap(): boolean {
     if (this.monthlyTokenCap <= 0) return false;
     this.rollMonth();
@@ -169,4 +221,31 @@ export class AssistantService {
       throw new AssistantError('the last message must be from the user', 'invalid_input');
     }
   }
+}
+
+/** Parse the model's reply into {title, description}. Prefers strict JSON, with
+ *  a plain-text fallback so a non-JSON reply still fills something useful. */
+function parseDraft(text: string): { title: string; description: string } {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/, '')
+    .trim();
+  try {
+    const obj = JSON.parse(cleaned) as { title?: unknown; description?: unknown };
+    const title = typeof obj.title === 'string' ? obj.title.trim().slice(0, 80) : '';
+    const description =
+      typeof obj.description === 'string' ? obj.description.trim().slice(0, 1200) : '';
+    if (title || description) return { title, description };
+  } catch {
+    /* not JSON — fall back to plain text */
+  }
+  const lines = text
+    .trim()
+    .split('\n')
+    .filter((l) => l.trim() !== '');
+  return {
+    title: (lines[0] ?? '').slice(0, 80),
+    description: (lines.slice(1).join(' ') || (lines[0] ?? '')).slice(0, 1200),
+  };
 }

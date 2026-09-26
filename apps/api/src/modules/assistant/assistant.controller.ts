@@ -10,10 +10,14 @@ import {
   Post,
 } from '@nestjs/common';
 import { AssistantError, AssistantService } from './assistant.service.js';
-import type { ChatMessage, ChatReply } from './assistant.types.js';
+import type { ChatMessage, ChatReply, ListingDraft } from './assistant.types.js';
 
 interface ChatBody {
   messages?: unknown;
+}
+interface ListingBody {
+  category?: unknown;
+  details?: unknown;
 }
 
 function parseMessages(input: unknown): ChatMessage[] {
@@ -46,17 +50,37 @@ export class AssistantController {
     try {
       return await this.assistant.chat(messages, ip || 'anon');
     } catch (e) {
-      if (e instanceof AssistantError) {
-        throw new HttpException(
-          { message: e.message },
-          e.code === 'invalid_input'
-            ? HttpStatus.BAD_REQUEST
-            : e.code === 'rate_limited'
-              ? HttpStatus.TOO_MANY_REQUESTS
-              : HttpStatus.BAD_GATEWAY,
-        );
-      }
-      throw e;
+      throw toHttp(e);
     }
   }
+
+  /** AI-assisted posting (D): draft a title + description from rough notes. */
+  @Post('listing')
+  @HttpCode(200)
+  async listing(@Body() body: ListingBody, @Ip() ip: string): Promise<ListingDraft> {
+    const details = typeof body.details === 'string' ? body.details : '';
+    const arg: { category?: string; details: string } = { details };
+    if (typeof body.category === 'string') arg.category = body.category;
+    try {
+      return await this.assistant.draftListing(arg, ip || 'anon');
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+}
+
+function toHttp(e: unknown): HttpException {
+  if (e instanceof AssistantError) {
+    return new HttpException(
+      { message: e.message },
+      e.code === 'invalid_input'
+        ? HttpStatus.BAD_REQUEST
+        : e.code === 'rate_limited'
+          ? HttpStatus.TOO_MANY_REQUESTS
+          : HttpStatus.BAD_GATEWAY,
+    );
+  }
+  return e instanceof HttpException
+    ? e
+    : new HttpException({ message: 'Assistant error' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

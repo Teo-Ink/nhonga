@@ -14,6 +14,15 @@ export interface ChatReply {
   readonly configured: boolean;
 }
 
+export interface ListingDraft {
+  /** Suggested title (empty when not configured). */
+  readonly title: string;
+  /** Suggested description (empty when not configured). */
+  readonly description: string;
+  /** False when no ANTHROPIC_API_KEY is set. */
+  readonly configured: boolean;
+}
+
 export interface TokenUsage {
   readonly inputTokens: number;
   readonly outputTokens: number;

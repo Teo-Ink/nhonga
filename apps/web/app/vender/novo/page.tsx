@@ -2,13 +2,18 @@
 import { useState } from 'react';
 import { cents, formatMZN, fromMeticais } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
-import { IconChevronLeft, IconBox } from '../../../components/icons';
+import { IconChevronLeft, IconBox, IconSparkle } from '../../../components/icons';
 
 // Create listing. Publishing is not wired (no seller auth, no create endpoint),
 // so this is the correct form with a live preview, but "Publish" persists
 // nothing and surfaces an honest "not available in this demo" message. Photo
 // upload is deliberately disabled and labelled.
 const CATEGORY_KEYS = [
+  'viaturas',
+  'imoveis',
+  'empregos',
+  'servicos',
+  'eventos',
   'moda',
   'electronica',
   'telemoveis',
@@ -28,6 +33,38 @@ export default function NewListingPage() {
   const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
   const [submitted, setSubmitted] = useState(false);
   const [notice, setNotice] = useState(false);
+  const [aiNotes, setAiNotes] = useState('');
+  const [aiState, setAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>('idle');
+
+  async function generate() {
+    if (aiNotes.trim().length < 3) return;
+    setAiState('loading');
+    try {
+      const res = await fetch('/api/assistant/listing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ category, details: aiNotes }),
+      });
+      const data = (await res.json()) as {
+        title?: string;
+        description?: string;
+        configured?: boolean;
+      };
+      if (!res.ok) {
+        setAiState('error');
+        return;
+      }
+      if (!data.configured) {
+        setAiState('unconfigured');
+        return;
+      }
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+      setAiState('idle');
+    } catch {
+      setAiState('error');
+    }
+  }
 
   const plans = [
     { id: 'free' as const, name: t.plan_free, desc: t.plan_free_desc },
@@ -63,6 +100,39 @@ export default function NewListingPage() {
 
       <div className="newlisting__grid">
         <form className="card" onSubmit={onSubmit} noValidate>
+          <div className="aihelper">
+            <div className="aihelper__head">
+              <IconSparkle width={18} height={18} />
+              <strong>{t.ai_title}</strong>
+            </div>
+            <p className="aihelper__hint">{t.ai_hint}</p>
+            <textarea
+              className="field__input"
+              rows={2}
+              value={aiNotes}
+              onChange={(e) => setAiNotes(e.target.value)}
+              placeholder={t.ai_ph}
+            />
+            <button
+              type="button"
+              className="btn btn--ghost aihelper__btn"
+              onClick={generate}
+              disabled={aiState === 'loading' || aiNotes.trim().length < 3}
+            >
+              {aiState === 'loading' ? t.ai_loading : t.ai_generate}
+            </button>
+            {aiState === 'unconfigured' ? (
+              <p className="aihelper__note" role="status">
+                {t.ai_unconfigured}
+              </p>
+            ) : null}
+            {aiState === 'error' ? (
+              <p className="aihelper__note aihelper__note--err" role="alert">
+                {t.ai_error}
+              </p>
+            ) : null}
+          </div>
+
           <label className="field">
             <span className="field__label">
               {t.f_title} <span aria-hidden="true">*</span>

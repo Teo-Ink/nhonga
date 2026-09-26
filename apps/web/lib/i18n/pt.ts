@@ -408,6 +408,13 @@ export const pt = {
     // create listing
     new_title: 'Criar anúncio',
     new_subtitle: 'Descreva o seu produto com clareza para vender mais depressa.',
+    ai_title: 'Escrever com IA',
+    ai_hint: 'Diga em poucas palavras o que está a vender e a IA sugere um título e uma descrição.',
+    ai_ph: 'Ex.: Toyota Corolla 2016, gasolina, 120 mil km, bom estado, Maputo',
+    ai_generate: 'Gerar com IA',
+    ai_loading: 'A gerar…',
+    ai_unconfigured: 'O assistente de IA ainda não está ligado nesta demonstração.',
+    ai_error: 'Não foi possível gerar agora. Tente novamente.',
     f_title: 'Título do produto',
     f_title_ph: 'Ex.: Capulana tradicional mocambicana',
     f_category: 'Categoria',
