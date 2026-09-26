@@ -22,15 +22,13 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
       <a className="lrow__link" href={`/produto/${p.slug}`}>
         <div className="lrow__media">
           {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
-          {p.image ? (
-            <Image
-              src={p.image.url}
-              alt={p.image.alt ?? p.title}
-              fill
-              sizes="(max-width: 768px) 40vw, 220px"
-              style={{ objectFit: 'cover' }}
-            />
-          ) : null}
+          <Image
+            src={p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`}
+            alt={p.image?.alt ?? p.title}
+            fill
+            sizes="(max-width: 768px) 40vw, 220px"
+            style={{ objectFit: 'cover' }}
+          />
         </div>
         <div className="lrow__body">
           <h3 className="lrow__title">{p.title}</h3>

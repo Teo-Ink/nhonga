@@ -28,15 +28,13 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
         <div className="lcard__media">
           {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
           {p.discountPercent ? <span className="lcard__badge">-{p.discountPercent}%</span> : null}
-          {p.image ? (
-            <Image
-              src={p.image.url}
-              alt={p.image.alt ?? p.title}
-              fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              style={{ objectFit: 'cover' }}
-            />
-          ) : null}
+          <Image
+            src={p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`}
+            alt={p.image?.alt ?? p.title}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            style={{ objectFit: 'cover' }}
+          />
           {!p.inStock ? <span className="lcard__soldout">{t.common.sold_out}</span> : null}
         </div>
         <div className="lcard__body">

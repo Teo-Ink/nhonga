@@ -29,6 +29,7 @@ export async function AdSlot({
   placement,
   variant,
   category,
+  houseOnly,
 }: {
   t: Dictionary;
   placement: Placement;
@@ -36,8 +37,11 @@ export async function AdSlot({
   variant?: Variant;
   /** Category context for ad targeting (results/category pages). */
   category?: string;
+  /** Skip serving a booked campaign — always show the house promo (avoids two
+   *  identical ads when a rail has more slots than live campaigns). */
+  houseOnly?: boolean;
 }) {
-  const ad = await getAd(placement, category);
+  const ad = houseOnly ? null : await getAd(placement, category);
 
   return (
     <aside className={`adslot adslot--${placement}`} aria-label={t.ads.label}>

@@ -5418,19 +5418,17 @@ a.seller:focus-visible {
 .adslot__banner img {
   display: block;
   width: 100%;
-  height: auto;
+  object-fit: cover;
+  /* Fixed heights so a slow/broken creative never collapses the slot to 0. */
 }
 .adslot--leaderboard .adslot__banner img {
-  max-height: 130px;
-  object-fit: cover;
+  height: 100px;
 }
 .adslot--mpu .adslot__banner img {
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  height: 200px;
 }
 .adslot--inline .adslot__banner img {
-  max-height: 140px;
-  object-fit: cover;
+  height: 110px;
 }
 
 /* ── Ad self-serve booking (house-ads) ──────────────────────────── */
