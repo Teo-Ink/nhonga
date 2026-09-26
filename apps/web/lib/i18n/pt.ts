@@ -192,7 +192,7 @@ export const pt = {
     imoveis: 'Imóveis',
     empregos: 'Empregos',
     servicos: 'Serviços',
-    agro: 'Agro e Animais',
+    eventos: 'Eventos',
     all: 'Ver todas',
   },
   cart: {

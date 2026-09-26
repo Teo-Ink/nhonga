@@ -10,7 +10,7 @@ const CATEGORY_KEYS = [
   'imoveis',
   'empregos',
   'servicos',
-  'agro',
+  'eventos',
   'moda',
   'electronica',
   'telemoveis',

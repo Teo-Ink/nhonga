@@ -266,3 +266,10 @@ export const IconLeaf = (p: SVGProps<SVGSVGElement>) => (
     <path d="M4 20c3-4 6-6 10-8" />
   </svg>
 );
+
+export const IconTicket = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="M3 9V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a2 2 0 1 0 0 4v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a2 2 0 1 0 0-4z" />
+    <path d="M15 6.5v11" strokeDasharray="2 2" />
+  </svg>
+);

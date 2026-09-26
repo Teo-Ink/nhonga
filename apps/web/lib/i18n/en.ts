@@ -192,7 +192,7 @@ export const en: Dictionary = {
     imoveis: 'Property',
     empregos: 'Jobs',
     servicos: 'Services',
-    agro: 'Agriculture & Animals',
+    eventos: 'Events',
     all: 'See all',
   },
   cart: {
