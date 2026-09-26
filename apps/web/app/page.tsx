@@ -1,6 +1,5 @@
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
-import { CategoryStrip } from '../components/home/CategoryStrip';
 import { AdSlot } from '../components/AdSlot';
 import { PostAdBanner } from '../components/home/PostAdBanner';
 import { AppPromo } from '../components/home/AppPromo';
@@ -84,8 +83,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <CategoryStrip t={t} />
-
+      {/* Category navigation lives once, in the site header (no home-only strip). */}
       {/* Jumbotron */}
       <HeroCarousel
         slides={slides}
