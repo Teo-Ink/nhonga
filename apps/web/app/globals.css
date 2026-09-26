@@ -5409,26 +5409,26 @@ a.seller:focus-visible {
 
 /* ── Served ad creative (real campaign banner) ──────────────────── */
 .adslot__banner {
+  position: relative;
   display: block;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--surface-sunken);
 }
-.adslot__banner img {
-  display: block;
-  width: 100%;
-  object-fit: cover;
-  /* Fixed heights so a slow/broken creative never collapses the slot to 0. */
-}
-.adslot--leaderboard .adslot__banner img {
+/* Fixed heights on the container so next/image fill has a box and a slow/broken
+   creative never collapses the slot to 0. */
+.adslot--leaderboard .adslot__banner {
   height: 100px;
 }
-.adslot--mpu .adslot__banner img {
+.adslot--mpu .adslot__banner {
   height: 200px;
 }
-.adslot--inline .adslot__banner img {
+.adslot--inline .adslot__banner {
   height: 110px;
+}
+.adslot__banner img {
+  object-fit: cover;
 }
 
 /* ── Ad self-serve booking (house-ads) ──────────────────────────── */

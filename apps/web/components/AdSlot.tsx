@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getAd } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
 
@@ -53,7 +54,14 @@ export async function AdSlot({
           target="_blank"
           rel="noopener noreferrer sponsored"
         >
-          <img src={ad.imageUrl} alt={ad.headline ?? ad.advertiser} loading="lazy" />
+          <Image
+            src={ad.imageUrl}
+            alt={ad.headline ?? ad.advertiser}
+            fill
+            sizes="(max-width: 1200px) 100vw, 300px"
+            style={{ objectFit: 'cover' }}
+            unoptimized
+          />
         </a>
       ) : (
         <HousePromo t={t} placement={placement} variant={variant} />

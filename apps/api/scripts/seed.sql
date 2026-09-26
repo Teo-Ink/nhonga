@@ -261,8 +261,8 @@ WHERE v.id = s.vendor_id;
 
 -- ── Display-ad campaigns (house-ads monetisation) — 2 active demo campaigns ──
 INSERT INTO ad_campaign (id, advertiser_name, image_url, click_url, headline, placement, category_slug, starts_at, ends_at, price_cents, status) VALUES
-  ('aaaa1111-0000-4000-8000-000000000001', 'Banco Exemplo', '/ph?c=viaturas&t=Banco%20Exemplo', 'https://www.example.com', 'Banco Exemplo — crédito para a sua viatura', 'leaderboard', NULL, now() - interval '1 day', now() + interval '30 days', 1500000, 'active'),
-  ('aaaa1111-0000-4000-8000-000000000002', 'Escola de Condução Xitique', '/ph?c=servicos&t=Carta%20de%20Conducao', 'https://www.example.com', 'Tire a sua carta de condução', 'mpu', 'viaturas', now() - interval '1 day', now() + interval '30 days', 900000, 'active');
+  ('aaaa1111-0000-4000-8000-000000000001', 'Banco Exemplo', '/ph?c=viaturas&t=Banco%20Exemplo&s=Cr%C3%A9dito%20para%20a%20sua%20viatura', 'https://www.example.com', 'Banco Exemplo — crédito para a sua viatura', 'leaderboard', NULL, now() - interval '1 day', now() + interval '30 days', 1500000, 'active'),
+  ('aaaa1111-0000-4000-8000-000000000002', 'Escola de Condução Xitique', '/ph?c=telemoveis&t=Escola%20de%20Condu%C3%A7%C3%A3o&s=Tire%20a%20sua%20carta', 'https://www.example.com', 'Tire a sua carta de condução', 'mpu', 'viaturas', now() - interval '1 day', now() + interval '30 days', 900000, 'active');
 
 COMMIT;
 
