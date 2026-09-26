@@ -3535,6 +3535,9 @@ a.seller:focus-visible {
 .wlnav {
   display: flex;
   align-items: center;
+  /* Centre the pills when they fit; `safe` falls back to start-alignment when
+     they overflow on narrow screens, so nothing is clipped or unreachable. */
+  justify-content: safe center;
   gap: var(--space-1);
   max-width: var(--container-max);
   margin: 0 auto;
