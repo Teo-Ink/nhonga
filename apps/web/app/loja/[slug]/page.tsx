@@ -46,8 +46,11 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   const countLabel =
     count === 1 ? t.seller.one_product : t.seller.n_products.replace('{n}', String(count));
 
+  const ratingAvg = reviews.summary.ratingAvg ?? vendor?.ratingAvg ?? null;
+
   return (
     <>
+      <div className="store__banner" aria-hidden="true" />
       <header className="store">
         <span className="store__avatar" aria-hidden="true">
           {name.charAt(0)}
@@ -58,8 +61,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
             {vendor?.isVerified ? <VerifiedBadge label={t.seller.verified} /> : null}
           </h1>
           <div className="store__stats">
-            {vendor && vendor.ratingAvg !== null ? (
-              <Rating value={vendor.ratingAvg} count={vendor.ratingCount} />
+            {ratingAvg !== null ? (
+              <Rating value={ratingAvg} count={reviews.summary.ratingCount} />
             ) : null}
             <span className="store__count">{countLabel}</span>
           </div>
@@ -71,6 +74,27 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           {t.messages.contact_seller}
         </a>
       </header>
+
+      <ul className="storestats">
+        <li className="storestat">
+          <strong>{count}</strong>
+          <span>{t.seller.stat_listings}</span>
+        </li>
+        <li className="storestat">
+          <strong>{ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}</strong>
+          <span>{t.seller.stat_rating}</span>
+        </li>
+        <li className="storestat">
+          <strong>{reviews.summary.ratingCount}</strong>
+          <span>{t.seller.stat_reviews}</span>
+        </li>
+        {vendor?.isVerified ? (
+          <li className="storestat storestat--ok">
+            <strong>✓</strong>
+            <span>{t.seller.stat_verified}</span>
+          </li>
+        ) : null}
+      </ul>
 
       <section className="section" aria-label={t.seller.products}>
         {count === 0 ? (

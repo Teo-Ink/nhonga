@@ -5271,3 +5271,40 @@ a.seller:focus-visible {
   margin: var(--space-4) auto var(--space-3);
   max-width: 260px;
 }
+
+/* ── Store (Lojas, F) branding banner + stats ───────────────────── */
+.store__banner {
+  height: 96px;
+  border-radius: var(--radius-lg);
+  margin-bottom: -40px;
+  background: linear-gradient(120deg, var(--brand) 0%, #0b5138 60%, #083b28 100%);
+}
+.storestats {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-3) 0 var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.storestat {
+  flex: 1;
+  min-width: 90px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-3);
+  text-align: center;
+}
+.storestat strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+.storestat span {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.storestat--ok strong {
+  color: var(--brand-500);
+}
