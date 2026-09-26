@@ -187,6 +187,15 @@ export interface ServedAd {
   advertiser: string;
 }
 
+/** Example rate card (cents/day) per placement, for the booking form. */
+export async function getAdPlans(): Promise<Record<string, number>> {
+  try {
+    return await get<Record<string, number>>('/ads/plans');
+  } catch {
+    return { leaderboard: 50000, mpu: 30000, inline: 40000 };
+  }
+}
+
 /** Serve a live ad creative for a slot (counts an impression). Null → house ad. */
 export async function getAd(placement: string, category?: string): Promise<ServedAd | null> {
   try {

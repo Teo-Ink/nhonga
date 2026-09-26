@@ -1,14 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { and, desc, eq, gte, isNull, lte, or, sql } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
+import type { AppConfig } from '../../config/config.schema.js';
 import { adCampaign } from '../../db/schema/ads.js';
+import { PaymentProvidersService } from '../payments/providers.service.js';
+import type { ProviderId } from '../payments/payment-provider.interface.js';
 
 export class AdError extends Error {
   constructor(
     message: string,
-    readonly code: 'invalid_input' | 'not_found',
+    readonly code: 'invalid_input' | 'not_found' | 'unavailable',
   ) {
     super(message);
     this.name = 'AdError';
@@ -57,7 +61,11 @@ const RATE_PER_DAY: Record<Placement, number> = {
 
 @Injectable()
 export class AdsService {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly providers: PaymentProvidersService,
+    private readonly config: ConfigService<AppConfig, true>,
+  ) {}
 
   /** Pick a live campaign for a slot (targeted to the category or untargeted),
    *  count an impression, and return the creative. Null → caller shows a house ad. */
@@ -76,6 +84,7 @@ export class AdsService {
         clickUrl: adCampaign.clickUrl,
         headline: adCampaign.headline,
         advertiser: adCampaign.advertiserName,
+        categorySlug: adCampaign.categorySlug,
       })
       .from(adCampaign)
       .where(
@@ -88,13 +97,22 @@ export class AdsService {
         ),
       );
     if (rows.length === 0) return null;
-    // Prefer a category-targeted campaign over an untargeted one, then rotate.
-    const chosen = rows[Math.floor(Math.random() * rows.length)]!;
+    // Prefer a campaign targeted to this category over an untargeted one, then
+    // rotate at random within the chosen tier.
+    const targeted = rows.filter((r) => r.categorySlug !== null);
+    const pool = targeted.length > 0 ? targeted : rows;
+    const chosen = pool[Math.floor(Math.random() * pool.length)]!;
     await this.db
       .update(adCampaign)
       .set({ impressions: sql`${adCampaign.impressions} + 1` })
       .where(eq(adCampaign.id, chosen.id));
-    return chosen;
+    return {
+      id: chosen.id,
+      imageUrl: chosen.imageUrl,
+      clickUrl: chosen.clickUrl,
+      headline: chosen.headline,
+      advertiser: chosen.advertiser,
+    };
   }
 
   /** Count a click and return the destination URL (or null if unknown). */
@@ -118,7 +136,9 @@ export class AdsService {
     const name = (input.advertiserName ?? '').trim();
     const imageUrl = (input.imageUrl ?? '').trim();
     const clickUrl = (input.clickUrl ?? '').trim();
-    if (name === '' || !isHttpUrl(imageUrl) || !isHttpUrl(clickUrl)) {
+    // Creative may be a hosted https image or an internal /path; the click-through
+    // must be an external http(s) URL.
+    if (name === '' || !isImageUrl(imageUrl) || !isHttpUrl(clickUrl)) {
       throw new AdError('Nome, imagem (URL) e link (URL) são obrigatórios.', 'invalid_input');
     }
     if (!isPlacement(input.placement)) {
@@ -147,6 +167,27 @@ export class AdsService {
       status: 'pending',
     });
     return { id, priceCents };
+  }
+
+  /** Self-serve booking: validate the payment method, book, settle (mock) and
+   *  activate. Returns a receipt. Real wallet billing is partnership-gated. */
+  async bookAndPay(
+    input: BookInput,
+    paymentMethod: string,
+  ): Promise<{ id: string; priceCents: number; status: string; endsAt: string }> {
+    const method = paymentMethod as ProviderId;
+    if (this.providers.get(method) === undefined) {
+      throw new AdError('Método de pagamento inválido.', 'invalid_input');
+    }
+    if (this.config.get('paymentsMode', { infer: true }) !== 'mock') {
+      throw new AdError('Os pagamentos de publicidade ainda não estão disponíveis.', 'unavailable');
+    }
+    const { id, priceCents } = await this.book(input);
+    // Mock: settle immediately and go live.
+    await this.activate(id);
+    const days = Math.trunc(Number(input.days));
+    const endsAt = new Date(Date.now() + days * 86_400_000).toISOString();
+    return { id, priceCents, status: 'active', endsAt };
   }
 
   /** Activate a campaign (after payment/approval). */
@@ -190,6 +231,9 @@ function isPlacement(v: string): v is Placement {
 }
 function isHttpUrl(v: string): boolean {
   return /^https?:\/\/.+/i.test(v);
+}
+function isImageUrl(v: string): boolean {
+  return /^https?:\/\/.+/i.test(v) || /^\/[^/].*/.test(v);
 }
 const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 function asUuidOrNil(value: string): string {

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { cents, formatMZN } from '@nhonga/shared';
 import { IconMapPin, IconGrid, IconSparkle } from '../../components/icons';
+import { AdBookingForm } from '../../components/AdBookingForm';
+import { getAdPlans } from '../../lib/api';
+import { FORSALE_KEYS, PILLAR_KEYS } from '../../lib/nav';
 import { getDictionary } from '../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -16,17 +19,22 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AdvertisePage() {
   const { t } = await getDictionary();
   const a = t.ads;
+  const plans = await getAdPlans();
+  const cats = [...PILLAR_KEYS, ...FORSALE_KEYS].map((k) => ({
+    slug: k,
+    label: (t.categories as Record<string, string>)[k] ?? k,
+  }));
 
   const why = [
     { Icon: IconMapPin, title: a.why_reach, desc: a.why_reach_desc },
     { Icon: IconGrid, title: a.why_targeting, desc: a.why_targeting_desc },
     { Icon: IconSparkle, title: a.why_formats, desc: a.why_formats_desc },
   ];
-  // Example weekly rates (demo only), in cents.
+  // Example daily rates from the live rate card (demo pricing).
   const formats = [
-    { title: a.fmt_leaderboard, desc: a.fmt_leaderboard_desc, priceCents: 250000 },
-    { title: a.fmt_inline, desc: a.fmt_inline_desc, priceCents: 150000 },
-    { title: a.fmt_mpu, desc: a.fmt_mpu_desc, priceCents: 100000 },
+    { key: 'leaderboard', title: a.fmt_leaderboard, desc: a.fmt_leaderboard_desc },
+    { key: 'inline', title: a.fmt_inline, desc: a.fmt_inline_desc },
+    { key: 'mpu', title: a.fmt_mpu, desc: a.fmt_mpu_desc },
   ];
 
   return (
@@ -76,18 +84,15 @@ export default async function AdvertisePage() {
             <h3 className="adfmt__title">{f.title}</h3>
             <p className="adfmt__desc">{f.desc}</p>
             <p className="adfmt__price">
-              <span className="adfmt__from">{a.from_price}</span> {formatMZN(cents(f.priceCents))}
-              <span className="adfmt__per">{a.per_week}</span>
+              <span className="adfmt__from">{a.from_price}</span>{' '}
+              {formatMZN(cents(plans[f.key] ?? 0))}
+              <span className="adfmt__per">{a.per_day}</span>
             </p>
           </div>
         ))}
       </div>
 
-      <div className="adcta">
-        <a className="btn btn--primary" href="/ajuda">
-          {a.cta_contact}
-        </a>
-      </div>
+      <AdBookingForm t={a} plans={plans} categories={cats} />
 
       <div className="adboost">
         <div>
