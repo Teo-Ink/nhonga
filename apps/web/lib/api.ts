@@ -187,6 +187,28 @@ export interface ServedAd {
   advertiser: string;
 }
 
+export interface AdCampaignAdmin {
+  id: string;
+  advertiserName: string;
+  placement: string;
+  categorySlug: string | null;
+  status: string;
+  startsAt: string;
+  endsAt: string;
+  priceCents: number;
+  impressions: number;
+  clicks: number;
+}
+
+/** All ad campaigns with their stats (ops/admin view). */
+export async function getAdCampaigns(): Promise<AdCampaignAdmin[]> {
+  try {
+    return await get<AdCampaignAdmin[]>('/ads/admin');
+  } catch {
+    return [];
+  }
+}
+
 /** Example rate card (cents/day) per placement, for the booking form. */
 export async function getAdPlans(): Promise<Record<string, number>> {
   try {

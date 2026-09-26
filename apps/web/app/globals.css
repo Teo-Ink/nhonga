@@ -5457,3 +5457,55 @@ a.seller:focus-visible {
   display: block;
   margin-bottom: 4px;
 }
+
+/* ── Ads campaigns dashboard (ops) ──────────────────────────────── */
+.panelwrap {
+  margin-top: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.paneltable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  min-width: 720px;
+}
+.paneltable th,
+.paneltable td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.paneltable thead th {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.paneltable tbody tr:last-child td {
+  border-bottom: 0;
+}
+.paneltable .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.paneltable .nowrap {
+  white-space: nowrap;
+}
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+.pill--active {
+  background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+  color: var(--brand);
+}

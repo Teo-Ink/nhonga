@@ -55,6 +55,11 @@ export default async function AdvertisePage() {
         {a.page_title}
       </h1>
       <p className="adpage__lead">{a.page_subtitle}</p>
+      <p>
+        <a className="section__link" href="/anunciar/painel">
+          {a.panel_link} →
+        </a>
+      </p>
       <p className="notice" role="note">
         {a.demo_note}
       </p>
