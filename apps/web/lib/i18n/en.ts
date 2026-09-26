@@ -180,6 +180,19 @@ export const en: Dictionary = {
     clear_all: 'Clear all',
     showing: 'Showing {n}',
     crumb: 'Search',
+    save_search: 'Save search',
+    search_saved: 'Search saved',
+  },
+  saved: {
+    title: 'Saved searches',
+    subtitle: 'Return to your searches with one click.',
+    empty_title: 'No saved searches yet',
+    empty_body: 'On a results page, tap “Save search” to find it here.',
+    browse: 'Browse listings',
+    view: 'View results',
+    remove: 'Remove',
+    alerts_note:
+      'Demo: notification or SMS alerts are not available yet. Searches are saved on this device only.',
   },
   categories: {
     moda: 'Fashion',
@@ -663,6 +676,7 @@ export const en: Dictionary = {
     links_title: 'Shortcuts',
     link_cart: 'My cart',
     link_favorites: 'My favourites',
+    link_saved: 'Saved searches',
     link_messages: 'Messages',
     link_help: 'Help and support',
     link_sell: 'Sell on Nhonga',

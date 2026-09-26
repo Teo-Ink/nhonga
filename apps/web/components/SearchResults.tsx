@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { ListingRow } from './ListingRow';
 import { AdSlot } from './AdSlot';
 import { EmptyState } from './ui';
+import { SaveSearch } from './SaveSearch';
 import { SearchControls } from './SearchControls';
 import { SearchFilters } from './SearchFilters';
 import { IconSearch } from './icons';
@@ -67,6 +68,11 @@ export function SearchResults({
         </h1>
         <div className="results__meta">
           <span className="results__count">{fill(t.search.n_results, { n: total })}</span>
+          <SaveSearch
+            title={title}
+            saveLabel={t.search.save_search}
+            savedLabel={t.search.search_saved}
+          />
           <SearchControls t={t} />
         </div>
       </div>

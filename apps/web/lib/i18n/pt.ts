@@ -180,6 +180,20 @@ export const pt = {
     clear_all: 'Limpar tudo',
     showing: 'A mostrar {n}',
     crumb: 'Pesquisa',
+    save_search: 'Guardar pesquisa',
+    search_saved: 'Pesquisa guardada',
+  },
+  // Saved searches (C).
+  saved: {
+    title: 'Pesquisas guardadas',
+    subtitle: 'Volte às suas pesquisas com um clique.',
+    empty_title: 'Ainda não guardou pesquisas',
+    empty_body: 'Numa página de resultados, toque em «Guardar pesquisa» para a encontrar aqui.',
+    browse: 'Explorar anúncios',
+    view: 'Ver resultados',
+    remove: 'Remover',
+    alerts_note:
+      'Demonstração: os alertas por notificação ou SMS ainda não estão disponíveis. As pesquisas ficam guardadas apenas neste dispositivo.',
   },
   categories: {
     moda: 'Moda',
@@ -670,6 +684,7 @@ export const pt = {
     links_title: 'Atalhos',
     link_cart: 'O meu carrinho',
     link_favorites: 'Os meus favoritos',
+    link_saved: 'Pesquisas guardadas',
     link_messages: 'Mensagens',
     link_help: 'Ajuda e suporte',
     link_sell: 'Vender no Nhonga',

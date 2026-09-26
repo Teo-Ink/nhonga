@@ -1,7 +1,14 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { pt } from '../../lib/i18n/pt';
-import { IconUser, IconShield, IconChevronLeft, IconHeart, IconChat } from '../../components/icons';
+import {
+  IconUser,
+  IconShield,
+  IconChevronLeft,
+  IconHeart,
+  IconChat,
+  IconBell,
+} from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
 
 // Account (classifieds). Signed in (phone OTP) → greeting + shortcuts; otherwise
@@ -95,6 +102,7 @@ function Shortcuts() {
   const links = [
     { href: '/vender/comecar', icon: <IconUser width={20} height={20} />, label: t.link_sell },
     { href: '/favoritos', icon: <IconHeart width={20} height={20} />, label: t.link_favorites },
+    { href: '/pesquisas', icon: <IconBell width={20} height={20} />, label: t.link_saved },
     { href: '/mensagens', icon: <IconChat width={20} height={20} />, label: t.link_messages },
     { href: '/ajuda', icon: <IconShield width={20} height={20} />, label: t.link_help },
   ];
