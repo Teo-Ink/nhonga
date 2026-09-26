@@ -2818,7 +2818,8 @@ a.seller:focus-visible {
 .hcar {
   position: relative;
   margin-top: var(--space-4);
-  border-radius: var(--radius-lg);
+  /* Joined with the "Anunciar grátis" bar below: rounded top only, flush bottom. */
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   overflow: hidden;
 }
 .hcar__viewport {
@@ -3320,9 +3321,10 @@ a.seller:focus-visible {
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
-  margin: var(--space-3) 0;
+  /* Sits flush under the hero (no top gap), rounded bottom only — one block. */
+  margin: 0 0 var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   background: radial-gradient(120% 160% at 90% -20%, rgba(255, 255, 255, 0.12), transparent 55%),
     linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 62%, var(--cta)) 100%);
   color: #fff;
@@ -5422,7 +5424,7 @@ a.seller:focus-visible {
 /* Fixed heights on the container so next/image fill has a box and a slow/broken
    creative never collapses the slot to 0. */
 .spotbox--leaderboard .spotbox__media {
-  height: 100px;
+  height: 160px;
 }
 .spotbox--mpu .spotbox__media {
   height: 200px;
