@@ -3,7 +3,9 @@ import { ProductRail } from '../components/ProductRail';
 import { AdSlot } from '../components/AdSlot';
 import { PostAdBanner } from '../components/home/PostAdBanner';
 import { AppPromo } from '../components/home/AppPromo';
-import { HeroCarousel, type Slide } from '../components/HeroCarousel';
+import { HomeHeroSearch } from '../components/home/HomeHeroSearch';
+import { PopularCategories } from '../components/home/PopularCategories';
+import { HowItWorks } from '../components/home/HowItWorks';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
 import { listProducts, searchProducts, type ProductListItem } from '../lib/api';
@@ -25,9 +27,9 @@ const CATEGORY_KEYS = [
   'beleza',
 ] as const;
 
-// Classifieds home (OLX-structured, Nhonga's brand): category strip, a hero
-// carousel jumbotron, a post-a-free-ad banner, category listing rows, and a
-// recent-ads grid.
+// Classifieds home (Fiverr-structured hero + Nhonga's brand): a search-first
+// hero with popular quick links, a leaderboard promo, a popular-categories
+// slider, a "how it works" value section, then category rows and recent ads.
 export default async function HomePage() {
   const { t } = await getDictionary();
 
@@ -57,46 +59,19 @@ export default async function HomePage() {
     return tb - ta;
   });
 
-  const slides: Slide[] = [
-    {
-      title: t.home.hero_title,
-      subtitle: t.home.hero_subtitle,
-      cta: t.home.hero_cta,
-      href: '/pesquisa',
-      image: 'https://live.staticflickr.com/2680/4277873044_9680cb5df3_b.jpg',
-    },
-    {
-      title: t.home.slide2_title,
-      subtitle: t.home.slide2_sub,
-      cta: t.home.slide2_cta,
-      href: '/pesquisa?sort=price_asc',
-      image: 'https://live.staticflickr.com/671/21135682726_f8f6da6372_b.jpg',
-    },
-    {
-      title: t.home.slide3_title,
-      subtitle: t.home.slide3_sub,
-      cta: t.home.slide3_cta,
-      href: '/vender/novo',
-      image: 'https://live.staticflickr.com/6083/6149598235_7ff5ee3354_b.jpg',
-    },
-  ];
-
   return (
     <>
-      {/* Category navigation lives once, in the site header (no home-only strip). */}
-      {/* Jumbotron */}
-      <HeroCarousel
-        slides={slides}
-        prevLabel={t.home.carousel_prev}
-        nextLabel={t.home.carousel_next}
-        gotoLabel={t.home.carousel_goto}
-      />
-
-      <PostAdBanner t={t} />
+      <HomeHeroSearch t={t} />
 
       <section className="section">
         <AdSlot t={t} placement="leaderboard" />
       </section>
+
+      <PopularCategories t={t} />
+
+      <HowItWorks t={t} />
+
+      <PostAdBanner t={t} />
 
       {failed ? (
         <section className="section">
@@ -104,7 +79,6 @@ export default async function HomePage() {
         </section>
       ) : (
         <>
-          {/* Category listing rows (horizontal, OLX-style) */}
           {rows.map((row) => (
             <ProductRail
               key={row.slug}
@@ -115,7 +89,6 @@ export default async function HomePage() {
             />
           ))}
 
-          {/* Recent ads grid */}
           <section className="section" aria-labelledby="recent">
             <div className="section__head">
               <h2 className="section__title" id="recent">

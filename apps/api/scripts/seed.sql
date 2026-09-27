@@ -264,6 +264,150 @@ INSERT INTO ad_campaign (id, advertiser_name, image_url, click_url, headline, pl
   ('aaaa1111-0000-4000-8000-000000000001', 'Banco Exemplo', '/ph?c=viaturas&t=Banco%20Exemplo&s=Cr%C3%A9dito%20para%20a%20sua%20viatura', 'https://www.example.com', 'Banco Exemplo — crédito para a sua viatura', 'leaderboard', NULL, now() - interval '1 day', now() + interval '30 days', 1500000, 'active'),
   ('aaaa1111-0000-4000-8000-000000000002', 'Escola de Condução Xitique', '/ph?c=telemoveis&t=Escola%20de%20Condu%C3%A7%C3%A3o&s=Tire%20a%20sua%20carta', 'https://www.example.com', 'Tire a sua carta de condução', 'mpu', 'viaturas', now() - interval '1 day', now() + interval '30 days', 900000, 'active');
 
+-- ── Real photos for the vertical listings + ad creatives (replace /ph) ──
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/6011/5982659068_d0b8a34e88_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'aulas-ingles';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/4076/4946114680_d1f08b637f_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'bilhetes-marrabenta';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/65535/49927055648_79e8263b8e_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'canalizador-24h';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3167/2413600547_8f3670b933_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'dj-som-eventos';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2832/13243754323_6ed69e4fe5_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'empregada-domestica-matola';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/8231/8546321749_6031438d3a_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'honda-fit-2014';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3923/15204215650_f6cf50d027_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'programador-web-maputo';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2151/2107624809_18f59fe877_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 't3-arrendar-sommerschield';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2858/8751769199_6f4816d2b2_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'terreno-matola';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3817/14093903229_1836fcc2d5.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'toyota-corolla-2016';
+UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/7530/15222020274_aedac47229_b.jpg' WHERE advertiser_name = 'Banco Exemplo';
+UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/951/42373784431_dba7832ed6_b.jpg' WHERE advertiser_name = 'Escola de Condução Xitique';
+
+
+-- ── More sample listings across the verticals (fuller marketplace) ──
+-- 15 extra classifieds ads (viaturas, imóveis, empregos, serviços, eventos),
+-- each with a real CC-licensed photo (Openverse/Flickr). Prices in cents of MT.
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  -- Viaturas (c007)
+  ('a0000000-0000-4000-8000-000000000201', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000007', 'nissan-almera-2013', 'Nissan Almera 2013', 'Nissan Almera 2013', 'Almera 1.5 gasolina, económico e fiável. Ar condicionado, vidros elétricos, pneus em bom estado.', '{"marca":"Nissan","modelo":"Almera","ano":"2013","km":"110000","combustivel":"Gasolina","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '9 hours'),
+  ('a0000000-0000-4000-8000-000000000202', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000007', 'toyota-hilux-2015', 'Toyota Hilux 2015 4x4', 'Toyota Hilux 2015 4x4', 'Pick-up Hilux 2.5 diesel, 4x4, ideal para obra ou machamba. Caixa de carga com capota. Livro de revisões.', '{"marca":"Toyota","modelo":"Hilux","ano":"2015","km":"98000","combustivel":"Diesel","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000203', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000007', 'mota-haojue-125', 'Motorizada Haojue 125cc', 'Haojue 125cc Motorcycle', 'Mota Haojue 125cc, pouca quilometragem, documentos em ordem. Óptima para o dia-a-dia e entregas.', '{"marca":"Outra","modelo":"Haojue DK125","ano":"2019","km":"22000","combustivel":"Gasolina","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '4 days'),
+  -- Imóveis (c008)
+  ('a0000000-0000-4000-8000-000000000204', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000008', 't2-polana-arrendar', 'T2 para arrendar na Polana', 'T2 for rent in Polana', 'Apartamento T2 com varanda, cozinha equipada e água quente. Condomínio com segurança 24h. Renda mensal.', '{"negocio":"Arrendar","quartos":"2","area":"90"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000205', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000008', 'vivenda-t4-matola', 'Vivenda T4 na Matola', 'T4 villa in Matola', 'Vivenda T4 com quintal, garagem para 2 carros e dependência. Bairro tranquilo, perto de escolas.', '{"negocio":"Venda","quartos":"4","area":"300"}', 'active', NULL, NULL, 0, now() - interval '6 days'),
+  ('a0000000-0000-4000-8000-000000000206', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000008', 'loja-baixa-trespasse', 'Loja para trespasse na Baixa', 'Shop for lease transfer downtown', 'Trespasse de loja com montra na Baixa de Maputo. Boa localização, muito movimento. Contrato transferível.', '{"negocio":"Venda","quartos":"0","area":"120"}', 'active', NULL, NULL, 0, now() - interval '3 days'),
+  -- Empregos (c010)
+  ('a0000000-0000-4000-8000-000000000207', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000010', 'motorista-pesados-maputo', 'Motorista de pesados (Maputo)', 'Heavy-vehicle driver (Maputo)', 'Empresa de transportes procura motorista de pesados com carta pesada e experiência. Contrato a tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Transporte","local":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '12 hours'),
+  ('a0000000-0000-4000-8000-000000000208', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000010', 'rececionista-hotel-beira', 'Rececionista de hotel (Beira)', 'Hotel receptionist (Beira)', 'Hotel na Beira procura rececionista com boa apresentação e inglês. Turnos rotativos, tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Restauração","local":"Beira"}', 'active', NULL, NULL, 0, now() - interval '3 days'),
+  ('a0000000-0000-4000-8000-000000000209', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000010', 'tecnico-electricidade-matola', 'Técnico de electricidade (Matola)', 'Electrical technician (Matola)', 'Vaga para técnico de electricidade com experiência em instalações prediais. Contrato a tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Construção","local":"Matola"}', 'active', NULL, NULL, 0, now() - interval '5 days'),
+  -- Serviços (c009)
+  ('a0000000-0000-4000-8000-000000000210', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000009', 'eletricista-residencial', 'Eletricista residencial', 'Residential electrician', 'Instalações e reparações eléctricas ao domicílio. Quadros, tomadas, iluminação. Orçamento grátis.', '{"categoria_servico":"Eletricidade","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000211', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000009', 'reparacao-frigorificos', 'Reparação de frigoríficos e ACs', 'Fridge & AC repair', 'Reparo de frigoríficos, arcas e ar condicionado ao domicílio. Recarga de gás e peças. Atendimento rápido.', '{"categoria_servico":"Reparação","zona":"Matola"}', 'active', NULL, NULL, 0, now() - interval '5 days'),
+  ('a0000000-0000-4000-8000-000000000212', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000009', 'fotografo-eventos', 'Fotógrafo para eventos', 'Event photographer', 'Fotografia e vídeo para casamentos, festas e eventos empresariais. Entrega em galeria digital.', '{"categoria_servico":"Fotografia","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '8 days'),
+  -- Eventos (c011)
+  ('a0000000-0000-4000-8000-000000000213', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000011', 'aluguer-tendas-cadeiras', 'Aluguer de tendas e cadeiras', 'Tent & chair rental', 'Aluguer de tendas, cadeiras e mesas para festas e cerimónias. Montagem e transporte incluídos.', '{"tipo":"Festa","data":"A combinar","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000214', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000011', 'bilhetes-jogo-mambas', 'Bilhetes — Mambas vs. Argélia', 'Tickets — Mozambique vs. Algeria', 'Bilhetes para o jogo dos Mambas no Estádio Nacional do Zimpeto. Bancada central, lote limitado.', '{"tipo":"Desporto","data":"2026-10-11","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000215', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000011', 'dj-casamento-decoracao', 'DJ e decoração de casamentos', 'Wedding DJ & décor', 'Pacote completo para casamentos: DJ, som, iluminação e decoração de sala. Orçamento à medida.', '{"tipo":"Casamento","data":"A combinar","zona":"Matola"}', 'active', NULL, NULL, 0, now() - interval '10 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000301', 'a0000000-0000-4000-8000-000000000201', 'VIA-201', '{}', 48000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000302', 'a0000000-0000-4000-8000-000000000202', 'VIA-202', '{}', 135000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000303', 'a0000000-0000-4000-8000-000000000203', 'VIA-203', '{}', 6500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000304', 'a0000000-0000-4000-8000-000000000204', 'IMO-204', '{}', 4500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000305', 'a0000000-0000-4000-8000-000000000205', 'IMO-205', '{}', 850000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000306', 'a0000000-0000-4000-8000-000000000206', 'IMO-206', '{}', 95000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000307', 'a0000000-0000-4000-8000-000000000207', 'EMP-207', '{}', 2500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000308', 'a0000000-0000-4000-8000-000000000208', 'EMP-208', '{}', 2200000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000309', 'a0000000-0000-4000-8000-000000000209', 'EMP-209', '{}', 3000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000310', 'a0000000-0000-4000-8000-000000000210', 'SER-210', '{}', 150000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000311', 'a0000000-0000-4000-8000-000000000211', 'SER-211', '{}', 100000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000312', 'a0000000-0000-4000-8000-000000000212', 'SER-212', '{}', 500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000313', 'a0000000-0000-4000-8000-000000000213', 'EVT-213', '{}', 800000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000314', 'a0000000-0000-4000-8000-000000000214', 'EVT-214', '{}', 50000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000315', 'a0000000-0000-4000-8000-000000000215', 'EVT-215', '{}', 1500000, NULL, 1, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000201', 'a0000000-0000-4000-8000-000000000201', 'https://live.staticflickr.com/1136/1485326119_9f04c8be06_b.jpg', 1024, 768, 'Nissan Almera', 0),
+  ('e0000000-0000-4000-8000-000000000202', 'a0000000-0000-4000-8000-000000000202', 'https://live.staticflickr.com/4131/4972591434_24ed4eae0c_b.jpg', 1024, 768, 'Toyota Hilux 4x4', 0),
+  ('e0000000-0000-4000-8000-000000000203', 'a0000000-0000-4000-8000-000000000203', 'https://live.staticflickr.com/2931/14688503106_3061e9ac0a_b.jpg', 1024, 768, 'Motorizada 125cc', 0),
+  ('e0000000-0000-4000-8000-000000000204', 'a0000000-0000-4000-8000-000000000204', 'https://live.staticflickr.com/5582/15291722925_b8fb636a5c_b.jpg', 1024, 768, 'Apartamento T2', 0),
+  ('e0000000-0000-4000-8000-000000000205', 'a0000000-0000-4000-8000-000000000205', 'https://live.staticflickr.com/3131/3128754928_17f1181e02_b.jpg', 1024, 768, 'Vivenda T4', 0),
+  ('e0000000-0000-4000-8000-000000000206', 'a0000000-0000-4000-8000-000000000206', 'https://live.staticflickr.com/4134/4918836141_5a31eeb48c_b.jpg', 1024, 768, 'Loja na Baixa', 0),
+  ('e0000000-0000-4000-8000-000000000207', 'a0000000-0000-4000-8000-000000000207', 'https://live.staticflickr.com/2132/2225709482_c8ed3374c9_b.jpg', 1024, 768, 'Motorista de pesados', 0),
+  ('e0000000-0000-4000-8000-000000000208', 'a0000000-0000-4000-8000-000000000208', 'https://live.staticflickr.com/7420/11059593346_7f3c1fb233_b.jpg', 1024, 768, 'Rececionista de hotel', 0),
+  ('e0000000-0000-4000-8000-000000000209', 'a0000000-0000-4000-8000-000000000209', 'https://live.staticflickr.com/1215/5106374474_7f6785eb85_b.jpg', 1024, 768, 'Técnico de electricidade', 0),
+  ('e0000000-0000-4000-8000-000000000210', 'a0000000-0000-4000-8000-000000000210', 'https://live.staticflickr.com/3266/3148848829_4dd6a49d73_b.jpg', 1024, 768, 'Eletricista', 0),
+  ('e0000000-0000-4000-8000-000000000211', 'a0000000-0000-4000-8000-000000000211', 'https://live.staticflickr.com/4133/5024682259_9d3da85376_b.jpg', 1024, 768, 'Reparação de frigoríficos', 0),
+  ('e0000000-0000-4000-8000-000000000212', 'a0000000-0000-4000-8000-000000000212', 'https://live.staticflickr.com/4101/4759829140_9f8c9c354c_b.jpg', 1024, 768, 'Fotógrafo', 0),
+  ('e0000000-0000-4000-8000-000000000213', 'a0000000-0000-4000-8000-000000000213', 'https://live.staticflickr.com/6167/6142412961_403f0636cb_b.jpg', 1024, 768, 'Tendas e cadeiras', 0),
+  ('e0000000-0000-4000-8000-000000000214', 'a0000000-0000-4000-8000-000000000214', 'https://live.staticflickr.com/2076/2487740918_0a39e271e2_b.jpg', 1024, 768, 'Estádio de futebol', 0),
+  ('e0000000-0000-4000-8000-000000000215', 'a0000000-0000-4000-8000-000000000215', 'https://live.staticflickr.com/3558/3584418290_202ab5f954_b.jpg', 1024, 768, 'Decoração de casamento', 0);
+
+
+-- ── More retail listings (moda, eletrónica, telemóveis, casa, alimentação, beleza) ──
+-- 18 extra products (3 per retail category), each with a real CC-licensed
+-- Flickr photo. Prices in cents of MT.
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  -- Moda (c001)
+  ('a0000000-0000-4000-8000-000000000216', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001', 'tenis-desportivo', 'Ténis desportivo (vários números)', 'Sports sneakers (various sizes)', 'Ténis novos para desporto e dia-a-dia. Vários números disponíveis, confortáveis e leves.', '{"Material":"Têxtil","Estado":"Novo"}', 'active', 700, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000217', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000001', 'bolsa-senhora', 'Bolsa de senhora em couro', 'Women''s leather handbag', 'Bolsa elegante em couro sintético, espaçosa e resistente. Ideal para o dia-a-dia ou trabalho.', '{"Material":"Couro sintético","Cor":"Castanho"}', 'active', 600, NULL, 0, now() - interval '3 days'),
+  ('a0000000-0000-4000-8000-000000000218', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000001', 'oculos-sol', 'Óculos de sol com proteção UV', 'UV-protection sunglasses', 'Óculos de sol unissexo com proteção UV400. Armação leve e resistente. Estojo incluído.', '{"Proteção":"UV400","Género":"Unissexo"}', 'active', 120, NULL, 0, now() - interval '6 days'),
+  -- Eletrónica (c002)
+  ('a0000000-0000-4000-8000-000000000219', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000002', 'tv-led-43', 'Televisor LED 43" Full HD', '43" Full HD LED TV', 'TV LED de 43 polegadas, Full HD, com entradas HDMI e USB. Imagem nítida e consumo baixo.', '{"Tamanho":"43 pol","Resolução":"Full HD"}', 'active', 8000, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000220', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000002', 'laptop-usado', 'Laptop usado i5 8GB RAM', 'Used laptop i5 8GB RAM', 'Portátil Core i5, 8GB de RAM e SSD de 256GB. Bom estado, bateria com boa autonomia. Ideal para estudo e trabalho.', '{"Processador":"Core i5","RAM":"8GB","Estado":"Usado"}', 'active', 2200, NULL, 0, now() - interval '4 days'),
+  ('a0000000-0000-4000-8000-000000000221', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000002', 'fones-bluetooth', 'Auscultadores Bluetooth sem fios', 'Wireless Bluetooth headphones', 'Auscultadores sem fios com bom isolamento e bateria de longa duração. Microfone incorporado para chamadas.', '{"Ligação":"Bluetooth","Bateria":"20h"}', 'active', 300, NULL, 0, now() - interval '7 days'),
+  -- Telemóveis (c005)
+  ('a0000000-0000-4000-8000-000000000222', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000005', 'samsung-galaxy-a14', 'Samsung Galaxy A14 128GB', 'Samsung Galaxy A14 128GB', 'Galaxy A14 com 128GB, ecrã grande e bateria de 5000mAh. Dual SIM, selado na caixa com garantia.', '{"Marca":"Samsung","Armazenamento":"128GB","Estado":"Novo"}', 'active', 200, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000223', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000005', 'tecno-spark-usado', 'Tecno Spark usado 64GB', 'Tecno Spark used 64GB', 'Telemóvel Tecno Spark em bom estado, 64GB, com capa e carregador. Bateria em boas condições.', '{"Marca":"Tecno","Armazenamento":"64GB","Estado":"Usado"}', 'active', 190, NULL, 0, now() - interval '5 days'),
+  ('a0000000-0000-4000-8000-000000000224', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000005', 'smartwatch-fit', 'Smartwatch com medidor de passos', 'Smartwatch with step counter', 'Relógio inteligente com contador de passos, notificações e medição de frequência cardíaca. Compatível com Android e iPhone.', '{"Compatibilidade":"Android/iOS","Resistência":"IP67"}', 'active', 90, NULL, 0, now() - interval '8 days'),
+  -- Casa e Cozinha (c003)
+  ('a0000000-0000-4000-8000-000000000225', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000003', 'fogao-4-bocas', 'Fogão a gás 4 bocas com forno', '4-burner gas stove with oven', 'Fogão a gás de 4 bocas com forno, acendimento fácil e grelha em ferro. Ideal para toda a família.', '{"Bocas":"4","Tipo":"Gás"}', 'active', 25000, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000226', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000003', 'geleira-frigorifico', 'Frigorífico combinado 250L', 'Combi fridge 250L', 'Frigorífico combinado de 250 litros, baixo consumo, com congelador. Pouco uso, em ótimo estado.', '{"Capacidade":"250L","Classe":"A+"}', 'active', 45000, NULL, 0, now() - interval '4 days'),
+  ('a0000000-0000-4000-8000-000000000227', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000003', 'conjunto-sofa', 'Conjunto de sofás 3+2 lugares', '3+2 seater sofa set', 'Conjunto de sofás de 3 e 2 lugares, tecido confortável e estrutura robusta. Entrega combinada em Maputo e Matola.', '{"Lugares":"3+2","Material":"Tecido"}', 'active', 60000, NULL, 0, now() - interval '9 days'),
+  -- Alimentação (c004)
+  ('a0000000-0000-4000-8000-000000000228', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000004', 'arroz-25kg', 'Saco de arroz 25kg', '25kg rice sack', 'Saco de arroz de 25kg, grão longo e de boa qualidade. Ideal para casa, revenda ou restaurante.', '{"Peso":"25kg","Tipo":"Grão longo"}', 'active', 25000, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000229', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000004', 'feijao-manteiga', 'Feijão manteiga 5kg', 'Butter beans 5kg', 'Feijão manteiga seco, limpo e escolhido. Embalagem de 5kg. Direto do produtor.', '{"Peso":"5kg","Tipo":"Manteiga"}', 'active', 5000, NULL, 0, now() - interval '5 days'),
+  ('a0000000-0000-4000-8000-000000000230', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000004', 'amendoim-torrado', 'Amendoim torrado 1kg', 'Roasted peanuts 1kg', 'Amendoim torrado na hora, crocante e saboroso. Embalagem de 1kg. Ótimo para petiscar ou culinária.', '{"Peso":"1kg"}', 'active', 1000, NULL, 0, now() - interval '7 days'),
+  -- Beleza (c006)
+  ('a0000000-0000-4000-8000-000000000231', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000006', 'perfume-importado', 'Perfume importado 100ml', 'Imported perfume 100ml', 'Perfume importado de longa duração, 100ml. Fragrância marcante para o dia ou noite. Selado.', '{"Volume":"100ml","Género":"Unissexo"}', 'active', 350, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000232', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000006', 'kit-maquilhagem', 'Kit de maquilhagem completo', 'Complete makeup kit', 'Kit de maquilhagem com paleta de sombras, base, batons e pincéis. Ideal para profissionais e uso pessoal.', '{"Peças":"Kit completo"}', 'active', 800, NULL, 0, now() - interval '6 days'),
+  ('a0000000-0000-4000-8000-000000000233', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000006', 'creme-hidratante', 'Creme hidratante corporal 400ml', 'Body moisturizer 400ml', 'Creme hidratante para o corpo, 400ml. Absorção rápida, deixa a pele macia. Para todo o tipo de pele.', '{"Volume":"400ml"}', 'active', 450, NULL, 0, now() - interval '10 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000316', 'a0000000-0000-4000-8000-000000000216', 'MOD-216', '{}', 250000, NULL, 20, true),
+  ('b0000000-0000-4000-8000-000000000317', 'a0000000-0000-4000-8000-000000000217', 'MOD-217', '{}', 180000, NULL, 8, true),
+  ('b0000000-0000-4000-8000-000000000318', 'a0000000-0000-4000-8000-000000000218', 'MOD-218', '{}', 95000, NULL, 30, true),
+  ('b0000000-0000-4000-8000-000000000319', 'a0000000-0000-4000-8000-000000000219', 'ELE-219', '{}', 2200000, NULL, 5, true),
+  ('b0000000-0000-4000-8000-000000000320', 'a0000000-0000-4000-8000-000000000220', 'ELE-220', '{}', 1800000, NULL, 3, true),
+  ('b0000000-0000-4000-8000-000000000321', 'a0000000-0000-4000-8000-000000000221', 'ELE-221', '{}', 150000, NULL, 15, true),
+  ('b0000000-0000-4000-8000-000000000322', 'a0000000-0000-4000-8000-000000000222', 'TEL-222', '{}', 1200000, NULL, 6, true),
+  ('b0000000-0000-4000-8000-000000000323', 'a0000000-0000-4000-8000-000000000223', 'TEL-223', '{}', 850000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000324', 'a0000000-0000-4000-8000-000000000224', 'TEL-224', '{}', 350000, NULL, 12, true),
+  ('b0000000-0000-4000-8000-000000000325', 'a0000000-0000-4000-8000-000000000225', 'CAS-225', '{}', 950000, NULL, 4, true),
+  ('b0000000-0000-4000-8000-000000000326', 'a0000000-0000-4000-8000-000000000226', 'CAS-226', '{}', 1800000, NULL, 2, true),
+  ('b0000000-0000-4000-8000-000000000327', 'a0000000-0000-4000-8000-000000000227', 'CAS-227', '{}', 2200000, NULL, 3, true),
+  ('b0000000-0000-4000-8000-000000000328', 'a0000000-0000-4000-8000-000000000228', 'ALI-228', '{}', 220000, NULL, 40, true),
+  ('b0000000-0000-4000-8000-000000000329', 'a0000000-0000-4000-8000-000000000229', 'ALI-229', '{}', 60000, NULL, 25, true),
+  ('b0000000-0000-4000-8000-000000000330', 'a0000000-0000-4000-8000-000000000230', 'ALI-230', '{}', 30000, NULL, 50, true),
+  ('b0000000-0000-4000-8000-000000000331', 'a0000000-0000-4000-8000-000000000231', 'BEL-231', '{}', 180000, NULL, 10, true),
+  ('b0000000-0000-4000-8000-000000000332', 'a0000000-0000-4000-8000-000000000232', 'BEL-232', '{}', 120000, NULL, 14, true),
+  ('b0000000-0000-4000-8000-000000000333', 'a0000000-0000-4000-8000-000000000233', 'BEL-233', '{}', 65000, NULL, 18, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000216', 'a0000000-0000-4000-8000-000000000216', 'https://live.staticflickr.com/7413/27254488060_a4c93c8e25_b.jpg', 1024, 768, 'Ténis desportivo', 0),
+  ('e0000000-0000-4000-8000-000000000217', 'a0000000-0000-4000-8000-000000000217', 'https://live.staticflickr.com/1/536241_9a2aa38767_b.jpg', 1024, 768, 'Bolsa de senhora', 0),
+  ('e0000000-0000-4000-8000-000000000218', 'a0000000-0000-4000-8000-000000000218', 'https://live.staticflickr.com/8454/7993768362_324ae52f7e_b.jpg', 1024, 768, 'Óculos de sol', 0),
+  ('e0000000-0000-4000-8000-000000000219', 'a0000000-0000-4000-8000-000000000219', 'https://live.staticflickr.com/65535/32716079687_4671d3ba40_b.jpg', 1024, 768, 'Televisor LED', 0),
+  ('e0000000-0000-4000-8000-000000000220', 'a0000000-0000-4000-8000-000000000220', 'https://live.staticflickr.com/8809/17783465600_08cd924dff_b.jpg', 1024, 768, 'Laptop', 0),
+  ('e0000000-0000-4000-8000-000000000221', 'a0000000-0000-4000-8000-000000000221', 'https://live.staticflickr.com/3220/2338990355_651cd9f8e4_b.jpg', 1024, 768, 'Auscultadores Bluetooth', 0),
+  ('e0000000-0000-4000-8000-000000000222', 'a0000000-0000-4000-8000-000000000222', 'https://live.staticflickr.com/7386/12759210253_e19aa0f72c_b.jpg', 1024, 768, 'Samsung Galaxy', 0),
+  ('e0000000-0000-4000-8000-000000000223', 'a0000000-0000-4000-8000-000000000223', 'https://live.staticflickr.com/7502/27160977795_7c5ef43e28_b.jpg', 1024, 768, 'Tecno Spark', 0),
+  ('e0000000-0000-4000-8000-000000000224', 'a0000000-0000-4000-8000-000000000224', 'https://live.staticflickr.com/3790/13467474815_be54810773_b.jpg', 1024, 768, 'Smartwatch', 0),
+  ('e0000000-0000-4000-8000-000000000225', 'a0000000-0000-4000-8000-000000000225', 'https://live.staticflickr.com/160/410044341_835bbf7017_b.jpg', 1024, 768, 'Fogão a gás', 0),
+  ('e0000000-0000-4000-8000-000000000226', 'a0000000-0000-4000-8000-000000000226', 'https://live.staticflickr.com/3789/10312224554_1ceeca6906_b.jpg', 1024, 768, 'Frigorífico', 0),
+  ('e0000000-0000-4000-8000-000000000227', 'a0000000-0000-4000-8000-000000000227', 'https://live.staticflickr.com/4401/36633084871_9ec6e549b1_b.jpg', 1024, 768, 'Conjunto de sofás', 0),
+  ('e0000000-0000-4000-8000-000000000228', 'a0000000-0000-4000-8000-000000000228', 'https://live.staticflickr.com/4562/24971315878_b50ef5b255_b.jpg', 1024, 768, 'Saco de arroz', 0),
+  ('e0000000-0000-4000-8000-000000000229', 'a0000000-0000-4000-8000-000000000229', 'https://live.staticflickr.com/2266/1753109292_2bfb7b950b_b.jpg', 1024, 768, 'Feijão manteiga', 0),
+  ('e0000000-0000-4000-8000-000000000230', 'a0000000-0000-4000-8000-000000000230', 'https://live.staticflickr.com/172/391190975_d71078078c_b.jpg', 1024, 768, 'Amendoim torrado', 0),
+  ('e0000000-0000-4000-8000-000000000231', 'a0000000-0000-4000-8000-000000000231', 'https://live.staticflickr.com/3537/3301171124_850fd70a5a_b.jpg', 1024, 768, 'Perfume', 0),
+  ('e0000000-0000-4000-8000-000000000232', 'a0000000-0000-4000-8000-000000000232', 'https://live.staticflickr.com/4178/33638438273_17ae92d3b8_b.jpg', 1024, 768, 'Kit de maquilhagem', 0),
+  ('e0000000-0000-4000-8000-000000000233', 'a0000000-0000-4000-8000-000000000233', 'https://live.staticflickr.com/7451/16255328209_14fc13361d_b.jpg', 1024, 768, 'Creme hidratante', 0);
+
 COMMIT;
 
 SELECT
