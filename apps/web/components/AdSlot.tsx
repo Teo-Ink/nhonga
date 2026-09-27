@@ -57,7 +57,13 @@ export async function AdSlot({
           rel="noopener noreferrer sponsored"
           aria-label={ad.headline ?? ad.advertiser}
           style={{ backgroundImage: `url("${ad.imageUrl.replace(/["\\]/g, encodeURIComponent)}")` }}
-        />
+        >
+          <span className="spotbox__adscrim" aria-hidden="true" />
+          <span className="spotbox__adtext">
+            <strong className="spotbox__adname">{ad.advertiser}</strong>
+            {ad.headline ? <span className="spotbox__adhead">{ad.headline}</span> : null}
+          </span>
+        </a>
       ) : (
         <HousePromo t={t} placement={placement} variant={variant} />
       )}

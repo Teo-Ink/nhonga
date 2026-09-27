@@ -5873,3 +5873,36 @@ a.seller:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* Ad creative text overlaid on a real photo (advertiser + tagline). */
+.spotbox__adscrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.18) 60%, transparent 100%);
+}
+.spotbox__adtext {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: #fff;
+  max-width: 72%;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.spotbox__adname {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  line-height: 1.1;
+}
+.spotbox__adhead {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--text-sm);
+  opacity: 0.95;
+}
+.spotbox--mpu .spotbox__adtext {
+  max-width: 88%;
+}

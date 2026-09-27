@@ -264,6 +264,20 @@ INSERT INTO ad_campaign (id, advertiser_name, image_url, click_url, headline, pl
   ('aaaa1111-0000-4000-8000-000000000001', 'Banco Exemplo', '/ph?c=viaturas&t=Banco%20Exemplo&s=Cr%C3%A9dito%20para%20a%20sua%20viatura', 'https://www.example.com', 'Banco Exemplo — crédito para a sua viatura', 'leaderboard', NULL, now() - interval '1 day', now() + interval '30 days', 1500000, 'active'),
   ('aaaa1111-0000-4000-8000-000000000002', 'Escola de Condução Xitique', '/ph?c=telemoveis&t=Escola%20de%20Condu%C3%A7%C3%A3o&s=Tire%20a%20sua%20carta', 'https://www.example.com', 'Tire a sua carta de condução', 'mpu', 'viaturas', now() - interval '1 day', now() + interval '30 days', 900000, 'active');
 
+-- ── Real photos for the vertical listings + ad creatives (replace /ph) ──
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/6011/5982659068_d0b8a34e88_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'aulas-ingles';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/4076/4946114680_d1f08b637f_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'bilhetes-marrabenta';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/65535/49927055648_79e8263b8e_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'canalizador-24h';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3167/2413600547_8f3670b933_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'dj-som-eventos';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2832/13243754323_6ed69e4fe5_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'empregada-domestica-matola';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/8231/8546321749_6031438d3a_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'honda-fit-2014';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3923/15204215650_f6cf50d027_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'programador-web-maputo';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2151/2107624809_18f59fe877_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 't3-arrendar-sommerschield';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/2858/8751769199_6f4816d2b2_b.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'terreno-matola';
+UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3817/14093903229_1836fcc2d5.jpg' FROM product p WHERE i.product_id = p.id AND p.slug = 'toyota-corolla-2016';
+UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/7530/15222020274_aedac47229_b.jpg' WHERE advertiser_name = 'Banco Exemplo';
+UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/951/42373784431_dba7832ed6_b.jpg' WHERE advertiser_name = 'Escola de Condução Xitique';
+
 COMMIT;
 
 SELECT
