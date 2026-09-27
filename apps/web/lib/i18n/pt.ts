@@ -83,6 +83,13 @@ export const pt = {
     delivery: 'Entrega em todo o país',
     delivery_desc: 'Acompanhe o seu pedido em tempo real',
   },
+  pwa: {
+    install: 'Instalar app',
+    install_hint: 'Adicione o Nhonga ao ecrã inicial — abre como uma app.',
+    ios_hint: 'No iPhone: toque em Partilhar e depois em "Adicionar ao ecrã inicial".',
+    save_data: 'Poupar dados',
+    dismiss: 'Agora não',
+  },
   home: {
     categories: 'Categorias',
     hero_title: 'Compre e venda em Moçambique',

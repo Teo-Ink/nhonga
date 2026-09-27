@@ -84,6 +84,13 @@ export const en: Dictionary = {
     delivery: 'Nationwide delivery',
     delivery_desc: 'Track your order in real time',
   },
+  pwa: {
+    install: 'Install app',
+    install_hint: 'Add Nhonga to your home screen — it opens like an app.',
+    ios_hint: 'On iPhone: tap Share, then "Add to Home Screen".',
+    save_data: 'Data saver',
+    dismiss: 'Not now',
+  },
   home: {
     categories: 'Categories',
     hero_title: 'Buy and sell across Mozambique',

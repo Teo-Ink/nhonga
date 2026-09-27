@@ -1,5 +1,6 @@
 import { IconMapPin } from './icons';
 import { Logo } from './Logo';
+import { DataSaverToggle } from './pwa/DataSaverToggle';
 import type { Dictionary } from '../lib/i18n/index';
 
 // Site footer, Wallapop-structured in Nhonga's own green/black/yellow: a brand
@@ -81,6 +82,7 @@ export function Footer({ t }: { t: Dictionary }) {
           <IconMapPin width={14} height={14} aria-hidden /> Moçambique
         </span>
         <span className="wlftr__rights">{f.rights}</span>
+        <DataSaverToggle label={t.pwa.save_data} />
         <a className="wlftr__top" href="#top">
           {f.back_to_top} ↑
         </a>
