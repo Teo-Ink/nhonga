@@ -7,10 +7,10 @@ import { Slider } from './Slider';
 const CATS: { slug: string; img: string }[] = [
   { slug: 'viaturas', img: 'https://live.staticflickr.com/8711/16687001674_c0659d5e69_b.jpg' },
   { slug: 'imoveis', img: 'https://live.staticflickr.com/5549/11415902663_24562801da.jpg' },
-  { slug: 'empregos', img: 'https://live.staticflickr.com/3429/5720849489_92959abb9d_b.jpg' },
+  { slug: 'empregos', img: 'https://live.staticflickr.com/7351/14090438714_33bec862fe_b.jpg' },
   { slug: 'servicos', img: 'https://live.staticflickr.com/1046/840731747_029504ca41_b.jpg' },
   { slug: 'eventos', img: 'https://live.staticflickr.com/3490/3734360895_9ca52b84a2_b.jpg' },
-  { slug: 'telemoveis', img: 'https://live.staticflickr.com/671/21135682726_f8f6da6372_b.jpg' },
+  { slug: 'telemoveis', img: 'https://live.staticflickr.com/3200/2736563610_d172046032_b.jpg' },
   { slug: 'moda', img: 'https://live.staticflickr.com/4592/27737163279_5d47b0f79f.jpg' },
   { slug: 'casa', img: 'https://live.staticflickr.com/4361/35963279133_2463c3c9ba_b.jpg' },
 ];
