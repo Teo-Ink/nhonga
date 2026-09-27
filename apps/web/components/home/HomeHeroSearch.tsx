@@ -1,5 +1,6 @@
 import type { Dictionary } from '../../lib/i18n/index';
 import { IconSearch } from '../icons';
+import { HeroVideo } from './HeroVideo';
 
 // Fiverr-structured hero (Nhonga's own brand, no Fiverr assets/colours/copy): a
 // bold headline, one prominent centred search, and "Popular:" quick links. The
@@ -9,6 +10,7 @@ const POPULAR = ['viaturas', 'imoveis', 'empregos', 'servicos', 'telemoveis', 'e
 export function HomeHeroSearch({ t }: { t: Dictionary }) {
   return (
     <section className="herofind" aria-label={t.home.search_title}>
+      <HeroVideo src="/hero/market.mp4" pauseLabel={t.home.hero_pause} playLabel={t.home.hero_play} />
       <div className="herofind__inner">
         <h1 className="herofind__title">{t.home.search_title}</h1>
         <p className="herofind__sub">{t.home.search_sub}</p>

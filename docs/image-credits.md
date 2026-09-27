@@ -31,3 +31,7 @@ not yet rendered in the UI. Before going public, either:
    attribution required).
 
 Nothing here should ship publicly as-is without completing attribution.
+
+## Home hero video
+- apps/web/public/hero/market.mp4 — "Crowded market", Coverr (https://coverr.co/videos/crowded-market-go58otzya9).
+  Coverr License: free for personal and commercial use, no attribution required. Downloaded and self-hosted.

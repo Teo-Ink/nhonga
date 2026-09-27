@@ -146,6 +146,8 @@ export const en: Dictionary = {
     how2_b: 'Talk directly to the seller on WhatsApp or phone.',
     how3_t: 'Agree',
     how3_b: 'Agree on price, payment and delivery safely.',
+    hero_pause: 'Pause video',
+    hero_play: 'Play video',
   },
   pdp: {
     add_to_cart: 'Add to cart',

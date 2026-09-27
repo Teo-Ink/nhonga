@@ -145,6 +145,8 @@ export const pt = {
     how2_b: 'Fale diretamente com o vendedor por WhatsApp ou telefone.',
     how3_t: 'Combine',
     how3_b: 'Combine o preço, o pagamento e a entrega em segurança.',
+    hero_pause: 'Pausar vídeo',
+    hero_play: 'Reproduzir vídeo',
   },
   pdp: {
     add_to_cart: 'Adicionar ao carrinho',
