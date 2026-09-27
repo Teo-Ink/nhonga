@@ -28,8 +28,8 @@ const CATEGORY_KEYS = [
 ] as const;
 
 // Classifieds home (Fiverr-structured hero + Nhonga's brand): a search-first
-// hero with popular quick links, a popular-categories card grid, a leaderboard
-// promo, a "how it works" value section, then category rows and recent ads.
+// hero with popular quick links, a leaderboard promo, a popular-categories
+// slider, a "how it works" value section, then category rows and recent ads.
 export default async function HomePage() {
   const { t } = await getDictionary();
 
@@ -63,11 +63,11 @@ export default async function HomePage() {
     <>
       <HomeHeroSearch t={t} />
 
-      <PopularCategories t={t} />
-
       <section className="section">
         <AdSlot t={t} placement="leaderboard" />
       </section>
+
+      <PopularCategories t={t} />
 
       <HowItWorks t={t} />
 

@@ -278,6 +278,66 @@ UPDATE product_image i SET s3_key = 'https://live.staticflickr.com/3817/14093903
 UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/7530/15222020274_aedac47229_b.jpg' WHERE advertiser_name = 'Banco Exemplo';
 UPDATE ad_campaign SET image_url = 'https://live.staticflickr.com/951/42373784431_dba7832ed6_b.jpg' WHERE advertiser_name = 'Escola de Condução Xitique';
 
+
+-- ── More sample listings across the verticals (fuller marketplace) ──
+-- 15 extra classifieds ads (viaturas, imóveis, empregos, serviços, eventos),
+-- each with a real CC-licensed photo (Openverse/Flickr). Prices in cents of MT.
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  -- Viaturas (c007)
+  ('a0000000-0000-4000-8000-000000000201', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000007', 'nissan-almera-2013', 'Nissan Almera 2013', 'Nissan Almera 2013', 'Almera 1.5 gasolina, económico e fiável. Ar condicionado, vidros elétricos, pneus em bom estado.', '{"marca":"Nissan","modelo":"Almera","ano":"2013","km":"110000","combustivel":"Gasolina","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '9 hours'),
+  ('a0000000-0000-4000-8000-000000000202', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000007', 'toyota-hilux-2015', 'Toyota Hilux 2015 4x4', 'Toyota Hilux 2015 4x4', 'Pick-up Hilux 2.5 diesel, 4x4, ideal para obra ou machamba. Caixa de carga com capota. Livro de revisões.', '{"marca":"Toyota","modelo":"Hilux","ano":"2015","km":"98000","combustivel":"Diesel","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000203', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000007', 'mota-haojue-125', 'Motorizada Haojue 125cc', 'Haojue 125cc Motorcycle', 'Mota Haojue 125cc, pouca quilometragem, documentos em ordem. Óptima para o dia-a-dia e entregas.', '{"marca":"Outra","modelo":"Haojue DK125","ano":"2019","km":"22000","combustivel":"Gasolina","caixa":"Manual"}', 'active', NULL, NULL, 0, now() - interval '4 days'),
+  -- Imóveis (c008)
+  ('a0000000-0000-4000-8000-000000000204', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000008', 't2-polana-arrendar', 'T2 para arrendar na Polana', 'T2 for rent in Polana', 'Apartamento T2 com varanda, cozinha equipada e água quente. Condomínio com segurança 24h. Renda mensal.', '{"negocio":"Arrendar","quartos":"2","area":"90"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000205', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000008', 'vivenda-t4-matola', 'Vivenda T4 na Matola', 'T4 villa in Matola', 'Vivenda T4 com quintal, garagem para 2 carros e dependência. Bairro tranquilo, perto de escolas.', '{"negocio":"Venda","quartos":"4","area":"300"}', 'active', NULL, NULL, 0, now() - interval '6 days'),
+  ('a0000000-0000-4000-8000-000000000206', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000008', 'loja-baixa-trespasse', 'Loja para trespasse na Baixa', 'Shop for lease transfer downtown', 'Trespasse de loja com montra na Baixa de Maputo. Boa localização, muito movimento. Contrato transferível.', '{"negocio":"Venda","quartos":"0","area":"120"}', 'active', NULL, NULL, 0, now() - interval '3 days'),
+  -- Empregos (c010)
+  ('a0000000-0000-4000-8000-000000000207', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000010', 'motorista-pesados-maputo', 'Motorista de pesados (Maputo)', 'Heavy-vehicle driver (Maputo)', 'Empresa de transportes procura motorista de pesados com carta pesada e experiência. Contrato a tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Transporte","local":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '12 hours'),
+  ('a0000000-0000-4000-8000-000000000208', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000010', 'rececionista-hotel-beira', 'Rececionista de hotel (Beira)', 'Hotel receptionist (Beira)', 'Hotel na Beira procura rececionista com boa apresentação e inglês. Turnos rotativos, tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Restauração","local":"Beira"}', 'active', NULL, NULL, 0, now() - interval '3 days'),
+  ('a0000000-0000-4000-8000-000000000209', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000010', 'tecnico-electricidade-matola', 'Técnico de electricidade (Matola)', 'Electrical technician (Matola)', 'Vaga para técnico de electricidade com experiência em instalações prediais. Contrato a tempo inteiro.', '{"tipo_contrato":"Tempo inteiro","area":"Construção","local":"Matola"}', 'active', NULL, NULL, 0, now() - interval '5 days'),
+  -- Serviços (c009)
+  ('a0000000-0000-4000-8000-000000000210', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000009', 'eletricista-residencial', 'Eletricista residencial', 'Residential electrician', 'Instalações e reparações eléctricas ao domicílio. Quadros, tomadas, iluminação. Orçamento grátis.', '{"categoria_servico":"Eletricidade","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000211', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000009', 'reparacao-frigorificos', 'Reparação de frigoríficos e ACs', 'Fridge & AC repair', 'Reparo de frigoríficos, arcas e ar condicionado ao domicílio. Recarga de gás e peças. Atendimento rápido.', '{"categoria_servico":"Reparação","zona":"Matola"}', 'active', NULL, NULL, 0, now() - interval '5 days'),
+  ('a0000000-0000-4000-8000-000000000212', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000009', 'fotografo-eventos', 'Fotógrafo para eventos', 'Event photographer', 'Fotografia e vídeo para casamentos, festas e eventos empresariais. Entrega em galeria digital.', '{"categoria_servico":"Fotografia","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '8 days'),
+  -- Eventos (c011)
+  ('a0000000-0000-4000-8000-000000000213', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000011', 'aluguer-tendas-cadeiras', 'Aluguer de tendas e cadeiras', 'Tent & chair rental', 'Aluguer de tendas, cadeiras e mesas para festas e cerimónias. Montagem e transporte incluídos.', '{"tipo":"Festa","data":"A combinar","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000214', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000011', 'bilhetes-jogo-mambas', 'Bilhetes — Mambas vs. Argélia', 'Tickets — Mozambique vs. Algeria', 'Bilhetes para o jogo dos Mambas no Estádio Nacional do Zimpeto. Bancada central, lote limitado.', '{"tipo":"Desporto","data":"2026-10-11","zona":"Maputo Cidade"}', 'active', NULL, NULL, 0, now() - interval '2 days'),
+  ('a0000000-0000-4000-8000-000000000215', '11111111-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000011', 'dj-casamento-decoracao', 'DJ e decoração de casamentos', 'Wedding DJ & décor', 'Pacote completo para casamentos: DJ, som, iluminação e decoração de sala. Orçamento à medida.', '{"tipo":"Casamento","data":"A combinar","zona":"Matola"}', 'active', NULL, NULL, 0, now() - interval '10 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000301', 'a0000000-0000-4000-8000-000000000201', 'VIA-201', '{}', 48000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000302', 'a0000000-0000-4000-8000-000000000202', 'VIA-202', '{}', 135000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000303', 'a0000000-0000-4000-8000-000000000203', 'VIA-203', '{}', 6500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000304', 'a0000000-0000-4000-8000-000000000204', 'IMO-204', '{}', 4500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000305', 'a0000000-0000-4000-8000-000000000205', 'IMO-205', '{}', 850000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000306', 'a0000000-0000-4000-8000-000000000206', 'IMO-206', '{}', 95000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000307', 'a0000000-0000-4000-8000-000000000207', 'EMP-207', '{}', 2500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000308', 'a0000000-0000-4000-8000-000000000208', 'EMP-208', '{}', 2200000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000309', 'a0000000-0000-4000-8000-000000000209', 'EMP-209', '{}', 3000000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000310', 'a0000000-0000-4000-8000-000000000210', 'SER-210', '{}', 150000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000311', 'a0000000-0000-4000-8000-000000000211', 'SER-211', '{}', 100000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000312', 'a0000000-0000-4000-8000-000000000212', 'SER-212', '{}', 500000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000313', 'a0000000-0000-4000-8000-000000000213', 'EVT-213', '{}', 800000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000314', 'a0000000-0000-4000-8000-000000000214', 'EVT-214', '{}', 50000, NULL, 1, true),
+  ('b0000000-0000-4000-8000-000000000315', 'a0000000-0000-4000-8000-000000000215', 'EVT-215', '{}', 1500000, NULL, 1, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000201', 'a0000000-0000-4000-8000-000000000201', 'https://live.staticflickr.com/1136/1485326119_9f04c8be06_b.jpg', 1024, 768, 'Nissan Almera', 0),
+  ('e0000000-0000-4000-8000-000000000202', 'a0000000-0000-4000-8000-000000000202', 'https://live.staticflickr.com/4131/4972591434_24ed4eae0c_b.jpg', 1024, 768, 'Toyota Hilux 4x4', 0),
+  ('e0000000-0000-4000-8000-000000000203', 'a0000000-0000-4000-8000-000000000203', 'https://live.staticflickr.com/2931/14688503106_3061e9ac0a_b.jpg', 1024, 768, 'Motorizada 125cc', 0),
+  ('e0000000-0000-4000-8000-000000000204', 'a0000000-0000-4000-8000-000000000204', 'https://live.staticflickr.com/5582/15291722925_b8fb636a5c_b.jpg', 1024, 768, 'Apartamento T2', 0),
+  ('e0000000-0000-4000-8000-000000000205', 'a0000000-0000-4000-8000-000000000205', 'https://live.staticflickr.com/3131/3128754928_17f1181e02_b.jpg', 1024, 768, 'Vivenda T4', 0),
+  ('e0000000-0000-4000-8000-000000000206', 'a0000000-0000-4000-8000-000000000206', 'https://live.staticflickr.com/4134/4918836141_5a31eeb48c_b.jpg', 1024, 768, 'Loja na Baixa', 0),
+  ('e0000000-0000-4000-8000-000000000207', 'a0000000-0000-4000-8000-000000000207', 'https://live.staticflickr.com/2132/2225709482_c8ed3374c9_b.jpg', 1024, 768, 'Motorista de pesados', 0),
+  ('e0000000-0000-4000-8000-000000000208', 'a0000000-0000-4000-8000-000000000208', 'https://live.staticflickr.com/7420/11059593346_7f3c1fb233_b.jpg', 1024, 768, 'Rececionista de hotel', 0),
+  ('e0000000-0000-4000-8000-000000000209', 'a0000000-0000-4000-8000-000000000209', 'https://live.staticflickr.com/1215/5106374474_7f6785eb85_b.jpg', 1024, 768, 'Técnico de electricidade', 0),
+  ('e0000000-0000-4000-8000-000000000210', 'a0000000-0000-4000-8000-000000000210', 'https://live.staticflickr.com/3266/3148848829_4dd6a49d73_b.jpg', 1024, 768, 'Eletricista', 0),
+  ('e0000000-0000-4000-8000-000000000211', 'a0000000-0000-4000-8000-000000000211', 'https://live.staticflickr.com/4133/5024682259_9d3da85376_b.jpg', 1024, 768, 'Reparação de frigoríficos', 0),
+  ('e0000000-0000-4000-8000-000000000212', 'a0000000-0000-4000-8000-000000000212', 'https://live.staticflickr.com/4101/4759829140_9f8c9c354c_b.jpg', 1024, 768, 'Fotógrafo', 0),
+  ('e0000000-0000-4000-8000-000000000213', 'a0000000-0000-4000-8000-000000000213', 'https://live.staticflickr.com/6167/6142412961_403f0636cb_b.jpg', 1024, 768, 'Tendas e cadeiras', 0),
+  ('e0000000-0000-4000-8000-000000000214', 'a0000000-0000-4000-8000-000000000214', 'https://live.staticflickr.com/2076/2487740918_0a39e271e2_b.jpg', 1024, 768, 'Estádio de futebol', 0),
+  ('e0000000-0000-4000-8000-000000000215', 'a0000000-0000-4000-8000-000000000215', 'https://live.staticflickr.com/3558/3584418290_202ab5f954_b.jpg', 1024, 768, 'Decoração de casamento', 0);
+
 COMMIT;
 
 SELECT
