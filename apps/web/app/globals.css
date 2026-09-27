@@ -11,6 +11,7 @@
 }
 html {
   -webkit-text-size-adjust: 100%;
+  overflow-x: clip;
 }
 body {
   font-family: var(--font-sans);
@@ -19,6 +20,9 @@ body {
   color: var(--text);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  /* Clip the scrollbar-width overhang from the full-bleed hero (100vw) without
+     creating a scroll container — so it does not break the sticky header. */
+  overflow-x: clip;
 }
 /* Headings use the display face (Ubuntu); body, prices and product names stay
    on the sans face (Inter). */
@@ -5583,9 +5587,13 @@ a.seller:focus-visible {
 .herofind {
   position: relative;
   overflow: hidden;
-  margin-top: var(--space-4);
-  border-radius: var(--radius-lg);
-  padding: 56px var(--space-4) 48px;
+  /* Full-bleed: break out of the centred, padded page container to span the
+     whole viewport width, flush under the header (edge-to-edge like the ref). */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: 0;
+  border-radius: 0;
+  padding: 72px var(--space-4) 60px;
   /* Fallback shown before the video loads / if it fails, and on phones. */
   background:
     radial-gradient(120% 140% at 82% -10%, rgba(245, 197, 24, 0.16), transparent 55%),

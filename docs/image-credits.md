@@ -33,5 +33,7 @@ not yet rendered in the UI. Before going public, either:
 Nothing here should ship publicly as-is without completing attribution.
 
 ## Home hero video
-- apps/web/public/hero/market.mp4 — "Crowded market", Coverr (https://coverr.co/videos/crowded-market-go58otzya9).
-  Coverr License: free for personal and commercial use, no attribution required. Downloaded and self-hosted.
+- apps/web/public/hero/market.mp4 — "Aerial View of Busy African Market Street", Pexels
+  (https://www.pexels.com/video/aerial-view-of-busy-african-market-street-30339600/), 1280x720.
+  Pexels License: free to use, no attribution required. Downloaded and self-hosted (reflects the
+  reality of local African/Mozambican street markets).
