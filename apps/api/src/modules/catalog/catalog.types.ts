@@ -13,6 +13,8 @@ export interface VendorSummaryDto {
   readonly slug: string;
   readonly displayName: string;
   readonly isVerified: boolean;
+  /** Paid "Loja Pro" subscription active — the verified-shop selo. */
+  readonly isPro: boolean;
   readonly ratingAvg: number | null;
   readonly ratingCount: number;
   /** Classifieds contact — null when the seller hides the channel or has no

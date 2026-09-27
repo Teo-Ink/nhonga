@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { cents, formatMZN } from '@nhonga/shared';
-import { Price, Rating, VerifiedBadge } from '../../../components/ui';
+import { Price, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
 import { IconTruck, IconCheck, IconShield } from '../../../components/icons';
 import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
@@ -146,6 +146,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <span className="seller__name">
                 {product.vendor.displayName}
                 {product.vendor.isVerified ? <VerifiedBadge label={t.common.verified} /> : null}
+                {product.vendor.isPro ? <ProBadge label={t.common.pro} /> : null}
               </span>
               <span className="seller__meta">
                 <Rating value={product.ratingAvg} count={product.ratingCount} />

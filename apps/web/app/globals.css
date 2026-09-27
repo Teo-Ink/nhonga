@@ -358,6 +358,16 @@ button {
   background: var(--color-primary-50);
   color: var(--color-primary-700);
 }
+.badge--pro {
+  background: #fdf3cf;
+  color: #7a5a00;
+  border: 1px solid #f5c518;
+}
+:root[data-theme='dark'] .badge--pro {
+  background: rgba(245, 197, 24, 0.16);
+  color: #f5c518;
+  border-color: rgba(245, 197, 24, 0.5);
+}
 .badge--soldout {
   background: var(--surface-sunken);
   color: var(--text-muted);

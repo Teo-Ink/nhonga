@@ -43,6 +43,13 @@
       "when": 1790467188474,
       "tag": "0005_fine_morlocks",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790536278188,
+      "tag": "0006_hot_mandrill",
+      "breakpoints": true
     }
   ]
 }

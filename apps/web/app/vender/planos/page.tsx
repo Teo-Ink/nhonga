@@ -61,6 +61,7 @@ export default async function PlansPage() {
       benefits: [p.pro_pro_b1, p.pro_pro_b2, p.pro_pro_b3, p.pro_pro_b4],
       highlight: true,
       cta: p.go_pro,
+      href: '/vender/verificar',
     },
   ];
 
@@ -139,7 +140,7 @@ export default async function PlansPage() {
             </ul>
             <a
               className={`btn ${tier.highlight ? 'btn--cta' : 'btn--ghost'} plancard__cta`}
-              href="/vender/comecar"
+              href={'href' in tier && tier.href ? tier.href : '/vender/comecar'}
             >
               {tier.cta}
             </a>

@@ -39,6 +39,16 @@ export function VerifiedBadge({ label }: { label: string }) {
   );
 }
 
+// Paid "Loja Pro" subscription — a premium, gold selo distinct from the
+// (free) KYC "Verificado" badge.
+export function ProBadge({ label }: { label: string }) {
+  return (
+    <span className="badge badge--pro">
+      <IconStar width={11} height={11} /> {label}
+    </span>
+  );
+}
+
 export function TrustStrip({ t }: { t: Dictionary }) {
   const items = [
     { ico: <IconShield />, t: t.trust.buyer_protection, d: t.trust.buyer_protection_desc },

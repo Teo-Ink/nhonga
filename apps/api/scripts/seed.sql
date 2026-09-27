@@ -426,6 +426,10 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000236', 'a0000000-0000-4000-8000-000000000236', 'https://live.staticflickr.com/5307/5575095686_b58e0b6f7e_b.jpg', 1024, 768, 'Kit de primeiros socorros', 0);
 
 
+
+-- Demo: one shop on the paid "Loja Pro" subscription (verified selo).
+UPDATE vendor SET pro_until = now() + interval '30 days' WHERE slug = 'mama-rosa';
+
 COMMIT;
 
 SELECT

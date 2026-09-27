@@ -15,6 +15,8 @@ export interface VendorSummary {
   slug: string;
   displayName: string;
   isVerified: boolean;
+  /** Paid "Loja Pro" subscription active — shows the premium selo. */
+  isPro?: boolean;
   ratingAvg: number | null;
   ratingCount: number;
   /** Contact channels — only populated on the product detail; null when hidden. */

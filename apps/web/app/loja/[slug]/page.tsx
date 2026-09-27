@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { ProductCard } from '../../../components/ProductCard';
 import { SellerReviews } from '../../../components/SellerReviews';
-import { EmptyState, Rating, VerifiedBadge } from '../../../components/ui';
+import { EmptyState, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
 import { IconBox } from '../../../components/icons';
 import { getVendorReviews, listProductsByVendor, type VendorReviewList } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
@@ -59,6 +59,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           <h1 className="store__name">
             {name}
             {vendor?.isVerified ? <VerifiedBadge label={t.seller.verified} /> : null}
+            {vendor?.isPro ? <ProBadge label={t.common.pro} /> : null}
           </h1>
           <div className="store__stats">
             {ratingAvg !== null ? (
