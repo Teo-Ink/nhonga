@@ -53,11 +53,14 @@ export default async function HomePage() {
   );
   const rows = perCategory.filter((c) => c.items.length > 0);
 
-  const recent = [...products].sort((a, b) => {
-    const ta = a.postedAt ? Date.parse(a.postedAt) : 0;
-    const tb = b.postedAt ? Date.parse(b.postedAt) : 0;
-    return tb - ta;
-  });
+  const recent = [...products]
+    .sort((a, b) => {
+      const ta = a.postedAt ? Date.parse(a.postedAt) : 0;
+      const tb = b.postedAt ? Date.parse(b.postedAt) : 0;
+      return tb - ta;
+    })
+    // Keep the home light: show the 12 newest, with "ver todos" → /pesquisa.
+    .slice(0, 12);
 
   return (
     <>

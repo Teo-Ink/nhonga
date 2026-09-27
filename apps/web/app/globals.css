@@ -5601,6 +5601,14 @@ a.seller:focus-visible {
   color: #fff;
   text-align: center;
 }
+.herofind__photo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
 .herofind__video {
   position: absolute;
   inset: 0;

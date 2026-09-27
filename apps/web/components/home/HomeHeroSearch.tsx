@@ -10,6 +10,17 @@ const POPULAR = ['viaturas', 'imoveis', 'empregos', 'servicos', 'telemoveis', 'e
 export function HomeHeroSearch({ t }: { t: Dictionary }) {
   return (
     <section className="herofind" aria-label={t.home.search_title}>
+      {/* Mozambique-reality still (Maputo municipal market). Sits under the video
+          on desktop; on phones the video is hidden by CSS and this shows instead,
+          so the hero is never a flat colour — one light image, not a 6MB loop. */}
+      <span
+        className="herofind__photo"
+        aria-hidden="true"
+        style={{
+          backgroundImage:
+            'url("https://live.staticflickr.com/2618/3858546840_da8a76b450_b.jpg")',
+        }}
+      />
       <HeroVideo src="/hero/market.mp4" pauseLabel={t.home.hero_pause} playLabel={t.home.hero_play} />
       <div className="herofind__inner">
         <h1 className="herofind__title">{t.home.search_title}</h1>
