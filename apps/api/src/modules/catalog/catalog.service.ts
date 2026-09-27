@@ -10,9 +10,10 @@ import {
   productImage,
   productVariant,
 } from '../../db/schema/catalog.js';
-import { vendor } from '../../db/schema/vendors.js';
+import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { district } from '../../db/schema/identity.js';
 import { MediaService } from '../media/media.service.js';
+import { AuthService, type AuthUser } from '../auth/auth.service.js';
 import type { Db } from '../../db/types.js';
 import {
   buildOptions,
@@ -50,6 +51,7 @@ export class CatalogService {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly media: MediaService,
+    private readonly auth: AuthService,
   ) {}
 
   /**
@@ -58,14 +60,17 @@ export class CatalogService {
    * that is created on first use. Photos are browser-compressed data URLs; each
    * is stored as a media asset and referenced by its /api/media URL.
    */
-  async createListing(input: {
-    title: string;
-    categorySlug: string;
-    description?: string;
-    priceCents: number;
-    stock?: number;
-    photos?: string[];
-  }): Promise<{ id: string; slug: string }> {
+  async createListing(
+    input: {
+      title: string;
+      categorySlug: string;
+      description?: string;
+      priceCents: number;
+      stock?: number;
+      photos?: string[];
+    },
+    sessionToken?: string | null,
+  ): Promise<{ id: string; slug: string }> {
     const title = input.title.trim();
     if (title.length < 3) throw new BadRequestException({ message: 'title too short' });
     if (!Number.isFinite(input.priceCents) || input.priceCents < 0) {
@@ -81,7 +86,19 @@ export class CatalogService {
     )[0];
     if (!cat) throw new BadRequestException({ message: 'unknown category' });
 
-    const vendorId = await this.ensureCommunityVendor();
+    // Signed-in seller → their own shop (created on first listing); otherwise
+    // the shared community shop, so the demo works without an account.
+    let vendorId: string;
+    if (sessionToken) {
+      try {
+        const user = await this.auth.me(sessionToken);
+        vendorId = await this.ensureUserVendor(user);
+      } catch {
+        vendorId = await this.ensureCommunityVendor();
+      }
+    } else {
+      vendorId = await this.ensureCommunityVendor();
+    }
     const slug = await this.uniqueSlug(title);
     const productId = randomUUID();
 
@@ -140,6 +157,66 @@ export class CatalogService {
     }
 
     return { id: productId, slug };
+  }
+
+  /** The signed-in seller's own shop, created on their first listing. */
+  private async ensureUserVendor(user: AuthUser): Promise<string> {
+    const link = (
+      await this.db
+        .select({ vendorId: vendorUser.vendorId })
+        .from(vendorUser)
+        .where(eq(vendorUser.userId, user.id))
+        .limit(1)
+    )[0];
+    if (link) return link.vendorId;
+
+    const dist = (await this.db.select({ id: district.id }).from(district).limit(1))[0];
+    const name = user.displayName.trim() || `Loja ${user.phoneE164.slice(-4)}`;
+    const slug = await this.uniqueVendorSlug(name);
+    const vendorId = randomUUID();
+    const phone = user.phoneE164.replace(/^\+/, '');
+    // status 'pending_kyc' → no "Verificado" selo until they pass KYC or go Pro.
+    await this.db.insert(vendor).values({
+      id: vendorId,
+      slug,
+      legalName: name,
+      displayName: name,
+      vendorType: 'individual',
+      ...(dist ? { districtId: dist.id } : {}),
+      status: 'pending_kyc',
+      whatsapp: phone,
+      contactPhone: phone,
+    });
+    await this.db.insert(vendorUser).values({
+      id: randomUUID(),
+      vendorId,
+      userId: user.id,
+      role: 'owner',
+    });
+    return vendorId;
+  }
+
+  private async uniqueVendorSlug(name: string): Promise<string> {
+    const base =
+      name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 50) || 'loja';
+    for (let n = 0; n < 50; n++) {
+      const candidate = n === 0 ? base : `${base}-${n + 1}`;
+      const hit = (
+        await this.db
+          .select({ id: vendor.id })
+          .from(vendor)
+          .where(eq(vendor.slug, candidate))
+          .limit(1)
+      )[0];
+      if (!hit) return candidate;
+    }
+    return `${base}-${randomUUID().slice(0, 6)}`;
   }
 
   /** The shared demo shop that owns visitor-created listings. */

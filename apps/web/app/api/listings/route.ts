@@ -1,6 +1,9 @@
 // BFF: the full listings feed, forwarded to the private catalogue API. Used by
 // the favourites page, which filters it against the viewer's local list.
+import { cookies } from 'next/headers';
+
 const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+const SESSION_COOKIE = 'nhonga_session';
 
 export async function GET(): Promise<Response> {
   const res = await fetch(`${API_URL}/catalog/products?limit=48`, {
@@ -14,12 +17,19 @@ export async function GET(): Promise<Response> {
   });
 }
 
-// Create a listing (real "Publicar"), forwarded to the catalogue API.
+// Create a listing (real "Publicar"), forwarded to the catalogue API. Forwards
+// the session cookie as a bearer token so the listing attaches to the signed-in
+// seller's own shop (or the community shop when signed out).
 export async function POST(req: Request): Promise<Response> {
   const body = await req.text();
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const res = await fetch(`${API_URL}/catalog/products`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
+    headers: {
+      'content-type': 'application/json',
+      'accept-language': 'pt',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
     body,
     cache: 'no-store',
   });

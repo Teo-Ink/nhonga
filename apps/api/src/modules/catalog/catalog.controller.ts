@@ -71,21 +71,28 @@ export class CatalogController {
   /** Create a listing (real "Publicar"). No auth in the demo. */
   @Post('products')
   @HttpCode(201)
-  create(@Body() body: CreateListingBody): Promise<{ id: string; slug: string }> {
+  create(
+    @Body() body: CreateListingBody,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ id: string; slug: string }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v : '');
     const num = (v: unknown): number =>
       typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
     const photos = Array.isArray(body.photos)
       ? body.photos.filter((p): p is string => typeof p === 'string')
       : [];
-    return this.catalog.createListing({
-      title: str(body.title),
-      categorySlug: str(body.category),
-      description: str(body.description),
-      priceCents: num(body.priceCents),
-      stock: num(body.stock),
-      photos,
-    });
+    const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
+    return this.catalog.createListing(
+      {
+        title: str(body.title),
+        categorySlug: str(body.category),
+        description: str(body.description),
+        priceCents: num(body.priceCents),
+        stock: num(body.stock),
+        photos,
+      },
+      token,
+    );
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */
