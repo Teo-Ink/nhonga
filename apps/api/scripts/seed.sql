@@ -5,7 +5,7 @@
 -- The /ph route still exists as a branded fallback placeholder generator.
 BEGIN;
 
-TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, review, app_user, vendor, district, ad_campaign RESTART IDENTITY CASCADE;
+TRUNCATE product_image, product_variant, product, category, category_attribute, promotion_plan, product_promotion, review, app_user, vendor, district, ad_campaign, listing_report RESTART IDENTITY CASCADE;
 
 -- Provinces — all 11 (names match the storefront checkout province list so a
 -- guest order resolves to a real province/district for the address FK).

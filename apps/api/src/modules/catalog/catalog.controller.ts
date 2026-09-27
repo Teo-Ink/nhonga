@@ -89,6 +89,21 @@ export class CatalogController {
     }
     await this.catalog.recordEvent(idOrSlug, type);
   }
+
+  /** File a trust-&-safety report against a listing (anonymous). */
+  @Post('products/:idOrSlug/reports')
+  @HttpCode(201)
+  async report(
+    @Param('idOrSlug') idOrSlug: string,
+    @Body() body: { reason?: unknown; note?: unknown },
+  ): Promise<{ id: string }> {
+    const reason = typeof body.reason === 'string' ? body.reason : '';
+    const note = typeof body.note === 'string' ? body.note : undefined;
+    return this.catalog.createReport(idOrSlug, {
+      reason,
+      ...(note !== undefined ? { note } : {}),
+    });
+  }
 }
 
 /** Parse the `attributes` query param: a JSON map of {key: "value"} (exact) or

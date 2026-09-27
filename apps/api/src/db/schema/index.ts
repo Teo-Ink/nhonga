@@ -15,3 +15,4 @@ export * from './platform.js';
 export * from './promotions.js';
 export * from './reviews.js';
 export * from './ads.js';
+export * from './reports.js';

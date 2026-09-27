@@ -5524,3 +5524,58 @@ a.seller:focus-visible {
   background-position: center;
   background-repeat: no-repeat;
 }
+
+/* ── Report a listing (trust & safety) ──────────────────────────── */
+.reportbox__toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  padding: 0;
+  margin-top: var(--space-3);
+  cursor: pointer;
+}
+.reportbox__toggle:hover {
+  color: var(--text);
+}
+.reportbox {
+  margin-top: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--surface);
+}
+.reportbox__title {
+  display: block;
+}
+.reportbox__sub {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin: 4px 0 var(--space-2);
+}
+.reportbox__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.reportbox__cancel {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.reportbox__err {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-danger-600, #c0392b);
+  font-size: var(--text-sm);
+}
+.reportbox__done {
+  margin-top: var(--space-3);
+  color: var(--brand-500);
+  font-size: var(--text-sm);
+}

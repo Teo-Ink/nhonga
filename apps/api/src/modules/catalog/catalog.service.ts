@@ -1,6 +1,8 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
+import { listingReport } from '../../db/schema/reports.js';
 import {
   category,
   categoryAttribute,
@@ -31,6 +33,16 @@ import type {
   ProductListResponse,
   SortKey,
 } from './catalog.types.js';
+
+/** Allowed listing-report reasons (trust & safety). */
+export const REPORT_REASONS = [
+  'fraud',
+  'prohibited',
+  'spam',
+  'wrong_category',
+  'offensive',
+  'other',
+] as const;
 
 @Injectable()
 export class CatalogService {
@@ -279,6 +291,29 @@ export class CatalogService {
 
   /** Record an engagement event on a listing, bumping the matching counter.
    *  Fire-and-forget from the client; best-effort. */
+  /** File a trust-&-safety report against a listing (anonymous). */
+  async createReport(idOrSlug: string, input: { reason: string; note?: string }): Promise<{ id: string }> {
+    if (!(REPORT_REASONS as readonly string[]).includes(input.reason)) {
+      throw new BadRequestException({ message: 'Motivo de denúncia inválido.' });
+    }
+    const rows = await this.db
+      .select({ id: product.id, slug: product.slug })
+      .from(product)
+      .where(or(eq(product.slug, idOrSlug), eq(product.id, asUuidOrNil(idOrSlug))))
+      .limit(1);
+    const p = rows[0];
+    if (p === undefined) throw new NotFoundException({ message: 'Anúncio não encontrado.' });
+    const note =
+      typeof input.note === 'string' && input.note.trim() !== ''
+        ? input.note.trim().slice(0, 1000)
+        : null;
+    const id = randomUUID();
+    await this.db
+      .insert(listingReport)
+      .values({ id, productId: p.id, productSlug: p.slug, reason: input.reason, note });
+    return { id };
+  }
+
   async recordEvent(idOrSlug: string, event: 'contact' | 'share' | 'view'): Promise<void> {
     const where = or(eq(product.slug, idOrSlug), eq(product.id, asUuidOrNil(idOrSlug)));
     const set =

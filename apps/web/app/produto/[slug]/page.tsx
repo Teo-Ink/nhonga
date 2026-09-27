@@ -7,6 +7,7 @@ import { IconTruck, IconCheck, IconShield } from '../../../components/icons';
 import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 import { ContactSeller } from '../../../components/ContactSeller';
+import { ReportListing } from '../../../components/ReportListing';
 
 export const dynamic = 'force-dynamic';
 
@@ -213,6 +214,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <p className="notice" role="note">
             {t.pdp.demo_notice}
           </p>
+
+          <ReportListing slug={product.slug} t={t.report} />
         </div>
       </div>
     </article>
