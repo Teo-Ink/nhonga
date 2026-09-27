@@ -9,6 +9,7 @@ import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
 import { AssistantModule } from './modules/assistant/assistant.module.js';
 import { PromotionsModule } from './modules/promotions/promotions.module.js';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.js';
+import { AlertsModule } from './modules/alerts/alerts.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { AdsModule } from './modules/ads/ads.module.js';
 import { HealthController } from './health/health.controller.js';
@@ -29,6 +30,7 @@ import { HealthController } from './health/health.controller.js';
     AssistantModule,
     PromotionsModule,
     SubscriptionsModule,
+    AlertsModule,
     ReviewsModule,
     AdsModule,
   ],

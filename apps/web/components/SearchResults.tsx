@@ -72,6 +72,18 @@ export function SearchResults({
             title={title}
             saveLabel={t.search.save_search}
             savedLabel={t.search.search_saved}
+            alerts={{
+              title: t.search.alert_title,
+              sub: t.search.alert_sub,
+              phonePh: t.search.alert_phone_ph,
+              cta: t.search.alert_cta,
+              sending: t.search.alert_sending,
+              demo: t.search.alert_demo,
+              done: t.search.alert_done,
+              smsPreview: t.search.alert_sms_preview,
+              none: t.search.alert_none,
+              error: t.search.alert_error,
+            }}
           />
           <SearchControls t={t} />
         </div>

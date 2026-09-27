@@ -206,6 +206,16 @@ export const pt = {
     crumb: 'Pesquisa',
     save_search: 'Guardar pesquisa',
     search_saved: 'Pesquisa guardada',
+    alert_title: 'Receber alertas por SMS',
+    alert_sub: 'Avisamos quando houver novos anúncios para esta pesquisa.',
+    alert_phone_ph: 'Ex.: 84 123 4567',
+    alert_cta: 'Activar alertas',
+    alert_sending: 'A activar…',
+    alert_demo: 'Demonstração: o SMS é simulado — nada é enviado.',
+    alert_done: 'Alertas activados!',
+    alert_sms_preview: 'Exemplo de SMS:',
+    alert_none: 'Alertas activados. Avisamos quando surgirem novos anúncios.',
+    alert_error: 'Não foi possível activar. Verifique o número.',
   },
   // Safety screen (B).
   safety: {
