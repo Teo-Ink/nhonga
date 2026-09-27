@@ -488,6 +488,8 @@ export const pt = {
     badge_destaque: 'DESTAQUE',
     publish_free: 'Publicar grátis',
     publish_paid: 'Publicar com destaque',
+    publishing: 'A publicar…',
+    publish_error: 'Não foi possível publicar. Tente novamente.',
   },
   plans: {
     title: 'Planos e destaques',

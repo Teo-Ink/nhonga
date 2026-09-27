@@ -57,6 +57,13 @@
       "when": 1790537731249,
       "tag": "0007_yellow_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790538507194,
+      "tag": "0008_stiff_gargoyle",
+      "breakpoints": true
     }
   ]
 }

@@ -22,6 +22,15 @@ import type {
 
 const SORTS: readonly SortKey[] = ['relevance', 'price_asc', 'price_desc', 'rating', 'newest'];
 
+interface CreateListingBody {
+  title?: unknown;
+  category?: unknown;
+  description?: unknown;
+  priceCents?: unknown;
+  stock?: unknown;
+  photos?: unknown;
+}
+
 /** Public catalogue browse. No auth (security: [] in the contract). */
 @Controller('catalog')
 export class CatalogController {
@@ -57,6 +66,26 @@ export class CatalogController {
       ...(lim !== undefined ? { limit: lim } : {}),
     };
     return this.catalog.listProducts(langOf(acceptLanguage), filters);
+  }
+
+  /** Create a listing (real "Publicar"). No auth in the demo. */
+  @Post('products')
+  @HttpCode(201)
+  create(@Body() body: CreateListingBody): Promise<{ id: string; slug: string }> {
+    const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+    const num = (v: unknown): number =>
+      typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+    const photos = Array.isArray(body.photos)
+      ? body.photos.filter((p): p is string => typeof p === 'string')
+      : [];
+    return this.catalog.createListing({
+      title: str(body.title),
+      categorySlug: str(body.category),
+      description: str(body.description),
+      priceCents: num(body.priceCents),
+      stock: num(body.stock),
+      photos,
+    });
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */

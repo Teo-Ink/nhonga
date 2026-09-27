@@ -17,3 +17,4 @@ export * from './reviews.js';
 export * from './ads.js';
 export * from './reports.js';
 export * from './alerts.js';
+export * from './media.js';

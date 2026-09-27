@@ -482,6 +482,8 @@ export const en: Dictionary = {
     badge_destaque: 'FEATURED',
     publish_free: 'Publish for free',
     publish_paid: 'Publish as featured',
+    publishing: 'Publishing…',
+    publish_error: 'Could not publish. Please try again.',
   },
   plans: {
     title: 'Plans & boosts',

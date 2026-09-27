@@ -12,6 +12,7 @@ import {
 } from '../../db/schema/catalog.js';
 import { vendor } from '../../db/schema/vendors.js';
 import { district } from '../../db/schema/identity.js';
+import { MediaService } from '../media/media.service.js';
 import type { Db } from '../../db/types.js';
 import {
   buildOptions,
@@ -46,7 +47,151 @@ export const REPORT_REASONS = [
 
 @Injectable()
 export class CatalogService {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly media: MediaService,
+  ) {}
+
+  /**
+   * Create a listing from the seller form (G — real "Publicar"). No seller auth
+   * in the demo, so listings attach to a shared "Anúncios da Comunidade" shop
+   * that is created on first use. Photos are browser-compressed data URLs; each
+   * is stored as a media asset and referenced by its /api/media URL.
+   */
+  async createListing(input: {
+    title: string;
+    categorySlug: string;
+    description?: string;
+    priceCents: number;
+    stock?: number;
+    photos?: string[];
+  }): Promise<{ id: string; slug: string }> {
+    const title = input.title.trim();
+    if (title.length < 3) throw new BadRequestException({ message: 'title too short' });
+    if (!Number.isFinite(input.priceCents) || input.priceCents < 0) {
+      throw new BadRequestException({ message: 'invalid price' });
+    }
+
+    const cat = (
+      await this.db
+        .select({ id: category.id })
+        .from(category)
+        .where(eq(category.slug, input.categorySlug))
+        .limit(1)
+    )[0];
+    if (!cat) throw new BadRequestException({ message: 'unknown category' });
+
+    const vendorId = await this.ensureCommunityVendor();
+    const slug = await this.uniqueSlug(title);
+    const productId = randomUUID();
+
+    await this.db.insert(product).values({
+      id: productId,
+      vendorId,
+      categoryId: cat.id,
+      slug,
+      titlePt: title.slice(0, 140),
+      titleEn: null,
+      descriptionPt: (input.description ?? '').slice(0, 4000),
+      attributes: {},
+      status: 'active',
+      publishedAt: new Date(),
+    });
+
+    await this.db.insert(productVariant).values({
+      id: randomUUID(),
+      productId,
+      sku: `USR-${slug.slice(0, 20)}`.toUpperCase(),
+      options: {},
+      priceCents: Math.trunc(input.priceCents),
+      stockQuantity: Number.isFinite(input.stock) ? Math.max(0, Math.trunc(input.stock!)) : 1,
+      isActive: true,
+    });
+
+    const photos = (input.photos ?? []).slice(0, 6);
+    let sort = 0;
+    for (const dataUrl of photos) {
+      try {
+        const mediaId = await this.media.storeDataUrl(dataUrl);
+        await this.db.insert(productImage).values({
+          id: randomUUID(),
+          productId,
+          s3Key: `/api/media/${mediaId}`,
+          width: 1024,
+          height: 768,
+          altText: title.slice(0, 140),
+          sortOrder: sort++,
+        });
+      } catch {
+        // Skip an unparseable/oversized photo rather than failing the listing.
+      }
+    }
+    // No photo uploaded → a generated placeholder so cards still render.
+    if (sort === 0) {
+      await this.db.insert(productImage).values({
+        id: randomUUID(),
+        productId,
+        s3Key: `/ph?t=${encodeURIComponent(title)}`,
+        width: 640,
+        height: 480,
+        altText: title.slice(0, 140),
+        sortOrder: 0,
+      });
+    }
+
+    return { id: productId, slug };
+  }
+
+  /** The shared demo shop that owns visitor-created listings. */
+  private async ensureCommunityVendor(): Promise<string> {
+    const existing = (
+      await this.db
+        .select({ id: vendor.id })
+        .from(vendor)
+        .where(eq(vendor.slug, 'anuncios-demo'))
+        .limit(1)
+    )[0];
+    if (existing) return existing.id;
+
+    const dist = (await this.db.select({ id: district.id }).from(district).limit(1))[0];
+    const id = randomUUID();
+    await this.db.insert(vendor).values({
+      id,
+      slug: 'anuncios-demo',
+      legalName: 'Anúncios da Comunidade',
+      displayName: 'Anúncios da Comunidade',
+      vendorType: 'individual',
+      ...(dist ? { districtId: dist.id } : {}),
+      status: 'active',
+      whatsapp: '258840000000',
+      contactPhone: '258840000000',
+    });
+    return id;
+  }
+
+  /** A URL-safe, unique slug derived from the title. */
+  private async uniqueSlug(title: string): Promise<string> {
+    const base =
+      title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+        .slice(0, 60) || 'anuncio';
+    for (let n = 0; n < 50; n++) {
+      const candidate = n === 0 ? base : `${base}-${n + 1}`;
+      const hit = (
+        await this.db
+          .select({ id: product.id })
+          .from(product)
+          .where(eq(product.slug, candidate))
+          .limit(1)
+      )[0];
+      if (!hit) return candidate;
+    }
+    return `${base}-${randomUUID().slice(0, 6)}`;
+  }
 
   /** Browse published products. Kept intentionally simple for the read slice:
    *  no OpenSearch, no facets - a straight Postgres query behind the contract's

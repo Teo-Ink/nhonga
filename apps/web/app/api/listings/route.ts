@@ -13,3 +13,19 @@ export async function GET(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+// Create a listing (real "Publicar"), forwarded to the catalogue API.
+export async function POST(req: Request): Promise<Response> {
+  const body = await req.text();
+  const res = await fetch(`${API_URL}/catalog/products`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
+    body,
+    cache: 'no-store',
+  });
+  const text = await res.text();
+  return new Response(text, {
+    status: res.status,
+    headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
+  });
+}

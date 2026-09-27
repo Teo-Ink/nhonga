@@ -34,7 +34,8 @@ export default function NewListingPage() {
   const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
-  const [notice, setNotice] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [pubError, setPubError] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>('idle');
 
@@ -78,15 +79,47 @@ export default function NewListingPage() {
   const priceValid = price.trim() !== '' && Number.isFinite(priceNum) && priceNum > 0;
   const valid = title.trim() !== '' && category !== '' && priceValid;
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
+    setPubError(false);
     if (!valid) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
       return;
     }
-    // Deliberately does not publish. Nothing is persisted.
-    setNotice(true);
+    setPublishing(true);
+    try {
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          category,
+          description: description.trim(),
+          priceCents: Math.round(priceNum * 100),
+          stock: Number(stock.replace(/\D/g, '')) || 1,
+          photos,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { slug?: string };
+      if (!res.ok || !data.slug) {
+        setPubError(true);
+        return;
+      }
+      // A paid plan boosts the fresh listing (mock payment), like /vender/promover.
+      if (plan !== 'free') {
+        await fetch('/api/promotions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
+        }).catch(() => undefined);
+      }
+      window.location.href = `/produto/${data.slug}`;
+    } catch {
+      setPubError(true);
+    } finally {
+      setPublishing(false);
+    }
   }
 
   const previewPrice = priceValid ? formatMZN(cents(fromMeticais(priceNum))) : null;
@@ -246,8 +279,8 @@ export default function NewListingPage() {
             <span className="field__hint">{t.plan_hint}</span>
           </div>
 
-          <button type="submit" className="btn btn--cta auth__submit">
-            {plan === 'free' ? t.publish_free : t.publish_paid}
+          <button type="submit" className="btn btn--cta auth__submit" disabled={publishing}>
+            {publishing ? t.publishing : plan === 'free' ? t.publish_free : t.publish_paid}
           </button>
 
           {submitted && !valid ? (
@@ -255,9 +288,9 @@ export default function NewListingPage() {
               {t.required}
             </p>
           ) : null}
-          {notice ? (
-            <p className="auth__notice" role="alert">
-              {t.not_wired}
+          {pubError ? (
+            <p className="field__error" role="alert">
+              {t.publish_error}
             </p>
           ) : null}
         </form>
