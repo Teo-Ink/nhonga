@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { cents, formatMZN, fromMeticais } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconBox, IconSparkle } from '../../../components/icons';
+import { PhotoUpload } from '../../../components/PhotoUpload';
 
 // Create listing. Publishing is not wired (no seller auth, no create endpoint),
 // so this is the correct form with a live preview, but "Publish" persists
@@ -31,6 +32,7 @@ export default function NewListingPage() {
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
   const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [notice, setNotice] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
@@ -204,11 +206,19 @@ export default function NewListingPage() {
 
           <div className="field">
             <span className="field__label">{t.f_photos}</span>
-            <button type="button" className="uploadbox" disabled aria-disabled="true">
-              <IconBox />
-              <span>{t.f_photos_add}</span>
-            </button>
-            <span className="field__hint">{t.f_photos_hint}</span>
+            <PhotoUpload
+              photos={photos}
+              onChange={setPhotos}
+              max={6}
+              labels={{
+                add: t.f_photos_add,
+                hint: t.f_photos_hint,
+                cover: t.f_photos_cover,
+                makeCover: t.f_photos_makecover,
+                remove: t.f_photos_remove,
+                count: (n, m) => t.f_photos_count.replace('{n}', String(n)).replace('{max}', String(m)),
+              }}
+            />
           </div>
 
           {/* Listing plan (MercadoLivre-style step; Gumtree-style boosts) */}
@@ -255,7 +265,7 @@ export default function NewListingPage() {
         {/* Live preview */}
         <aside className="newlisting__preview" aria-label={t.preview_title}>
           <h2 className="card__title">{t.preview_title}</h2>
-          {title.trim() === '' && !previewPrice ? (
+          {title.trim() === '' && !previewPrice && photos.length === 0 ? (
             <p className="account__muted">{t.preview_empty}</p>
           ) : (
             <div className="card preview-card">
@@ -263,9 +273,14 @@ export default function NewListingPage() {
                 {plan !== 'free' ? (
                   <span className="preview-card__badge">{t.badge_destaque}</span>
                 ) : null}
-                <span className="preview-card__ph" aria-hidden="true">
-                  <IconBox />
-                </span>
+                {photos[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photos[0]} alt="" className="preview-card__cover" />
+                ) : (
+                  <span className="preview-card__ph" aria-hidden="true">
+                    <IconBox />
+                  </span>
+                )}
               </div>
               <div className="card__body">
                 <span className="card__title">{title || t.f_title_ph}</span>

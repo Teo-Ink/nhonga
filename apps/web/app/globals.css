@@ -1671,6 +1671,70 @@ a.seller:focus-visible {
   cursor: not-allowed;
   opacity: 0.75;
 }
+
+/* ── Multi-photo upload ───────────────────────────────────────────────────── */
+.photoup__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+}
+.photoup__add {
+  min-height: 96px;
+  cursor: pointer;
+}
+.photoup__item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.photoup__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photoup__cover {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.photoup__actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 4px;
+}
+.photoup__act {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.photoup__act--del:hover {
+  background: #c0392b;
+}
+.preview-card__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .newlisting__preview {
   align-self: start;
 }
