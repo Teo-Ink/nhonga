@@ -1,18 +1,19 @@
 import type { Dictionary } from '../../lib/i18n/index';
+import { Slider } from './Slider';
 
-// Fiverr-structured "popular categories" card grid (Nhonga brand). Each card is
-// a category image (the reliable /ph placeholder as a CSS background) with a
-// label, linking to that category. Image-card look, classifieds substance.
-const CATS = [
-  'viaturas',
-  'imoveis',
-  'empregos',
-  'servicos',
-  'eventos',
-  'telemoveis',
-  'moda',
-  'casa',
-] as const;
+// Fiverr-structured "popular categories" slider (Nhonga brand): a horizontal
+// scroll bar of cards, each a green title band + a real, related photo. Images
+// are CC-licensed (Openverse/Flickr), reflecting each category.
+const CATS: { slug: string; img: string }[] = [
+  { slug: 'viaturas', img: 'https://live.staticflickr.com/8711/16687001674_c0659d5e69_b.jpg' },
+  { slug: 'imoveis', img: 'https://live.staticflickr.com/5549/11415902663_24562801da.jpg' },
+  { slug: 'empregos', img: 'https://live.staticflickr.com/3429/5720849489_92959abb9d_b.jpg' },
+  { slug: 'servicos', img: 'https://live.staticflickr.com/1046/840731747_029504ca41_b.jpg' },
+  { slug: 'eventos', img: 'https://live.staticflickr.com/3490/3734360895_9ca52b84a2_b.jpg' },
+  { slug: 'telemoveis', img: 'https://live.staticflickr.com/671/21135682726_f8f6da6372_b.jpg' },
+  { slug: 'moda', img: 'https://live.staticflickr.com/4592/27737163279_5d47b0f79f.jpg' },
+  { slug: 'casa', img: 'https://live.staticflickr.com/4361/35963279133_2463c3c9ba_b.jpg' },
+];
 
 export function PopularCategories({ t }: { t: Dictionary }) {
   return (
@@ -22,22 +23,21 @@ export function PopularCategories({ t }: { t: Dictionary }) {
           {t.home.popular_cats}
         </h2>
       </div>
-      <div className="popcats">
-        {CATS.map((slug) => {
+      <Slider prevLabel={t.home.carousel_prev} nextLabel={t.home.carousel_next}>
+        {CATS.map(({ slug, img }) => {
           const label = (t.categories as Record<string, string>)[slug] ?? slug;
-          const img = `/ph?c=${encodeURIComponent(slug)}&t=${encodeURIComponent(label)}`;
           return (
-            <a className="popcat" key={slug} href={`/categoria/${slug}`}>
+            <a className="popcard" key={slug} href={`/categoria/${slug}`}>
+              <span className="popcard__head">{label}</span>
               <span
-                className="popcat__img"
+                className="popcard__img"
                 aria-hidden="true"
                 style={{ backgroundImage: `url("${img}")` }}
               />
-              <span className="popcat__label">{label}</span>
             </a>
           );
         })}
-      </div>
+      </Slider>
     </section>
   );
 }

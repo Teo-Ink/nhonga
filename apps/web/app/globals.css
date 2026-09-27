@@ -5730,38 +5730,92 @@ a.seller:focus-visible {
   }
 }
 
-.popcats {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--space-3);
+.slider {
+  position: relative;
 }
-.popcat {
-  display: block;
+.slider__track {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 2px 2px var(--space-2);
+  scroll-padding-left: 2px;
+}
+.slider__track::-webkit-scrollbar {
+  display: none;
+}
+.slider__arrow {
+  position: absolute;
+  top: 46%;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.slider__arrow:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.slider__arrow--prev {
+  left: -6px;
+}
+.slider__arrow--next {
+  right: -6px;
+}
+@media (max-width: 640px) {
+  .slider__arrow {
+    display: none;
+  }
+}
+.popcard {
+  flex: 0 0 auto;
+  width: 210px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-md);
   overflow: hidden;
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease;
 }
-.popcat:hover {
+.popcard:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
-.popcat__img {
+.popcard__head {
+  padding: var(--space-3);
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, #0b5138 100%);
+}
+.popcard__img {
   display: block;
-  height: 120px;
+  height: 150px;
   background-color: var(--surface-sunken);
   background-size: cover;
   background-position: center;
 }
-.popcat__label {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  font-weight: 600;
-  font-size: var(--text-sm);
+@media (max-width: 480px) {
+  .popcard {
+    width: 160px;
+  }
+  .popcard__img {
+    height: 120px;
+  }
 }
 
 .howworks__steps {
