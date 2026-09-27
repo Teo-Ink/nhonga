@@ -255,7 +255,7 @@ export const en: Dictionary = {
     electronica: 'Electronics',
     casa: 'Home & Kitchen',
     alimentacao: 'Food',
-    beleza: 'Beauty',
+    beleza: 'Beauty & Health',
     telemoveis: 'Phones',
     viaturas: 'Vehicles',
     imoveis: 'Property',

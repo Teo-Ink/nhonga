@@ -55,7 +55,7 @@ INSERT INTO category (id, slug, name_pt, name_en, level, sort_order) VALUES
   ('c0000000-0000-4000-8000-000000000005', 'telemoveis', 'Telemóveis', 'Phones', 1, 3),
   ('c0000000-0000-4000-8000-000000000003', 'casa', 'Casa e Cozinha', 'Home & Kitchen', 1, 4),
   ('c0000000-0000-4000-8000-000000000004', 'alimentacao', 'Alimentação', 'Food', 1, 5),
-  ('c0000000-0000-4000-8000-000000000006', 'beleza', 'Beleza', 'Beauty', 1, 6);
+  ('c0000000-0000-4000-8000-000000000006', 'beleza', 'Beleza e Saúde', 'Beauty & Health', 1, 6);
 
 -- Products
 INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
@@ -407,6 +407,24 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000231', 'a0000000-0000-4000-8000-000000000231', 'https://live.staticflickr.com/3537/3301171124_850fd70a5a_b.jpg', 1024, 768, 'Perfume', 0),
   ('e0000000-0000-4000-8000-000000000232', 'a0000000-0000-4000-8000-000000000232', 'https://live.staticflickr.com/4178/33638438273_17ae92d3b8_b.jpg', 1024, 768, 'Kit de maquilhagem', 0),
   ('e0000000-0000-4000-8000-000000000233', 'a0000000-0000-4000-8000-000000000233', 'https://live.staticflickr.com/7451/16255328209_14fc13361d_b.jpg', 1024, 768, 'Creme hidratante', 0);
+
+
+-- ── Saúde (health) items folded into the Beleza e Saúde category ──
+INSERT INTO product (id, vendor_id, category_id, slug, title_pt, title_en, description_pt, attributes, status, weight_grams, rating_avg, rating_count, published_at) VALUES
+  ('a0000000-0000-4000-8000-000000000234', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000006', 'tensiometro-digital', 'Tensiómetro digital de braço', 'Digital arm blood-pressure monitor', 'Medidor de tensão arterial digital, de braço, com ecrã grande e memória. Ideal para controlo em casa.', '{"Tipo":"Braço","Ecrã":"Digital"}', 'active', 500, NULL, 0, now() - interval '1 days'),
+  ('a0000000-0000-4000-8000-000000000235', '11111111-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000006', 'termometro-digital', 'Termómetro digital', 'Digital thermometer', 'Termómetro digital de leitura rápida, com sinal sonoro. Para toda a família. Ponta flexível.', '{"Leitura":"Rápida","Uso":"Familiar"}', 'active', 60, NULL, 0, now() - interval '4 days'),
+  ('a0000000-0000-4000-8000-000000000236', '11111111-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000006', 'kit-primeiros-socorros', 'Kit de primeiros socorros', 'First-aid kit', 'Estojo de primeiros socorros completo: ligaduras, pensos, compressas, tesoura e antisséptico. Para casa, carro ou trabalho.', '{"Conteúdo":"Completo","Uso":"Casa/Carro"}', 'active', 900, NULL, 0, now() - interval '8 days');
+
+INSERT INTO product_variant (id, product_id, sku, options, price_cents, compare_at_cents, stock_quantity, is_active) VALUES
+  ('b0000000-0000-4000-8000-000000000334', 'a0000000-0000-4000-8000-000000000234', 'SAU-234', '{}', 350000, NULL, 8, true),
+  ('b0000000-0000-4000-8000-000000000335', 'a0000000-0000-4000-8000-000000000235', 'SAU-235', '{}', 85000, NULL, 25, true),
+  ('b0000000-0000-4000-8000-000000000336', 'a0000000-0000-4000-8000-000000000236', 'SAU-236', '{}', 120000, NULL, 15, true);
+
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000234', 'a0000000-0000-4000-8000-000000000234', 'https://live.staticflickr.com/3722/10668630046_53eca2c5eb_b.jpg', 1024, 768, 'Tensiómetro digital', 0),
+  ('e0000000-0000-4000-8000-000000000235', 'a0000000-0000-4000-8000-000000000235', 'https://live.staticflickr.com/1227/579070390_c69248b25c_b.jpg', 1024, 768, 'Termómetro digital', 0),
+  ('e0000000-0000-4000-8000-000000000236', 'a0000000-0000-4000-8000-000000000236', 'https://live.staticflickr.com/5307/5575095686_b58e0b6f7e_b.jpg', 1024, 768, 'Kit de primeiros socorros', 0);
+
 
 COMMIT;
 

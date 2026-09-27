@@ -258,7 +258,7 @@ export const pt = {
     electronica: 'Eletrónica',
     casa: 'Casa e Cozinha',
     alimentacao: 'Alimentação',
-    beleza: 'Beleza',
+    beleza: 'Beleza e Saúde',
     telemoveis: 'Telemóveis',
     viaturas: 'Viaturas',
     imoveis: 'Imóveis',
