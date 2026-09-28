@@ -182,6 +182,30 @@ export async function getVendorReviews(vendorId: string): Promise<VendorReviewLi
   }
 }
 
+export interface ShopDetail {
+  slug: string;
+  displayName: string;
+  isVerified: boolean;
+  isPro: boolean;
+  ratingAvg: number | null;
+  ratingCount: number;
+  location: string | null;
+  memberSince: string;
+  activeCount: number;
+  soldCount: number;
+  whatsapp: string | null;
+  phone: string | null;
+}
+
+/** Public shop detail (header, trust, contact, stats), or null. */
+export async function getShopDetail(slug: string): Promise<ShopDetail | null> {
+  try {
+    return await get<ShopDetail | null>(`/catalog/shops/${encodeURIComponent(slug)}`);
+  } catch {
+    return null;
+  }
+}
+
 export interface ServedAd {
   id: string;
   imageUrl: string;

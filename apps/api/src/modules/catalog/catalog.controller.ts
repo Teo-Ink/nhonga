@@ -159,6 +159,26 @@ export class CatalogController {
     return this.catalog.archiveListing(id, bearer(authz));
   }
 
+  /** Change a listing's status: active / sold / archived (seller only). */
+  @Patch('products/:id/status')
+  setStatus(
+    @Param('id') id: string,
+    @Body() body: { status?: unknown },
+    @Headers('authorization') authz?: string,
+  ): Promise<{ ok: true; status: string }> {
+    const status = body.status;
+    if (status !== 'active' && status !== 'sold' && status !== 'archived') {
+      throw new BadRequestException({ message: 'status must be active, sold or archived' });
+    }
+    return this.catalog.setListingStatus(id, status, bearer(authz));
+  }
+
+  /** Public shop detail (header, trust, contact, stats). */
+  @Get('shops/:slug')
+  shop(@Param('slug') slug: string): Promise<unknown> {
+    return this.catalog.getShop(slug);
+  }
+
   /** Filterable attributes for a category (drives the per-category filter UI). */
   @Get('categories/:slug/attributes')
   categoryAttributes(

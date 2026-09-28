@@ -6251,3 +6251,53 @@ a.seller:focus-visible {
     justify-content: flex-end;
   }
 }
+
+/* Listing status chip in the seller panel. */
+.mrow__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mstatus {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.mstatus--active {
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+}
+.mstatus--sold {
+  background: #fdf3cf;
+  color: #7a5a00;
+}
+.mstatus--archived {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+.mrow--archived,
+.mrow--sold {
+  opacity: 0.72;
+}
+
+/* Shop header: location/member-since sub-line and contact button group. */
+.store__sub {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.store__cta {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+@media (max-width: 560px) {
+  .store__cta {
+    width: 100%;
+  }
+  .store__cta .btn {
+    flex: 1;
+  }
+}

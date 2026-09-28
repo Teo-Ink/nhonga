@@ -64,6 +64,13 @@
       "when": 1790538507194,
       "tag": "0008_stiff_gargoyle",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790559651034,
+      "tag": "0009_abandoned_starfox",
+      "breakpoints": true
     }
   ]
 }

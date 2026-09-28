@@ -121,7 +121,7 @@ export const product = pgTable(
     index('product_attributes_gin').using('gin', table.attributes),
     check(
       'product_status_check',
-      sql`${table.status} in ('draft','pending_review','active','suspended','archived')`,
+      sql`${table.status} in ('draft','pending_review','active','suspended','archived','sold')`,
     ),
     check('product_weight_check', sql`${table.weightGrams} is null or ${table.weightGrams} > 0`),
   ],

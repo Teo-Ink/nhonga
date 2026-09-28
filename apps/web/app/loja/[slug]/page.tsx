@@ -3,7 +3,12 @@ import { ProductCard } from '../../../components/ProductCard';
 import { SellerReviews } from '../../../components/SellerReviews';
 import { EmptyState, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
 import { IconBox } from '../../../components/icons';
-import { getVendorReviews, listProductsByVendor, type VendorReviewList } from '../../../lib/api';
+import {
+  getShopDetail,
+  getVendorReviews,
+  listProductsByVendor,
+  type VendorReviewList,
+} from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +46,11 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
   let reviews: VendorReviewList = { items: [], summary: { ratingAvg: null, ratingCount: 0 } };
   if (vendor) reviews = await getVendorReviews(vendor.id);
 
+  const shop = await getShopDetail(slug);
+  const memberSince = shop
+    ? new Date(shop.memberSince).toLocaleDateString('pt-PT', { year: 'numeric', month: 'long' })
+    : null;
+
   const name = vendor?.displayName ?? slug;
   const count = items.length;
   const countLabel =
@@ -67,13 +77,36 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
             ) : null}
             <span className="store__count">{countLabel}</span>
           </div>
+          {shop && (shop.location || memberSince) ? (
+            <p className="store__sub">
+              {shop.location ? <span>{shop.location}</span> : null}
+              {shop.location && memberSince ? <span aria-hidden="true"> · </span> : null}
+              {memberSince ? (
+                <span>
+                  {t.seller.member_since} {memberSince}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
         </div>
-        <a
-          className="btn btn--ghost store__contact"
-          href={`/mensagens/novo?loja=${encodeURIComponent(slug)}&nome=${encodeURIComponent(name)}`}
-        >
-          {t.messages.contact_seller}
-        </a>
+        <div className="store__cta">
+          {shop?.whatsapp ? (
+            <a
+              className="btn btn--cta store__contact"
+              href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t.seller.contact_whatsapp}
+            </a>
+          ) : null}
+          <a
+            className="btn btn--ghost store__contact"
+            href={`/mensagens/novo?loja=${encodeURIComponent(slug)}&nome=${encodeURIComponent(name)}`}
+          >
+            {t.messages.contact_seller}
+          </a>
+        </div>
       </header>
 
       <ul className="storestats">
@@ -81,6 +114,12 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           <strong>{count}</strong>
           <span>{t.seller.stat_listings}</span>
         </li>
+        {shop && shop.soldCount > 0 ? (
+          <li className="storestat">
+            <strong>{shop.soldCount}</strong>
+            <span>{t.seller.stat_sold}</span>
+          </li>
+        ) : null}
         <li className="storestat">
           <strong>{ratingAvg !== null ? ratingAvg.toFixed(1) : '—'}</strong>
           <span>{t.seller.stat_rating}</span>

@@ -1,0 +1,2 @@
+ALTER TABLE "product" DROP CONSTRAINT "product_status_check";--> statement-breakpoint
+ALTER TABLE "product" ADD CONSTRAINT "product_status_check" CHECK ("product"."status" in ('draft','pending_review','active','suspended','archived','sold'));

@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import { listingReport } from '../../db/schema/reports.js';
 import {
@@ -182,15 +182,155 @@ export class CatalogService {
     return rows.map((r) => r.vendorId);
   }
 
-  /** The signed-in seller's own listings (active), for the "A minha loja" panel. */
+  /** Public shop detail: header, trust signals, contact and simple stats. */
+  async getShop(slug: string): Promise<{
+    slug: string;
+    displayName: string;
+    isVerified: boolean;
+    isPro: boolean;
+    ratingAvg: number | null;
+    ratingCount: number;
+    location: string | null;
+    memberSince: string;
+    activeCount: number;
+    soldCount: number;
+    whatsapp: string | null;
+    phone: string | null;
+  } | null> {
+    const v = (
+      await this.db
+        .select({
+          id: vendor.id,
+          slug: vendor.slug,
+          name: vendor.displayName,
+          status: vendor.status,
+          proUntil: vendor.proUntil,
+          ratingAvg: vendor.ratingAvg,
+          ratingCount: vendor.ratingCount,
+          createdAt: vendor.createdAt,
+          whatsapp: vendor.whatsapp,
+          contactPhone: vendor.contactPhone,
+          showWhatsapp: vendor.showWhatsapp,
+          showPhone: vendor.showPhone,
+          districtName: district.name,
+        })
+        .from(vendor)
+        .leftJoin(district, eq(vendor.districtId, district.id))
+        .where(eq(vendor.slug, slug))
+        .limit(1)
+    )[0];
+    if (!v) return null;
+
+    const counts = await this.db
+      .select({ status: product.status, n: sql<number>`count(*)::int` })
+      .from(product)
+      .where(eq(product.vendorId, v.id))
+      .groupBy(product.status);
+    const activeCount = counts.find((c) => c.status === 'active')?.n ?? 0;
+    const soldCount = counts.find((c) => c.status === 'sold')?.n ?? 0;
+    const contact = sellerContact({
+      whatsapp: v.whatsapp,
+      contactPhone: v.contactPhone,
+      showWhatsapp: v.showWhatsapp,
+      showPhone: v.showPhone,
+    });
+
+    return {
+      slug: v.slug,
+      displayName: v.name,
+      isVerified: v.status === 'active',
+      isPro: v.proUntil !== null && v.proUntil.getTime() > Date.now(),
+      ratingAvg: v.ratingAvg === null ? null : Number(v.ratingAvg),
+      ratingCount: v.ratingCount,
+      location: v.districtName,
+      memberSince: v.createdAt.toISOString(),
+      activeCount,
+      soldCount,
+      whatsapp: contact.whatsapp,
+      phone: contact.phone,
+    };
+  }
+
+  /** The signed-in seller's own listings — all statuses (active/sold/archived),
+   *  for the "A minha loja" panel, so they can manage each one. */
   async mineProducts(
     sessionToken: string | null,
     lang: Lang,
-  ): Promise<{ shop: { slug: string; displayName: string } | null; items: ProductListItem[] }> {
+  ): Promise<{
+    shop: { slug: string; displayName: string } | null;
+    items: {
+      id: string;
+      slug: string;
+      title: string;
+      priceCents: number;
+      imageUrl: string | null;
+      status: string;
+      inStock: boolean;
+    }[];
+  }> {
     const shop = await this.myShop(sessionToken);
-    if (!shop) return { shop: null, items: [] };
-    const res = await this.listProducts(lang, { vendorSlug: shop.slug, limit: 100 });
-    return { shop, items: [...res.items] };
+    const vids = await this.userVendorIds(sessionToken);
+    if (!shop || vids.length === 0) return { shop, items: [] };
+
+    const rows = await this.db
+      .select({
+        id: product.id,
+        slug: product.slug,
+        titlePt: product.titlePt,
+        titleEn: product.titleEn,
+        status: product.status,
+      })
+      .from(product)
+      .where(
+        and(
+          inArray(product.vendorId, vids),
+          inArray(product.status, ['active', 'sold', 'archived']),
+        ),
+      )
+      .orderBy(desc(product.updatedAt));
+
+    const ids = rows.map((r) => r.id);
+    const variants = await this.variantsFor(ids);
+    const images = await this.primaryImageFor(ids);
+    const items = rows.map((r) => {
+      const active = (variants.get(r.id) ?? []).filter((v) => v.isActive);
+      const head = headlineVariant(active);
+      return {
+        id: r.id,
+        slug: r.slug,
+        title: pickText(r.titlePt, r.titleEn, lang),
+        priceCents: head?.priceCents ?? 0,
+        imageUrl: images.get(r.id)?.url ?? null,
+        status: r.status,
+        inStock: active.some((v) => v.stockQuantity > 0),
+      };
+    });
+    return { shop, items };
+  }
+
+  /** Change one of the seller's listings between active / sold / archived. */
+  async setListingStatus(
+    id: string,
+    status: 'active' | 'sold' | 'archived',
+    sessionToken: string | null,
+  ): Promise<{ ok: true; status: string }> {
+    const vendorIds = await this.userVendorIds(sessionToken);
+    const prod = (
+      await this.db
+        .select({ vendorId: product.vendorId })
+        .from(product)
+        .where(eq(product.id, id))
+        .limit(1)
+    )[0];
+    if (!prod) throw new NotFoundException({ message: 'No such listing' });
+    if (!vendorIds.includes(prod.vendorId)) {
+      throw new ForbiddenException({ message: 'Not your listing' });
+    }
+    await this.db
+      .update(product)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(product.id, id));
+    return { ok: true, status };
   }
 
   /** Edit one of the seller's own listings. */
