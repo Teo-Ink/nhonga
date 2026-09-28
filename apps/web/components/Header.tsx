@@ -3,6 +3,7 @@ import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
 import { AccountLink } from './auth/AccountLink';
 import { SellButton } from './auth/SellButton';
+import { NotificationBell } from './notifications/NotificationBell';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
@@ -45,6 +46,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
             <IconChat width={22} height={22} />
             <span className="wlact__label">{t.common.messages}</span>
           </a>
+          <NotificationBell label={t.common.notifications} />
           <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
           <SellButton label={t.common.sell} />
         </div>

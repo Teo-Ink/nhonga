@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../lib/i18n/pt';
 import { useSession } from '../auth/SessionProvider';
-import { IconBell } from '../icons';
 
 interface MineItem {
   id: string;
@@ -41,7 +40,6 @@ export function MyShopPanel() {
   const [removing, setRemoving] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'archived'>('all');
-  const [unread, setUnread] = useState(0);
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -57,10 +55,6 @@ export function MyShopPanel() {
       return;
     }
     void load().finally(() => setLoading(false));
-    void fetch('/api/notifications', { cache: 'no-store' })
-      .then((r) => r.json())
-      .then((d: { unread?: number }) => setUnread(d.unread ?? 0))
-      .catch(() => setUnread(0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, sessionLoading]);
 
@@ -135,15 +129,9 @@ export function MyShopPanel() {
           <h1 className="section__title">{t.my_listings}</h1>
           {data?.shop ? <p className="dash__store">{data.shop.displayName}</p> : null}
         </div>
-        <div className="myshop__headactions">
-          <a className="notifbell" href="/conta/notificacoes" aria-label={t.notif_bell}>
-            <IconBell width={20} height={20} />
-            {unread > 0 ? <span className="notifbell__badge">{unread}</span> : null}
-          </a>
-          <a className="btn btn--cta" href="/vender/novo">
-            {t.m_new}
-          </a>
-        </div>
+        <a className="btn btn--cta" href="/vender/novo">
+          {t.m_new}
+        </a>
       </div>
 
       <div className="myshop__stats">

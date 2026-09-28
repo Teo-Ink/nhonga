@@ -1,4 +1,4 @@
-import { Controller, Get, Headers, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Post, Put } from '@nestjs/common';
 import { NotificationsService, type NotificationDto } from './notifications.service.js';
 
 function bearer(authz: string | undefined): string | null {
@@ -21,5 +21,23 @@ export class NotificationsController {
   @HttpCode(200)
   markRead(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
     return this.notifications.markAllRead(bearer(authz));
+  }
+
+  @Get('prefs')
+  getPrefs(
+    @Headers('authorization') authz?: string,
+  ): Promise<{ contact: boolean; review: boolean }> {
+    return this.notifications.getPrefs(bearer(authz));
+  }
+
+  @Put('prefs')
+  setPrefs(
+    @Body() body: { contact?: unknown; review?: unknown },
+    @Headers('authorization') authz?: string,
+  ): Promise<{ contact: boolean; review: boolean }> {
+    return this.notifications.setPrefs(bearer(authz), {
+      contact: body.contact !== false,
+      review: body.review !== false,
+    });
   }
 }

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
-import { notification } from '../../db/schema/notifications.js';
+import { notification, notificationPref } from '../../db/schema/notifications.js';
 import { vendorUser } from '../../db/schema/vendors.js';
 import { AuthService } from '../auth/auth.service.js';
 
@@ -35,10 +35,27 @@ export class NotificationsService {
         .from(vendorUser)
         .where(eq(vendorUser.vendorId, vendorId));
       if (owners.length === 0) return;
+
+      // Respect each recipient's preferences (default: everything on).
+      const ownerIds = owners.map((o) => o.userId);
+      const prefs = await this.db
+        .select()
+        .from(notificationPref)
+        .where(inArray(notificationPref.userId, ownerIds));
+      const prefMap = new Map(prefs.map((p) => [p.userId, p]));
+      const recipients = ownerIds.filter((id) => {
+        const p = prefMap.get(id);
+        if (!p) return true;
+        if (n.type === 'review') return p.reviewEnabled;
+        if (n.type === 'contact') return p.contactEnabled;
+        return true;
+      });
+      if (recipients.length === 0) return;
+
       await this.db.insert(notification).values(
-        owners.map((o) => ({
+        recipients.map((userId) => ({
           id: randomUUID(),
-          userId: o.userId,
+          userId,
           type: n.type,
           title: n.title,
           body: n.body ?? null,
@@ -78,6 +95,51 @@ export class NotificationsService {
       })),
       unread: rows.filter((r) => !r.isRead).length,
     };
+  }
+
+  async getPrefs(sessionToken: string | null): Promise<{ contact: boolean; review: boolean }> {
+    const on = { contact: true, review: true };
+    if (!sessionToken) return on;
+    let userId: string;
+    try {
+      userId = (await this.auth.me(sessionToken)).id;
+    } catch {
+      return on;
+    }
+    const p = (
+      await this.db
+        .select()
+        .from(notificationPref)
+        .where(eq(notificationPref.userId, userId))
+        .limit(1)
+    )[0];
+    if (!p) return on;
+    return { contact: p.contactEnabled, review: p.reviewEnabled };
+  }
+
+  async setPrefs(
+    sessionToken: string | null,
+    prefs: { contact: boolean; review: boolean },
+  ): Promise<{ contact: boolean; review: boolean }> {
+    if (!sessionToken) return prefs;
+    const userId = (await this.auth.me(sessionToken)).id;
+    await this.db
+      .insert(notificationPref)
+      .values({
+        userId,
+        contactEnabled: prefs.contact,
+        reviewEnabled: prefs.review,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: notificationPref.userId,
+        set: {
+          contactEnabled: prefs.contact,
+          reviewEnabled: prefs.review,
+          updatedAt: new Date(),
+        },
+      });
+    return prefs;
   }
 
   async markAllRead(sessionToken: string | null): Promise<{ ok: true }> {

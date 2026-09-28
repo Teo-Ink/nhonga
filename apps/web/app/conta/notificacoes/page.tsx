@@ -29,6 +29,11 @@ export default function NotificationsPage() {
   const t = pt.sell;
   const [items, setItems] = useState<Notif[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [prefs, setPrefs] = useState<{ contact: boolean; review: boolean }>({
+    contact: true,
+    review: true,
+  });
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     void fetch('/api/notifications', { cache: 'no-store' })
@@ -39,7 +44,28 @@ export default function NotificationsPage() {
         setLoaded(true);
         void fetch('/api/notifications/read', { method: 'POST' }).catch(() => undefined);
       });
+    void fetch('/api/notifications/prefs', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((p: { contact?: boolean; review?: boolean }) =>
+        setPrefs({ contact: p.contact !== false, review: p.review !== false }),
+      )
+      .catch(() => undefined);
   }, []);
+
+  function togglePref(key: 'contact' | 'review') {
+    const next = { ...prefs, [key]: !prefs[key] };
+    setPrefs(next);
+    void fetch('/api/notifications/prefs', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(next),
+    })
+      .then(() => {
+        setSavedFlash(true);
+        window.setTimeout(() => setSavedFlash(false), 1800);
+      })
+      .catch(() => undefined);
+  }
 
   return (
     <section className="notifpage">
@@ -47,6 +73,30 @@ export default function NotificationsPage() {
         <IconChevronLeft /> {t.notif_back}
       </a>
       <h1 className="section__title">{t.notif_title}</h1>
+
+      <div className="card notifprefs">
+        <strong className="card__title">{t.notif_prefs}</strong>
+        {(['contact', 'review'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            className="notifprefs__row"
+            role="switch"
+            aria-checked={prefs[key]}
+            onClick={() => togglePref(key)}
+          >
+            <span>{key === 'contact' ? t.notif_pref_contact : t.notif_pref_review}</span>
+            <span className="datasaver__track" aria-hidden="true">
+              <span className="datasaver__thumb" />
+            </span>
+          </button>
+        ))}
+        {savedFlash ? (
+          <span className="notifprefs__saved" role="status">
+            {t.notif_pref_saved}
+          </span>
+        ) : null}
+      </div>
 
       {loaded && items.length === 0 ? (
         <p className="account__muted">{t.notif_empty}</p>

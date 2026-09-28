@@ -9,6 +9,17 @@ import { appUser } from './identity.js';
 
 const now = sql`now()`;
 
+/** Per-user notification preferences (which types to receive). Absence of a row
+ *  means everything is on. */
+export const notificationPref = pgTable('notification_pref', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => appUser.id, { onDelete: 'cascade' }),
+  contactEnabled: boolean('contact_enabled').notNull().default(true),
+  reviewEnabled: boolean('review_enabled').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
+});
+
 export const notification = pgTable(
   'notification',
   {
