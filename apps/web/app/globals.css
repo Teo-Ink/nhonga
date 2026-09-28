@@ -6307,3 +6307,147 @@ a.seller:focus-visible {
   font-size: var(--text-xs);
   color: var(--text-muted);
 }
+
+/* Seller panel status filter tabs. */
+.myshop__filters {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.mfilter {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.mfilter.is-on {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+.mfilter__n {
+  opacity: 0.7;
+  font-weight: 700;
+}
+.myshop__none {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+/* Owner control bar on a listing's own detail page. */
+.ownerbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+}
+.ownerbar__title {
+  color: var(--color-primary-700);
+  font-size: var(--text-sm);
+}
+.ownerbar__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Notifications: bell + list. */
+.myshop__headactions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.notifbell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface);
+}
+.notifbell__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.notiflist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.notif {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.notif.is-unread {
+  border-color: var(--brand);
+  background: var(--color-primary-50);
+}
+.notif__link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  color: inherit;
+  text-decoration: none;
+}
+.notif__icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  color: var(--brand);
+}
+.notif__icon--review {
+  color: #7a5a00;
+  background: #fdf3cf;
+}
+.notif__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.notif__body {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.notif__time {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.notifpage {
+  max-width: 640px;
+}

@@ -8,6 +8,7 @@ import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../
 import { getDictionary } from '../../../lib/i18n/index';
 import { ContactSeller } from '../../../components/ContactSeller';
 import { ReportListing } from '../../../components/ReportListing';
+import { OwnerControls } from '../../../components/vender/OwnerControls';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,6 +130,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
 
         <div className="pdp__body">
+          <OwnerControls productId={product.id} slug={slug} />
           <h1 className="pdp__title">{product.title}</h1>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>

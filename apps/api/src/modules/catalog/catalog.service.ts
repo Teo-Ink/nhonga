@@ -20,6 +20,7 @@ import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { district } from '../../db/schema/identity.js';
 import { MediaService } from '../media/media.service.js';
 import { AuthService, type AuthUser } from '../auth/auth.service.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 import type { Db } from '../../db/types.js';
 import {
   buildOptions,
@@ -58,6 +59,7 @@ export class CatalogService {
     @Inject(DB) private readonly db: Db,
     private readonly media: MediaService,
     private readonly auth: AuthService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
@@ -914,6 +916,25 @@ export class CatalogService {
           ? { shareCount: sql`${product.shareCount} + 1` }
           : { viewCount: sql`${product.viewCount} + 1` };
     await this.db.update(product).set(set).where(where);
+
+    // A contact is worth telling the seller about.
+    if (event === 'contact') {
+      const p = (
+        await this.db
+          .select({ vendorId: product.vendorId, slug: product.slug, title: product.titlePt })
+          .from(product)
+          .where(where)
+          .limit(1)
+      )[0];
+      if (p) {
+        await this.notifications.notifyVendorOwners(p.vendorId, {
+          type: 'contact',
+          title: 'Novo contacto',
+          body: p.title,
+          href: `/produto/${p.slug}`,
+        });
+      }
+    }
   }
 
   private async variantsFor(productIds: string[]): Promise<Map<string, VariantRow[]>> {

@@ -71,6 +71,13 @@
       "when": 1790559651034,
       "tag": "0009_abandoned_starfox",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790589251144,
+      "tag": "0010_slippery_robin_chapel",
+      "breakpoints": true
     }
   ]
 }

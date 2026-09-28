@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../lib/i18n/pt';
 import { useSession } from '../auth/SessionProvider';
+import { IconBell } from '../icons';
 
 interface MineItem {
   id: string;
@@ -39,6 +40,8 @@ export function MyShopPanel() {
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'archived'>('all');
+  const [unread, setUnread] = useState(0);
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -54,6 +57,10 @@ export function MyShopPanel() {
       return;
     }
     void load().finally(() => setLoading(false));
+    void fetch('/api/notifications', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d: { unread?: number }) => setUnread(d.unread ?? 0))
+      .catch(() => setUnread(0));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, sessionLoading]);
 
@@ -102,8 +109,19 @@ export function MyShopPanel() {
     );
   }
 
-  const items = data?.items ?? [];
+  const allItems = data?.items ?? [];
+  const items = filter === 'all' ? allItems : allItems.filter((i) => i.status === filter);
   const stats = data?.stats;
+  const filters: { key: typeof filter; label: string; n: number }[] = [
+    { key: 'all', label: t.m_filter_all, n: allItems.length },
+    { key: 'active', label: t.st_active, n: allItems.filter((i) => i.status === 'active').length },
+    { key: 'sold', label: t.st_sold, n: allItems.filter((i) => i.status === 'sold').length },
+    {
+      key: 'archived',
+      label: t.st_archived,
+      n: allItems.filter((i) => i.status === 'archived').length,
+    },
+  ];
   const statusLabel: Record<string, string> = {
     active: t.st_active,
     sold: t.st_sold,
@@ -117,9 +135,15 @@ export function MyShopPanel() {
           <h1 className="section__title">{t.my_listings}</h1>
           {data?.shop ? <p className="dash__store">{data.shop.displayName}</p> : null}
         </div>
-        <a className="btn btn--cta" href="/vender/novo">
-          {t.m_new}
-        </a>
+        <div className="myshop__headactions">
+          <a className="notifbell" href="/conta/notificacoes" aria-label={t.notif_bell}>
+            <IconBell width={20} height={20} />
+            {unread > 0 ? <span className="notifbell__badge">{unread}</span> : null}
+          </a>
+          <a className="btn btn--cta" href="/vender/novo">
+            {t.m_new}
+          </a>
+        </div>
       </div>
 
       <div className="myshop__stats">
@@ -147,7 +171,7 @@ export function MyShopPanel() {
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {allItems.length === 0 ? (
         <div className="card myshop__empty">
           <p>{t.m_empty}</p>
           <a className="btn btn--cta" href="/vender/novo">
@@ -155,7 +179,25 @@ export function MyShopPanel() {
           </a>
         </div>
       ) : (
-        <ul className="myshop__list">
+        <>
+          <div className="myshop__filters" role="tablist">
+            {filters.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                role="tab"
+                aria-selected={filter === f.key}
+                className={`mfilter ${filter === f.key ? 'is-on' : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label} <span className="mfilter__n">{f.n}</span>
+              </button>
+            ))}
+          </div>
+          {items.length === 0 ? (
+            <p className="account__muted myshop__none">—</p>
+          ) : (
+            <ul className="myshop__list">
           {items.map((p) => {
             const img = p.imageUrl ?? `/ph?t=${encodeURIComponent(p.title)}`;
             const busy = removing === p.id || updating === p.id;
@@ -233,7 +275,9 @@ export function MyShopPanel() {
               </li>
             );
           })}
-        </ul>
+            </ul>
+          )}
+        </>
       )}
     </section>
   );

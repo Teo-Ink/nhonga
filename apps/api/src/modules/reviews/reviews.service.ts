@@ -6,6 +6,7 @@ import type { Db } from '../../db/types.js';
 import { review } from '../../db/schema/reviews.js';
 import { vendor } from '../../db/schema/vendors.js';
 import { product } from '../../db/schema/catalog.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 export class ReviewError extends Error {
   constructor(
@@ -41,7 +42,10 @@ export interface CreateReviewInput {
 
 @Injectable()
 export class ReviewsService {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /** Published reviews for a vendor, newest first, with a rating summary. */
   async list(vendorId: string): Promise<ReviewListDto> {
@@ -113,6 +117,16 @@ export class ReviewsService {
       });
 
     await this.refreshVendorRating(vendorId);
+
+    const vs = (
+      await this.db.select({ slug: vendor.slug }).from(vendor).where(eq(vendor.id, vendorId)).limit(1)
+    )[0];
+    await this.notifications.notifyVendorOwners(vendorId, {
+      type: 'review',
+      title: 'Nova avaliação',
+      body: `${rating}★${comment ? ` — ${comment.slice(0, 60)}` : ''}`,
+      ...(vs ? { href: `/loja/${vs.slug}` } : {}),
+    });
 
     const created = await this.db
       .select({
