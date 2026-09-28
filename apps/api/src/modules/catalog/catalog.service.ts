@@ -1,5 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { and, asc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import { listingReport } from '../../db/schema/reports.js';
@@ -158,6 +164,153 @@ export class CatalogService {
     }
 
     return { id: productId, slug };
+  }
+
+  /** The vendor ids the signed-in user owns/manages (for ownership checks). */
+  private async userVendorIds(sessionToken: string | null): Promise<string[]> {
+    if (!sessionToken) return [];
+    let user: AuthUser;
+    try {
+      user = await this.auth.me(sessionToken);
+    } catch {
+      return [];
+    }
+    const rows = await this.db
+      .select({ vendorId: vendorUser.vendorId })
+      .from(vendorUser)
+      .where(eq(vendorUser.userId, user.id));
+    return rows.map((r) => r.vendorId);
+  }
+
+  /** The signed-in seller's own listings (active), for the "A minha loja" panel. */
+  async mineProducts(
+    sessionToken: string | null,
+    lang: Lang,
+  ): Promise<{ shop: { slug: string; displayName: string } | null; items: ProductListItem[] }> {
+    const shop = await this.myShop(sessionToken);
+    if (!shop) return { shop: null, items: [] };
+    const res = await this.listProducts(lang, { vendorSlug: shop.slug, limit: 100 });
+    return { shop, items: [...res.items] };
+  }
+
+  /** Edit one of the seller's own listings. */
+  async updateListing(
+    id: string,
+    input: {
+      title?: string;
+      categorySlug?: string;
+      description?: string;
+      priceCents?: number;
+      stock?: number;
+      photos?: string[];
+    },
+    sessionToken: string | null,
+  ): Promise<{ slug: string }> {
+    const vendorIds = await this.userVendorIds(sessionToken);
+    const prod = (
+      await this.db
+        .select({ id: product.id, slug: product.slug, vendorId: product.vendorId })
+        .from(product)
+        .where(eq(product.id, id))
+        .limit(1)
+    )[0];
+    if (!prod) throw new NotFoundException({ message: 'No such listing' });
+    if (!vendorIds.includes(prod.vendorId)) {
+      throw new ForbiddenException({ message: 'Not your listing' });
+    }
+
+    const set: Record<string, unknown> = { updatedAt: new Date() };
+    if (input.title !== undefined && input.title.trim().length >= 3) {
+      set['titlePt'] = input.title.trim().slice(0, 140);
+    }
+    if (input.description !== undefined) set['descriptionPt'] = input.description.slice(0, 4000);
+    if (input.categorySlug) {
+      const cat = (
+        await this.db
+          .select({ id: category.id })
+          .from(category)
+          .where(eq(category.slug, input.categorySlug))
+          .limit(1)
+      )[0];
+      if (cat) set['categoryId'] = cat.id;
+    }
+    await this.db.update(product).set(set).where(eq(product.id, id));
+
+    if (
+      (input.priceCents !== undefined && Number.isFinite(input.priceCents)) ||
+      input.stock !== undefined
+    ) {
+      const vset: Record<string, unknown> = {};
+      if (input.priceCents !== undefined && Number.isFinite(input.priceCents)) {
+        vset['priceCents'] = Math.max(0, Math.trunc(input.priceCents));
+      }
+      if (input.stock !== undefined && Number.isFinite(input.stock)) {
+        vset['stockQuantity'] = Math.max(0, Math.trunc(input.stock));
+      }
+      if (Object.keys(vset).length > 0) {
+        await this.db.update(productVariant).set(vset).where(eq(productVariant.productId, id));
+      }
+    }
+
+    // Full photo replacement: existing URLs are kept as-is; new data URLs are
+    // stored as media. An empty list falls back to a generated placeholder.
+    if (input.photos) {
+      await this.db.delete(productImage).where(eq(productImage.productId, id));
+      let sort = 0;
+      for (const p of input.photos.slice(0, 6)) {
+        let s3Key = p;
+        if (p.startsWith('data:')) {
+          try {
+            s3Key = `/api/media/${await this.media.storeDataUrl(p)}`;
+          } catch {
+            continue;
+          }
+        }
+        await this.db.insert(productImage).values({
+          id: randomUUID(),
+          productId: id,
+          s3Key,
+          width: 1024,
+          height: 768,
+          altText: (input.title ?? '').slice(0, 140) || null,
+          sortOrder: sort++,
+        });
+      }
+      if (sort === 0) {
+        await this.db.insert(productImage).values({
+          id: randomUUID(),
+          productId: id,
+          s3Key: `/ph?t=${encodeURIComponent(input.title ?? prod.slug)}`,
+          width: 640,
+          height: 480,
+          altText: null,
+          sortOrder: 0,
+        });
+      }
+    }
+
+    return { slug: prod.slug };
+  }
+
+  /** Remove (archive) one of the seller's own listings. */
+  async archiveListing(id: string, sessionToken: string | null): Promise<{ ok: true }> {
+    const vendorIds = await this.userVendorIds(sessionToken);
+    const prod = (
+      await this.db
+        .select({ vendorId: product.vendorId })
+        .from(product)
+        .where(eq(product.id, id))
+        .limit(1)
+    )[0];
+    if (!prod) throw new NotFoundException({ message: 'No such listing' });
+    if (!vendorIds.includes(prod.vendorId)) {
+      throw new ForbiddenException({ message: 'Not your listing' });
+    }
+    await this.db
+      .update(product)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(eq(product.id, id));
+    return { ok: true };
   }
 
   /** The signed-in seller's existing shop (name + slug), or null if they have

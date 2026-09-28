@@ -2,10 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
   Param,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
@@ -103,8 +105,58 @@ export class CatalogController {
   myShop(
     @Headers('authorization') authz?: string,
   ): Promise<{ slug: string; displayName: string } | null> {
-    const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
-    return this.catalog.myShop(token);
+    return this.catalog.myShop(bearer(authz));
+  }
+
+  /** The signed-in seller's own listings, for the "A minha loja" panel. */
+  @Get('mine/products')
+  mineProducts(
+    @Headers('accept-language') acceptLanguage?: string,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ shop: { slug: string; displayName: string } | null; items: unknown[] }> {
+    return this.catalog.mineProducts(bearer(authz), langOf(acceptLanguage));
+  }
+
+  /** Edit one of the seller's own listings. */
+  @Patch('products/:id')
+  update(
+    @Param('id') id: string,
+    @Body() body: CreateListingBody,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ slug: string }> {
+    const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+    const numOrUndef = (v: unknown): number | undefined =>
+      v === undefined || v === null || v === ''
+        ? undefined
+        : Number.isFinite(Number(v))
+          ? Number(v)
+          : undefined;
+    const photos = Array.isArray(body.photos)
+      ? body.photos.filter((p): p is string => typeof p === 'string')
+      : undefined;
+    return this.catalog.updateListing(
+      id,
+      {
+        ...(str(body.title) !== undefined ? { title: str(body.title)! } : {}),
+        ...(str(body.category) ? { categorySlug: str(body.category)! } : {}),
+        ...(str(body.description) !== undefined ? { description: str(body.description)! } : {}),
+        ...(numOrUndef(body.priceCents) !== undefined
+          ? { priceCents: numOrUndef(body.priceCents)! }
+          : {}),
+        ...(numOrUndef(body.stock) !== undefined ? { stock: numOrUndef(body.stock)! } : {}),
+        ...(photos ? { photos } : {}),
+      },
+      bearer(authz),
+    );
+  }
+
+  /** Remove (archive) one of the seller's own listings. */
+  @Delete('products/:id')
+  remove(
+    @Param('id') id: string,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ ok: true }> {
+    return this.catalog.archiveListing(id, bearer(authz));
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */
@@ -178,6 +230,10 @@ function parseAttributes(raw: string | undefined): Record<string, AttributeFilte
     }
   }
   return Object.keys(out).length > 0 ? out : undefined;
+}
+
+function bearer(authz: string | undefined): string | null {
+  return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
 }
 
 function intOrUndef(v: string | undefined): number | undefined {

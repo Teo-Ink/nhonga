@@ -6168,3 +6168,86 @@ a.seller:focus-visible {
 .newlisting__as strong {
   color: var(--text);
 }
+
+/* ── A minha loja (seller panel) ──────────────────────────────────────────── */
+.btn--sm {
+  padding: 6px 12px;
+  font-size: var(--text-sm);
+  width: auto;
+}
+.myshop__stats {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+.myshop__empty {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-3);
+}
+.myshop__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.mrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.mrow__thumb {
+  width: 64px;
+  height: 64px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background-size: cover;
+  background-position: center;
+  background-color: var(--surface-sunken);
+}
+.mrow__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mrow__title {
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mrow__price {
+  color: var(--brand);
+  font-weight: 700;
+}
+.mrow__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex: none;
+}
+.mrow__del:hover {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+@media (max-width: 560px) {
+  .mrow {
+    flex-wrap: wrap;
+  }
+  .mrow__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
