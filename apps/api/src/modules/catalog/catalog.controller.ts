@@ -113,7 +113,7 @@ export class CatalogController {
   mineProducts(
     @Headers('accept-language') acceptLanguage?: string,
     @Headers('authorization') authz?: string,
-  ): Promise<{ shop: { slug: string; displayName: string } | null; items: unknown[] }> {
+  ): Promise<unknown> {
     return this.catalog.mineProducts(bearer(authz), langOf(acceptLanguage));
   }
 

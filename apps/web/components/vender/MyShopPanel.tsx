@@ -12,9 +12,20 @@ interface MineItem {
   imageUrl: string | null;
   status: 'active' | 'sold' | 'archived' | string;
   inStock: boolean;
+  views: number;
+  contacts: number;
+}
+interface MineStats {
+  active: number;
+  sold: number;
+  views: number;
+  contacts: number;
+  ratingAvg: number | null;
+  ratingCount: number;
 }
 interface MineResponse {
   shop: { slug: string; displayName: string } | null;
+  stats: MineStats;
   items: MineItem[];
 }
 
@@ -27,6 +38,7 @@ export function MyShopPanel() {
   const [data, setData] = useState<MineResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -59,7 +71,7 @@ export function MyShopPanel() {
   }
 
   async function setStatus(id: string, status: 'active' | 'sold') {
-    setRemoving(id);
+    setUpdating(id);
     setData((d) =>
       d ? { ...d, items: d.items.map((i) => (i.id === id ? { ...i, status } : i)) } : d,
     );
@@ -71,7 +83,7 @@ export function MyShopPanel() {
       });
     } finally {
       await load();
-      setRemoving(null);
+      setUpdating(null);
     }
   }
 
@@ -91,8 +103,7 @@ export function MyShopPanel() {
   }
 
   const items = data?.items ?? [];
-  const activeCount = items.filter((i) => i.status === 'active').length;
-  const soldCount = items.filter((i) => i.status === 'sold').length;
+  const stats = data?.stats;
   const statusLabel: Record<string, string> = {
     active: t.st_active,
     sold: t.st_sold,
@@ -113,12 +124,26 @@ export function MyShopPanel() {
 
       <div className="myshop__stats">
         <div className="dash__stat">
-          <strong>{activeCount}</strong>
+          <strong>{stats?.active ?? 0}</strong>
           <span>{t.m_stat_active}</span>
         </div>
         <div className="dash__stat">
-          <strong>{soldCount}</strong>
+          <strong>{stats?.sold ?? 0}</strong>
           <span>{t.st_sold}</span>
+        </div>
+        <div className="dash__stat">
+          <strong>{stats?.views ?? 0}</strong>
+          <span>{t.m_stat_views}</span>
+        </div>
+        <div className="dash__stat">
+          <strong>{stats?.contacts ?? 0}</strong>
+          <span>{t.m_stat_contacts}</span>
+        </div>
+        <div className="dash__stat">
+          <strong>
+            {stats && stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'}
+          </strong>
+          <span>{t.m_stat_rating}</span>
         </div>
       </div>
 
@@ -133,7 +158,8 @@ export function MyShopPanel() {
         <ul className="myshop__list">
           {items.map((p) => {
             const img = p.imageUrl ?? `/ph?t=${encodeURIComponent(p.title)}`;
-            const busy = removing === p.id;
+            const busy = removing === p.id || updating === p.id;
+            const removeLabel = removing === p.id ? t.m_removing : t.m_remove;
             return (
               <li className={`mrow mrow--${p.status}`} key={p.id}>
                 <span
@@ -150,6 +176,9 @@ export function MyShopPanel() {
                     <span className={`mstatus mstatus--${p.status}`}>
                       {statusLabel[p.status] ?? p.status}
                     </span>
+                  </span>
+                  <span className="mrow__counts">
+                    {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}
                   </span>
                 </div>
                 <div className="mrow__actions">
@@ -175,7 +204,7 @@ export function MyShopPanel() {
                         onClick={() => remove(p.id)}
                         disabled={busy}
                       >
-                        {busy ? t.m_removing : t.m_remove}
+                        {removeLabel}
                       </button>
                     </>
                   ) : (
@@ -195,7 +224,7 @@ export function MyShopPanel() {
                           onClick={() => remove(p.id)}
                           disabled={busy}
                         >
-                          {busy ? t.m_removing : t.m_remove}
+                          {removeLabel}
                         </button>
                       ) : null}
                     </>

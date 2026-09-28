@@ -258,6 +258,14 @@ export class CatalogService {
     lang: Lang,
   ): Promise<{
     shop: { slug: string; displayName: string } | null;
+    stats: {
+      active: number;
+      sold: number;
+      views: number;
+      contacts: number;
+      ratingAvg: number | null;
+      ratingCount: number;
+    };
     items: {
       id: string;
       slug: string;
@@ -266,11 +274,21 @@ export class CatalogService {
       imageUrl: string | null;
       status: string;
       inStock: boolean;
+      views: number;
+      contacts: number;
     }[];
   }> {
+    const empty = {
+      active: 0,
+      sold: 0,
+      views: 0,
+      contacts: 0,
+      ratingAvg: null as number | null,
+      ratingCount: 0,
+    };
     const shop = await this.myShop(sessionToken);
     const vids = await this.userVendorIds(sessionToken);
-    if (!shop || vids.length === 0) return { shop, items: [] };
+    if (!shop || vids.length === 0) return { shop, stats: empty, items: [] };
 
     const rows = await this.db
       .select({
@@ -279,6 +297,8 @@ export class CatalogService {
         titlePt: product.titlePt,
         titleEn: product.titleEn,
         status: product.status,
+        views: product.viewCount,
+        contacts: product.contactCount,
       })
       .from(product)
       .where(
@@ -303,9 +323,27 @@ export class CatalogService {
         imageUrl: images.get(r.id)?.url ?? null,
         status: r.status,
         inStock: active.some((v) => v.stockQuantity > 0),
+        views: r.views,
+        contacts: r.contacts,
       };
     });
-    return { shop, items };
+
+    const rating = (
+      await this.db
+        .select({ avg: vendor.ratingAvg, count: vendor.ratingCount })
+        .from(vendor)
+        .where(eq(vendor.id, vids[0]!))
+        .limit(1)
+    )[0];
+    const stats = {
+      active: rows.filter((r) => r.status === 'active').length,
+      sold: rows.filter((r) => r.status === 'sold').length,
+      views: rows.reduce((n, r) => n + (r.views ?? 0), 0),
+      contacts: rows.reduce((n, r) => n + (r.contacts ?? 0), 0),
+      ratingAvg: rating?.avg ? Number(rating.avg) : null,
+      ratingCount: rating?.count ?? 0,
+    };
+    return { shop, stats, items };
   }
 
   /** Change one of the seller's listings between active / sold / archived. */

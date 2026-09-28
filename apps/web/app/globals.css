@@ -6301,3 +6301,9 @@ a.seller:focus-visible {
     flex: 1;
   }
 }
+
+/* Per-listing view/contact counts in the seller panel. */
+.mrow__counts {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
