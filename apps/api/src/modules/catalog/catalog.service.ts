@@ -68,6 +68,7 @@ export class CatalogService {
       priceCents: number;
       stock?: number;
       photos?: string[];
+      shopName?: string;
     },
     sessionToken?: string | null,
   ): Promise<{ id: string; slug: string }> {
@@ -92,7 +93,7 @@ export class CatalogService {
     if (sessionToken) {
       try {
         const user = await this.auth.me(sessionToken);
-        vendorId = await this.ensureUserVendor(user);
+        vendorId = await this.ensureUserVendor(user, input.shopName);
       } catch {
         vendorId = await this.ensureCommunityVendor();
       }
@@ -159,8 +160,40 @@ export class CatalogService {
     return { id: productId, slug };
   }
 
-  /** The signed-in seller's own shop, created on their first listing. */
-  private async ensureUserVendor(user: AuthUser): Promise<string> {
+  /** The signed-in seller's existing shop (name + slug), or null if they have
+   *  none yet — the new-listing form uses it to decide whether to ask for a
+   *  shop name (first-time seller onboarding). */
+  async myShop(
+    sessionToken: string | null,
+  ): Promise<{ slug: string; displayName: string } | null> {
+    if (!sessionToken) return null;
+    let user: AuthUser;
+    try {
+      user = await this.auth.me(sessionToken);
+    } catch {
+      return null;
+    }
+    const link = (
+      await this.db
+        .select({ vendorId: vendorUser.vendorId })
+        .from(vendorUser)
+        .where(eq(vendorUser.userId, user.id))
+        .limit(1)
+    )[0];
+    if (!link) return null;
+    const v = (
+      await this.db
+        .select({ slug: vendor.slug, displayName: vendor.displayName })
+        .from(vendor)
+        .where(eq(vendor.id, link.vendorId))
+        .limit(1)
+    )[0];
+    return v ?? null;
+  }
+
+  /** The signed-in seller's own shop, created on their first listing. The
+   *  chosen shop name is used only when the shop is first created. */
+  private async ensureUserVendor(user: AuthUser, shopName?: string): Promise<string> {
     const link = (
       await this.db
         .select({ vendorId: vendorUser.vendorId })
@@ -171,7 +204,8 @@ export class CatalogService {
     if (link) return link.vendorId;
 
     const dist = (await this.db.select({ id: district.id }).from(district).limit(1))[0];
-    const name = user.displayName.trim() || `Loja ${user.phoneE164.slice(-4)}`;
+    const name =
+      shopName?.trim().slice(0, 80) || user.displayName.trim() || `Loja ${user.phoneE164.slice(-4)}`;
     const slug = await this.uniqueVendorSlug(name);
     const vendorId = randomUUID();
     const phone = user.phoneE164.replace(/^\+/, '');

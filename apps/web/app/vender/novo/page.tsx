@@ -1,9 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cents, formatMZN, fromMeticais } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconBox, IconSparkle } from '../../../components/icons';
 import { PhotoUpload } from '../../../components/PhotoUpload';
+import { useSession } from '../../../components/auth/SessionProvider';
 
 // Create listing. Publishing is not wired (no seller auth, no create endpoint),
 // so this is the correct form with a live preview, but "Publish" persists
@@ -33,6 +34,10 @@ export default function NewListingPage() {
   const [stock, setStock] = useState('');
   const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
   const [photos, setPhotos] = useState<string[]>([]);
+  const { user, loading: sessionLoading } = useSession();
+  const [shop, setShop] = useState<{ slug: string; displayName: string } | null>(null);
+  const [shopChecked, setShopChecked] = useState(false);
+  const [shopName, setShopName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [pubError, setPubError] = useState(false);
@@ -75,9 +80,29 @@ export default function NewListingPage() {
     { id: 'turbo' as const, name: t.plan_turbo, desc: t.plan_turbo_desc },
   ];
 
+  // Does the signed-in seller already have a shop? If not, they name it here.
+  useEffect(() => {
+    if (sessionLoading) return;
+    if (!user) {
+      setShopChecked(true);
+      return;
+    }
+    void fetch('/api/mine/shop', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d: { slug: string; displayName: string } | null) => setShop(d))
+      .catch(() => setShop(null))
+      .finally(() => setShopChecked(true));
+  }, [user, sessionLoading]);
+
+  const needsShopName = !!user && shopChecked && !shop;
+
   const priceNum = Number(price.replace(',', '.'));
   const priceValid = price.trim() !== '' && Number.isFinite(priceNum) && priceNum > 0;
-  const valid = title.trim() !== '' && category !== '' && priceValid;
+  const valid =
+    title.trim() !== '' &&
+    category !== '' &&
+    priceValid &&
+    (!needsShopName || shopName.trim().length >= 2);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,6 +124,7 @@ export default function NewListingPage() {
           priceCents: Math.round(priceNum * 100),
           stock: Number(stock.replace(/\D/g, '')) || 1,
           photos,
+          ...(needsShopName && shopName.trim() ? { shopName: shopName.trim() } : {}),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { slug?: string };
@@ -135,6 +161,34 @@ export default function NewListingPage() {
 
       <div className="newlisting__grid">
         <form className="card" onSubmit={onSubmit} noValidate>
+          {/* Seller identity: name the shop on the first listing (onboarding). */}
+          {shopChecked ? (
+            needsShopName ? (
+              <label className="field">
+                <span className="field__label">{t.shop_label}</span>
+                <input
+                  className="field__input"
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                  placeholder={t.shop_name_ph}
+                  aria-invalid={submitted && shopName.trim().length < 2}
+                />
+                <span className="field__hint">{t.shop_hint}</span>
+              </label>
+            ) : (
+              <p className="newlisting__as" role="note">
+                {t.publishing_as}{' '}
+                <strong>{shop ? shop.displayName : t.shop_community}</strong>
+                {!user ? (
+                  <>
+                    {' · '}
+                    <a href="/entrar">{t.shop_login}</a>
+                  </>
+                ) : null}
+              </p>
+            )
+          ) : null}
+
           <div className="aihelper">
             <div className="aihelper__head">
               <IconSparkle width={18} height={18} />

@@ -484,6 +484,12 @@ export const en: Dictionary = {
     publish_paid: 'Publish as featured',
     publishing: 'Publishing…',
     publish_error: 'Could not publish. Please try again.',
+    shop_label: 'Your shop name',
+    shop_name_ph: 'e.g. João’s Shop',
+    shop_hint: 'Shown on your listings. You can change it later.',
+    publishing_as: 'Publishing as',
+    shop_community: 'Community Listings',
+    shop_login: 'Sign in to publish to your shop',
   },
   plans: {
     title: 'Plans & boosts',

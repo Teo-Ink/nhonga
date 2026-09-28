@@ -29,6 +29,7 @@ interface CreateListingBody {
   priceCents?: unknown;
   stock?: unknown;
   photos?: unknown;
+  shopName?: unknown;
 }
 
 /** Public catalogue browse. No auth (security: [] in the contract). */
@@ -90,9 +91,20 @@ export class CatalogController {
         priceCents: num(body.priceCents),
         stock: num(body.stock),
         photos,
+        ...(str(body.shopName) ? { shopName: str(body.shopName) } : {}),
       },
       token,
     );
+  }
+
+  /** The signed-in seller's shop (name + slug), or null — drives first-time
+   *  seller onboarding on the new-listing form. */
+  @Get('mine/shop')
+  myShop(
+    @Headers('authorization') authz?: string,
+  ): Promise<{ slug: string; displayName: string } | null> {
+    const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
+    return this.catalog.myShop(token);
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */

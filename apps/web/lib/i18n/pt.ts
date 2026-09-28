@@ -490,6 +490,12 @@ export const pt = {
     publish_paid: 'Publicar com destaque',
     publishing: 'A publicar…',
     publish_error: 'Não foi possível publicar. Tente novamente.',
+    shop_label: 'Nome da sua loja',
+    shop_name_ph: 'Ex.: Loja do João',
+    shop_hint: 'Aparece nos seus anúncios. Pode mudar mais tarde.',
+    publishing_as: 'A publicar como',
+    shop_community: 'Anúncios da Comunidade',
+    shop_login: 'Entrar para publicar na sua loja',
   },
   plans: {
     title: 'Planos e destaques',
