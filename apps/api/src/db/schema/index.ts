@@ -19,3 +19,4 @@ export * from './reports.js';
 export * from './alerts.js';
 export * from './media.js';
 export * from './notifications.js';
+export * from './messaging.js';

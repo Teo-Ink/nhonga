@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { IconWhatsApp, IconPhone, IconShare } from './icons';
+import { IconWhatsApp, IconPhone, IconShare, IconChat } from './icons';
 import type { Dictionary } from '../lib/i18n/index';
 
 // Classifieds contact block: WhatsApp + call + share, replacing the old
@@ -15,6 +15,8 @@ export function ContactSeller({
   t,
   ctaLabel,
   waMessage,
+  vendorSlug,
+  vendorName,
 }: {
   slug: string;
   title: string;
@@ -26,6 +28,9 @@ export function ContactSeller({
   ctaLabel?: string;
   /** Overrides the pre-filled WhatsApp message template ({title}/{price}). */
   waMessage?: string;
+  /** Shop slug + name — enables the in-app "Message" button. */
+  vendorSlug?: string | null;
+  vendorName?: string | null;
 }) {
   function track(type: 'contact' | 'share') {
     void fetch('/api/track', {
@@ -92,6 +97,16 @@ export function ContactSeller({
           onClick={() => track('contact')}
         >
           <IconPhone width={18} height={18} /> {t.call}
+        </a>
+      ) : null}
+      {vendorSlug ? (
+        <a
+          className="btn contactbtn contactbtn--msg"
+          href={`/mensagens/novo?loja=${encodeURIComponent(vendorSlug)}&produto=${encodeURIComponent(
+            slug,
+          )}${vendorName ? `&nome=${encodeURIComponent(vendorName)}` : ''}`}
+        >
+          <IconChat width={18} height={18} /> {t.message}
         </a>
       ) : null}
       <button type="button" className="btn contactbtn contactbtn--share" onClick={share}>

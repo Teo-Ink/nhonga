@@ -601,6 +601,7 @@ export const en: Dictionary = {
     whatsapp: 'Contact on WhatsApp',
     call: 'Call',
     share: 'Share',
+    message: 'Message on Nhonga',
     no_contact: 'This seller left no contact.',
     safety:
       'Safety tip: meet in a public place and check the item before paying. Never send money in advance or share codes or PINs.',
@@ -883,6 +884,14 @@ export const en: Dictionary = {
     required: 'Write your message.',
     contact_seller: 'Contact seller',
     back: 'Back to messages',
+    reply_ph: 'Write a message…',
+    send_reply: 'Send',
+    about: 'About',
+    login_prompt: 'Sign in to see and send messages.',
+    login_cta: 'Sign in',
+    loading: 'Loading…',
+    send_error: 'Could not send. Please try again.',
+    thread_empty: 'No messages yet.',
   },
   account: {
     title: 'My account',

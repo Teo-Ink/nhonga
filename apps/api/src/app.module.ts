@@ -12,6 +12,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { AlertsModule } from './modules/alerts/alerts.module.js';
 import { MediaModule } from './modules/media/media.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { MessagingModule } from './modules/messaging/messaging.module.js';
 import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { AdsModule } from './modules/ads/ads.module.js';
 import { HealthController } from './health/health.controller.js';
@@ -35,6 +36,7 @@ import { HealthController } from './health/health.controller.js';
     AlertsModule,
     MediaModule,
     NotificationsModule,
+    MessagingModule,
     ReviewsModule,
     AdsModule,
   ],

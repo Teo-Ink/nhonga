@@ -168,6 +168,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             t={t.contact}
             ctaLabel={ctaLabel}
             waMessage={waMessage}
+            vendorSlug={product.vendor.slug}
+            vendorName={product.vendor.displayName}
           />
 
           <ul className="assurances">

@@ -67,6 +67,25 @@ export class NotificationsService {
     }
   }
 
+  /** Notify one specific user (e.g. the buyer in a conversation). Best-effort. */
+  async notifyUser(
+    userId: string,
+    n: { type: string; title: string; body?: string; href?: string },
+  ): Promise<void> {
+    try {
+      await this.db.insert(notification).values({
+        id: randomUUID(),
+        userId,
+        type: n.type,
+        title: n.title,
+        body: n.body ?? null,
+        href: n.href ?? null,
+      });
+    } catch {
+      /* best-effort */
+    }
+  }
+
   async list(
     sessionToken: string | null,
   ): Promise<{ items: NotificationDto[]; unread: number }> {

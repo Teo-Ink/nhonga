@@ -607,6 +607,7 @@ export const pt = {
     whatsapp: 'Contactar pelo WhatsApp',
     call: 'Ligar',
     share: 'Partilhar',
+    message: 'Mensagem no Nhonga',
     no_contact: 'Este vendedor não deixou contacto.',
     safety:
       'Dica de segurança: encontre-se num local público e verifique o produto antes de pagar. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
@@ -894,6 +895,14 @@ export const pt = {
     required: 'Escreva a sua mensagem.',
     contact_seller: 'Contactar vendedor',
     back: 'Voltar às mensagens',
+    reply_ph: 'Escreva uma mensagem…',
+    send_reply: 'Enviar',
+    about: 'Sobre',
+    login_prompt: 'Entre para ver e enviar mensagens.',
+    login_cta: 'Entrar',
+    loading: 'A carregar…',
+    send_error: 'Não foi possível enviar. Tente novamente.',
+    thread_empty: 'Sem mensagens ainda.',
   },
   account: {
     title: 'A minha conta',
