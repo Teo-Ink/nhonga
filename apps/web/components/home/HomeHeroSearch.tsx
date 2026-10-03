@@ -17,11 +17,14 @@ export function HomeHeroSearch({ t }: { t: Dictionary }) {
         className="herofind__photo"
         aria-hidden="true"
         style={{
-          backgroundImage:
-            'url("https://live.staticflickr.com/2618/3858546840_da8a76b450_b.jpg")',
+          backgroundImage: 'url("https://live.staticflickr.com/2618/3858546840_da8a76b450_b.jpg")',
         }}
       />
-      <HeroVideo src="/hero/market.mp4" pauseLabel={t.home.hero_pause} playLabel={t.home.hero_play} />
+      <HeroVideo
+        src="/hero/market.mp4"
+        pauseLabel={t.home.hero_pause}
+        playLabel={t.home.hero_play}
+      />
       <div className="herofind__inner">
         <h1 className="herofind__title">{t.home.search_title}</h1>
         <p className="herofind__sub">{t.home.search_sub}</p>
@@ -31,6 +34,15 @@ export function HomeHeroSearch({ t }: { t: Dictionary }) {
           categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
           variant="hero"
           submitLabel={t.home.search_btn}
+          tools={{
+            voice: t.common.search_voice,
+            image: t.common.search_image,
+            listening: t.common.search_listening,
+            thinking: t.common.search_thinking,
+            unsupported: t.common.search_voice_unsupported,
+            error: t.common.search_ai_error,
+            unconfigured: t.common.search_ai_unconfigured,
+          }}
         />
 
         <div className="herofind__popular">

@@ -34,6 +34,15 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           placeholder={t.common.search_placeholder}
           categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
           variant="header"
+          tools={{
+            voice: t.common.search_voice,
+            image: t.common.search_image,
+            listening: t.common.search_listening,
+            thinking: t.common.search_thinking,
+            unsupported: t.common.search_voice_unsupported,
+            error: t.common.search_ai_error,
+            unconfigured: t.common.search_ai_unconfigured,
+          }}
         />
 
         <div className="wlhdr__actions">

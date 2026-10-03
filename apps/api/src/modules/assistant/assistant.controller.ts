@@ -10,7 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { AssistantError, AssistantService } from './assistant.service.js';
-import type { ChatMessage, ChatReply, ListingDraft } from './assistant.types.js';
+import type { ChatMessage, ChatReply, ListingDraft, SearchQueryResult } from './assistant.types.js';
 
 interface ChatBody {
   messages?: unknown;
@@ -95,6 +95,25 @@ export class AssistantController {
     if (typeof body.notes === 'string') arg.notes = body.notes;
     try {
       return await this.assistant.draftListingFromPhoto(arg, ip || 'anon');
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  /** AI search: derive a catalogue query (+ category) from speech text or a photo. */
+  @Post('search-query')
+  @HttpCode(200)
+  async searchQuery(
+    @Body() body: { text?: unknown; image?: unknown; mediaType?: unknown },
+    @Ip() ip: string,
+  ): Promise<SearchQueryResult> {
+    const arg: { text?: string; image?: { mediaType: string; dataBase64: string } } = {};
+    if (typeof body.text === 'string' && body.text.trim()) arg.text = body.text;
+    if (typeof body.image === 'string' && body.image) {
+      arg.image = parseImage(body.image, body.mediaType);
+    }
+    try {
+      return await this.assistant.searchQuery(arg, ip || 'anon');
     } catch (e) {
       throw toHttp(e);
     }

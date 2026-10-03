@@ -2,7 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/config.schema.js';
 import { AnthropicProvider } from './anthropic.provider.js';
-import type { AssistantProvider, ChatMessage, ChatReply, ListingDraft } from './assistant.types.js';
+import type {
+  AssistantProvider,
+  ChatMessage,
+  ChatReply,
+  ListingDraft,
+  SearchQueryResult,
+} from './assistant.types.js';
 
 export class AssistantError extends Error {
   constructor(
@@ -106,6 +112,27 @@ Regras:
 
 Responde SÓ com JSON válido, sem texto à volta:
 {"title": "…", "description": "…", "category": "<slug ou null>"}`;
+
+// Turns a spoken phrase into a catalogue search. Keeps it to keywords (not a
+// sentence) and may pick a category from the known list.
+const SEARCH_TEXT_PROMPT = `O utilizador está a pesquisar no Nhonga (mercado de Moçambique) por voz. A partir do que disse, extrai a melhor CONSULTA de pesquisa.
+
+Regras:
+- "query": palavras-chave curtas (o artigo/serviço e detalhes úteis como marca, zona), NÃO uma frase. Remove "quero", "procuro", "mostra-me", etc.
+- "category": escolhe uma destas se encaixar, senão null: ${CATEGORY_SLUGS.join(', ')}.
+- Mantém o idioma do utilizador.
+
+Responde SÓ com JSON válido: {"query": "…", "category": "<slug ou null>"}`;
+
+// Turns a photo into a catalogue search for similar listings.
+const SEARCH_IMAGE_PROMPT = `O utilizador quer encontrar anúncios SEMELHANTES a este, no Nhonga (mercado de Moçambique), a partir de uma foto.
+
+Regras:
+- Identifica o produto ou serviço principal na imagem.
+- "query": palavras-chave curtas para o encontrar (tipo de artigo + 1 a 2 detalhes visíveis como cor, marca ou modelo se forem claros). NÃO inventes marca/modelo se não tiveres a certeza.
+- "category": escolhe uma destas se encaixar, senão null: ${CATEGORY_SLUGS.join(', ')}.
+
+Responde SÓ com JSON válido: {"query": "…", "category": "<slug ou null>"}`;
 
 @Injectable()
 export class AssistantService {
@@ -244,6 +271,53 @@ export class AssistantService {
     }
   }
 
+  /** AI search: turn a spoken phrase OR a photo into a catalogue query +
+   *  category, to drive /pesquisa. Exactly one of text/image is used. */
+  async searchQuery(
+    input: { text?: string; image?: { mediaType: string; dataBase64: string } },
+    clientId = 'anon',
+  ): Promise<SearchQueryResult> {
+    if (!this.limiter.allow(clientId)) {
+      throw new AssistantError('Too many requests — try again shortly', 'rate_limited');
+    }
+    const text = (input.text ?? '').trim().slice(0, MAX_CONTENT);
+    const image = input.image;
+    if (!text && !image) {
+      throw new AssistantError('Diga ou mostre o que procura.', 'invalid_input');
+    }
+    if (image) {
+      if (!/^image\/(jpeg|png|webp|gif)$/.test(image.mediaType) || !image.dataBase64) {
+        throw new AssistantError('Imagem inválida (use JPEG, PNG, WEBP ou GIF).', 'invalid_input');
+      }
+      if (image.dataBase64.length > 7_000_000) {
+        throw new AssistantError('Imagem demasiado grande.', 'invalid_input');
+      }
+    }
+    if (!this.provider) return { query: '', configured: false };
+    if (this.overMonthlyCap()) {
+      throw new AssistantError('O assistente está muito ocupado. Tenta mais tarde.', 'upstream');
+    }
+
+    try {
+      const { text: out, usage } = image
+        ? await this.provider.completeVision(
+            SEARCH_IMAGE_PROMPT,
+            text ? `Contexto do utilizador: ${text}` : 'Encontra anúncios semelhantes.',
+            image,
+          )
+        : await this.provider.complete(SEARCH_TEXT_PROMPT, [{ role: 'user', content: text }]);
+      this.record(usage.inputTokens, usage.outputTokens);
+      const parsed = parseSearch(out);
+      const category =
+        parsed.category && (CATEGORY_SLUGS as readonly string[]).includes(parsed.category)
+          ? parsed.category
+          : undefined;
+      return { query: parsed.query, ...(category ? { category } : {}), configured: true };
+    } catch (e) {
+      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+    }
+  }
+
   private overMonthlyCap(): boolean {
     if (this.monthlyTokenCap <= 0) return false;
     this.rollMonth();
@@ -295,6 +369,26 @@ export class AssistantService {
       throw new AssistantError('the last message must be from the user', 'invalid_input');
     }
   }
+}
+
+/** Parse the model's reply into {query, category}. JSON first, then fall back to
+ *  treating the whole reply as the query. */
+function parseSearch(text: string): { query: string; category?: string } {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/, '')
+    .trim();
+  try {
+    const obj = JSON.parse(cleaned) as { query?: unknown; category?: unknown };
+    const query = typeof obj.query === 'string' ? obj.query.trim().slice(0, 100) : '';
+    const category =
+      typeof obj.category === 'string' && obj.category.trim() ? obj.category.trim() : undefined;
+    if (query) return { query, ...(category ? { category } : {}) };
+  } catch {
+    /* not JSON — use the raw text as the query */
+  }
+  return { query: cleaned.replace(/[\r\n]+/g, ' ').slice(0, 100) };
 }
 
 /** Parse the model's reply into {title, description}. Prefers strict JSON, with

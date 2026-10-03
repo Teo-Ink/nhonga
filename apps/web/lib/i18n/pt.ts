@@ -4,6 +4,13 @@ export const pt = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Pesquisar produtos, marcas e lojas…',
+    search_voice: 'Pesquisar por voz',
+    search_image: 'Pesquisar por imagem',
+    search_listening: 'A ouvir… diga o que procura.',
+    search_thinking: 'A interpretar com IA…',
+    search_voice_unsupported: 'O seu navegador não suporta pesquisa por voz. Experimente o Chrome.',
+    search_ai_error: 'Não foi possível pesquisar agora. Tente novamente.',
+    search_ai_unconfigured: 'A pesquisa por IA ainda não está ligada nesta demonstração.',
     all_categories: 'Todas as categorias',
     account: 'Conta',
     cart: 'Carrinho',

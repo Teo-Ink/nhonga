@@ -31,6 +31,16 @@ export interface ImageInput {
   readonly dataBase64: string;
 }
 
+/** AI search: a structured catalogue query derived from speech or a photo. */
+export interface SearchQueryResult {
+  /** Keywords to search (empty when not configured or nothing recognised). */
+  readonly query: string;
+  /** A suggested category slug from the known list, when confident. */
+  readonly category?: string;
+  /** False when no ANTHROPIC_API_KEY is set. */
+  readonly configured: boolean;
+}
+
 export interface TokenUsage {
   readonly inputTokens: number;
   readonly outputTokens: number;

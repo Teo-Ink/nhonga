@@ -5,6 +5,13 @@ export const en: Dictionary = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Search products, brands and shops…',
+    search_voice: 'Search by voice',
+    search_image: 'Search by image',
+    search_listening: 'Listening… say what you are looking for.',
+    search_thinking: 'Interpreting with AI…',
+    search_voice_unsupported: 'Your browser does not support voice search. Try Chrome.',
+    search_ai_error: 'Could not search right now. Please try again.',
+    search_ai_unconfigured: 'AI search is not connected in this demo yet.',
     all_categories: 'All categories',
     account: 'Account',
     cart: 'Cart',
