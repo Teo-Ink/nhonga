@@ -177,6 +177,39 @@ export const pt = {
     info_returns_desc: 'Confirme o estado do produto antes de entregar o dinheiro.',
     info_protection: 'Encontro seguro',
     info_protection_desc: 'Combine um local público e movimentado para o encontro.',
+    // Dicas de confiança adaptadas ao tipo de anúncio (vertical).
+    tips: {
+      default: [
+        { t: 'Entrega combinada', d: 'A entrega é combinada diretamente com o vendedor.' },
+        { t: 'Verifique antes de pagar', d: 'Confirme o estado do produto antes de entregar o dinheiro.' },
+        { t: 'Encontro seguro', d: 'Combine um local público e movimentado para o encontro.' },
+      ],
+      viaturas: [
+        { t: 'Verifique os documentos', d: 'Confirme o livrete, o DUA e a matrícula antes de pagar.' },
+        { t: 'Teste antes de comprar', d: 'Faça um test-drive e, se puder, uma inspeção mecânica.' },
+        { t: 'Encontro seguro', d: 'Combine um local público; evite pagamentos adiantados.' },
+      ],
+      imoveis: [
+        { t: 'Visite o imóvel', d: 'Veja o imóvel pessoalmente antes de qualquer pagamento.' },
+        { t: 'Confirme a documentação', d: 'Verifique o DUAT/título e a identidade do proprietário.' },
+        { t: 'Cuidado com sinais', d: 'Nunca pague sinal ou caução sem visitar e confirmar tudo.' },
+      ],
+      empregos: [
+        { t: 'Candidatura gratuita', d: 'Uma vaga legítima nunca pede dinheiro para se candidatar.' },
+        { t: 'Confirme a empresa', d: 'Verifique a empresa e a vaga antes de partilhar dados pessoais.' },
+        { t: 'Desconfie de ofertas fáceis', d: 'Cuidado com salários altos sem entrevista ou requisitos.' },
+      ],
+      servicos: [
+        { t: 'Combine tudo antes', d: 'Acerte o âmbito, o prazo e o preço com o prestador antes de começar.' },
+        { t: 'Pague ao concluir', d: 'Prefira pagar após o serviço feito, ou por etapas.' },
+        { t: 'Veja referências', d: 'Peça exemplos de trabalhos ou avaliações de outros clientes.' },
+      ],
+      eventos: [
+        { t: 'Confirme o evento', d: 'Verifique a data, o local e a validade do bilhete.' },
+        { t: 'Cuidado com bilhetes falsos', d: 'Compre de fontes de confiança; desconfie de preços baixos.' },
+        { t: 'Encontro seguro', d: 'Combine a entrega num local público e movimentado.' },
+      ],
+    },
   },
   search: {
     results_for: 'Resultados para',

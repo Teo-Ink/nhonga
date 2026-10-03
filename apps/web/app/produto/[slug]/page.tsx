@@ -3,7 +3,14 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { cents, formatMZN } from '@nhonga/shared';
 import { Price, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
-import { IconTruck, IconCheck, IconShield } from '../../../components/icons';
+import {
+  IconTruck,
+  IconCheck,
+  IconShield,
+  IconMapPin,
+  IconWallet,
+  IconStar,
+} from '../../../components/icons';
 import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
 import { ContactSeller } from '../../../components/ContactSeller';
@@ -63,6 +70,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const attrDefs = catSlug ? await getCategoryAttributes(catSlug) : [];
   const labelOf = new Map(attrDefs.map((a) => [a.key, a.label]));
   const specs = Object.entries(product.attributes);
+
+  // Trust tips adapt to the listing's vertical (a job isn't "delivered"; a
+  // property is visited; a service is agreed up front). Falls back to the
+  // physical-goods default for the retail categories.
+  const TIP_VERTICALS = ['viaturas', 'imoveis', 'empregos', 'servicos', 'eventos'] as const;
+  const vertical = (TIP_VERTICALS as readonly string[]).includes(catSlug ?? '')
+    ? (catSlug as (typeof TIP_VERTICALS)[number])
+    : 'default';
+  const tips = t.pdp.tips[vertical];
+  const tipIcons: Record<string, (typeof IconShield)[]> = {
+    default: [IconTruck, IconCheck, IconShield],
+    viaturas: [IconTruck, IconCheck, IconShield],
+    imoveis: [IconMapPin, IconCheck, IconShield],
+    empregos: [IconCheck, IconShield, IconWallet],
+    servicos: [IconCheck, IconWallet, IconStar],
+    eventos: [IconCheck, IconShield, IconMapPin],
+  };
+  const icons = tipIcons[vertical] ?? tipIcons.default!;
 
   // Category-aware call-to-action: jobs "apply", services "request a quote".
   const ctaLabel =
@@ -173,27 +198,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           />
 
           <ul className="assurances">
-            <li className="assurance">
-              <IconTruck width={20} height={20} />
-              <span className="assurance__body">
-                <strong>{t.pdp.info_delivery}</strong>
-                <span>{t.pdp.info_delivery_desc}</span>
-              </span>
-            </li>
-            <li className="assurance">
-              <IconCheck width={20} height={20} />
-              <span className="assurance__body">
-                <strong>{t.pdp.info_returns}</strong>
-                <span>{t.pdp.info_returns_desc}</span>
-              </span>
-            </li>
-            <li className="assurance">
-              <IconShield width={20} height={20} />
-              <span className="assurance__body">
-                <strong>{t.pdp.info_protection}</strong>
-                <span>{t.pdp.info_protection_desc}</span>
-              </span>
-            </li>
+            {tips.map((tip, i) => {
+              const Icon = icons[i] ?? IconShield;
+              return (
+                <li className="assurance" key={tip.t}>
+                  <Icon width={20} height={20} />
+                  <span className="assurance__body">
+                    <strong>{tip.t}</strong>
+                    <span>{tip.d}</span>
+                  </span>
+                </li>
+              );
+            })}
           </ul>
 
           {product.description ? <p className="desc">{product.description}</p> : null}

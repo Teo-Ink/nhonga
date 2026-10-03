@@ -178,6 +178,39 @@ export const en: Dictionary = {
     info_returns_desc: 'Confirm the item’s condition before handing over any money.',
     info_protection: 'Meet safely',
     info_protection_desc: 'Agree on a public, busy place to meet.',
+    // Trust tips adapted to the listing type (vertical).
+    tips: {
+      default: [
+        { t: 'Delivery arranged', d: 'Delivery is arranged directly with the seller.' },
+        { t: 'Check before you pay', d: 'Inspect the item before handing over any money.' },
+        { t: 'Meet safely', d: 'Agree on a public, busy place to meet.' },
+      ],
+      viaturas: [
+        { t: 'Check the documents', d: 'Confirm the logbook, DUA and plates before paying.' },
+        { t: 'Test before buying', d: 'Take a test drive and, if possible, a mechanical inspection.' },
+        { t: 'Meet safely', d: 'Meet in a public place; avoid upfront payments.' },
+      ],
+      imoveis: [
+        { t: 'Visit the property', d: 'See the property in person before any payment.' },
+        { t: 'Confirm the paperwork', d: 'Verify the DUAT/title and the owner’s identity.' },
+        { t: 'Beware of deposits', d: 'Never pay a deposit without visiting and confirming everything.' },
+      ],
+      empregos: [
+        { t: 'Applying is free', d: 'A legitimate job never asks for money to apply.' },
+        { t: 'Verify the employer', d: 'Check the company and the role before sharing personal data.' },
+        { t: 'Beware easy offers', d: 'Be wary of high pay with no interview or requirements.' },
+      ],
+      servicos: [
+        { t: 'Agree terms first', d: 'Settle scope, timeline and price with the provider before starting.' },
+        { t: 'Pay on completion', d: 'Prefer paying after the work is done, or in stages.' },
+        { t: 'Ask for references', d: 'Request examples of past work or reviews from other clients.' },
+      ],
+      eventos: [
+        { t: 'Confirm the event', d: 'Check the date, venue and ticket validity.' },
+        { t: 'Beware fake tickets', d: 'Buy from trusted sources; be wary of low prices.' },
+        { t: 'Meet safely', d: 'Arrange handover in a public, busy place.' },
+      ],
+    },
   },
   search: {
     results_for: 'Results for',
