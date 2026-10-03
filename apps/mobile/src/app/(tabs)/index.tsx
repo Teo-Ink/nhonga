@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -7,11 +7,13 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { listProducts, formatMZN, type ProductListItem } from '@/lib/api';
+import { FavoriteButton } from '@/components/FavoriteButton';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
 export default function HomeScreen() {
@@ -19,94 +21,166 @@ export default function HomeScreen() {
   const [items, setItems] = useState<ProductListItem[] | null>(null);
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const load = useCallback(() => {
+  const fetchList = useCallback((q: string) => {
     setError(false);
-    listProducts()
+    return listProducts(48, q)
       .then((r) => setItems(r.items ?? []))
       .catch(() => setError(true));
   }, []);
 
-  // Pull-to-refresh: re-fetch and keep the spinner until the request settles.
+  // Load on mount and whenever the query changes. Typed queries are debounced;
+  // an empty query (initial load / cleared search) fetches immediately.
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const typed = query.trim().length > 0;
+    if (typed) setSearching(true);
+    debounceRef.current = setTimeout(
+      () => {
+        void fetchList(query).finally(() => setSearching(false));
+      },
+      typed ? 350 : 0,
+    );
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, fetchList]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setError(false);
-    listProducts()
-      .then((r) => setItems(r.items ?? []))
-      .catch(() => setError(true))
-      .finally(() => setRefreshing(false));
-  }, []);
+    fetchList(query).finally(() => setRefreshing(false));
+  }, [fetchList, query]);
 
-  useEffect(load, [load]);
-
+  let body: React.ReactNode;
   if (error) {
-    return (
+    body = (
       <View style={styles.center}>
         <Text style={styles.muted}>Não foi possível carregar os produtos.</Text>
-        <Pressable style={styles.retry} onPress={load}>
+        <Pressable style={styles.retry} onPress={() => void fetchList(query)}>
           <Text style={styles.retryText}>Tentar de novo</Text>
         </Pressable>
       </View>
     );
-  }
-
-  if (items === null) {
-    return (
+  } else if (items === null) {
+    body = (
       <View style={styles.center}>
         <ActivityIndicator color={brand.green} />
       </View>
     );
+  } else {
+    body = (
+      <FlatList
+        data={items}
+        keyExtractor={(p) => p.id}
+        numColumns={2}
+        contentContainerStyle={styles.list}
+        columnWrapperStyle={styles.row}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={brand.green}
+            colors={[brand.green]}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Ionicons name="search-outline" size={32} color={brand.muted} />
+            <Text style={styles.muted}>
+              {query.trim() ? `Sem resultados para “${query.trim()}”.` : 'Ainda não há anúncios.'}
+            </Text>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <Pressable
+            style={({ pressed }) => [
+              styles.card,
+              pressed && { transform: [{ scale: 0.97 }], opacity: 0.92 },
+            ]}
+            onPress={() => router.push({ pathname: '/produto/[slug]', params: { slug: item.slug } })}>
+            <View style={styles.media}>
+              {item.image ? (
+                <Image source={{ uri: item.image.url }} style={styles.image} resizeMode="cover" />
+              ) : null}
+              {item.discountPercent ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>-{item.discountPercent}%</Text>
+                </View>
+              ) : null}
+              <FavoriteButton productId={item.id} />
+            </View>
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title}
+            </Text>
+            <Text style={styles.price}>{formatMZN(item.priceCents)}</Text>
+            {item.location ? (
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={12} color={brand.muted} />
+                <Text style={styles.location} numberOfLines={1}>
+                  {item.location}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        )}
+      />
+    );
   }
 
   return (
-    <FlatList
-      data={items}
-      keyExtractor={(p) => p.id}
-      numColumns={2}
-      contentContainerStyle={styles.list}
-      columnWrapperStyle={styles.row}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={brand.green} colors={[brand.green]} />
-      }
-      renderItem={({ item }) => (
-        <Pressable
-          style={({ pressed }) => [
-            styles.card,
-            pressed && { transform: [{ scale: 0.97 }], opacity: 0.92 },
-          ]}
-          onPress={() => router.push({ pathname: '/produto/[slug]', params: { slug: item.slug } })}>
-
-          <View style={styles.media}>
-            {item.image ? (
-              <Image source={{ uri: item.image.url }} style={styles.image} resizeMode="cover" />
-            ) : null}
-            {item.discountPercent ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>-{item.discountPercent}%</Text>
-              </View>
-            ) : null}
-          </View>
-          <Text style={styles.title} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.price}>{formatMZN(item.priceCents)}</Text>
-          {item.location ? (
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={12} color={brand.muted} />
-              <Text style={styles.location} numberOfLines={1}>
-                {item.location}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
-      )}
-    />
+    <View style={styles.screen}>
+      {/* Sticky search bar — kept outside the list so typing never loses focus. */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search" size={18} color={brand.muted} />
+        <TextInput
+          style={styles.searchInput}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Pesquisar no Nhonga…"
+          placeholderTextColor={brand.muted}
+          returnKeyType="search"
+          autoCorrect={false}
+          autoCapitalize="none"
+          clearButtonMode="never"
+        />
+        {searching ? (
+          <ActivityIndicator size="small" color={brand.muted} />
+        ) : query ? (
+          <Pressable onPress={() => setQuery('')} hitSlop={8} accessibilityLabel="Limpar pesquisa">
+            <Ionicons name="close-circle" size={18} color={brand.muted} />
+          </Pressable>
+        ) : null}
+      </View>
+      {body}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: brand.bg },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    marginHorizontal: space.md,
+    marginTop: space.md,
+    marginBottom: space.xs,
+    paddingHorizontal: space.md,
+    height: 44,
+    borderRadius: radius.pill,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+  },
+  searchInput: { flex: 1, color: brand.text, fontSize: 15, paddingVertical: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.xl },
-  muted: { color: brand.muted },
+  empty: { alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingVertical: space.xl * 2 },
+  muted: { color: brand.muted, textAlign: 'center' },
   retry: {
     backgroundColor: brand.green,
     paddingHorizontal: space.lg,
@@ -114,7 +188,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   retryText: { color: '#fff', fontWeight: '600' },
-  list: { padding: space.md, backgroundColor: brand.bg },
+  list: { padding: space.md, backgroundColor: brand.bg, flexGrow: 1 },
   row: { gap: space.md },
   card: { flex: 1, marginBottom: space.md },
   media: {

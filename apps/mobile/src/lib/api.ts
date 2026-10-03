@@ -112,8 +112,9 @@ export async function clearToken(): Promise<void> {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────
-export function listProducts(limit = 48): Promise<{ items: ProductListItem[] }> {
-  return get(`/catalog/products?limit=${limit}`);
+export function listProducts(limit = 48, q?: string): Promise<{ items: ProductListItem[] }> {
+  const query = q && q.trim() ? `&q=${encodeURIComponent(q.trim())}` : '';
+  return get(`/catalog/products?limit=${limit}${query}`);
 }
 export function getProduct(slug: string): Promise<ProductDetail> {
   return get(`/catalog/products/${encodeURIComponent(slug)}`);
@@ -132,6 +133,28 @@ export function me(): Promise<{ user: AuthUser | null }> {
 }
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; configured: boolean }> {
   return post('/assistant/chat', { messages });
+}
+
+// ── Favourites (server-side, requires a session) ──────────────────
+export interface FavoriteItem {
+  productId: string;
+  slug: string;
+  savedPriceCents: number;
+}
+export function listFavorites(): Promise<FavoriteItem[]> {
+  return get('/favorites', true);
+}
+export function addFavorite(productId: string): Promise<{ ok: true }> {
+  return post('/favorites', { productId }, true);
+}
+export async function removeFavorite(productId: string): Promise<void> {
+  const token = await getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['authorization'] = `Bearer ${token}`;
+  await fetch(`${API_URL}/favorites/${encodeURIComponent(productId)}`, {
+    method: 'DELETE',
+    headers,
+  }).catch(() => undefined);
 }
 /** Record an engagement event on a listing (contact / share). Best-effort. */
 export function recordEvent(slug: string, type: 'contact' | 'share' | 'view'): void {

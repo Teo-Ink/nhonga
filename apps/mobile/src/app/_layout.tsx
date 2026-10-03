@@ -1,11 +1,12 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { FavoritesProvider } from '@/lib/favorites';
 import { brand } from '@/lib/theme';
 
 // Root navigator: the tab group plus a pushed product-detail screen.
 export default function RootLayout() {
   return (
-    <>
+    <FavoritesProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -17,6 +18,6 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="produto/[slug]" options={{ title: 'Produto' }} />
       </Stack>
-    </>
+    </FavoritesProvider>
   );
 }

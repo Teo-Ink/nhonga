@@ -13,11 +13,27 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { getProduct, recordEvent, formatMZN, type ProductDetail } from '@/lib/api';
+import { useFavorites } from '@/lib/favorites';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
 // Shrinks a button slightly while pressed for tactile feedback.
 const pressed = ({ pressed: p }: { pressed: boolean }) =>
   p ? { transform: [{ scale: 0.98 }], opacity: 0.92 } : null;
+
+// Favourite toggle for the green header bar (white heart, red when saved).
+function HeaderHeart({ productId }: { productId: string }) {
+  const { isFavorite, toggle } = useFavorites();
+  const on = isFavorite(productId);
+  return (
+    <Pressable
+      onPress={() => toggle(productId)}
+      hitSlop={10}
+      accessibilityLabel={on ? 'Remover dos favoritos' : 'Guardar nos favoritos'}
+      style={(s) => [{ paddingHorizontal: space.sm }, pressed(s)]}>
+      <Ionicons name={on ? 'heart' : 'heart-outline'} size={24} color={on ? '#ff6b8a' : '#fff'} />
+    </Pressable>
+  );
+}
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -76,7 +92,9 @@ export default function ProductScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ title: product.title }} />
+      <Stack.Screen
+        options={{ title: product.title, headerRight: () => <HeaderHeart productId={product.id} /> }}
+      />
       <View style={styles.media}>
         {hero ? <Image source={{ uri: hero.url }} style={styles.image} resizeMode="cover" /> : null}
       </View>
