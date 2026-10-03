@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Pressable,
@@ -11,8 +12,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { listProducts, formatMZN, type ProductListItem } from '@/lib/api';
+import { aiSearch, listProducts, formatMZN, type ProductListItem } from '@/lib/api';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
@@ -22,8 +24,36 @@ export default function HomeScreen() {
   const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
   const [query, setQuery] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Image search: pick a photo, let the AI derive a query, then search by it.
+  const searchByImage = useCallback(async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      base64: true,
+      quality: 0.6,
+    });
+    if (res.canceled || !res.assets?.[0]?.base64) return;
+    const a = res.assets[0];
+    const image = `data:${a.mimeType ?? 'image/jpeg'};base64,${a.base64}`;
+    setImgBusy(true);
+    try {
+      const r = await aiSearch({ image });
+      if (!r.configured) {
+        Alert.alert('Pesquisa por imagem', 'A pesquisa por IA ainda não está ligada nesta demonstração.');
+        return;
+      }
+      if (r.query) setQuery(r.query);
+    } catch {
+      Alert.alert('Pesquisa por imagem', 'Não foi possível pesquisar agora. Tente novamente.');
+    } finally {
+      setImgBusy(false);
+    }
+  }, []);
 
   const fetchList = useCallback((q: string) => {
     setError(false);
@@ -155,6 +185,18 @@ export default function HomeScreen() {
             <Ionicons name="close-circle" size={18} color={brand.muted} />
           </Pressable>
         ) : null}
+        <Pressable
+          onPress={() => void searchByImage()}
+          hitSlop={8}
+          disabled={imgBusy}
+          accessibilityLabel="Pesquisar por imagem"
+          style={styles.camBtn}>
+          {imgBusy ? (
+            <ActivityIndicator size="small" color={brand.green} />
+          ) : (
+            <Ionicons name="camera-outline" size={20} color={brand.green} />
+          )}
+        </Pressable>
       </View>
       {body}
     </View>
@@ -178,6 +220,7 @@ const styles = StyleSheet.create({
     borderColor: brand.border,
   },
   searchInput: { flex: 1, color: brand.text, fontSize: 15, paddingVertical: 0 },
+  camBtn: { width: 24, alignItems: 'center', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md, padding: space.xl },
   empty: { alignItems: 'center', justifyContent: 'center', gap: space.sm, paddingVertical: space.xl * 2 },
   muted: { color: brand.muted, textAlign: 'center' },

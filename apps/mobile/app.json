@@ -39,6 +39,12 @@
           "color": "#007A5E",
           "defaultChannel": "default"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Nhonga usa as tuas fotos para pesquisar produtos por imagem."
+        }
       ]
     ],
     "experiments": {

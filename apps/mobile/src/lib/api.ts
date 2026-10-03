@@ -116,6 +116,16 @@ export function listProducts(limit = 48, q?: string): Promise<{ items: ProductLi
   const query = q && q.trim() ? `&q=${encodeURIComponent(q.trim())}` : '';
   return get(`/catalog/products?limit=${limit}${query}`);
 }
+
+// AI search: derive a catalogue query (+ category) from a photo (or text).
+export interface AiSearchResult {
+  query: string;
+  category?: string;
+  configured: boolean;
+}
+export function aiSearch(payload: { text?: string; image?: string }): Promise<AiSearchResult> {
+  return post('/assistant/search-query', payload);
+}
 export function getProduct(slug: string): Promise<ProductDetail> {
   return get(`/catalog/products/${encodeURIComponent(slug)}`);
 }
