@@ -30,6 +30,14 @@ export interface AppConfig {
   readonly assistantRatePerMin: number;
   /** Monthly token budget; 0 disables the cap. */
   readonly assistantMonthlyTokenCap: number;
+  /**
+   * Browser origins allowed to call the API cross-origin (CORS). The web app
+   * talks to the API server-side through its BFF, and native mobile fetches are
+   * not subject to CORS, so this is only needed for browser clients like the
+   * Expo web preview. Empty disables CORS; in development any localhost origin
+   * is reflected automatically regardless of this list.
+   */
+  readonly corsOrigins: readonly string[];
 }
 
 class ConfigError extends Error {
@@ -114,6 +122,10 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
       : 'claude-sonnet-5',
     assistantRatePerMin: requireInt(raw, 'ASSISTANT_RATE_PER_MIN', 15),
     assistantMonthlyTokenCap: requireInt(raw, 'ASSISTANT_MONTHLY_TOKEN_CAP', 0),
+    corsOrigins: (raw['CORS_ORIGINS'] ?? '')
+      .split(',')
+      .map((o) => o.trim())
+      .filter((o) => o.length > 0),
   };
 
   return config;

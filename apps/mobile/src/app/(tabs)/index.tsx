@@ -4,10 +4,12 @@ import {
   FlatList,
   Image,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { listProducts, formatMZN, type ProductListItem } from '@/lib/api';
 import { brand, radius, space, shadow } from '@/lib/theme';
@@ -16,12 +18,23 @@ export default function HomeScreen() {
   const router = useRouter();
   const [items, setItems] = useState<ProductListItem[] | null>(null);
   const [error, setError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
     setError(false);
     listProducts()
       .then((r) => setItems(r.items ?? []))
       .catch(() => setError(true));
+  }, []);
+
+  // Pull-to-refresh: re-fetch and keep the spinner until the request settles.
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setError(false);
+    listProducts()
+      .then((r) => setItems(r.items ?? []))
+      .catch(() => setError(true))
+      .finally(() => setRefreshing(false));
   }, []);
 
   useEffect(load, [load]);
@@ -52,6 +65,9 @@ export default function HomeScreen() {
       numColumns={2}
       contentContainerStyle={styles.list}
       columnWrapperStyle={styles.row}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={brand.green} colors={[brand.green]} />
+      }
       renderItem={({ item }) => (
         <Pressable
           style={({ pressed }) => [
@@ -75,9 +91,12 @@ export default function HomeScreen() {
           </Text>
           <Text style={styles.price}>{formatMZN(item.priceCents)}</Text>
           {item.location ? (
-            <Text style={styles.location} numberOfLines={1}>
-              {item.location}
-            </Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location-outline" size={12} color={brand.muted} />
+              <Text style={styles.location} numberOfLines={1}>
+                {item.location}
+              </Text>
+            </View>
           ) : null}
         </Pressable>
       )}
@@ -119,5 +138,6 @@ const styles = StyleSheet.create({
   badgeText: { color: brand.ink, fontWeight: '800', fontSize: 11, letterSpacing: 0.2 },
   title: { marginTop: space.sm, fontSize: 13, lineHeight: 17, color: brand.text },
   price: { marginTop: 2, fontSize: 15, fontWeight: '800', color: brand.green, letterSpacing: -0.2 },
-  location: { marginTop: 2, fontSize: 11, color: brand.muted },
+  locationRow: { marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 2 },
+  location: { fontSize: 11, color: brand.muted, flexShrink: 1 },
 });

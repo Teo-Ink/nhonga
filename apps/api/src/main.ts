@@ -14,8 +14,38 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
   const log = new Logger('Bootstrap');
+  const config = app.get(ConfigService<AppConfig, true>);
+  const nodeEnv = config.get('nodeEnv', { infer: true });
+  const corsOrigins = config.get('corsOrigins', { infer: true });
 
   app.use(helmet());
+
+  // CORS for browser clients only. The web app reaches the API server-side via
+  // its BFF and native mobile fetches are not subject to CORS, so this exists
+  // mainly for the Expo web preview and any other browser origin we allowlist.
+  // In development, any localhost/127.0.0.1 origin (on any port) is reflected so
+  // the mobile preview just works; elsewhere only CORS_ORIGINS entries pass.
+  const isDev = nodeEnv === 'development';
+  const allowList = new Set(corsOrigins);
+  const isLocalhost = (origin: string): boolean =>
+    /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+  if (isDev || allowList.size > 0) {
+    app.enableCors({
+      credentials: true,
+      origin: (
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void,
+      ) => {
+        // Non-browser / same-origin requests (no Origin header) are always fine.
+        if (!origin) return callback(null, true);
+        if (allowList.has(origin) || (isDev && isLocalhost(origin))) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
+    });
+  }
+
   app.useGlobalFilters(new ProblemDetailsFilter());
 
   // Request-body validation is deliberately not wired globally yet. The stack
@@ -26,10 +56,9 @@ async function bootstrap(): Promise<void> {
   // Let ECS stop a task cleanly: onApplicationShutdown drains the DB pool.
   app.enableShutdownHooks();
 
-  const config = app.get(ConfigService<AppConfig, true>);
   const port = config.get('port', { infer: true });
   await app.listen(port, '0.0.0.0');
-  log.log(`nhonga api listening on :${port} (${config.get('nodeEnv', { infer: true })})`);
+  log.log(`nhonga api listening on :${port} (${nodeEnv})`);
 }
 
 void bootstrap();

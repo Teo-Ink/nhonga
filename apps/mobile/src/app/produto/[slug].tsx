@@ -113,10 +113,13 @@ export default function ProductScreen() {
       {!hasContact ? (
         <Text style={styles.muted}>Este vendedor não deixou contacto.</Text>
       ) : null}
-      <Text style={styles.safe}>
-        Dica: encontre-se num local público e verifique o produto antes de pagar. Nunca envie
-        dinheiro adiantado nem partilhe códigos ou PIN.
-      </Text>
+      <View style={styles.safeBox}>
+        <Ionicons name="shield-checkmark-outline" size={18} color={brand.green} />
+        <Text style={styles.safe}>
+          Dica: encontre-se num local público e verifique o produto antes de pagar. Nunca envie
+          dinheiro adiantado nem partilhe códigos ou PIN.
+        </Text>
+      </View>
 
       {product.description ? <Text style={styles.desc}>{product.description}</Text> : null}
 
@@ -166,7 +169,17 @@ const styles = StyleSheet.create({
   contactText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   shareBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: brand.border },
   shareText: { color: brand.text, fontWeight: '600', fontSize: 15 },
-  safe: { marginTop: space.sm, fontSize: 12, color: brand.muted, lineHeight: 18 },
+  safeBox: {
+    marginTop: space.sm,
+    flexDirection: 'row',
+    gap: space.sm,
+    padding: space.md,
+    borderRadius: radius.md,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+  },
+  safe: { flex: 1, fontSize: 12, color: brand.muted, lineHeight: 18 },
   desc: { marginTop: space.md, fontSize: 15, lineHeight: 22, color: brand.text },
   specs: { marginTop: space.md, borderTopWidth: 1, borderTopColor: brand.border },
   specsTitle: { marginTop: space.md, marginBottom: space.sm, fontWeight: '700', color: brand.text },
