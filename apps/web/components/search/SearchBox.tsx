@@ -102,21 +102,23 @@ export function SearchBox({
         category?: string;
         configured?: boolean;
       };
-      if (!res.ok) {
-        setAiState('error');
-        return;
-      }
-      if (!data.configured) {
-        // Voice still works without AI (raw transcript); image needs AI.
+      // Voice/text search always works: if the AI isn't connected or errors
+      // (e.g. no credits), fall back to searching the raw transcript. Only image
+      // search truly depends on the AI.
+      if (!res.ok || !data.configured) {
         if (payload.text) {
           goSearch(payload.text);
           return;
         }
-        setAiState('unconfigured');
+        setAiState(data.configured === false ? 'unconfigured' : 'error');
         return;
       }
       goSearch(data.query ?? payload.text ?? '', data.category);
     } catch {
+      if (payload.text) {
+        goSearch(payload.text);
+        return;
+      }
       setAiState('error');
     }
   }
