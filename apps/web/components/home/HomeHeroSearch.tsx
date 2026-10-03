@@ -1,6 +1,6 @@
 import type { Dictionary } from '../../lib/i18n/index';
-import { IconSearch } from '../icons';
 import { HeroVideo } from './HeroVideo';
+import { SearchBox } from '../search/SearchBox';
 
 // Fiverr-structured hero (Nhonga's own brand, no Fiverr assets/colours/copy): a
 // bold headline, one prominent centred search, and "Popular:" quick links. The
@@ -26,16 +26,12 @@ export function HomeHeroSearch({ t }: { t: Dictionary }) {
         <h1 className="herofind__title">{t.home.search_title}</h1>
         <p className="herofind__sub">{t.home.search_sub}</p>
 
-        <form className="herofind__search" role="search" action="/pesquisa" method="get">
-          <IconSearch width={22} height={22} aria-hidden />
-          <label htmlFor="hq" className="sr-only">
-            {t.home.search_ph}
-          </label>
-          <input id="hq" name="q" placeholder={t.home.search_ph} autoComplete="off" />
-          <button type="submit" className="btn btn--cta herofind__btn">
-            {t.home.search_btn}
-          </button>
-        </form>
+        <SearchBox
+          placeholder={t.home.search_ph}
+          categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
+          variant="hero"
+          submitLabel={t.home.search_btn}
+        />
 
         <div className="herofind__popular">
           <span className="herofind__poplabel">{t.home.popular}</span>

@@ -1,10 +1,11 @@
-import { IconSearch, IconHeart, IconGrid } from './icons';
+import { IconHeart, IconGrid } from './icons';
 import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
 import { AccountLink } from './auth/AccountLink';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
 import { MessagesLink } from './messaging/MessagesLink';
+import { SearchBox } from './search/SearchBox';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
@@ -29,13 +30,11 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           <Logo variant="auto" label={t.common.brand} />
         </a>
 
-        <form className="wlsearch" role="search" action="/pesquisa" method="get">
-          <IconSearch width={20} height={20} aria-hidden />
-          <label htmlFor="q" className="sr-only">
-            {t.common.search_placeholder}
-          </label>
-          <input id="q" name="q" placeholder={t.common.search_placeholder} autoComplete="off" />
-        </form>
+        <SearchBox
+          placeholder={t.common.search_placeholder}
+          categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
+          variant="header"
+        />
 
         <div className="wlhdr__actions">
           <LocaleControls locale={locale} />

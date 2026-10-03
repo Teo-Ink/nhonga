@@ -756,6 +756,25 @@ export class CatalogService {
     return { total, items: page, page: { cursor: null, hasMore: total > limit } };
   }
 
+  /** Lightweight title suggestions for the search autocomplete. */
+  async suggest(q: string, lang: Lang): Promise<{ slug: string; title: string }[]> {
+    const term = q.trim();
+    if (term.length < 2) return [];
+    const needle = `%${term.replace(/[%_]/g, '\\$&')}%`;
+    const rows = await this.db
+      .select({ slug: product.slug, titlePt: product.titlePt, titleEn: product.titleEn })
+      .from(product)
+      .where(
+        and(
+          eq(product.status, 'active'),
+          or(ilike(product.titlePt, needle), ilike(product.titleEn, needle)),
+        ),
+      )
+      .orderBy(desc(product.bumpedAt), desc(product.publishedAt))
+      .limit(6);
+    return rows.map((r) => ({ slug: r.slug, title: pickText(r.titlePt, r.titleEn, lang) }));
+  }
+
   /** Full detail by UUID or slug. */
   async getProduct(idOrSlug: string, lang: Lang): Promise<ProductDetail> {
     const rows = await this.db

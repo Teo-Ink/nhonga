@@ -179,6 +179,15 @@ export class CatalogController {
     return this.catalog.getShop(slug);
   }
 
+  /** Title suggestions for the search autocomplete. */
+  @Get('suggest')
+  suggest(
+    @Query('q') q?: string,
+    @Headers('accept-language') acceptLanguage?: string,
+  ): Promise<{ slug: string; title: string }[]> {
+    return this.catalog.suggest(q ?? '', langOf(acceptLanguage));
+  }
+
   /** Filterable attributes for a category (drives the per-category filter UI). */
   @Get('categories/:slug/attributes')
   categoryAttributes(
