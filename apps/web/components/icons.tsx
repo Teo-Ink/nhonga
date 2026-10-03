@@ -1,102 +1,110 @@
-// Outline icons, drawn inline (stroke-based, 24x24, currentColor). Inline SVG
-// avoids shipping an icon-library bundle. Style matches Lucide/Phosphor (2px
-// stroke, round caps). Add new icons here so the set stays consistent.
+// Platform icon set. The UI icons come from Lucide (lucide-react) — a modern,
+// consistent 24x24 stroke set — re-exported here under the app's own `Icon*`
+// names so call sites never import lucide-react directly and can be restyled
+// in one place. Brand/app-store marks stay hand-drawn (multi-colour / filled).
 import type { SVGProps } from 'react';
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Menu,
+  Star,
+  ShieldCheck,
+  Truck,
+  Wallet,
+  Check,
+  ChevronLeft,
+  Globe,
+  Sun,
+  Package,
+  Heart,
+  MessageCircle,
+  Plus,
+  LayoutGrid,
+  MapPin,
+  Undo2,
+  Shirt,
+  Monitor,
+  Smartphone,
+  House,
+  Coffee,
+  Sparkles,
+  Share2,
+  Car,
+  KeyRound,
+  Wrench,
+  Briefcase,
+  Leaf,
+  Ticket,
+  Bell,
+  Gift,
+  ShoppingBag,
+  type LucideIcon,
+  type LucideProps,
+} from 'lucide-react';
 
-const base = (props: SVGProps<SVGSVGElement>) => ({
-  width: 20,
-  height: 20,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  'aria-hidden': true,
-  ...props,
-});
+// Wrap a Lucide icon so it defaults to the app's size for its slot and is
+// hidden from assistive tech (icons here are always decorative, paired with
+// text). Callers can still override width/height/size or any prop. `extra`
+// bakes in per-icon style (e.g. a filled variant).
+type IconProps = SVGProps<SVGSVGElement> & { size?: number | string };
+function icon(C: LucideIcon, size = 20, extra?: Partial<LucideProps>) {
+  const Wrapped = (p: IconProps) => (
+    <C aria-hidden size={size} {...extra} {...(p as LucideProps)} />
+  );
+  Wrapped.displayName = `Icon(${C.displayName ?? 'lucide'})`;
+  return Wrapped;
+}
 
-export const IconSearch = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="11" cy="11" r="7" />
-    <path d="m21 21-4.3-4.3" />
-  </svg>
-);
-export const IconCart = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="9" cy="20" r="1.5" />
-    <circle cx="18" cy="20" r="1.5" />
-    <path d="M2 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21 7H5.5" />
-  </svg>
-);
-export const IconUser = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="8" r="4" />
-    <path d="M4 21a8 8 0 0 1 16 0" />
-  </svg>
-);
-export const IconMenu = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M3 6h18M3 12h18M3 18h18" />
-  </svg>
-);
-export const IconStar = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} fill="currentColor" stroke="none">
-    <path d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.3l6.5-.9z" />
-  </svg>
-);
-export const IconShield = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} width={24} height={24}>
-    <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
-);
-export const IconTruck = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} width={24} height={24}>
-    <path d="M3 6h11v9H3zM14 9h4l3 3v3h-7z" />
-    <circle cx="7" cy="18" r="1.6" />
-    <circle cx="17.5" cy="18" r="1.6" />
-  </svg>
-);
-export const IconWallet = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} width={24} height={24}>
-    <path d="M3 7a2 2 0 0 1 2-2h12v4" />
-    <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5" />
-    <circle cx="16.5" cy="13" r="1.2" fill="currentColor" stroke="none" />
-  </svg>
-);
-export const IconCheck = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} width={16} height={16}>
-    <path d="m5 12 4 4 10-10" />
-  </svg>
-);
-export const IconChevronLeft = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="m15 6-6 6 6 6" />
-  </svg>
-);
-export const IconGlobe = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="12" r="9" />
-    <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
-  </svg>
-);
-export const IconSun = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-  </svg>
-);
-export const IconBox = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} width={40} height={40}>
-    <path d="M3 8l9-4 9 4-9 4z" />
-    <path d="M3 8v8l9 4 9-4V8" />
-    <path d="M12 12v8" />
-  </svg>
-);
+// Chrome / navigation
+export const IconSearch = icon(Search);
+export const IconCart = icon(ShoppingCart);
+export const IconUser = icon(User);
+export const IconMenu = icon(Menu);
+export const IconChevronLeft = icon(ChevronLeft);
+export const IconGlobe = icon(Globe);
+export const IconSun = icon(Sun);
+export const IconPlus = icon(Plus);
+export const IconGrid = icon(LayoutGrid);
+export const IconBell = icon(Bell);
 
-// Brand logos, used only on their official "sign in with…" buttons (filled,
-// multi-colour — NOT the outline set). Kept faithful to each brand's mark.
+// Trust / commerce (larger slots keep their original sizes)
+export const IconStar = icon(Star, 20, { fill: 'currentColor' });
+export const IconShield = icon(ShieldCheck, 24);
+export const IconTruck = icon(Truck, 24);
+export const IconWallet = icon(Wallet, 24);
+export const IconCheck = icon(Check, 16);
+export const IconBox = icon(Package, 40);
+export const IconBag = icon(ShoppingBag);
+export const IconGift = icon(Gift);
+
+// Favourites / messaging / sharing
+export const IconHeart = icon(Heart);
+export const IconHeartFilled = icon(Heart, 20, { fill: 'currentColor' });
+export const IconChat = icon(MessageCircle);
+export const IconShare = icon(Share2);
+export const IconMapPin = icon(MapPin);
+export const IconReturn = icon(Undo2);
+
+// Category glyphs (home tiles + verticals)
+export const IconShirt = icon(Shirt);
+export const IconDevice = icon(Monitor);
+export const IconPhone = icon(Smartphone);
+export const IconHome = icon(House);
+export const IconCup = icon(Coffee);
+export const IconSparkle = icon(Sparkles);
+export const IconCar = icon(Car);
+export const IconKey = icon(KeyRound);
+export const IconTools = icon(Wrench);
+export const IconBriefcase = icon(Briefcase);
+export const IconLeaf = icon(Leaf);
+export const IconTicket = icon(Ticket);
+
+// ---------------------------------------------------------------------------
+// Brand & app-store marks: kept hand-drawn (multi-colour / filled), NOT part of
+// the Lucide outline set. Used only on their official "sign in with…" / badge
+// buttons and must stay faithful to each brand's mark.
+// ---------------------------------------------------------------------------
 export const IconGoogle = (p: SVGProps<SVGSVGElement>) => (
   <svg width={18} height={18} viewBox="0 0 48 48" aria-hidden="true" {...p}>
     <path
@@ -125,86 +133,6 @@ export const IconFacebook = (p: SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
-
-export const IconHeart = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M12 20s-7-4.35-7-9.5a4 4 0 0 1 7-2.6 4 4 0 0 1 7 2.6C19 15.65 12 20 12 20z" />
-  </svg>
-);
-export const IconHeartFilled = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)} fill="currentColor" stroke="none">
-    <path d="M12 20s-7-4.35-7-9.5a4 4 0 0 1 7-2.6 4 4 0 0 1 7 2.6C19 15.65 12 20 12 20z" />
-  </svg>
-);
-export const IconChat = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M4 5h16v11H8l-4 4z" />
-  </svg>
-);
-export const IconPlus = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
-export const IconGrid = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <rect x="4" y="4" width="7" height="7" rx="1.5" />
-    <rect x="13" y="4" width="7" height="7" rx="1.5" />
-    <rect x="4" y="13" width="7" height="7" rx="1.5" />
-    <rect x="13" y="13" width="7" height="7" rx="1.5" />
-  </svg>
-);
-export const IconMapPin = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M12 21s7-6.3 7-11a7 7 0 0 0-14 0c0 4.7 7 11 7 11z" />
-    <circle cx="12" cy="10" r="2.5" />
-  </svg>
-);
-export const IconReturn = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M9 14l-4-4 4-4" />
-    <path d="M5 10h9a5 5 0 0 1 5 5v2" />
-  </svg>
-);
-
-// Category glyphs for the home tiles (outline set).
-export const IconShirt = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M8 3l4 2 4-2 4 4-3 2v10H7V9L4 7z" />
-  </svg>
-);
-export const IconDevice = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <rect x="3" y="5" width="18" height="12" rx="1.5" />
-    <path d="M2 21h20" />
-  </svg>
-);
-export const IconPhone = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <rect x="7" y="2" width="10" height="20" rx="2.5" />
-    <path d="M11 18h2" />
-  </svg>
-);
-export const IconHome = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M3 11l9-7 9 7" />
-    <path d="M5 10v10h14V10" />
-  </svg>
-);
-export const IconCup = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M5 8h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5z" />
-    <path d="M16 9h2.5a2.5 2.5 0 0 1 0 5H16" />
-    <path d="M6 3v2M10 3v2M14 3v2" />
-  </svg>
-);
-export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" />
-  </svg>
-);
-
-// Platform glyphs for the app-store badges (filled, currentColor).
 export const IconApple = (p: SVGProps<SVGSVGElement>) => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...p}>
     <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z" />
@@ -218,80 +146,5 @@ export const IconGooglePlay = (p: SVGProps<SVGSVGElement>) => (
 export const IconWhatsApp = (p: SVGProps<SVGSVGElement>) => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...p}>
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.521-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-  </svg>
-);
-export const IconShare = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" />
-  </svg>
-);
-
-// Classifieds vertical icons (Viaturas, Imóveis, Serviços, Empregos, Agro).
-export const IconCar = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11" />
-    <path d="M3 15v-2.5A1.5 1.5 0 0 1 4.5 11h15A1.5 1.5 0 0 1 21 12.5V15a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-2 0v-1H7v1a1 1 0 0 1-2 0v-1H4a1 1 0 0 1-1-1z" />
-    <circle cx="7.5" cy="13.5" r="0.6" />
-    <circle cx="16.5" cy="13.5" r="0.6" />
-  </svg>
-);
-
-export const IconKey = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <circle cx="7.5" cy="15.5" r="3.5" />
-    <path d="M10 13L20 3M17 6l2 2M14 9l2 2" />
-  </svg>
-);
-
-export const IconTools = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M14.5 5.5a3.5 3.5 0 0 0 4.6 4.6L21 12l-3 3-1.9-1.9a3.5 3.5 0 0 0-4.6-4.6z" />
-    <path d="M12.5 11.5L4 20l-1 1M9 8l-5.5 5.5" />
-  </svg>
-);
-
-export const IconBriefcase = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <rect x="3" y="7" width="18" height="12" rx="2" />
-    <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18" />
-  </svg>
-);
-
-export const IconLeaf = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M4 20c0-8 6-14 16-14 0 10-6 16-14 16" />
-    <path d="M4 20c3-4 6-6 10-8" />
-  </svg>
-);
-
-export const IconTicket = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M3 9V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2a2 2 0 1 0 0 4v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2a2 2 0 1 0 0-4z" />
-    <path d="M15 6.5v11" strokeDasharray="2 2" />
-  </svg>
-);
-
-export const IconBell = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" />
-    <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
-  </svg>
-);
-
-export const IconGift = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M4 11h16v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
-    <path d="M3 7h18v4H3zM12 7v14" />
-    <path d="M12 7S10.5 3 8 4.2C6 5 7 7 9.5 7zM12 7s1.5-4 4-2.8C18 5 17 7 14.5 7z" />
-  </svg>
-);
-
-export const IconBag = (p: SVGProps<SVGSVGElement>) => (
-  <svg {...base(p)}>
-    <path d="M6 8h12l-1 12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z" />
-    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
   </svg>
 );

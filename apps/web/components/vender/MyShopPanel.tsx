@@ -45,7 +45,13 @@ export function MyShopPanel() {
     return fetch('/api/mine/products', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d: MineResponse) => setData(d))
-      .catch(() => setData({ shop: null, items: [] }));
+      .catch(() =>
+        setData({
+          shop: null,
+          stats: { active: 0, sold: 0, views: 0, contacts: 0, ratingAvg: null, ratingCount: 0 },
+          items: [],
+        }),
+      );
   }
 
   useEffect(() => {
