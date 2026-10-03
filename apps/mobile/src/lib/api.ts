@@ -144,6 +144,39 @@ export interface FavoriteItem {
 export function listFavorites(): Promise<FavoriteItem[]> {
   return get('/favorites', true);
 }
+
+// ── Push token registration (signed-in) ───────────────────────────
+export function registerPushToken(token: string, platform: string): Promise<{ ok: boolean }> {
+  return post('/notifications/push-token', { token, platform }, true);
+}
+export async function unregisterPushToken(token: string): Promise<void> {
+  await post('/notifications/push-token/remove', { token }, true).catch(() => undefined);
+}
+
+// ── Saved searches (SMS/push alerts) ──────────────────────────────
+export interface SavedSearch {
+  id: string;
+  label: string;
+  href: string;
+  createdAt: string;
+  lastRunAt: string | null;
+}
+export function listSavedSearches(phoneE164: string): Promise<SavedSearch[]> {
+  return get(`/saved-searches?phone=${encodeURIComponent(phoneE164)}`);
+}
+export function createSavedSearch(input: {
+  phone: string;
+  label: string;
+  href: string;
+  query: Record<string, unknown>;
+}): Promise<{ id: string }> {
+  return post('/saved-searches', input);
+}
+export async function removeSavedSearch(id: string): Promise<void> {
+  await fetch(`${API_URL}/saved-searches/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(
+    () => undefined,
+  );
+}
 export function addFavorite(productId: string): Promise<{ ok: true }> {
   return post('/favorites', { productId }, true);
 }

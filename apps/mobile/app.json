@@ -32,6 +32,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#007A5E",
+          "defaultChannel": "default"
+        }
       ]
     ],
     "experiments": {

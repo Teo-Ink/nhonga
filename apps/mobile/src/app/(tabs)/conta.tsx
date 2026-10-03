@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   clearToken,
   me,
@@ -8,9 +9,11 @@ import {
   verifyOtp,
   type AuthUser,
 } from '@/lib/api';
+import { registerForPush, unregisterForPush } from '@/lib/push';
 import { brand, radius, space } from '@/lib/theme';
 
 type Step = 'phone' | 'code' | 'done';
+type PushState = 'unknown' | 'on' | 'off' | 'unavailable';
 
 export default function AccountScreen() {
   const [step, setStep] = useState<Step>('phone');
@@ -21,14 +24,27 @@ export default function AccountScreen() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [push, setPush] = useState<PushState>('unknown');
 
-  // Restore an existing session on mount.
+  // Register this device for push alerts (native only), reflecting the result.
+  function enablePush() {
+    if (Platform.OS === 'web') {
+      setPush('unavailable');
+      return;
+    }
+    registerForPush()
+      .then((token) => setPush(token ? 'on' : 'off'))
+      .catch(() => setPush('off'));
+  }
+
+  // Restore an existing session on mount; a signed-in device registers for push.
   useEffect(() => {
     me()
       .then((r) => {
         if (r.user) {
           setUser(r.user);
           setStep('done');
+          enablePush();
         }
       })
       .catch(() => {});
@@ -57,6 +73,7 @@ export default function AccountScreen() {
       await setToken(r.sessionToken);
       setUser(r.user);
       setStep('done');
+      enablePush();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro');
     } finally {
@@ -65,11 +82,13 @@ export default function AccountScreen() {
   }
 
   async function onSignOut() {
+    await unregisterForPush();
     await clearToken();
     setUser(null);
     setPhone('');
     setCode('');
     setStep('phone');
+    setPush('unknown');
   }
 
   if (step === 'done' && user) {
@@ -77,6 +96,36 @@ export default function AccountScreen() {
       <View style={styles.container}>
         <Text style={styles.hello}>Olá, {user.displayName.split(' ')[0]}!</Text>
         <Text style={styles.muted}>{user.phoneE164}</Text>
+
+        <View style={styles.notifyRow}>
+          <Ionicons
+            name={push === 'on' ? 'notifications' : 'notifications-outline'}
+            size={20}
+            color={push === 'on' ? brand.green : brand.muted}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.notifyTitle}>
+              {push === 'on'
+                ? 'Alertas ativados'
+                : push === 'unavailable'
+                  ? 'Alertas no telemóvel'
+                  : 'Ativar alertas'}
+            </Text>
+            <Text style={styles.notifyHint}>
+              {push === 'on'
+                ? 'Avisamos-te por notificação e SMS quando surgir algo nas tuas pesquisas guardadas.'
+                : push === 'unavailable'
+                  ? 'As notificações push funcionam na app instalada; aqui usamos SMS.'
+                  : 'Recebe uma notificação quando surgirem novos anúncios para ti.'}
+            </Text>
+          </View>
+          {push !== 'on' && push !== 'unavailable' ? (
+            <Pressable onPress={enablePush} hitSlop={6}>
+              <Text style={styles.notifyAction}>Ativar</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
         <Pressable style={styles.secondary} onPress={onSignOut}>
           <Text style={styles.secondaryText}>Terminar sessão</Text>
         </Pressable>
@@ -161,6 +210,20 @@ const styles = StyleSheet.create({
     marginTop: space.md,
   },
   secondaryText: { color: brand.text, fontWeight: '600' },
+  notifyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.sm,
+    padding: space.md,
+    borderRadius: radius.md,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+    marginTop: space.sm,
+  },
+  notifyTitle: { color: brand.text, fontWeight: '600', fontSize: 14 },
+  notifyHint: { color: brand.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  notifyAction: { color: brand.green, fontWeight: '700' },
   link: { color: brand.green, textAlign: 'center', marginTop: space.sm },
   dev: { color: brand.green, backgroundColor: brand.surfaceSunken, padding: space.sm, borderRadius: radius.sm },
   error: { color: brand.danger },
