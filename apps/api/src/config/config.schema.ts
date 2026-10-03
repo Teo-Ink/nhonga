@@ -38,6 +38,21 @@ export interface AppConfig {
    * is reflected automatically regardless of this list.
    */
   readonly corsOrigins: readonly string[];
+
+  // ── Outbound delivery (SMS + push) ──────────────────────────────
+  /** 'mock' (log only, default) or 'live' (post to the SMS gateway). */
+  readonly smsMode: 'mock' | 'live';
+  /** JSON HTTP SMS gateway endpoint; required for live SMS. */
+  readonly smsGatewayUrl: string | null;
+  readonly smsGatewayToken: string | null;
+  /** Optional alphanumeric sender ID shown on the SMS. */
+  readonly smsSenderId: string | null;
+  /** 'live' (real Expo push, default — free, no creds) or 'mock' (log only). */
+  readonly pushMode: 'mock' | 'live';
+  /** Optional Expo access token for push sender verification. */
+  readonly expoAccessToken: string | null;
+  /** How often the saved-search alert sweep runs; 0 disables it. */
+  readonly alertsSweepMinutes: number;
 }
 
 class ConfigError extends Error {
@@ -126,6 +141,13 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
       .split(',')
       .map((o) => o.trim())
       .filter((o) => o.length > 0),
+    smsMode: oneOf(raw, 'SMS_MODE', ['mock', 'live'] as const, 'mock'),
+    smsGatewayUrl: raw['SMS_GATEWAY_URL']?.trim() ? raw['SMS_GATEWAY_URL']!.trim() : null,
+    smsGatewayToken: raw['SMS_GATEWAY_TOKEN']?.trim() ? raw['SMS_GATEWAY_TOKEN']!.trim() : null,
+    smsSenderId: raw['SMS_SENDER_ID']?.trim() ? raw['SMS_SENDER_ID']!.trim() : null,
+    pushMode: oneOf(raw, 'PUSH_MODE', ['mock', 'live'] as const, 'live'),
+    expoAccessToken: raw['EXPO_ACCESS_TOKEN']?.trim() ? raw['EXPO_ACCESS_TOKEN']!.trim() : null,
+    alertsSweepMinutes: requireInt(raw, 'ALERTS_SWEEP_MINUTES', 0),
   };
 
   return config;

@@ -139,8 +139,7 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
       slug: input.vendor.slug,
       displayName: input.vendor.displayName,
       isVerified: input.vendor.status === 'active',
-      isPro:
-        input.vendor.proUntil !== null && input.vendor.proUntil.getTime() > Date.now(),
+      isPro: input.vendor.proUntil != null && input.vendor.proUntil.getTime() > Date.now(),
       ratingAvg: input.vendor.ratingAvg === null ? null : Number(input.vendor.ratingAvg),
       ratingCount: input.vendor.ratingCount,
       // Contact channels are exposed only on the product detail, never in lists.

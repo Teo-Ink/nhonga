@@ -1,15 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { savedSearch } from '../../db/schema/alerts.js';
 import { CatalogService } from '../catalog/catalog.service.js';
 import type { ProductFilters, SortKey } from '../catalog/catalog.types.js';
-
-// SMS is mocked (same as auth): we log the message and return it. A real
-// gateway is not wired for the demo.
-const SMS_MOCK = (process.env['SMS_MODE'] ?? 'mock') !== 'live';
+import { DeliveryService } from '../notifications/delivery.service.js';
 
 export class AlertError extends Error {
   constructor(
@@ -36,17 +33,20 @@ export interface AlertRunResult {
   newCount: number;
   sms: string | null;
   sent: boolean;
+  /** How many devices the push reached (0 if the phone isn't a signed-in user). */
+  push: number;
+  /** Whether an in-app notification was also written. */
+  inApp: boolean;
 }
 
 const SORTS: readonly SortKey[] = ['relevance', 'newest', 'price_asc', 'price_desc', 'rating'];
 
 @Injectable()
 export class AlertsService {
-  private readonly log = new Logger('Alerts');
-
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly catalog: CatalogService,
+    private readonly delivery: DeliveryService,
   ) {}
 
   async create(input: {
@@ -114,10 +114,21 @@ export class AlertsService {
 
       let sms: string | null = null;
       let sent = false;
+      let push = 0;
+      let inApp = false;
       if (newCount > 0) {
         sms = `Nhonga: ${newCount} anuncio(s) para "${r.label}". Ver: https://nhonga.co.mz${r.href}`;
-        if (SMS_MOCK) this.log.log(`[mock SMS] alert to ${r.phoneE164}: ${sms}`);
-        sent = true;
+        // Fan the alert across SMS + push + in-app (push/in-app only reach the
+        // phone if it belongs to a signed-in user with a registered device).
+        const delivered = await this.delivery.notifyPhone(r.phoneE164, {
+          title: `${newCount} novo(s) anúncio(s)`,
+          body: `${r.label} — toque para ver`,
+          href: r.href,
+          smsText: sms,
+        });
+        sent = delivered.sms;
+        push = delivered.push;
+        inApp = delivered.inApp;
       }
       await this.db
         .update(savedSearch)
@@ -132,6 +143,8 @@ export class AlertsService {
         newCount,
         sms,
         sent,
+        push,
+        inApp,
       });
     }
     return out;
