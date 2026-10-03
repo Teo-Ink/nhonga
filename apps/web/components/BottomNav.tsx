@@ -12,23 +12,30 @@ export function BottomNav({ t }: { t: Dictionary }) {
   const path = usePathname();
   const { user } = useSession();
   const [unread, setUnread] = useState(0);
+  const [msgUnread, setMsgUnread] = useState(0);
   const active = (href: string): boolean => (href === '/' ? path === '/' : path.startsWith(href));
 
-  // Surface unread notifications on the Account tab (notifications live under
-  // /conta), so mobile sellers see a new contact/review without the header.
+  // Surface unread notifications on the Account tab and unread conversations on
+  // the Messages tab, so mobile users see activity without the desktop header.
   useEffect(() => {
     if (!user) {
       setUnread(0);
+      setMsgUnread(0);
       return;
     }
     let on = true;
-    const load = () =>
-      fetch('/api/notifications', { cache: 'no-store' })
+    const load = () => {
+      void fetch('/api/notifications', { cache: 'no-store' })
         .then((r) => r.json())
         .then((d: { unread?: number }) => on && setUnread(d.unread ?? 0))
         .catch(() => undefined);
-    void load();
-    const onFocus = () => void load();
+      void fetch('/api/conversations', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((d: { unread?: number }) => on && setMsgUnread(d.unread ?? 0))
+        .catch(() => undefined);
+    };
+    load();
+    const onFocus = () => load();
     window.addEventListener('focus', onFocus);
     return () => {
       on = false;
@@ -60,7 +67,21 @@ export function BottomNav({ t }: { t: Dictionary }) {
         </span>
         <span>{t.common.tab_sell}</span>
       </a>
-      {tab('/mensagens', t.common.messages, IconChat)}
+      <a
+        href="/mensagens"
+        className={`btab ${active('/mensagens') ? 'is-active' : ''}`}
+        aria-current={active('/mensagens') ? 'page' : undefined}
+      >
+        <span className="btab__iconwrap">
+          <IconChat width={22} height={22} />
+          {msgUnread > 0 ? (
+            <span className="btab__badge" aria-label={t.common.messages}>
+              {msgUnread > 9 ? '9+' : msgUnread}
+            </span>
+          ) : null}
+        </span>
+        <span>{t.common.messages}</span>
+      </a>
       <a
         href="/conta"
         className={`btab ${active('/conta') ? 'is-active' : ''}`}

@@ -1,9 +1,10 @@
-import { IconSearch, IconHeart, IconChat, IconGrid } from './icons';
+import { IconSearch, IconHeart, IconGrid } from './icons';
 import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
 import { AccountLink } from './auth/AccountLink';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
+import { MessagesLink } from './messaging/MessagesLink';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
@@ -42,10 +43,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
             <IconHeart width={22} height={22} />
             <span className="wlact__label">{t.common.favorites}</span>
           </a>
-          <a className="wlact wlact--hide-sm" href="/mensagens" aria-label={t.common.messages}>
-            <IconChat width={22} height={22} />
-            <span className="wlact__label">{t.common.messages}</span>
-          </a>
+          <MessagesLink label={t.common.messages} />
           <NotificationBell label={t.common.notifications} />
           <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
           <SellButton label={t.common.sell} />
