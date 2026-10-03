@@ -19,8 +19,16 @@ export interface ListingDraft {
   readonly title: string;
   /** Suggested description (empty when not configured). */
   readonly description: string;
+  /** Suggested category slug from the known list, when the model is confident. */
+  readonly category?: string;
   /** False when no ANTHROPIC_API_KEY is set. */
   readonly configured: boolean;
+}
+
+/** An image for vision drafting: base64 bytes + its media type. */
+export interface ImageInput {
+  readonly mediaType: string;
+  readonly dataBase64: string;
 }
 
 export interface TokenUsage {
@@ -35,4 +43,6 @@ export interface CompletionResult {
 /** A pluggable completion backend (Anthropic today; Bedrock/etc. later). */
 export interface AssistantProvider {
   complete(system: string, messages: readonly ChatMessage[]): Promise<CompletionResult>;
+  /** Single-turn completion over a text prompt plus one image (vision). */
+  completeVision(system: string, text: string, image: ImageInput): Promise<CompletionResult>;
 }

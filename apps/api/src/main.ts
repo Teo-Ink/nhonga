@@ -2,17 +2,21 @@ import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // Preserve the exact request bytes so webhook signature verification can
     // run against them (payments webhook receiver).
     rawBody: true,
   });
+  // Allow base64 image uploads (AI photo listing + listing photos). Nest still
+  // captures rawBody for the payments webhook — `verify` is reserved for that.
+  app.useBodyParser('json', { limit: '12mb' });
   const log = new Logger('Bootstrap');
   const config = app.get(ConfigService<AppConfig, true>);
   const nodeEnv = config.get('nodeEnv', { infer: true });

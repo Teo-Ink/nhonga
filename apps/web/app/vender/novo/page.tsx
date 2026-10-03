@@ -2,7 +2,13 @@
 import { useEffect, useState } from 'react';
 import { cents, formatMZN, fromMeticais } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
-import { IconChevronLeft, IconBox, IconSparkle } from '../../../components/icons';
+import {
+  IconChevronLeft,
+  IconBox,
+  IconSparkle,
+  IconMic,
+  IconCamera,
+} from '../../../components/icons';
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
 
@@ -43,6 +49,73 @@ export default function NewListingPage() {
   const [pubError, setPubError] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>('idle');
+  const [photoAiState, setPhotoAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>(
+    'idle',
+  );
+  const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'unsupported'>('idle');
+
+  // Draft title + description + category from the first uploaded photo (vision).
+  async function analyzePhoto() {
+    const image = photos[0];
+    if (!image) return;
+    setPhotoAiState('loading');
+    try {
+      const res = await fetch('/api/assistant/listing-photo', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ image, notes: aiNotes.trim() || undefined }),
+      });
+      const data = (await res.json()) as {
+        title?: string;
+        description?: string;
+        category?: string;
+        configured?: boolean;
+      };
+      if (!res.ok) {
+        setPhotoAiState('error');
+        return;
+      }
+      if (!data.configured) {
+        setPhotoAiState('unconfigured');
+        return;
+      }
+      if (data.title) setTitle(data.title);
+      if (data.description) setDescription(data.description);
+      if (data.category && (CATEGORY_KEYS as readonly string[]).includes(data.category)) {
+        setCategory(data.category);
+      }
+      setPhotoAiState('idle');
+    } catch {
+      setPhotoAiState('error');
+    }
+  }
+
+  // Dictate the notes by voice (Web Speech API, Chrome/Edge). The transcript is
+  // appended to the notes so the seller can then "write with AI" from speech.
+  function startVoice() {
+    type SR = { lang: string; interimResults: boolean; continuous: boolean; start: () => void;
+      onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+      onerror: (() => void) | null; onend: (() => void) | null };
+    const w = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) {
+      setVoiceState('unsupported');
+      return;
+    }
+    const rec = new Ctor();
+    rec.lang = 'pt-PT';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.onresult = (e) => {
+      let text = '';
+      for (let i = 0; i < e.results.length; i++) text += e.results[i]![0]!.transcript;
+      setAiNotes((prev) => (prev ? `${prev} ${text}` : text).trim());
+    };
+    rec.onerror = () => setVoiceState('idle');
+    rec.onend = () => setVoiceState('idle');
+    setVoiceState('listening');
+    rec.start();
+  }
 
   async function generate() {
     if (aiNotes.trim().length < 3) return;
@@ -195,27 +268,66 @@ export default function NewListingPage() {
               <strong>{t.ai_title}</strong>
             </div>
             <p className="aihelper__hint">{t.ai_hint}</p>
-            <textarea
-              className="field__input"
-              rows={2}
-              value={aiNotes}
-              onChange={(e) => setAiNotes(e.target.value)}
-              placeholder={t.ai_ph}
-            />
-            <button
-              type="button"
-              className="btn btn--ghost aihelper__btn"
-              onClick={generate}
-              disabled={aiState === 'loading' || aiNotes.trim().length < 3}
-            >
-              {aiState === 'loading' ? t.ai_loading : t.ai_generate}
-            </button>
-            {aiState === 'unconfigured' ? (
+            <div className="aihelper__inputwrap">
+              <textarea
+                className="field__input"
+                rows={2}
+                value={aiNotes}
+                onChange={(e) => setAiNotes(e.target.value)}
+                placeholder={t.ai_ph}
+              />
+              <button
+                type="button"
+                className={`aihelper__mic ${voiceState === 'listening' ? 'is-on' : ''}`}
+                onClick={startVoice}
+                disabled={voiceState === 'listening'}
+                aria-label={t.voice}
+                title={t.voice}
+              >
+                <IconMic width={18} height={18} />
+              </button>
+            </div>
+            {voiceState === 'listening' ? (
+              <p className="aihelper__note" role="status">
+                {t.voice_listening}
+              </p>
+            ) : null}
+            {voiceState === 'unsupported' ? (
+              <p className="aihelper__note" role="status">
+                {t.voice_unsupported}
+              </p>
+            ) : null}
+            <div className="aihelper__actions">
+              <button
+                type="button"
+                className="btn btn--ghost aihelper__btn"
+                onClick={generate}
+                disabled={aiState === 'loading' || aiNotes.trim().length < 3}
+              >
+                <IconSparkle width={16} height={16} />
+                {aiState === 'loading' ? t.ai_loading : t.ai_generate}
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost aihelper__btn"
+                onClick={analyzePhoto}
+                disabled={photoAiState === 'loading' || photos.length === 0}
+              >
+                <IconCamera width={16} height={16} />
+                {photoAiState === 'loading' ? t.ai_photo_loading : t.ai_photo}
+              </button>
+            </div>
+            {photos.length === 0 ? (
+              <p className="aihelper__note" role="status">
+                {t.ai_photo_hint}
+              </p>
+            ) : null}
+            {aiState === 'unconfigured' || photoAiState === 'unconfigured' ? (
               <p className="aihelper__note" role="status">
                 {t.ai_unconfigured}
               </p>
             ) : null}
-            {aiState === 'error' ? (
+            {aiState === 'error' || photoAiState === 'error' ? (
               <p className="aihelper__note aihelper__note--err" role="alert">
                 {t.ai_error}
               </p>

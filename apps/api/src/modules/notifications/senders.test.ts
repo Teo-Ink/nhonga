@@ -9,12 +9,22 @@ import {
 
 describe('SMS sender factory', () => {
   it('uses the mock in demo mode', () => {
-    const s = createSmsSender({ mode: 'mock', gatewayUrl: 'https://x', gatewayToken: null, senderId: null });
+    const s = createSmsSender({
+      mode: 'mock',
+      gatewayUrl: 'https://x',
+      gatewayToken: null,
+      senderId: null,
+    });
     expect(s).toBeInstanceOf(MockSmsSender);
   });
   it('uses the HTTP gateway only when live AND a URL is configured', () => {
     expect(
-      createSmsSender({ mode: 'live', gatewayUrl: 'https://sms', gatewayToken: 't', senderId: 'Nhonga' }),
+      createSmsSender({
+        mode: 'live',
+        gatewayUrl: 'https://sms',
+        gatewayToken: 't',
+        senderId: 'Nhonga',
+      }),
     ).toBeInstanceOf(HttpSmsSender);
     // live but no URL → still mock (fails safe, never silently drops)
     expect(

@@ -181,32 +181,62 @@ export const pt = {
     tips: {
       default: [
         { t: 'Entrega combinada', d: 'A entrega é combinada diretamente com o vendedor.' },
-        { t: 'Verifique antes de pagar', d: 'Confirme o estado do produto antes de entregar o dinheiro.' },
+        {
+          t: 'Verifique antes de pagar',
+          d: 'Confirme o estado do produto antes de entregar o dinheiro.',
+        },
         { t: 'Encontro seguro', d: 'Combine um local público e movimentado para o encontro.' },
       ],
       viaturas: [
-        { t: 'Verifique os documentos', d: 'Confirme o livrete, o DUA e a matrícula antes de pagar.' },
-        { t: 'Teste antes de comprar', d: 'Faça um test-drive e, se puder, uma inspeção mecânica.' },
+        {
+          t: 'Verifique os documentos',
+          d: 'Confirme o livrete, o DUA e a matrícula antes de pagar.',
+        },
+        {
+          t: 'Teste antes de comprar',
+          d: 'Faça um test-drive e, se puder, uma inspeção mecânica.',
+        },
         { t: 'Encontro seguro', d: 'Combine um local público; evite pagamentos adiantados.' },
       ],
       imoveis: [
         { t: 'Visite o imóvel', d: 'Veja o imóvel pessoalmente antes de qualquer pagamento.' },
-        { t: 'Confirme a documentação', d: 'Verifique o DUAT/título e a identidade do proprietário.' },
+        {
+          t: 'Confirme a documentação',
+          d: 'Verifique o DUAT/título e a identidade do proprietário.',
+        },
         { t: 'Cuidado com sinais', d: 'Nunca pague sinal ou caução sem visitar e confirmar tudo.' },
       ],
       empregos: [
-        { t: 'Candidatura gratuita', d: 'Uma vaga legítima nunca pede dinheiro para se candidatar.' },
-        { t: 'Confirme a empresa', d: 'Verifique a empresa e a vaga antes de partilhar dados pessoais.' },
-        { t: 'Desconfie de ofertas fáceis', d: 'Cuidado com salários altos sem entrevista ou requisitos.' },
+        {
+          t: 'Candidatura gratuita',
+          d: 'Uma vaga legítima nunca pede dinheiro para se candidatar.',
+        },
+        {
+          t: 'Confirme a empresa',
+          d: 'Verifique a empresa e a vaga antes de partilhar dados pessoais.',
+        },
+        {
+          t: 'Desconfie de ofertas fáceis',
+          d: 'Cuidado com salários altos sem entrevista ou requisitos.',
+        },
       ],
       servicos: [
-        { t: 'Combine tudo antes', d: 'Acerte o âmbito, o prazo e o preço com o prestador antes de começar.' },
+        {
+          t: 'Combine tudo antes',
+          d: 'Acerte o âmbito, o prazo e o preço com o prestador antes de começar.',
+        },
         { t: 'Pague ao concluir', d: 'Prefira pagar após o serviço feito, ou por etapas.' },
-        { t: 'Veja referências', d: 'Peça exemplos de trabalhos ou avaliações de outros clientes.' },
+        {
+          t: 'Veja referências',
+          d: 'Peça exemplos de trabalhos ou avaliações de outros clientes.',
+        },
       ],
       eventos: [
         { t: 'Confirme o evento', d: 'Verifique a data, o local e a validade do bilhete.' },
-        { t: 'Cuidado com bilhetes falsos', d: 'Compre de fontes de confiança; desconfie de preços baixos.' },
+        {
+          t: 'Cuidado com bilhetes falsos',
+          d: 'Compre de fontes de confiança; desconfie de preços baixos.',
+        },
         { t: 'Encontro seguro', d: 'Combine a entrega num local público e movimentado.' },
       ],
     },
@@ -254,7 +284,8 @@ export const pt = {
   // Safety screen (B).
   safety: {
     title: 'Comprar e vender em segurança',
-    subtitle: 'O Nhonga liga compradores e vendedores. O negócio é combinado entre as partes, por isso siga estas dicas.',
+    subtitle:
+      'O Nhonga liga compradores e vendedores. O negócio é combinado entre as partes, por isso siga estas dicas.',
     buyers_title: 'Para quem compra',
     b1: 'Encontre-se num local público e movimentado, de dia.',
     b2: 'Veja e teste o produto antes de entregar o dinheiro.',
@@ -265,7 +296,8 @@ export const pt = {
     s2: 'Confirme que recebeu o pagamento antes de entregar.',
     s3: 'Não partilhe códigos de confirmação recebidos por SMS.',
     never_title: 'Nunca partilhe',
-    never_body: 'A sua palavra-passe, código OTP, PIN ou dados do cartão. O Nhonga nunca lhe pede estes dados.',
+    never_body:
+      'A sua palavra-passe, código OTP, PIN ou dados do cartão. O Nhonga nunca lhe pede estes dados.',
     report_title: 'Viu algo suspeito?',
     report_body: 'Denuncie o anúncio ou o vendedor e ajude a manter o Nhonga seguro.',
     report_cta: 'Abrir uma reclamação',
@@ -528,6 +560,13 @@ export const pt = {
     ai_loading: 'A gerar…',
     ai_unconfigured: 'O assistente de IA ainda não está ligado nesta demonstração.',
     ai_error: 'Não foi possível gerar agora. Tente novamente.',
+    ai_photo: 'Analisar foto com IA',
+    ai_photo_loading: 'A analisar foto…',
+    ai_photo_hint:
+      'Adiciona uma foto abaixo e a IA sugere o título, a descrição e a categoria a partir dela.',
+    voice: 'Ditar por voz',
+    voice_listening: 'A ouvir… fala agora.',
+    voice_unsupported: 'O teu navegador não suporta ditado por voz. Experimenta o Chrome.',
     f_title: 'Título do produto',
     f_title_ph: 'Ex.: Capulana tradicional mocambicana',
     f_category: 'Categoria',
@@ -729,11 +768,13 @@ export const pt = {
     done_title: 'Anúncio publicado!',
     done_body: 'A sua campanha está activa até {date}.',
     book_error: 'Não foi possível concluir. Verifique os dados e tente novamente.',
-    demo_pay: 'Demonstração: o pagamento é simulado — nada é cobrado. Use um URL de imagem público.',
+    demo_pay:
+      'Demonstração: o pagamento é simulado — nada é cobrado. Use um URL de imagem público.',
     panel_link: 'Ver painel de campanhas',
     panel_title: 'Painel de campanhas',
     panel_subtitle: 'Todas as campanhas de publicidade e o seu desempenho.',
-    panel_note: 'Vista de operações (demonstração). Numa versão real, o acesso seria restrito à equipa.',
+    panel_note:
+      'Vista de operações (demonstração). Numa versão real, o acesso seria restrito à equipa.',
     col_advertiser: 'Anunciante',
     col_placement: 'Espaço',
     col_category: 'Categoria',

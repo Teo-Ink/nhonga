@@ -39,6 +39,8 @@ import {
   Bell,
   Gift,
   ShoppingBag,
+  Mic,
+  Camera,
   type LucideIcon,
   type LucideProps,
 } from 'lucide-react';
@@ -93,6 +95,8 @@ export const IconPhone = icon(Smartphone);
 export const IconHome = icon(House);
 export const IconCup = icon(Coffee);
 export const IconSparkle = icon(Sparkles);
+export const IconMic = icon(Mic);
+export const IconCamera = icon(Camera);
 export const IconCar = icon(Car);
 export const IconKey = icon(KeyRound);
 export const IconTools = icon(Wrench);

@@ -2,12 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/config.schema.js';
 import { AnthropicProvider } from './anthropic.provider.js';
-import type {
-  AssistantProvider,
-  ChatMessage,
-  ChatReply,
-  ListingDraft,
-} from './assistant.types.js';
+import type { AssistantProvider, ChatMessage, ChatReply, ListingDraft } from './assistant.types.js';
 
 export class AssistantError extends Error {
   constructor(
@@ -80,6 +75,37 @@ Regras:
 
 Responde SÓ com JSON válido, sem texto à volta, no formato:
 {"title": "…", "description": "…"}`;
+
+// Known category slugs the vision model may suggest. Anything else is ignored.
+const CATEGORY_SLUGS = [
+  'viaturas',
+  'imoveis',
+  'empregos',
+  'servicos',
+  'eventos',
+  'moda',
+  'electronica',
+  'telemoveis',
+  'casa',
+  'alimentacao',
+  'beleza',
+] as const;
+
+// Drafts a listing from a PHOTO of the item (plus optional seller notes). Honest:
+// describes only what is visibly in the photo / stated in the notes — never
+// invents brand, condition, specs or price. Also suggests a category.
+const PHOTO_PROMPT = `És um assistente que ajuda vendedores do Nhonga (classificados de Moçambique) a criar um anúncio a partir de uma FOTO do artigo.
+
+Regras:
+- Escreve em português de Moçambique, tom simpático e direto.
+- Descreve APENAS o que se vê na foto (e nas notas do vendedor, se houver). NÃO inventes marca, modelo, estado, medidas, garantias nem preço se não forem claros.
+- Se não tiveres a certeza de um detalhe, não o afirmes.
+- Título: máximo 60 caracteres, específico, sem MAIÚSCULAS a gritar.
+- Descrição: 2 a 4 frases úteis para o comprador.
+- Sugere a categoria mais adequada, ESCOLHENDO uma destas (ou null se nenhuma encaixar): ${CATEGORY_SLUGS.join(', ')}.
+
+Responde SÓ com JSON válido, sem texto à volta:
+{"title": "…", "description": "…", "category": "<slug ou null>"}`;
 
 @Injectable()
 export class AssistantService {
@@ -170,6 +196,54 @@ export class AssistantService {
     }
   }
 
+  /** AI-assisted posting from a PHOTO (vision): draft title + description +
+   *  a suggested category from the item's image, plus any seller notes. */
+  async draftListingFromPhoto(
+    input: { image: { mediaType: string; dataBase64: string }; notes?: string },
+    clientId = 'anon',
+  ): Promise<ListingDraft> {
+    if (!this.limiter.allow(clientId)) {
+      throw new AssistantError('Too many requests — try again shortly', 'rate_limited');
+    }
+    const { mediaType, dataBase64 } = input.image;
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(mediaType) || !dataBase64) {
+      throw new AssistantError('Imagem inválida (use JPEG, PNG, WEBP ou GIF).', 'invalid_input');
+    }
+    // ~7MB of base64 ≈ 5MB image — Claude's per-image ceiling.
+    if (dataBase64.length > 7_000_000) {
+      throw new AssistantError('Imagem demasiado grande.', 'invalid_input');
+    }
+    const notes = (input.notes ?? '').trim().slice(0, MAX_CONTENT);
+    if (!this.provider) return { title: '', description: '', configured: false };
+    if (this.overMonthlyCap()) {
+      throw new AssistantError('O assistente está muito ocupado. Tenta mais tarde.', 'upstream');
+    }
+
+    const text = notes
+      ? `Cria o anúncio a partir desta foto. Notas do vendedor: ${notes}`
+      : 'Cria o anúncio a partir desta foto.';
+    try {
+      const { text: out, usage } = await this.provider.completeVision(PHOTO_PROMPT, text, {
+        mediaType,
+        dataBase64,
+      });
+      this.record(usage.inputTokens, usage.outputTokens);
+      const draft = parseDraft(out);
+      const category =
+        draft.category && (CATEGORY_SLUGS as readonly string[]).includes(draft.category)
+          ? draft.category
+          : undefined;
+      return {
+        title: draft.title,
+        description: draft.description,
+        ...(category ? { category } : {}),
+        configured: true,
+      };
+    } catch (e) {
+      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+    }
+  }
+
   private overMonthlyCap(): boolean {
     if (this.monthlyTokenCap <= 0) return false;
     this.rollMonth();
@@ -225,18 +299,24 @@ export class AssistantService {
 
 /** Parse the model's reply into {title, description}. Prefers strict JSON, with
  *  a plain-text fallback so a non-JSON reply still fills something useful. */
-function parseDraft(text: string): { title: string; description: string } {
+function parseDraft(text: string): { title: string; description: string; category?: string } {
   const cleaned = text
     .trim()
     .replace(/^```(?:json)?/i, '')
     .replace(/```$/, '')
     .trim();
   try {
-    const obj = JSON.parse(cleaned) as { title?: unknown; description?: unknown };
+    const obj = JSON.parse(cleaned) as {
+      title?: unknown;
+      description?: unknown;
+      category?: unknown;
+    };
     const title = typeof obj.title === 'string' ? obj.title.trim().slice(0, 80) : '';
     const description =
       typeof obj.description === 'string' ? obj.description.trim().slice(0, 1200) : '';
-    if (title || description) return { title, description };
+    const category =
+      typeof obj.category === 'string' && obj.category.trim() ? obj.category.trim() : undefined;
+    if (title || description) return { title, description, ...(category ? { category } : {}) };
   } catch {
     /* not JSON — fall back to plain text */
   }

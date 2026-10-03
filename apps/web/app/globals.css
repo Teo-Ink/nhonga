@@ -5474,6 +5474,61 @@ a.seller:focus-visible {
   font-size: var(--text-sm);
   margin-bottom: var(--space-2);
 }
+.aihelper__inputwrap {
+  position: relative;
+}
+.aihelper__inputwrap .field__input {
+  padding-right: 44px;
+}
+/* Voice-dictation mic, floated inside the notes field. */
+.aihelper__mic {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--brand);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring);
+}
+.aihelper__mic:hover {
+  background: var(--bg-subtle);
+}
+.aihelper__mic:active {
+  transform: scale(0.92);
+}
+.aihelper__mic.is-on {
+  background: var(--cta);
+  color: var(--cta-text);
+  border-color: var(--cta);
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--cta) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--cta) 0%, transparent);
+  }
+}
+.aihelper__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.aihelper__actions .aihelper__btn {
+  margin-top: 0;
+  width: auto;
+  flex: 1 1 auto;
+}
 .aihelper__btn {
   margin-top: var(--space-2);
 }
@@ -5741,8 +5796,7 @@ a.seller:focus-visible {
   border-radius: 0;
   padding: 72px var(--space-4) 60px;
   /* Fallback shown before the video loads / if it fails, and on phones. */
-  background:
-    radial-gradient(120% 140% at 82% -10%, rgba(245, 197, 24, 0.16), transparent 55%),
+  background: radial-gradient(120% 140% at 82% -10%, rgba(245, 197, 24, 0.16), transparent 55%),
     linear-gradient(135deg, var(--brand) 0%, #0b5138 60%, #083b28 100%);
   color: #fff;
   text-align: center;
@@ -6032,7 +6086,12 @@ a.seller:focus-visible {
 .spotbox__adscrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.18) 60%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.18) 60%,
+    transparent 100%
+  );
 }
 .spotbox__adtext {
   position: absolute;

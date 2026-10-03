@@ -19,6 +19,24 @@ interface ListingBody {
   category?: unknown;
   details?: unknown;
 }
+interface ListingPhotoBody {
+  /** A data URL (data:image/jpeg;base64,…) or raw base64 bytes. */
+  image?: unknown;
+  /** Required when `image` is raw base64 (inferred from the data URL otherwise). */
+  mediaType?: unknown;
+  notes?: unknown;
+}
+
+/** Split a data URL into its media type + base64, or use the provided mediaType. */
+function parseImage(image: unknown, mediaType: unknown): { mediaType: string; dataBase64: string } {
+  if (typeof image !== 'string' || !image) {
+    throw new BadRequestException({ message: 'image is required' });
+  }
+  const m = /^data:([^;]+);base64,(.+)$/s.exec(image);
+  if (m) return { mediaType: m[1]!, dataBase64: m[2]! };
+  if (typeof mediaType === 'string' && mediaType) return { mediaType, dataBase64: image };
+  throw new BadRequestException({ message: 'image must be a data URL or include mediaType' });
+}
 
 function parseMessages(input: unknown): ChatMessage[] {
   if (!Array.isArray(input)) {
@@ -63,6 +81,20 @@ export class AssistantController {
     if (typeof body.category === 'string') arg.category = body.category;
     try {
       return await this.assistant.draftListing(arg, ip || 'anon');
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  /** AI-assisted posting from a PHOTO (vision): draft a listing from the image. */
+  @Post('listing-photo')
+  @HttpCode(200)
+  async listingPhoto(@Body() body: ListingPhotoBody, @Ip() ip: string): Promise<ListingDraft> {
+    const image = parseImage(body.image, body.mediaType);
+    const arg: { image: { mediaType: string; dataBase64: string }; notes?: string } = { image };
+    if (typeof body.notes === 'string') arg.notes = body.notes;
+    try {
+      return await this.assistant.draftListingFromPhoto(arg, ip || 'anon');
     } catch (e) {
       throw toHttp(e);
     }

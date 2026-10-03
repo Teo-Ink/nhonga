@@ -187,23 +187,38 @@ export const en: Dictionary = {
       ],
       viaturas: [
         { t: 'Check the documents', d: 'Confirm the logbook, DUA and plates before paying.' },
-        { t: 'Test before buying', d: 'Take a test drive and, if possible, a mechanical inspection.' },
+        {
+          t: 'Test before buying',
+          d: 'Take a test drive and, if possible, a mechanical inspection.',
+        },
         { t: 'Meet safely', d: 'Meet in a public place; avoid upfront payments.' },
       ],
       imoveis: [
         { t: 'Visit the property', d: 'See the property in person before any payment.' },
         { t: 'Confirm the paperwork', d: 'Verify the DUAT/title and the owner’s identity.' },
-        { t: 'Beware of deposits', d: 'Never pay a deposit without visiting and confirming everything.' },
+        {
+          t: 'Beware of deposits',
+          d: 'Never pay a deposit without visiting and confirming everything.',
+        },
       ],
       empregos: [
         { t: 'Applying is free', d: 'A legitimate job never asks for money to apply.' },
-        { t: 'Verify the employer', d: 'Check the company and the role before sharing personal data.' },
+        {
+          t: 'Verify the employer',
+          d: 'Check the company and the role before sharing personal data.',
+        },
         { t: 'Beware easy offers', d: 'Be wary of high pay with no interview or requirements.' },
       ],
       servicos: [
-        { t: 'Agree terms first', d: 'Settle scope, timeline and price with the provider before starting.' },
+        {
+          t: 'Agree terms first',
+          d: 'Settle scope, timeline and price with the provider before starting.',
+        },
         { t: 'Pay on completion', d: 'Prefer paying after the work is done, or in stages.' },
-        { t: 'Ask for references', d: 'Request examples of past work or reviews from other clients.' },
+        {
+          t: 'Ask for references',
+          d: 'Request examples of past work or reviews from other clients.',
+        },
       ],
       eventos: [
         { t: 'Confirm the event', d: 'Check the date, venue and ticket validity.' },
@@ -253,7 +268,8 @@ export const en: Dictionary = {
   },
   safety: {
     title: 'Buying and selling safely',
-    subtitle: 'Nhonga connects buyers and sellers. Deals are arranged between the parties, so follow these tips.',
+    subtitle:
+      'Nhonga connects buyers and sellers. Deals are arranged between the parties, so follow these tips.',
     buyers_title: 'For buyers',
     b1: 'Meet in a public, busy place during the day.',
     b2: 'See and test the item before handing over money.',
@@ -264,7 +280,8 @@ export const en: Dictionary = {
     s2: 'Confirm you have received payment before handing over.',
     s3: 'Never share confirmation codes you receive by SMS.',
     never_title: 'Never share',
-    never_body: 'Your password, OTP code, PIN or card details. Nhonga will never ask you for these.',
+    never_body:
+      'Your password, OTP code, PIN or card details. Nhonga will never ask you for these.',
     report_title: 'Seen something suspicious?',
     report_body: 'Report the listing or seller and help keep Nhonga safe.',
     report_cta: 'Open a dispute',
@@ -522,6 +539,13 @@ export const en: Dictionary = {
     ai_loading: 'Generating…',
     ai_unconfigured: 'The AI assistant is not connected in this demo yet.',
     ai_error: 'Could not generate right now. Please try again.',
+    ai_photo: 'Analyse photo with AI',
+    ai_photo_loading: 'Analysing photo…',
+    ai_photo_hint:
+      'Add a photo below and the AI suggests a title, description and category from it.',
+    voice: 'Dictate by voice',
+    voice_listening: 'Listening… speak now.',
+    voice_unsupported: 'Your browser does not support voice dictation. Try Chrome.',
     f_title: 'Product title',
     f_title_ph: 'e.g. Traditional Mozambican capulana',
     f_category: 'Category',

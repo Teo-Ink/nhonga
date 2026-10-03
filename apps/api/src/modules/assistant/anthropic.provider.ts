@@ -1,4 +1,9 @@
-import type { AssistantProvider, ChatMessage, CompletionResult } from './assistant.types.js';
+import type {
+  AssistantProvider,
+  ChatMessage,
+  CompletionResult,
+  ImageInput,
+} from './assistant.types.js';
 
 interface AnthropicTextBlock {
   type: string;
@@ -23,7 +28,30 @@ export class AnthropicProvider implements AssistantProvider {
     private readonly maxTokens = 700,
   ) {}
 
-  async complete(system: string, messages: readonly ChatMessage[]): Promise<CompletionResult> {
+  complete(system: string, messages: readonly ChatMessage[]): Promise<CompletionResult> {
+    return this.request(
+      system,
+      messages.map((m) => ({ role: m.role, content: m.content })),
+    );
+  }
+
+  /** One user turn carrying an image block plus the instruction text. */
+  completeVision(system: string, text: string, image: ImageInput): Promise<CompletionResult> {
+    return this.request(system, [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: image.mediaType, data: image.dataBase64 },
+          },
+          { type: 'text', text },
+        ],
+      },
+    ]);
+  }
+
+  private async request(system: string, messages: unknown[]): Promise<CompletionResult> {
     const res = await fetch(AnthropicProvider.ENDPOINT, {
       method: 'POST',
       headers: {
@@ -35,7 +63,7 @@ export class AnthropicProvider implements AssistantProvider {
         model: this.model,
         max_tokens: this.maxTokens,
         system,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages,
       }),
     });
 
