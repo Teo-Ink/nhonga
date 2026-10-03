@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { IconWhatsApp, IconPhone, IconShare } from './icons';
 import type { Dictionary } from '../lib/i18n/index';
 
@@ -35,12 +36,20 @@ export function ContactSeller({
     }).catch(() => {});
   }
 
-  const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // Read the page URL only after mount: using window.location during render
+  // makes the server (empty) and client (full URL) markup differ, which React
+  // reports as a hydration mismatch. Starting empty keeps SSR and the first
+  // client render identical; the link is enriched with the URL right after.
+  const [pageUrl, setPageUrl] = useState('');
+  useEffect(() => {
+    setPageUrl(window.location.href);
+  }, []);
+
   const messageTpl = waMessage ?? t.wa_message;
+  const message = messageTpl.replace('{title}', title).replace('{price}', priceLabel);
+  const waText = pageUrl ? `${message} ${pageUrl}` : message;
   const waHref = whatsapp
-    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
-        `${messageTpl.replace('{title}', title).replace('{price}', priceLabel)} ${pageUrl}`,
-      )}`
+    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waText)}`
     : null;
 
   async function share() {
