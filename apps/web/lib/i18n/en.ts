@@ -638,6 +638,21 @@ export const en: Dictionary = {
     no_contact: 'This seller left no contact.',
     safety:
       'Safety tip: meet in a public place and check the item before paying. Never send money in advance or share codes or PINs.',
+    // Safety line adapted to the listing type.
+    safety_tips: {
+      default:
+        'Safety tip: meet in a public place, check the item before paying, and never send money in advance or share codes or PINs.',
+      viaturas:
+        'Safety tip: check the vehicle’s documents and meet in a public place. Never pay without seeing the vehicle or share codes or PINs.',
+      imoveis:
+        'Safety tip: visit the property and confirm the paperwork before paying. Never transfer a deposit without viewing it or share codes or PINs.',
+      empregos:
+        'Safety tip: never pay to apply, and never share bank details, codes or PINs. Be wary of offers that seem too good to be true.',
+      servicos:
+        'Safety tip: agree the price up front, prefer paying after the work, and meet in a public place. Never share codes or PINs.',
+      eventos:
+        'Safety tip: confirm the event and ticket validity and buy from trusted sources. Never send money in advance or share codes or PINs.',
+    },
     wa_message: 'Hi! I am interested in your “{title}” ({price}) listing on Nhonga.',
     cta_apply: 'Apply on WhatsApp',
     wa_apply: 'Hi! I saw the “{title}” job on Nhonga and would like to apply.',

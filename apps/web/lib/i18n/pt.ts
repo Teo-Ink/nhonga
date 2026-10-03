@@ -644,6 +644,21 @@ export const pt = {
     no_contact: 'Este vendedor não deixou contacto.',
     safety:
       'Dica de segurança: encontre-se num local público e verifique o produto antes de pagar. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
+    // Linha de segurança adaptada ao tipo de anúncio.
+    safety_tips: {
+      default:
+        'Dica de segurança: encontre-se num local público, verifique o produto antes de pagar e nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
+      viaturas:
+        'Dica de segurança: verifique os documentos da viatura e encontre-se num local público. Nunca pague sem ver o veículo nem partilhe códigos ou PIN.',
+      imoveis:
+        'Dica de segurança: visite o imóvel e confirme a documentação antes de pagar. Nunca transfira sinal ou caução sem ver o imóvel nem partilhe códigos ou PIN.',
+      empregos:
+        'Dica de segurança: nunca pague para se candidatar nem partilhe dados bancários, códigos ou PIN. Desconfie de ofertas boas demais.',
+      servicos:
+        'Dica de segurança: combine o preço à partida, prefira pagar após o serviço e encontre-se num local público. Nunca partilhe códigos ou PIN.',
+      eventos:
+        'Dica de segurança: confirme o evento e a validade do bilhete e compre de fontes de confiança. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
+    },
     wa_message: 'Olá! Tenho interesse no anúncio «{title}» ({price}) no Nhonga.',
     cta_apply: 'Candidatar-me pelo WhatsApp',
     wa_apply: 'Olá! Vi a vaga «{title}» no Nhonga e gostaria de me candidatar.',

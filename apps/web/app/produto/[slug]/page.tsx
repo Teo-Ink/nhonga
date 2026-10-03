@@ -195,6 +195,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             waMessage={waMessage}
             vendorSlug={product.vendor.slug}
             vendorName={product.vendor.displayName}
+            safetyNote={t.contact.safety_tips[vertical]}
           />
 
           <ul className="assurances">

@@ -17,6 +17,7 @@ export function ContactSeller({
   waMessage,
   vendorSlug,
   vendorName,
+  safetyNote,
 }: {
   slug: string;
   title: string;
@@ -31,6 +32,8 @@ export function ContactSeller({
   /** Shop slug + name — enables the in-app "Message" button. */
   vendorSlug?: string | null;
   vendorName?: string | null;
+  /** Vertical-specific safety line; falls back to the generic one. */
+  safetyNote?: string;
 }) {
   function track(type: 'contact' | 'share') {
     void fetch('/api/track', {
@@ -113,7 +116,7 @@ export function ContactSeller({
         <IconShare width={18} height={18} /> {t.share}
       </button>
       {!hasContact ? <p className="contactbox__none">{t.no_contact}</p> : null}
-      <p className="contactbox__safe">{t.safety}</p>
+      <p className="contactbox__safe">{safetyNote ?? t.safety}</p>
     </div>
   );
 }
