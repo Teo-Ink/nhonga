@@ -10,9 +10,14 @@ import {
   Text,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { getProduct, recordEvent, formatMZN, type ProductDetail } from '@/lib/api';
-import { brand, radius, space } from '@/lib/theme';
+import { brand, radius, space, shadow } from '@/lib/theme';
+
+// Shrinks a button slightly while pressed for tactile feedback.
+const pressed = ({ pressed: p }: { pressed: boolean }) =>
+  p ? { transform: [{ scale: 0.98 }], opacity: 0.92 } : null;
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -90,16 +95,19 @@ export default function ProductScreen() {
 
       {/* Contact block */}
       {whatsapp ? (
-        <Pressable style={[styles.contactBtn, styles.wa]} onPress={openWhatsApp}>
+        <Pressable style={(s) => [styles.contactBtn, styles.wa, pressed(s)]} onPress={openWhatsApp}>
+          <Ionicons name="logo-whatsapp" size={20} color="#fff" />
           <Text style={styles.contactText}>Contactar pelo WhatsApp</Text>
         </Pressable>
       ) : null}
       {phone ? (
-        <Pressable style={[styles.contactBtn, styles.call]} onPress={call}>
+        <Pressable style={(s) => [styles.contactBtn, styles.call, pressed(s)]} onPress={call}>
+          <Ionicons name="call" size={18} color="#fff" />
           <Text style={styles.contactText}>Ligar</Text>
         </Pressable>
       ) : null}
-      <Pressable style={[styles.contactBtn, styles.shareBtn]} onPress={share}>
+      <Pressable style={(s) => [styles.contactBtn, styles.shareBtn, pressed(s)]} onPress={share}>
+        <Ionicons name="share-social-outline" size={18} color={brand.text} />
         <Text style={styles.shareText}>Partilhar</Text>
       </Pressable>
       {!hasContact ? (
@@ -136,22 +144,25 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
     backgroundColor: brand.surfaceSunken,
+    ...shadow.md,
   },
   image: { width: '100%', height: '100%' },
-  title: { marginTop: space.md, fontSize: 20, fontWeight: '700', color: brand.text },
+  title: { marginTop: space.md, fontSize: 20, fontWeight: '700', color: brand.text, letterSpacing: -0.3 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  price: { fontSize: 22, fontWeight: '800', color: brand.green },
+  price: { fontSize: 22, fontWeight: '800', color: brand.green, letterSpacing: -0.4 },
   was: { fontSize: 15, color: brand.muted, textDecorationLine: 'line-through' },
   seller: { color: brand.muted, marginBottom: space.sm },
   contactBtn: {
+    flexDirection: 'row',
+    gap: space.sm,
     height: 50,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: space.xs,
   },
-  wa: { backgroundColor: '#25D366' },
-  call: { backgroundColor: brand.green },
+  wa: { backgroundColor: '#25D366', ...shadow.sm },
+  call: { backgroundColor: brand.green, ...shadow.sm },
   contactText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   shareBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: brand.border },
   shareText: { color: brand.text, fontWeight: '600', fontSize: 15 },

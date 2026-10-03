@@ -8,24 +8,37 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarActiveTintColor: brand.green,
         tabBarInactiveTintColor: brand.muted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: brand.white,
+          borderTopColor: brand.border,
+          paddingTop: 4,
+        },
         headerStyle: { backgroundColor: brand.green },
         headerTintColor: '#ffffff',
         headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Nhonga',
           tabBarLabel: 'Início',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="assistente"
         options={{
           title: 'Assistente',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -33,7 +46,9 @@ export default function TabsLayout() {
         name="conta"
         options={{
           title: 'Conta',
-          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { listProducts, formatMZN, type ProductListItem } from '@/lib/api';
-import { brand, radius, space } from '@/lib/theme';
+import { brand, radius, space, shadow } from '@/lib/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -54,7 +54,10 @@ export default function HomeScreen() {
       columnWrapperStyle={styles.row}
       renderItem={({ item }) => (
         <Pressable
-          style={styles.card}
+          style={({ pressed }) => [
+            styles.card,
+            pressed && { transform: [{ scale: 0.97 }], opacity: 0.92 },
+          ]}
           onPress={() => router.push({ pathname: '/produto/[slug]', params: { slug: item.slug } })}>
 
           <View style={styles.media}>
@@ -97,22 +100,24 @@ const styles = StyleSheet.create({
   card: { flex: 1, marginBottom: space.md },
   media: {
     aspectRatio: 4 / 3,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     overflow: 'hidden',
     backgroundColor: brand.surfaceSunken,
+    ...shadow.sm,
   },
   image: { width: '100%', height: '100%' },
   badge: {
     position: 'absolute',
-    top: 6,
-    left: 6,
+    top: 8,
+    left: 8,
     backgroundColor: brand.yellow,
-    borderRadius: radius.sm,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    borderRadius: radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    ...shadow.sm,
   },
-  badgeText: { color: brand.ink, fontWeight: '700', fontSize: 11 },
-  title: { marginTop: space.sm, fontSize: 13, color: brand.text },
-  price: { marginTop: 2, fontSize: 15, fontWeight: '700', color: brand.green },
+  badgeText: { color: brand.ink, fontWeight: '800', fontSize: 11, letterSpacing: 0.2 },
+  title: { marginTop: space.sm, fontSize: 13, lineHeight: 17, color: brand.text },
+  price: { marginTop: 2, fontSize: 15, fontWeight: '800', color: brand.green, letterSpacing: -0.2 },
   location: { marginTop: 2, fontSize: 11, color: brand.muted },
 });

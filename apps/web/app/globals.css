@@ -401,29 +401,47 @@ button {
   border-radius: var(--radius-md);
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
-  transition: background var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring);
   width: 100%;
+}
+/* Tactile press: the button dips slightly, springs back on release. */
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn--cta {
   background: var(--cta);
   color: var(--cta-text);
+  box-shadow: var(--shadow-sm);
 }
 .btn--cta:hover {
   background: var(--cta-hover);
+  box-shadow: var(--shadow-md);
 }
 .btn--primary {
   background: var(--brand);
   color: var(--text-on-primary);
+  box-shadow: var(--shadow-sm);
+}
+.btn--primary:hover {
+  box-shadow: var(--shadow-md);
 }
 .btn--ghost {
   background: transparent;
   color: var(--brand);
   border: 1px solid var(--border-strong);
 }
+.btn--ghost:hover {
+  background: var(--bg-subtle);
+  border-color: var(--brand);
+}
 .btn:disabled {
   background: var(--surface-sunken);
   color: var(--text-muted);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* ── Notice ───────────────────────────────────────────────────── */
@@ -3273,23 +3291,42 @@ a.seller:focus-visible {
   overflow: hidden;
   text-decoration: none;
   color: var(--text);
+  box-shadow: var(--shadow-xs);
   transition:
     transform var(--dur-base, 150ms) var(--ease-out, ease),
-    box-shadow var(--dur-base, 150ms) var(--ease-out, ease);
+    box-shadow var(--dur-base, 150ms) var(--ease-out, ease),
+    border-color var(--dur-base, 150ms) var(--ease-out, ease);
 }
 .lcard:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-strong);
+}
+/* Tactile press feedback on touch/click — the card settles back down. */
+.lcard:active {
+  transform: translateY(-1px);
+  transition-duration: var(--dur-fast);
 }
 .lcard__media {
   position: relative;
   aspect-ratio: 4 / 3;
   background: var(--surface-sunken);
+  overflow: hidden;
 }
-.lcard__media img {
+.lcard__media img,
+.lcard__media .ph-bg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform var(--dur-slow, 250ms) var(--ease-out, ease);
+}
+/* Slow photo zoom on hover — a modern marketplace delight. Hover-capable
+   pointers only, so a tap on mobile never leaves the image stuck zoomed. */
+@media (hover: hover) {
+  .lcard:hover .lcard__media img,
+  .lcard:hover .lcard__media .ph-bg {
+    transform: scale(1.05);
+  }
 }
 .lcard__badge {
   position: absolute;
@@ -3674,19 +3711,40 @@ a.seller:focus-visible {
   height: 34px;
   border-radius: 50%;
   border: 0;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
   color: #3a352c;
   display: grid;
   place-items: center;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-  transition: transform var(--dur-fast, 150ms) var(--ease-out, ease);
+  transition: transform var(--dur-base, 200ms) var(--ease-spring, ease);
 }
 .favbtn:hover {
-  background: #fff;
-  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.1);
+}
+.favbtn:active {
+  transform: scale(0.9);
+  transition-duration: var(--dur-fast);
 }
 .favbtn.is-on {
   color: #e0245e;
+}
+/* A quick pop when a listing is favourited. */
+.favbtn.is-on svg {
+  animation: fav-pop var(--dur-base, 200ms) var(--ease-spring, ease);
+}
+@keyframes fav-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Mobile bottom tab bar */
@@ -5446,15 +5504,20 @@ a.seller:focus-visible {
   background: var(--surface);
   color: var(--text);
   text-align: center;
+  box-shadow: var(--shadow-xs);
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
 .hubtile:hover {
   border-color: var(--brand);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+.hubtile:active {
+  transform: translateY(-1px);
+  transition-duration: var(--dur-fast);
 }
 .hubtile__icon {
   display: grid;
@@ -5464,6 +5527,15 @@ a.seller:focus-visible {
   border-radius: 50%;
   background: var(--surface-sunken);
   color: var(--brand-500);
+  transition:
+    background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-spring);
+}
+.hubtile:hover .hubtile__icon {
+  background: var(--color-primary-50);
+  color: var(--brand);
+  transform: scale(1.08);
 }
 .hubtile__label {
   font-weight: 600;
