@@ -21,6 +21,7 @@ import { district } from '../../db/schema/identity.js';
 import { MediaService } from '../media/media.service.js';
 import { AuthService, type AuthUser } from '../auth/auth.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { FavoritesService } from '../favorites/favorites.service.js';
 import type { Db } from '../../db/types.js';
 import {
   buildOptions,
@@ -60,6 +61,7 @@ export class CatalogService {
     private readonly media: MediaService,
     private readonly auth: AuthService,
     private readonly notifications: NotificationsService,
+    private readonly favorites: FavoritesService,
   ) {}
 
   /**
@@ -420,15 +422,35 @@ export class CatalogService {
       (input.priceCents !== undefined && Number.isFinite(input.priceCents)) ||
       input.stock !== undefined
     ) {
-      const vset: Record<string, unknown> = {};
-      if (input.priceCents !== undefined && Number.isFinite(input.priceCents)) {
-        vset['priceCents'] = Math.max(0, Math.trunc(input.priceCents));
+      const newPrice =
+        input.priceCents !== undefined && Number.isFinite(input.priceCents)
+          ? Math.max(0, Math.trunc(input.priceCents))
+          : undefined;
+
+      // Capture the current price before we change it, to detect a drop.
+      let oldPrice: number | undefined;
+      if (newPrice !== undefined) {
+        const row = (
+          await this.db
+            .select({ price: sql<number>`min(${productVariant.priceCents})::bigint` })
+            .from(productVariant)
+            .where(and(eq(productVariant.productId, id), eq(productVariant.isActive, true)))
+        )[0];
+        oldPrice = Number(row?.price ?? 0);
       }
+
+      const vset: Record<string, unknown> = {};
+      if (newPrice !== undefined) vset['priceCents'] = newPrice;
       if (input.stock !== undefined && Number.isFinite(input.stock)) {
         vset['stockQuantity'] = Math.max(0, Math.trunc(input.stock));
       }
       if (Object.keys(vset).length > 0) {
         await this.db.update(productVariant).set(vset).where(eq(productVariant.productId, id));
+      }
+
+      // Alert anyone who favourited this listing when the price drops.
+      if (newPrice !== undefined && oldPrice !== undefined && newPrice < oldPrice) {
+        await this.favorites.onPriceChange(id, newPrice);
       }
     }
 
