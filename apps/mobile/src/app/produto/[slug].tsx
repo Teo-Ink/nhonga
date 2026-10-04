@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ExpoLinking from 'expo-linking';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import {
   getProduct,
@@ -110,8 +111,15 @@ export default function ProductScreen() {
   async function share() {
     if (!product) return;
     recordEvent(product.slug, 'share');
+    // Deep link that reopens this exact listing (nhonga://produto/slug on a
+    // device, the web URL on Expo web).
+    const url = ExpoLinking.createURL(`/produto/${product.slug}`);
     try {
-      await Share.share({ message: `${product.title} — ${price} · Nhonga` });
+      await Share.share({
+        message: `${product.title} — ${price} · Nhonga\n${url}`,
+        url,
+        title: product.title,
+      });
     } catch {
       /* cancelled */
     }
@@ -194,7 +202,20 @@ export default function ProductScreen() {
 
       {similar.length > 0 ? (
         <View style={styles.similar}>
-          <Text style={styles.similarTitle}>Anúncios semelhantes</Text>
+          <View style={styles.similarHead}>
+            <Text style={styles.similarTitle}>Anúncios semelhantes</Text>
+            <Pressable
+              style={(s) => [styles.seeAll, pressed(s)]}
+              onPress={() =>
+                router.navigate({ pathname: '/', params: { category: product.category.slug } })
+              }
+              accessibilityRole="link"
+              accessibilityLabel={`Ver mais em ${product.category.name}`}
+            >
+              <Text style={styles.seeAllText}>Ver mais</Text>
+              <Ionicons name="chevron-forward" size={14} color={brand.green} />
+            </Pressable>
+          </View>
           <FlatList
             data={similar}
             keyExtractor={(p) => p.id}
@@ -293,7 +314,15 @@ const styles = StyleSheet.create({
   specKey: { color: brand.muted },
   specVal: { color: brand.text, fontWeight: '500' },
   similar: { marginTop: space.lg },
-  similarTitle: { fontSize: 16, fontWeight: '700', color: brand.text, marginBottom: space.sm },
+  similarHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space.sm,
+  },
+  similarTitle: { fontSize: 16, fontWeight: '700', color: brand.text },
+  seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: space.xs },
+  seeAllText: { color: brand.green, fontWeight: '700', fontSize: 14 },
   similarRow: { gap: space.md, paddingRight: space.md },
   simCard: { width: 150 },
   simMedia: {

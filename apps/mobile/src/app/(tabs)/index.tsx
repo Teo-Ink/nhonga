@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { aiSearch, listProducts, type ProductListItem, type SortKey } from '@/lib/api';
 import { ProductGridCard } from '@/components/ProductGridCard';
 import { brand, radius, space } from '@/lib/theme';
@@ -41,6 +41,7 @@ const CATEGORIES: { slug: string; label: string; icon: IconName }[] = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ category?: string }>();
   const { width } = useWindowDimensions();
   // Responsive grid: 2 columns on a phone, more on tablets / wide (web) screens.
   const numColumns = width >= 1100 ? 5 : width >= 820 ? 4 : width >= 560 ? 3 : 2;
@@ -70,6 +71,15 @@ export default function HomeScreen() {
   const minCents = toCents(minPrice);
   const maxCents = toCents(maxPrice);
   const filtersActive = sort !== 'relevance' || minCents !== undefined || maxCents !== undefined;
+
+  // Preselect a category when arriving from a "Ver mais" link (e.g. the
+  // similar-listings carousel on a product). Clears any active text search.
+  useEffect(() => {
+    if (typeof params.category === 'string') {
+      setCategory(params.category);
+      setQuery('');
+    }
+  }, [params.category]);
 
   function openFilters() {
     setDSort(sort);
