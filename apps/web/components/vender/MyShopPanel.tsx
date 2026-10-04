@@ -4,6 +4,7 @@ import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../lib/i18n/pt';
 import { IconSearch } from '../icons';
 import { useSession } from '../auth/SessionProvider';
+import { WalletBar } from './WalletBar';
 
 interface MineItem {
   id: string;
@@ -15,6 +16,8 @@ interface MineItem {
   inStock: boolean;
   views: number;
   contacts: number;
+  categorySlug?: string;
+  categoryName?: string;
 }
 interface MineStats {
   active: number;
@@ -43,6 +46,8 @@ export function MyShopPanel() {
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'archived'>('all');
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'recent' | 'price_asc' | 'price_desc'>('recent');
+  const [cat, setCat] = useState('');
+  const [showStats, setShowStats] = useState(false);
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -64,7 +69,6 @@ export function MyShopPanel() {
       return;
     }
     void load().finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, sessionLoading]);
 
   async function remove(id: string) {
@@ -114,14 +118,27 @@ export function MyShopPanel() {
 
   const allItems = data?.items ?? [];
   const byStatus = filter === 'all' ? allItems : allItems.filter((i) => i.status === filter);
+  const byCat = cat ? byStatus.filter((i) => i.categorySlug === cat) : byStatus;
   const q = search.trim().toLowerCase();
-  const matched = q ? byStatus.filter((i) => i.title.toLowerCase().includes(q)) : byStatus;
+  const matched = q
+    ? byCat.filter(
+        (i) => i.title.toLowerCase().includes(q) || i.slug.toLowerCase().includes(q),
+      )
+    : byCat;
   const items =
     sort === 'recent'
       ? matched
       : [...matched].sort((a, b) =>
           sort === 'price_asc' ? a.priceCents - b.priceCents : b.priceCents - a.priceCents,
         );
+  // Distinct categories present in the seller's listings (for the filter).
+  const catOptions = Array.from(
+    new Map(
+      allItems
+        .filter((i) => i.categorySlug)
+        .map((i) => [i.categorySlug as string, i.categoryName ?? i.categorySlug] as const),
+    ).entries(),
+  );
   const stats = data?.stats;
   const filters: { key: typeof filter; label: string; n: number }[] = [
     { key: 'all', label: t.m_filter_all, n: allItems.length },
@@ -141,37 +158,22 @@ export function MyShopPanel() {
 
   return (
     <section className="myshop">
-      <div className="dash__head">
+      <div className="myshop__head">
         <div>
           <h1 className="section__title">{t.my_listings}</h1>
           {data?.shop ? <p className="dash__store">{data.shop.displayName}</p> : null}
         </div>
-        <a className="btn btn--cta" href="/vender/novo">
-          {t.m_new}
-        </a>
+        <div className="myshop__headright">
+          <WalletBar />
+          <a className="btn btn--cta" href="/vender/novo">
+            {t.m_new}
+          </a>
+        </div>
       </div>
 
-      <div className="myshop__stats">
-        <div className="dash__stat">
-          <strong>{stats?.active ?? 0}</strong>
-          <span>{t.m_stat_active}</span>
-        </div>
-        <div className="dash__stat">
-          <strong>{stats?.sold ?? 0}</strong>
-          <span>{t.st_sold}</span>
-        </div>
-        <div className="dash__stat">
-          <strong>{stats?.views ?? 0}</strong>
-          <span>{t.m_stat_views}</span>
-        </div>
-        <div className="dash__stat">
-          <strong>{stats?.contacts ?? 0}</strong>
-          <span>{t.m_stat_contacts}</span>
-        </div>
-        <div className="dash__stat">
-          <strong>{stats && stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'}</strong>
-          <span>{t.m_stat_rating}</span>
-        </div>
+      <div className="myshop__notice" role="note">
+        Dica de segurança: combina entregas e pagamentos sempre dentro do Nhonga. Desconfia de quem
+        te leva para fora da plataforma (ex.: WhatsApp) antes de pagares.
       </div>
 
       {allItems.length === 0 ? (
@@ -183,31 +185,102 @@ export function MyShopPanel() {
         </div>
       ) : (
         <>
-          <div className="myshop__filters" role="tablist">
-            {filters.map((f) => (
+          <div className="myshop__tabsrow">
+            <div className="myshop__filters" role="tablist">
+              {filters.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={filter === f.key}
+                  className={`mfilter ${filter === f.key ? 'is-on' : ''}`}
+                  onClick={() => setFilter(f.key)}
+                >
+                  {f.label} <span className="mfilter__n">{f.n}</span>
+                </button>
+              ))}
+            </div>
+            <div className="myshop__tabsactions">
+              <a className="btn btn--ghost btn--sm" href="/vender/novo">
+                Ver limite de anúncios grátis
+              </a>
               <button
-                key={f.key}
                 type="button"
-                role="tab"
-                aria-selected={filter === f.key}
-                className={`mfilter ${filter === f.key ? 'is-on' : ''}`}
-                onClick={() => setFilter(f.key)}
+                className={`btn btn--ghost btn--sm ${showStats ? 'is-on' : ''}`}
+                aria-pressed={showStats}
+                onClick={() => setShowStats((s) => !s)}
               >
-                {f.label} <span className="mfilter__n">{f.n}</span>
+                Estatísticas
               </button>
-            ))}
+            </div>
           </div>
 
+          {showStats ? (
+            <div className="myshop__stats">
+              <div className="dash__stat">
+                <strong>{stats?.active ?? 0}</strong>
+                <span>{t.m_stat_active}</span>
+              </div>
+              <div className="dash__stat">
+                <strong>{stats?.sold ?? 0}</strong>
+                <span>{t.st_sold}</span>
+              </div>
+              <div className="dash__stat">
+                <strong>{stats?.views ?? 0}</strong>
+                <span>{t.m_stat_views}</span>
+              </div>
+              <div className="dash__stat">
+                <strong>{stats?.contacts ?? 0}</strong>
+                <span>{t.m_stat_contacts}</span>
+              </div>
+              <div className="dash__stat">
+                <strong>
+                  {stats && stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'}
+                </strong>
+                <span>{t.m_stat_rating}</span>
+              </div>
+            </div>
+          ) : null}
+
           <div className="myshop__toolbar">
+            {cat || search || sort !== 'recent' ? (
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm myshop__clear"
+                onClick={() => {
+                  setCat('');
+                  setSearch('');
+                  setSort('recent');
+                }}
+              >
+                Limpar filtros
+              </button>
+            ) : null}
             <label className="myshop__search">
               <IconSearch width={18} height={18} aria-hidden />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t.m_search_ph}
-                aria-label={t.m_search_ph}
+                placeholder="Pesquisar por título ou ID…"
+                aria-label="Pesquisar por título ou ID"
               />
+            </label>
+            <label className="myshop__sort">
+              <span className="sr-only">Categoria</span>
+              <select
+                className="field__input"
+                value={cat}
+                onChange={(e) => setCat(e.target.value)}
+                aria-label="Filtrar por categoria"
+              >
+                <option value="">Qualquer categoria</option>
+                {catOptions.map(([slug, name]) => (
+                  <option key={slug} value={slug}>
+                    {name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="myshop__sort">
               <span className="sr-only">{t.m_sort_label}</span>
@@ -216,7 +289,7 @@ export function MyShopPanel() {
                 value={sort}
                 onChange={(e) => setSort(e.target.value as typeof sort)}
               >
-                <option value="recent">{t.m_sort_recent}</option>
+                <option value="recent">Data de publicação: Mais recente</option>
                 <option value="price_asc">{t.m_sort_price_asc}</option>
                 <option value="price_desc">{t.m_sort_price_desc}</option>
               </select>

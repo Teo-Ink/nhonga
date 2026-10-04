@@ -6836,6 +6836,148 @@ a.seller:focus-visible {
   text-align: center;
 }
 
+/* "Os teus anúncios" header: title left, wallet + new-listing right. */
+.myshop__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.myshop__headright {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.myshop__notice {
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-100, var(--border));
+  color: var(--color-primary-700);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.myshop__tabsrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.myshop__tabsactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.myshop__clear {
+  flex: 0 0 auto;
+}
+
+/* Seller wallet strip (balance + points + buy). */
+.wallet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.wallet__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+.wallet__figures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wallet__label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.wallet__label strong {
+  color: var(--text);
+}
+.wallet__label--pts strong {
+  color: var(--color-primary-700);
+}
+.wallet__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.wallet__hint,
+.wallet__msg {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+.wallet__msg {
+  color: var(--color-primary-700);
+}
+.wallet__panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+.wallet__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.wallet__field input {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.wallet__field input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.wallet__quick {
+  display: flex;
+  gap: var(--space-2);
+}
+.wallet__packages {
+  flex-direction: column;
+  align-items: stretch;
+}
+.wallet__pkg {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+.wallet__pkg + .wallet__pkg {
+  border-top: 1px solid var(--border);
+}
+.wallet__pkg strong {
+  display: block;
+  color: var(--text);
+}
+.wallet__pkgmeta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 /* Owner control bar on a listing's own detail page. */
 .ownerbar {
   display: flex;
