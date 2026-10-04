@@ -14,8 +14,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import {
+  boostListing,
   clearToken,
   formatMZN,
+  getWalletPlans,
   me,
   myListings,
   removeListing,
@@ -24,6 +26,7 @@ import {
   setToken,
   verifyOtp,
   type AuthUser,
+  type BoostPlan,
   type MineResponse,
 } from '@/lib/api';
 import { registerForPush, unregisterForPush } from '@/lib/push';
@@ -48,6 +51,33 @@ export default function AccountScreen() {
   const [busy, setBusy] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [push, setPush] = useState<PushState>('unknown');
+  const [walletSignal, setWalletSignal] = useState(0);
+  const [plans, setPlans] = useState<BoostPlan[]>([]);
+  const [boostFor, setBoostFor] = useState<string | null>(null);
+  const [boostBusy, setBoostBusy] = useState<string | null>(null);
+
+  function openBoost(id: string) {
+    setBoostFor((cur) => (cur === id ? null : id));
+    if (plans.length === 0) {
+      getWalletPlans()
+        .then((d) => setPlans(Array.isArray(d) ? d : []))
+        .catch(() => setPlans([]));
+    }
+  }
+  async function doBoost(productId: string, planCode: string) {
+    setBoostBusy(productId);
+    try {
+      const r = await boostListing(productId, planCode);
+      setBoostFor(null);
+      setWalletSignal((s) => s + 1);
+      loadMine();
+      Alert.alert('Anúncio promovido', `Plano aplicado: ${r.planName}.`);
+    } catch (e) {
+      Alert.alert('Destaque', e instanceof Error ? e.message : 'Não foi possível destacar.');
+    } finally {
+      setBoostBusy(null);
+    }
+  }
 
   function enablePush() {
     if (Platform.OS === 'web') {
@@ -214,7 +244,7 @@ export default function AccountScreen() {
         {isSeller ? (
           <>
             <Text style={styles.sectionTitle}>A minha carteira</Text>
-            <WalletCard />
+            <WalletCard reloadSignal={walletSignal} />
             <Text style={styles.sectionTitle}>Os meus anúncios</Text>
             <View style={styles.statsRow}>
               <Stat n={stats?.active ?? 0} label="Activos" />
@@ -252,6 +282,12 @@ export default function AccountScreen() {
                         <Text style={styles.listingMeta}>
                           {statusLabel(it.status)} · {it.views} vistas · {it.contacts} contactos
                         </Text>
+                        {it.featured ? (
+                          <View style={styles.featBadge}>
+                            <Ionicons name="star" size={11} color="#fff" />
+                            <Text style={styles.featText}>Destacado</Text>
+                          </View>
+                        ) : null}
                       </View>
                       <Ionicons name="chevron-forward" size={18} color={brand.muted} />
                     </Pressable>
@@ -260,13 +296,29 @@ export default function AccountScreen() {
                       {rowBusy ? (
                         <ActivityIndicator size="small" color={brand.muted} />
                       ) : it.status === 'active' ? (
-                        <Pressable
-                          style={styles.act}
-                          onPress={() => void changeStatus(it.id, 'sold')}
-                        >
-                          <Ionicons name="checkmark-circle-outline" size={16} color={brand.text} />
-                          <Text style={styles.actText}>Marcar vendido</Text>
-                        </Pressable>
+                        <>
+                          <Pressable
+                            style={styles.act}
+                            disabled={boostBusy === it.id}
+                            onPress={() => openBoost(it.id)}
+                          >
+                            <Ionicons name="star-outline" size={16} color={brand.green} />
+                            <Text style={[styles.actText, { color: brand.green }]}>
+                              {it.featured ? 'Renovar' : 'Destacar'}
+                            </Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.act}
+                            onPress={() => void changeStatus(it.id, 'sold')}
+                          >
+                            <Ionicons
+                              name="checkmark-circle-outline"
+                              size={16}
+                              color={brand.text}
+                            />
+                            <Text style={styles.actText}>Marcar vendido</Text>
+                          </Pressable>
+                        </>
                       ) : (
                         <Pressable
                           style={styles.act}
@@ -285,6 +337,30 @@ export default function AccountScreen() {
                         <Text style={[styles.actText, { color: brand.danger }]}>Remover</Text>
                       </Pressable>
                     </View>
+
+                    {boostFor === it.id ? (
+                      <View style={styles.boostPanel}>
+                        <Text style={styles.boostLabel}>Promover com saldo:</Text>
+                        {plans.length === 0 ? (
+                          <Text style={styles.muted}>A carregar planos…</Text>
+                        ) : (
+                          plans.map((pl) => (
+                            <Pressable
+                              key={pl.code}
+                              style={({ pressed }) => [styles.boostPlan, pressed && { opacity: 0.85 }]}
+                              disabled={boostBusy === it.id}
+                              onPress={() => void doBoost(it.id, pl.code)}
+                            >
+                              <Text style={styles.boostPlanName}>{pl.name}</Text>
+                              <Text style={styles.boostPlanPrice}>
+                                {formatMZN(pl.priceCents)}
+                                {pl.kind === 'feature' ? ` · ${pl.durationDays}d` : ''}
+                              </Text>
+                            </Pressable>
+                          ))
+                        )}
+                      </View>
+                    ) : null}
                   </View>
                 );
               })
@@ -445,6 +521,39 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   actText: { fontSize: 12, fontWeight: '600', color: brand.text },
+  featBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 3,
+    marginTop: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: radius.pill,
+    backgroundColor: brand.green,
+  },
+  featText: { fontSize: 10, fontWeight: '800', color: '#fff' },
+  boostPanel: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: brand.border,
+  },
+  boostLabel: { fontSize: 12, fontWeight: '600', color: brand.muted, width: '100%' },
+  boostPlan: {
+    borderWidth: 1,
+    borderColor: brand.green,
+    borderRadius: radius.md,
+    paddingHorizontal: space.md,
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  boostPlanName: { fontSize: 13, fontWeight: '700', color: brand.text },
+  boostPlanPrice: { fontSize: 11, color: brand.green, fontWeight: '600' },
   listingThumb: {
     width: 52,
     height: 52,

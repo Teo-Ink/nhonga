@@ -15,7 +15,7 @@ import { brand, radius, shadow, space } from '@/lib/theme';
 // Seller wallet: balance (MZN) + loyalty points, with demo top-ups and prepaid
 // packages. Mirrors the web "Saldo em conta / Comprar pacote" strip. Shown only
 // for sellers (the account screen gates on that).
-export function WalletCard() {
+export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const [w, setW] = useState<WalletView | null>(null);
   const [panel, setPanel] = useState<'none' | 'topup' | 'packages'>('none');
   const [amount, setAmount] = useState('');
@@ -33,7 +33,7 @@ export function WalletCard() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, reloadSignal]);
 
   function openTopup() {
     setMsg(null);

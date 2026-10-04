@@ -188,6 +188,8 @@ export interface MineItem {
   inStock: boolean;
   views: number;
   contacts: number;
+  featured?: boolean;
+  featuredUntil?: string | null;
 }
 export interface MineResponse {
   shop: { slug: string; displayName: string } | null;
@@ -286,6 +288,24 @@ export function topupWallet(amountCents: number): Promise<WalletView> {
 }
 export function purchasePackage(packageId: string): Promise<WalletView> {
   return post('/wallet/purchase', { packageId }, true);
+}
+export interface BoostPlan {
+  code: string;
+  name: string;
+  kind: 'feature' | 'bump';
+  priceCents: number;
+  durationDays: number;
+}
+export interface BoostResult {
+  wallet: WalletView;
+  planName: string;
+  endsAt: string | null;
+}
+export function getWalletPlans(): Promise<BoostPlan[]> {
+  return get('/wallet/plans');
+}
+export function boostListing(productId: string, planCode: string): Promise<BoostResult> {
+  return post('/wallet/boost', { productId, planCode }, true);
 }
 
 // ── Push token registration (signed-in) ───────────────────────────
