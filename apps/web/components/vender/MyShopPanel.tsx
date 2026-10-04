@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../lib/i18n/pt';
+import { IconSearch } from '../icons';
 import { useSession } from '../auth/SessionProvider';
 
 interface MineItem {
@@ -40,6 +41,8 @@ export function MyShopPanel() {
   const [removing, setRemoving] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'sold' | 'archived'>('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'recent' | 'price_asc' | 'price_desc'>('recent');
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -110,7 +113,15 @@ export function MyShopPanel() {
   }
 
   const allItems = data?.items ?? [];
-  const items = filter === 'all' ? allItems : allItems.filter((i) => i.status === filter);
+  const byStatus = filter === 'all' ? allItems : allItems.filter((i) => i.status === filter);
+  const q = search.trim().toLowerCase();
+  const matched = q ? byStatus.filter((i) => i.title.toLowerCase().includes(q)) : byStatus;
+  const items =
+    sort === 'recent'
+      ? matched
+      : [...matched].sort((a, b) =>
+          sort === 'price_asc' ? a.priceCents - b.priceCents : b.priceCents - a.priceCents,
+        );
   const stats = data?.stats;
   const filters: { key: typeof filter; label: string; n: number }[] = [
     { key: 'all', label: t.m_filter_all, n: allItems.length },
@@ -158,9 +169,7 @@ export function MyShopPanel() {
           <span>{t.m_stat_contacts}</span>
         </div>
         <div className="dash__stat">
-          <strong>
-            {stats && stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'}
-          </strong>
+          <strong>{stats && stats.ratingAvg !== null ? stats.ratingAvg.toFixed(1) : '—'}</strong>
           <span>{t.m_stat_rating}</span>
         </div>
       </div>
@@ -188,87 +197,117 @@ export function MyShopPanel() {
               </button>
             ))}
           </div>
+
+          <div className="myshop__toolbar">
+            <label className="myshop__search">
+              <IconSearch width={18} height={18} aria-hidden />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t.m_search_ph}
+                aria-label={t.m_search_ph}
+              />
+            </label>
+            <label className="myshop__sort">
+              <span className="sr-only">{t.m_sort_label}</span>
+              <select
+                className="field__input"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as typeof sort)}
+              >
+                <option value="recent">{t.m_sort_recent}</option>
+                <option value="price_asc">{t.m_sort_price_asc}</option>
+                <option value="price_desc">{t.m_sort_price_desc}</option>
+              </select>
+            </label>
+          </div>
+
+          <p className="myshop__count">{t.m_showing.replace('{n}', String(items.length))}</p>
+
           {items.length === 0 ? (
             <p className="account__muted myshop__none">—</p>
           ) : (
             <ul className="myshop__list">
-          {items.map((p) => {
-            const img = p.imageUrl ?? `/ph?t=${encodeURIComponent(p.title)}`;
-            const busy = removing === p.id || updating === p.id;
-            const removeLabel = removing === p.id ? t.m_removing : t.m_remove;
-            return (
-              <li className={`mrow mrow--${p.status}`} key={p.id}>
-                <span
-                  className="mrow__thumb"
-                  aria-hidden="true"
-                  style={{ backgroundImage: `url("${img.replace(/["\\]/g, encodeURIComponent)}")` }}
-                />
-                <div className="mrow__info">
-                  <a className="mrow__title" href={`/produto/${p.slug}`}>
-                    {p.title}
-                  </a>
-                  <span className="mrow__meta">
-                    <span className="mrow__price">{formatMZN(cents(p.priceCents))}</span>
-                    <span className={`mstatus mstatus--${p.status}`}>
-                      {statusLabel[p.status] ?? p.status}
-                    </span>
-                  </span>
-                  <span className="mrow__counts">
-                    {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}
-                  </span>
-                </div>
-                <div className="mrow__actions">
-                  {p.status === 'active' ? (
-                    <>
-                      <a
-                        className="btn btn--ghost btn--sm"
-                        href={`/vender/anuncio/${p.slug}/editar`}
-                      >
-                        {t.m_edit}
+              {items.map((p) => {
+                const img = p.imageUrl ?? `/ph?t=${encodeURIComponent(p.title)}`;
+                const busy = removing === p.id || updating === p.id;
+                const removeLabel = removing === p.id ? t.m_removing : t.m_remove;
+                return (
+                  <li className={`mrow mrow--${p.status}`} key={p.id}>
+                    <span
+                      className="mrow__thumb"
+                      aria-hidden="true"
+                      style={{
+                        backgroundImage: `url("${img.replace(/["\\]/g, encodeURIComponent)}")`,
+                      }}
+                    />
+                    <div className="mrow__info">
+                      <a className="mrow__title" href={`/produto/${p.slug}`}>
+                        {p.title}
                       </a>
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => setStatus(p.id, 'sold')}
-                        disabled={busy}
-                      >
-                        {t.m_sold}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm mrow__del"
-                        onClick={() => remove(p.id)}
-                        disabled={busy}
-                      >
-                        {removeLabel}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => setStatus(p.id, 'active')}
-                        disabled={busy}
-                      >
-                        {t.m_reactivate}
-                      </button>
-                      {p.status === 'sold' ? (
-                        <button
-                          type="button"
-                          className="btn btn--ghost btn--sm mrow__del"
-                          onClick={() => remove(p.id)}
-                          disabled={busy}
-                        >
-                          {removeLabel}
-                        </button>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+                      <span className="mrow__meta">
+                        <span className="mrow__price">{formatMZN(cents(p.priceCents))}</span>
+                        <span className={`mstatus mstatus--${p.status}`}>
+                          {statusLabel[p.status] ?? p.status}
+                        </span>
+                      </span>
+                      <span className="mrow__counts">
+                        {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}
+                      </span>
+                    </div>
+                    <div className="mrow__actions">
+                      {p.status === 'active' ? (
+                        <>
+                          <a
+                            className="btn btn--ghost btn--sm"
+                            href={`/vender/anuncio/${p.slug}/editar`}
+                          >
+                            {t.m_edit}
+                          </a>
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => setStatus(p.id, 'sold')}
+                            disabled={busy}
+                          >
+                            {t.m_sold}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm mrow__del"
+                            onClick={() => remove(p.id)}
+                            disabled={busy}
+                          >
+                            {removeLabel}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => setStatus(p.id, 'active')}
+                            disabled={busy}
+                          >
+                            {t.m_reactivate}
+                          </button>
+                          {p.status === 'sold' ? (
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--sm mrow__del"
+                              onClick={() => remove(p.id)}
+                              disabled={busy}
+                            >
+                              {removeLabel}
+                            </button>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </>

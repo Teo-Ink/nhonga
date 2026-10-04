@@ -13,9 +13,9 @@ import { MyShopPanel } from '../../components/vender/MyShopPanel';
 export default function AccountPage() {
   const t = pt.account;
   const router = useRouter();
-  const { user, shop, isSeller, loading, signOut } = useSession();
+  const { user, shop, isSeller, loading, shopLoading, signOut } = useSession();
 
-  if (loading) {
+  if (loading || (user && shopLoading)) {
     return (
       <section className="account">
         <div className="empty" role="status">

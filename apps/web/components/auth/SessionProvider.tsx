@@ -21,6 +21,8 @@ interface SessionCtx {
   /** Convenience: true when the user has a shop. */
   isSeller: boolean;
   loading: boolean;
+  /** True while the shop lookup is in flight (avoids a buyer/seller flash). */
+  shopLoading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -31,6 +33,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [shop, setShop] = useState<SessionShop | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shopLoading, setShopLoading] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -58,9 +61,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) {
       setShop(null);
+      setShopLoading(false);
       return;
     }
     let active = true;
+    setShopLoading(true);
     void fetch('/api/mine/shop', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
       .then((s: SessionShop | null) => {
@@ -68,6 +73,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (active) setShop(null);
+      })
+      .finally(() => {
+        if (active) setShopLoading(false);
       });
     return () => {
       active = false;
@@ -75,7 +83,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <Ctx.Provider value={{ user, shop, isSeller: shop !== null, loading, refresh, signOut }}>
+    <Ctx.Provider
+      value={{ user, shop, isSeller: shop !== null, loading, shopLoading, refresh, signOut }}
+    >
       {children}
     </Ctx.Provider>
   );
