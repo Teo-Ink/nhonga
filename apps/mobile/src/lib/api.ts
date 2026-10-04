@@ -90,21 +90,31 @@ async function post<T>(path: string, body: unknown, auth = false): Promise<T> {
 }
 
 // ── Session token (SecureStore) ───────────────────────────────────
+// SecureStore has no web implementation, so on Expo web the setItem/getItem
+// calls throw and the token would be lost. We keep an in-memory fallback so the
+// session at least works within a running web session (it still won't survive a
+// full page reload there — use a native build for persistent sessions).
+let memToken: string | null = null;
+
 export async function getToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync(TOKEN_KEY);
+    const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+    if (stored) return stored;
   } catch {
-    return null;
+    /* secure store unavailable (e.g. web) — fall back to memory */
   }
+  return memToken;
 }
 export async function setToken(token: string): Promise<void> {
+  memToken = token;
   try {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
   } catch {
-    /* ignore */
+    /* ignore — kept in memory */
   }
 }
 export async function clearToken(): Promise<void> {
+  memToken = null;
   try {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
   } catch {
@@ -240,6 +250,42 @@ export interface FavoriteItem {
 }
 export function listFavorites(): Promise<FavoriteItem[]> {
   return get('/favorites', true);
+}
+
+// ── Seller wallet (balance + loyalty points) ──────────────────────
+export interface WalletPackage {
+  id: string;
+  name: string;
+  priceCents: number;
+  balanceCents: number;
+  points: number;
+}
+export interface WalletTx {
+  id: string;
+  kind: string;
+  amountCents: number;
+  points: number;
+  description: string;
+  createdAt: string;
+}
+export interface WalletView {
+  hasShop: boolean;
+  shopName: string | null;
+  balanceCents: number;
+  points: number;
+  transactions: WalletTx[];
+}
+export function getWallet(): Promise<WalletView> {
+  return get('/wallet', true);
+}
+export function getWalletPackages(): Promise<WalletPackage[]> {
+  return get('/wallet/packages');
+}
+export function topupWallet(amountCents: number): Promise<WalletView> {
+  return post('/wallet/topup', { amountCents }, true);
+}
+export function purchasePackage(packageId: string): Promise<WalletView> {
+  return post('/wallet/purchase', { packageId }, true);
 }
 
 // ── Push token registration (signed-in) ───────────────────────────

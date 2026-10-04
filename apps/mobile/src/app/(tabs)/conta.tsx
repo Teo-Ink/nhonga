@@ -28,6 +28,7 @@ import {
 } from '@/lib/api';
 import { registerForPush, unregisterForPush } from '@/lib/push';
 import { useFavorites } from '@/lib/favorites';
+import { WalletCard } from '@/components/WalletCard';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
 type Step = 'phone' | 'code' | 'done';
@@ -212,6 +213,8 @@ export default function AccountScreen() {
 
         {isSeller ? (
           <>
+            <Text style={styles.sectionTitle}>A minha carteira</Text>
+            <WalletCard />
             <Text style={styles.sectionTitle}>Os meus anúncios</Text>
             <View style={styles.statsRow}>
               <Stat n={stats?.active ?? 0} label="Activos" />
