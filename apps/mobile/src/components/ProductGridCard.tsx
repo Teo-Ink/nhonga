@@ -19,8 +19,14 @@ export function ProductGridCard({ item, onPress }: { item: ProductListItem; onPr
         {item.image ? (
           <Image source={{ uri: item.image.url }} style={styles.image} resizeMode="cover" />
         ) : null}
+        {item.featured ? (
+          <View style={styles.featured}>
+            <Ionicons name="star" size={10} color="#fff" />
+            <Text style={styles.featuredText}>Destaque</Text>
+          </View>
+        ) : null}
         {item.discountPercent ? (
-          <View style={styles.badge}>
+          <View style={[styles.badge, item.featured && styles.badgeBelow]}>
             <Text style={styles.badgeText}>-{item.discountPercent}%</Text>
           </View>
         ) : null}
@@ -63,6 +69,21 @@ const styles = StyleSheet.create({
     ...shadow.sm,
   },
   badgeText: { color: brand.ink, fontWeight: '800', fontSize: 11, letterSpacing: 0.2 },
+  badgeBelow: { top: 34 },
+  featured: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: brand.green,
+    borderRadius: radius.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    ...shadow.sm,
+  },
+  featuredText: { color: '#fff', fontWeight: '800', fontSize: 10, letterSpacing: 0.2 },
   title: { marginTop: space.sm, fontSize: 13, lineHeight: 17, color: brand.text },
   price: { marginTop: 2, fontSize: 15, fontWeight: '800', color: brand.green, letterSpacing: -0.2 },
   locationRow: { marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 2 },

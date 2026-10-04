@@ -353,8 +353,9 @@ export default function AccountScreen() {
                             >
                               <Text style={styles.boostPlanName}>{pl.name}</Text>
                               <Text style={styles.boostPlanPrice}>
-                                {formatMZN(pl.priceCents)}
-                                {pl.kind === 'feature' ? ` · ${pl.durationDays}d` : ''}
+                                {pl.kind === 'bump'
+                                  ? `${pl.pointsCost} pts`
+                                  : `${formatMZN(pl.priceCents)} · ${pl.durationDays}d`}
                               </Text>
                             </Pressable>
                           ))

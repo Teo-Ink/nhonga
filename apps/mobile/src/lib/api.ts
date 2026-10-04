@@ -23,6 +23,7 @@ export interface ProductListItem {
   inStock: boolean;
   location: string | null;
   vendor: { displayName: string };
+  featured?: boolean;
 }
 export interface ProductVariant {
   id: string;
@@ -294,6 +295,7 @@ export interface BoostPlan {
   name: string;
   kind: 'feature' | 'bump';
   priceCents: number;
+  pointsCost: number;
   durationDays: number;
 }
 export interface BoostResult {

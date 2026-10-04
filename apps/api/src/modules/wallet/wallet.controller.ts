@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Headers, HttpCode, Post } from '@nestjs/common';
 import {
   WalletService,
+  type BoostPlanDto,
   type BoostResult,
   type WalletPackage,
   type WalletView,
 } from './wallet.service.js';
-import { PromotionsService, type PlanDto } from '../promotions/promotions.service.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -15,15 +15,12 @@ function bearer(authz: string | undefined): string | null {
 // packages. All reads/writes are scoped to the caller's own shop.
 @Controller('wallet')
 export class WalletController {
-  constructor(
-    private readonly wallet: WalletService,
-    private readonly promotions: PromotionsService,
-  ) {}
+  constructor(private readonly wallet: WalletService) {}
 
-  /** Promotion plans a seller can buy with wallet balance (Destaque / Turbo / Subir). */
+  /** Promotion plans a seller can buy (Destaque/Turbo with balance, Subir with points). */
   @Get('plans')
-  plans(@Headers('accept-language') lang?: string): Promise<PlanDto[]> {
-    return this.promotions.listPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
+  plans(@Headers('accept-language') lang?: string): Promise<BoostPlanDto[]> {
+    return this.wallet.boostPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
   }
 
   @Post('boost')

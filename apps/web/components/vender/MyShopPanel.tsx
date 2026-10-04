@@ -26,6 +26,7 @@ interface BoostPlan {
   name: string;
   kind: 'feature' | 'bump';
   priceCents: number;
+  pointsCost: number;
   durationDays: number;
 }
 interface MineStats {
@@ -449,8 +450,9 @@ export function MyShopPanel() {
                               onClick={() => void boost(p.id, pl.code)}
                               disabled={boostBusy === p.id}
                             >
-                              {pl.name} · {formatMZN(cents(pl.priceCents))}
-                              {pl.kind === 'feature' ? ` · ${pl.durationDays}d` : ''}
+                              {pl.kind === 'bump'
+                                ? `${pl.name} · ${pl.pointsCost} pts`
+                                : `${pl.name} · ${formatMZN(cents(pl.priceCents))} · ${pl.durationDays}d`}
                             </button>
                           ))
                         )}

@@ -52,6 +52,20 @@ const PACKAGES: readonly WalletPackage[] = [
 
 const MAX_TOPUP_CENTS = 10_000_000; // 100 000 MT per top-up
 
+// Points cost of a bump plan: 1 point ≈ 1 MT of the plan's price.
+const pointsCostOf = (priceCents: number): number => Math.max(1, Math.round(priceCents / 100));
+
+// A promotion plan as the wallet presents it: feature plans cost balance,
+// bump plans cost loyalty points.
+export interface BoostPlanDto {
+  code: string;
+  name: string;
+  kind: 'feature' | 'bump';
+  priceCents: number;
+  pointsCost: number;
+  durationDays: number;
+}
+
 @Injectable()
 export class WalletService {
   constructor(
@@ -62,6 +76,19 @@ export class WalletService {
 
   packages(): readonly WalletPackage[] {
     return PACKAGES;
+  }
+
+  /** Promotion plans, priced the way the wallet charges them (balance vs points). */
+  async boostPlans(lang: 'pt' | 'en'): Promise<BoostPlanDto[]> {
+    const plans = await this.promotions.listPlans(lang);
+    return plans.map((p) => ({
+      code: p.code,
+      name: p.name,
+      kind: p.kind,
+      priceCents: p.kind === 'feature' ? p.priceCents : 0,
+      pointsCost: p.kind === 'bump' ? pointsCostOf(p.priceCents) : 0,
+      durationDays: p.durationDays,
+    }));
   }
 
   /** The signed-in user's shop (first vendor they own), or null. */
@@ -188,24 +215,43 @@ export class WalletService {
     if (!plan) throw new BadRequestException('Plano de destaque inválido.');
     await this.ensureWallet(v.id);
     const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, v.id)))[0];
-    if (Number(w?.balanceCents ?? 0) < plan.priceCents) {
-      throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+    if (plan.kind === 'bump') {
+      // "Subir ao topo" is paid with loyalty points (1 point ≈ 1 MT of price).
+      const pts = pointsCostOf(plan.priceCents);
+      if ((w?.points ?? 0) < pts) {
+        throw new BadRequestException('Pontos insuficientes. Compra um pacote para ganhar pontos.');
+      }
+      await this.db
+        .update(wallet)
+        .set({ points: sql`${wallet.points} - ${pts}`, updatedAt: sql`now()` })
+        .where(eq(wallet.vendorId, v.id));
+      await this.db.insert(walletTransaction).values({
+        vendorId: v.id,
+        kind: 'spend',
+        amountCents: 0,
+        points: -pts,
+        description: `Subir ao topo: ${plan.name}`,
+      });
+    } else {
+      // "Destaque"/"Turbo" are paid with balance.
+      if (Number(w?.balanceCents ?? 0) < plan.priceCents) {
+        throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+      }
+      await this.db
+        .update(wallet)
+        .set({
+          balanceCents: sql`${wallet.balanceCents} - ${plan.priceCents}`,
+          updatedAt: sql`now()`,
+        })
+        .where(eq(wallet.vendorId, v.id));
+      await this.db.insert(walletTransaction).values({
+        vendorId: v.id,
+        kind: 'spend',
+        amountCents: -plan.priceCents,
+        points: 0,
+        description: `Destaque: ${plan.name}`,
+      });
     }
-    // Charge the wallet, then apply the promotion to the listing.
-    await this.db
-      .update(wallet)
-      .set({
-        balanceCents: sql`${wallet.balanceCents} - ${plan.priceCents}`,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(wallet.vendorId, v.id));
-    await this.db.insert(walletTransaction).values({
-      vendorId: v.id,
-      kind: 'spend',
-      amountCents: -plan.priceCents,
-      points: 0,
-      description: `Destaque: ${plan.name}`,
-    });
     const applied = await this.promotions.applyToProduct(productId, planCode, 'wallet');
     return {
       wallet: await this.snapshot(v.id, v.name),
