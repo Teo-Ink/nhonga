@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { getProduct, recordEvent, formatMZN, type ProductDetail } from '@/lib/api';
+import { ImageGallery } from '@/components/ImageGallery';
 import { useFavorites } from '@/lib/favorites';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
@@ -29,7 +29,8 @@ function HeaderHeart({ productId }: { productId: string }) {
       onPress={() => toggle(productId)}
       hitSlop={10}
       accessibilityLabel={on ? 'Remover dos favoritos' : 'Guardar nos favoritos'}
-      style={(s) => [{ paddingHorizontal: space.sm }, pressed(s)]}>
+      style={(s) => [{ paddingHorizontal: space.sm }, pressed(s)]}
+    >
       <Ionicons name={on ? 'heart' : 'heart-outline'} size={24} color={on ? '#ff6b8a' : '#fff'} />
     </Pressable>
   );
@@ -62,7 +63,12 @@ export default function ProductScreen() {
     );
   }
 
-  const hero = product.images?.[0] ?? product.image;
+  const gallery =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image
+        ? [product.image]
+        : [];
   const specs = Object.entries(product.attributes ?? {});
   const price = formatMZN(product.priceCents);
   const { whatsapp, phone } = product.vendor;
@@ -93,11 +99,12 @@ export default function ProductScreen() {
   return (
     <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
       <Stack.Screen
-        options={{ title: product.title, headerRight: () => <HeaderHeart productId={product.id} /> }}
+        options={{
+          title: product.title,
+          headerRight: () => <HeaderHeart productId={product.id} />,
+        }}
       />
-      <View style={styles.media}>
-        {hero ? <Image source={{ uri: hero.url }} style={styles.image} resizeMode="cover" /> : null}
-      </View>
+      <ImageGallery images={gallery} />
 
       <Text style={styles.title}>{product.title}</Text>
       <View style={styles.priceRow}>
@@ -128,9 +135,7 @@ export default function ProductScreen() {
         <Ionicons name="share-social-outline" size={18} color={brand.text} />
         <Text style={styles.shareText}>Partilhar</Text>
       </Pressable>
-      {!hasContact ? (
-        <Text style={styles.muted}>Este vendedor não deixou contacto.</Text>
-      ) : null}
+      {!hasContact ? <Text style={styles.muted}>Este vendedor não deixou contacto.</Text> : null}
       <View style={styles.safeBox}>
         <Ionicons name="shield-checkmark-outline" size={18} color={brand.green} />
         <Text style={styles.safe}>
@@ -160,15 +165,13 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xl },
   muted: { color: brand.muted },
   content: { padding: space.lg, gap: space.sm },
-  media: {
-    aspectRatio: 4 / 3,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    backgroundColor: brand.surfaceSunken,
-    ...shadow.md,
+  title: {
+    marginTop: space.md,
+    fontSize: 20,
+    fontWeight: '700',
+    color: brand.text,
+    letterSpacing: -0.3,
   },
-  image: { width: '100%', height: '100%' },
-  title: { marginTop: space.md, fontSize: 20, fontWeight: '700', color: brand.text, letterSpacing: -0.3 },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   price: { fontSize: 22, fontWeight: '800', color: brand.green, letterSpacing: -0.4 },
   was: { fontSize: 15, color: brand.muted, textDecorationLine: 'line-through' },

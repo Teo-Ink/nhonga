@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import { ProductGallery } from '../../../components/ProductGallery';
 import { notFound } from 'next/navigation';
 import { cents, formatMZN } from '@nhonga/shared';
 import { Price, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
@@ -62,7 +62,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     throw e;
   }
 
-  const hero = product.images[0] ?? product.image;
+  const galleryImages =
+    product.images.length > 0 ? product.images : product.image ? [product.image] : [];
 
   // Human labels for the attribute keys (marca → "Marca"), from the category's
   // own attribute definitions. Falls back to the raw key if a label is missing.
@@ -125,33 +126,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="pdp__layout">
         <div>
-          <div className="pdp__hero">
-            {hero ? (
-              <Image
-                src={hero.url}
-                alt={hero.alt ?? product.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                style={{ objectFit: 'cover' }}
-              />
-            ) : null}
-          </div>
-          {product.images.length > 1 ? (
-            <div className="pdp__thumbs">
-              {product.images.map((img, i) => (
-                <span className="pdp__thumb" key={i}>
-                  <Image
-                    src={img.url}
-                    alt={img.alt ?? ''}
-                    width={56}
-                    height={56}
-                    style={{ objectFit: 'cover' }}
-                  />
-                </span>
-              ))}
-            </div>
-          ) : null}
+          <ProductGallery images={galleryImages} title={product.title} />
         </div>
 
         <div className="pdp__body">
