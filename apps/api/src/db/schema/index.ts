@@ -21,3 +21,4 @@ export * from './media.js';
 export * from './notifications.js';
 export * from './messaging.js';
 export * from './favorites.js';
+export * from './wallet.js';
