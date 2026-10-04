@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { aiSearch, listProducts, type ProductListItem, type SortKey } from '@/lib/api';
 import { ProductGridCard } from '@/components/ProductGridCard';
+import { ProductGridSkeleton } from '@/components/Skeleton';
 import { brand, radius, space } from '@/lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -179,9 +180,9 @@ export default function HomeScreen() {
     );
   } else if (items === null) {
     body = (
-      <View style={styles.center}>
-        <ActivityIndicator color={brand.green} />
-      </View>
+      <ScrollView style={styles.listWrap} contentContainerStyle={{ paddingBottom: space.md }}>
+        <ProductGridSkeleton numColumns={numColumns} count={numColumns * 3} />
+      </ScrollView>
     );
   } else {
     body = (

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Linking,
@@ -23,6 +22,7 @@ import {
   type ProductListItem,
 } from '@/lib/api';
 import { ImageGallery } from '@/components/ImageGallery';
+import { Skeleton } from '@/components/Skeleton';
 import { useFavorites } from '@/lib/favorites';
 import { brand, radius, space, shadow } from '@/lib/theme';
 
@@ -81,9 +81,14 @@ export default function ProductScreen() {
   }
   if (!product) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={brand.green} />
-      </View>
+      <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
+        <Skeleton style={styles.skelGallery} />
+        <Skeleton style={styles.skelTitle} />
+        <Skeleton style={styles.skelPrice} />
+        <Skeleton style={styles.skelSeller} />
+        <Skeleton style={styles.skelBtn} />
+        <Skeleton style={styles.skelBtn} />
+      </ScrollView>
     );
   }
 
@@ -257,6 +262,11 @@ function SimilarCard({ item, onPress }: { item: ProductListItem; onPress: () => 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xl },
   muted: { color: brand.muted },
+  skelGallery: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg },
+  skelTitle: { marginTop: space.md, height: 22, width: '80%', borderRadius: radius.sm },
+  skelPrice: { marginTop: space.sm, height: 24, width: '40%', borderRadius: radius.sm },
+  skelSeller: { marginTop: space.sm, height: 16, width: '55%', borderRadius: radius.sm },
+  skelBtn: { marginTop: space.sm, height: 50, width: '100%', borderRadius: radius.pill },
   content: { padding: space.lg, gap: space.sm },
   title: {
     marginTop: space.md,

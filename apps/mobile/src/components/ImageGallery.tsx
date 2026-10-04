@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,15 +17,22 @@ export interface GalleryImage {
   alt?: string | null;
 }
 
-// A swipeable product image gallery: full-width paging with a counter and dots.
-// Falls back to a single image (no controls) when there's only one.
+// A swipeable product image gallery: full-width paging with a counter and a
+// tappable thumbnail strip (tap a thumb to jump to that image). Falls back to a
+// single image (no controls) when there's only one.
 export function ImageGallery({ images }: { images: GalleryImage[] }) {
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (width > 0) setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+  };
+
+  const goTo = (i: number) => {
+    setIndex(i);
+    if (width > 0) scrollRef.current?.scrollTo({ x: i * width, animated: true });
   };
 
   const many = images.length > 1;
@@ -34,6 +42,7 @@ export function ImageGallery({ images }: { images: GalleryImage[] }) {
       <View style={styles.box}>
         {width > 0 ? (
           <ScrollView
+            ref={scrollRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
@@ -61,11 +70,23 @@ export function ImageGallery({ images }: { images: GalleryImage[] }) {
         ) : null}
       </View>
       {many ? (
-        <View style={styles.dots}>
-          {images.map((_, i) => (
-            <View key={i} style={[styles.dot, i === index && styles.dotOn]} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.thumbs}
+        >
+          {images.map((img, i) => (
+            <Pressable
+              key={i}
+              onPress={() => goTo(i)}
+              style={[styles.thumb, i === index && styles.thumbOn]}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver imagem ${i + 1}`}
+            >
+              <Image source={{ uri: img.url }} style={styles.thumbImg} resizeMode="cover" />
+            </Pressable>
           ))}
-        </View>
+        </ScrollView>
       ) : null}
     </View>
   );
@@ -90,12 +111,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   counterText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: space.sm,
+  thumbs: { gap: space.sm, paddingVertical: space.sm, paddingRight: space.sm },
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: brand.border },
-  dotOn: { backgroundColor: brand.green, width: 18 },
+  thumbOn: { borderColor: brand.green },
+  thumbImg: { width: '100%', height: '100%' },
 });
