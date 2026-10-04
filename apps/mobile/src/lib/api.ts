@@ -38,6 +38,7 @@ export interface OptionGroup {
   values: { value: string; available: boolean }[];
 }
 export interface ProductDetail extends ProductListItem {
+  category: { slug: string; name: string };
   description: string | null;
   images: ProductImage[];
   attributes: Record<string, string>;

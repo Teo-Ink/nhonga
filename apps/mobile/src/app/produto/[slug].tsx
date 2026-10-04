@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
+  Image,
   Linking,
   Pressable,
   ScrollView,
@@ -11,7 +13,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { getProduct, recordEvent, formatMZN, type ProductDetail } from '@/lib/api';
+import {
+  getProduct,
+  listProducts,
+  recordEvent,
+  formatMZN,
+  type ProductDetail,
+  type ProductListItem,
+} from '@/lib/api';
 import { ImageGallery } from '@/components/ImageGallery';
 import { useFavorites } from '@/lib/favorites';
 import { brand, radius, space, shadow } from '@/lib/theme';
@@ -40,14 +49,27 @@ export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
   const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [similar, setSimilar] = useState<ProductListItem[]>([]);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
+    setProduct(null);
+    setSimilar([]);
     getProduct(String(slug))
       .then(setProduct)
       .catch(() => setError(true));
   }, [slug]);
+
+  // Once the product is known, pull other listings in the same category.
+  const categorySlug = product?.category.slug;
+  const currentId = product?.id;
+  useEffect(() => {
+    if (!categorySlug || !currentId) return;
+    void listProducts({ category: categorySlug, limit: 12 })
+      .then((r) => setSimilar((r.items ?? []).filter((p) => p.id !== currentId).slice(0, 10)))
+      .catch(() => setSimilar([]));
+  }, [categorySlug, currentId]);
 
   if (error) {
     return (
@@ -169,7 +191,45 @@ export default function ProductScreen() {
           ))}
         </View>
       ) : null}
+
+      {similar.length > 0 ? (
+        <View style={styles.similar}>
+          <Text style={styles.similarTitle}>Anúncios semelhantes</Text>
+          <FlatList
+            data={similar}
+            keyExtractor={(p) => p.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.similarRow}
+            renderItem={({ item }) => (
+              <SimilarCard
+                item={item}
+                onPress={() =>
+                  router.push({ pathname: '/produto/[slug]', params: { slug: item.slug } })
+                }
+              />
+            )}
+          />
+        </View>
+      ) : null}
     </ScrollView>
+  );
+}
+
+// A compact fixed-width card for the horizontal "similar listings" carousel.
+function SimilarCard({ item, onPress }: { item: ProductListItem; onPress: () => void }) {
+  return (
+    <Pressable style={(s) => [styles.simCard, pressed(s)]} onPress={onPress}>
+      <View style={styles.simMedia}>
+        {item.image ? (
+          <Image source={{ uri: item.image.url }} style={styles.simImage} resizeMode="cover" />
+        ) : null}
+      </View>
+      <Text style={styles.simTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <Text style={styles.simPrice}>{formatMZN(item.priceCents)}</Text>
+    </Pressable>
   );
 }
 
@@ -232,4 +292,19 @@ const styles = StyleSheet.create({
   },
   specKey: { color: brand.muted },
   specVal: { color: brand.text, fontWeight: '500' },
+  similar: { marginTop: space.lg },
+  similarTitle: { fontSize: 16, fontWeight: '700', color: brand.text, marginBottom: space.sm },
+  similarRow: { gap: space.md, paddingRight: space.md },
+  simCard: { width: 150 },
+  simMedia: {
+    width: 150,
+    aspectRatio: 1,
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: brand.surfaceSunken,
+    marginBottom: space.xs,
+  },
+  simImage: { width: '100%', height: '100%' },
+  simTitle: { fontSize: 13, color: brand.text, lineHeight: 17 },
+  simPrice: { fontSize: 14, fontWeight: '800', color: brand.green, marginTop: 2 },
 });
