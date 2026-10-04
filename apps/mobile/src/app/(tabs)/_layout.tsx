@@ -18,7 +18,8 @@ export default function TabsLayout() {
         headerTintColor: '#ffffff',
         headerTitleStyle: { fontWeight: '700' },
         headerShadowVisible: false,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -26,6 +27,15 @@ export default function TabsLayout() {
           tabBarLabel: 'Início',
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="favoritos"
+        options={{
+          title: 'Favoritos',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={size} color={color} />
           ),
         }}
       />
