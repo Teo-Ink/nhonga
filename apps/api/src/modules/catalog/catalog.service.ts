@@ -280,6 +280,8 @@ export class CatalogService {
       inStock: boolean;
       views: number;
       contacts: number;
+      categorySlug: string;
+      categoryName: string;
     }[];
   }> {
     const empty = {
@@ -303,8 +305,12 @@ export class CatalogService {
         status: product.status,
         views: product.viewCount,
         contacts: product.contactCount,
+        catSlug: category.slug,
+        catPt: category.namePt,
+        catEn: category.nameEn,
       })
       .from(product)
+      .innerJoin(category, eq(product.categoryId, category.id))
       .where(
         and(
           inArray(product.vendorId, vids),
@@ -329,6 +335,8 @@ export class CatalogService {
         inStock: active.some((v) => v.stockQuantity > 0),
         views: r.views,
         contacts: r.contacts,
+        categorySlug: r.catSlug,
+        categoryName: pickText(r.catPt, r.catEn, lang),
       };
     });
 
