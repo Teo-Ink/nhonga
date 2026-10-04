@@ -137,6 +137,65 @@ export class PromotionsService {
     return { id, status: 'active', receipt: await this.receipt(id) };
   }
 
+  /** Look up an active plan's pricing (for a wallet-paid boost). */
+  async planFor(code: string): Promise<{
+    code: string;
+    name: string;
+    kind: 'feature' | 'bump';
+    priceCents: number;
+    durationDays: number;
+  } | null> {
+    const p = (
+      await this.db.select().from(promotionPlan).where(eq(promotionPlan.code, code)).limit(1)
+    )[0];
+    if (!p || !p.isActive) return null;
+    return {
+      code: p.code,
+      name: p.namePt,
+      kind: p.kind as 'feature' | 'bump',
+      priceCents: Number(p.priceCents),
+      durationDays: p.durationDays,
+    };
+  }
+
+  /** Apply a plan to a listing and record the receipt. Used after the wallet
+   *  has already settled payment, so no payment provider is involved here. */
+  async applyToProduct(
+    productId: string,
+    planCode: string,
+    paymentMethod: string,
+  ): Promise<{ endsAt: Date | null; planName: string }> {
+    const plan = (
+      await this.db.select().from(promotionPlan).where(eq(promotionPlan.code, planCode)).limit(1)
+    )[0];
+    if (!plan || !plan.isActive) throw new PromotionError('plan not found', 'not_found');
+    const id = randomUUID();
+    const startsAt = new Date();
+    const endsAt =
+      plan.kind === 'feature'
+        ? new Date(startsAt.getTime() + plan.durationDays * 86_400_000)
+        : null;
+    await this.db.insert(productPromotion).values({
+      id,
+      productId,
+      planCode: plan.code,
+      amountCents: plan.priceCents,
+      paymentMethod,
+      status: 'active',
+      startsAt,
+      endsAt,
+    });
+    if (plan.kind === 'feature') {
+      await this.db
+        .update(product)
+        .set({ featuredUntil: endsAt, bumpedAt: startsAt })
+        .where(eq(product.id, productId));
+    } else {
+      await this.db.update(product).set({ bumpedAt: startsAt }).where(eq(product.id, productId));
+    }
+    return { endsAt, planName: plan.namePt };
+  }
+
   async receipt(id: string): Promise<ReceiptDto> {
     const row = (
       await this.db

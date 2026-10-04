@@ -9,5 +9,6 @@ import { PromotionsService } from './promotions.service.js';
   imports: [WebhooksModule],
   controllers: [PromotionsController],
   providers: [PromotionsService],
+  exports: [PromotionsService],
 })
 export class PromotionsModule {}

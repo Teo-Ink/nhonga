@@ -282,6 +282,8 @@ export class CatalogService {
       contacts: number;
       categorySlug: string;
       categoryName: string;
+      featured: boolean;
+      featuredUntil: string | null;
     }[];
   }> {
     const empty = {
@@ -308,6 +310,7 @@ export class CatalogService {
         catSlug: category.slug,
         catPt: category.namePt,
         catEn: category.nameEn,
+        featuredUntil: product.featuredUntil,
       })
       .from(product)
       .innerJoin(category, eq(product.categoryId, category.id))
@@ -337,6 +340,8 @@ export class CatalogService {
         contacts: r.contacts,
         categorySlug: r.catSlug,
         categoryName: pickText(r.catPt, r.catEn, lang),
+        featured: r.featuredUntil != null && r.featuredUntil.getTime() > Date.now(),
+        featuredUntil: r.featuredUntil ? r.featuredUntil.toISOString() : null,
       };
     });
 

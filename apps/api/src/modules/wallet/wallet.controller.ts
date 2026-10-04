@@ -1,9 +1,11 @@
 import { Body, Controller, Get, Headers, HttpCode, Post } from '@nestjs/common';
 import {
   WalletService,
+  type BoostResult,
   type WalletPackage,
   type WalletView,
 } from './wallet.service.js';
+import { PromotionsService, type PlanDto } from '../promotions/promotions.service.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -13,7 +15,27 @@ function bearer(authz: string | undefined): string | null {
 // packages. All reads/writes are scoped to the caller's own shop.
 @Controller('wallet')
 export class WalletController {
-  constructor(private readonly wallet: WalletService) {}
+  constructor(
+    private readonly wallet: WalletService,
+    private readonly promotions: PromotionsService,
+  ) {}
+
+  /** Promotion plans a seller can buy with wallet balance (Destaque / Turbo / Subir). */
+  @Get('plans')
+  plans(@Headers('accept-language') lang?: string): Promise<PlanDto[]> {
+    return this.promotions.listPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
+  }
+
+  @Post('boost')
+  @HttpCode(200)
+  boost(
+    @Body() body: { productId?: unknown; planCode?: unknown },
+    @Headers('authorization') authz?: string,
+  ): Promise<BoostResult> {
+    const productId = typeof body.productId === 'string' ? body.productId : '';
+    const planCode = typeof body.planCode === 'string' ? body.planCode : '';
+    return this.wallet.boost(bearer(authz), productId, planCode);
+  }
 
   @Get()
   get(@Headers('authorization') authz?: string): Promise<WalletView> {

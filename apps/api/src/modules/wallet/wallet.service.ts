@@ -1,10 +1,12 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
+import { product } from '../../db/schema/catalog.js';
 import { AuthService } from '../auth/auth.service.js';
+import { PromotionsService } from '../promotions/promotions.service.js';
 
 export interface WalletPackage {
   id: string;
@@ -34,6 +36,12 @@ export interface WalletView {
   transactions: WalletTx[];
 }
 
+export interface BoostResult {
+  wallet: WalletView;
+  planName: string;
+  endsAt: string | null;
+}
+
 // Prepaid seller packages. Buying one credits balance (+ a bonus) and loyalty
 // points. Demo payment: the balance is real and persisted, but no money moves.
 const PACKAGES: readonly WalletPackage[] = [
@@ -49,6 +57,7 @@ export class WalletService {
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly auth: AuthService,
+    private readonly promotions: PromotionsService,
   ) {}
 
   packages(): readonly WalletPackage[] {
@@ -156,6 +165,53 @@ export class WalletService {
       description: pkg.name,
     });
     return this.snapshot(v.id, v.name);
+  }
+
+  /** Spend balance to promote one of the seller's own listings. */
+  async boost(
+    token: string | null,
+    productId: string,
+    planCode: string,
+  ): Promise<BoostResult> {
+    const v = await this.requireVendor(token);
+    if (!productId) throw new BadRequestException('Anúncio inválido.');
+    // Ownership: the listing must belong to the caller's shop.
+    const owned = (
+      await this.db
+        .select({ id: product.id })
+        .from(product)
+        .where(and(eq(product.id, productId), eq(product.vendorId, v.id)))
+        .limit(1)
+    )[0];
+    if (!owned) throw new BadRequestException('Esse anúncio não é da tua loja.');
+    const plan = await this.promotions.planFor(planCode);
+    if (!plan) throw new BadRequestException('Plano de destaque inválido.');
+    await this.ensureWallet(v.id);
+    const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, v.id)))[0];
+    if (Number(w?.balanceCents ?? 0) < plan.priceCents) {
+      throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+    }
+    // Charge the wallet, then apply the promotion to the listing.
+    await this.db
+      .update(wallet)
+      .set({
+        balanceCents: sql`${wallet.balanceCents} - ${plan.priceCents}`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(wallet.vendorId, v.id));
+    await this.db.insert(walletTransaction).values({
+      vendorId: v.id,
+      kind: 'spend',
+      amountCents: -plan.priceCents,
+      points: 0,
+      description: `Destaque: ${plan.name}`,
+    });
+    const applied = await this.promotions.applyToProduct(productId, planCode, 'wallet');
+    return {
+      wallet: await this.snapshot(v.id, v.name),
+      planName: applied.planName,
+      endsAt: applied.endsAt ? applied.endsAt.toISOString() : null,
+    };
   }
 
   private async requireVendor(token: string | null): Promise<{ id: string; name: string }> {
