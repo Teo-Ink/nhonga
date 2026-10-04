@@ -18,6 +18,15 @@ interface MineItem {
   contacts: number;
   categorySlug?: string;
   categoryName?: string;
+  featured?: boolean;
+  featuredUntil?: string | null;
+}
+interface BoostPlan {
+  code: string;
+  name: string;
+  kind: 'feature' | 'bump';
+  priceCents: number;
+  durationDays: number;
 }
 interface MineStats {
   active: number;
@@ -48,6 +57,11 @@ export function MyShopPanel() {
   const [sort, setSort] = useState<'recent' | 'price_asc' | 'price_desc'>('recent');
   const [cat, setCat] = useState('');
   const [showStats, setShowStats] = useState(false);
+  const [plans, setPlans] = useState<BoostPlan[]>([]);
+  const [boostFor, setBoostFor] = useState<string | null>(null);
+  const [boostBusy, setBoostBusy] = useState<string | null>(null);
+  const [boostMsg, setBoostMsg] = useState<string | null>(null);
+  const [walletSignal, setWalletSignal] = useState(0);
 
   function load(): Promise<void> {
     return fetch('/api/mine/products', { cache: 'no-store' })
@@ -98,6 +112,40 @@ export function MyShopPanel() {
     } finally {
       await load();
       setUpdating(null);
+    }
+  }
+
+  function openBoost(id: string) {
+    setBoostMsg(null);
+    setBoostFor((cur) => (cur === id ? null : id));
+    if (plans.length === 0) {
+      void fetch('/api/wallet/plans', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((d: BoostPlan[]) => setPlans(Array.isArray(d) ? d : []))
+        .catch(() => setPlans([]));
+    }
+  }
+
+  async function boost(productId: string, planCode: string) {
+    setBoostBusy(productId);
+    setBoostMsg(null);
+    try {
+      const res = await fetch('/api/wallet/boost', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ productId, planCode }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setBoostMsg(d.detail ?? d.message ?? 'Não foi possível destacar.');
+        return;
+      }
+      setBoostFor(null);
+      setBoostMsg(`Anúncio promovido (${d.planName}).`);
+      setWalletSignal((s) => s + 1);
+      await load();
+    } finally {
+      setBoostBusy(null);
     }
   }
 
@@ -164,7 +212,7 @@ export function MyShopPanel() {
           {data?.shop ? <p className="dash__store">{data.shop.displayName}</p> : null}
         </div>
         <div className="myshop__headright">
-          <WalletBar />
+          <WalletBar reloadSignal={walletSignal} />
           <a className="btn btn--cta" href="/vender/novo">
             {t.m_new}
           </a>
@@ -324,6 +372,7 @@ export function MyShopPanel() {
                         <span className={`mstatus mstatus--${p.status}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
+                        {p.featured ? <span className="mstatus mstatus--featured">★ Destacado</span> : null}
                       </span>
                       <span className="mrow__counts">
                         {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}
@@ -332,6 +381,14 @@ export function MyShopPanel() {
                     <div className="mrow__actions">
                       {p.status === 'active' ? (
                         <>
+                          <button
+                            type="button"
+                            className={`btn btn--sm ${p.featured ? 'btn--ghost' : 'btn--cta'}`}
+                            onClick={() => openBoost(p.id)}
+                            disabled={boostBusy === p.id}
+                          >
+                            {p.featured ? 'Renovar destaque' : 'Destacar'}
+                          </button>
                           <a
                             className="btn btn--ghost btn--sm"
                             href={`/vender/anuncio/${p.slug}/editar`}
@@ -378,11 +435,33 @@ export function MyShopPanel() {
                         </>
                       )}
                     </div>
+                    {boostFor === p.id ? (
+                      <div className="mrow__boost">
+                        <span className="mrow__boostlabel">Promover com saldo:</span>
+                        {plans.length === 0 ? (
+                          <span className="account__muted">A carregar planos…</span>
+                        ) : (
+                          plans.map((pl) => (
+                            <button
+                              key={pl.code}
+                              type="button"
+                              className="btn btn--ghost btn--sm"
+                              onClick={() => void boost(p.id, pl.code)}
+                              disabled={boostBusy === p.id}
+                            >
+                              {pl.name} · {formatMZN(cents(pl.priceCents))}
+                              {pl.kind === 'feature' ? ` · ${pl.durationDays}d` : ''}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
             </ul>
           )}
+          {boostMsg ? <p className="wallet__msg">{boostMsg}</p> : null}
         </>
       )}
     </section>

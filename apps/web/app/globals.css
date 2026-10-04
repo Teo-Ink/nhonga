@@ -6649,6 +6649,7 @@ a.seller:focus-visible {
 }
 .mrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2);
@@ -6727,6 +6728,26 @@ a.seller:focus-visible {
 .mstatus--archived {
   background: var(--surface-sunken);
   color: var(--text-muted);
+}
+.mstatus--featured {
+  background: var(--brand-500, #007a5e);
+  color: #fff;
+}
+.mrow__boost {
+  flex-basis: 100%;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border);
+}
+.mrow__boostlabel {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 600;
 }
 .mrow--archived,
 .mrow--sold {

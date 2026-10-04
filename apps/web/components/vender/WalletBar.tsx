@@ -20,7 +20,7 @@ interface WalletView {
 // Seller wallet strip for "Os teus anúncios": balance (MZN) + loyalty points,
 // with inline top-up and prepaid-package panels. Mirrors the marketplace
 // "Saldo em conta / Comprar pacote" header. Top-ups are demo credits.
-export function WalletBar() {
+export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const [w, setW] = useState<WalletView | null>(null);
   const [panel, setPanel] = useState<'none' | 'topup' | 'packages'>('none');
   const [amount, setAmount] = useState('');
@@ -37,7 +37,8 @@ export function WalletBar() {
 
   useEffect(() => {
     void loadWallet();
-  }, []);
+    // eslint-disable-next-line
+  }, [reloadSignal]);
 
   function openTopup() {
     setMsg(null);
