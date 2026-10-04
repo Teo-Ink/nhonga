@@ -112,14 +112,24 @@ export async function clearToken(): Promise<void> {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────
-export function listProducts(
-  limit = 48,
-  q?: string,
-  category?: string,
-): Promise<{ items: ProductListItem[] }> {
-  const query = q && q.trim() ? `&q=${encodeURIComponent(q.trim())}` : '';
-  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
-  return get(`/catalog/products?limit=${limit}${query}${cat}`);
+export type SortKey = 'relevance' | 'newest' | 'price_asc' | 'price_desc' | 'rating';
+export interface ListOptions {
+  limit?: number;
+  q?: string;
+  category?: string;
+  sort?: SortKey;
+  minPriceCents?: number;
+  maxPriceCents?: number;
+}
+export function listProducts(opts: ListOptions = {}): Promise<{ items: ProductListItem[] }> {
+  const p = new URLSearchParams();
+  p.set('limit', String(opts.limit ?? 48));
+  if (opts.q && opts.q.trim()) p.set('q', opts.q.trim());
+  if (opts.category) p.set('category', opts.category);
+  if (opts.sort && opts.sort !== 'relevance') p.set('sort', opts.sort);
+  if (typeof opts.minPriceCents === 'number') p.set('minPrice', String(opts.minPriceCents));
+  if (typeof opts.maxPriceCents === 'number') p.set('maxPrice', String(opts.maxPriceCents));
+  return get(`/catalog/products?${p.toString()}`);
 }
 
 // AI search: derive a catalogue query (+ category) from a photo (or text).

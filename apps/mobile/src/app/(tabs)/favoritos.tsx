@@ -27,7 +27,7 @@ export default function FavoritesScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(() => {
-    return listProducts(100)
+    return listProducts({ limit: 100 })
       .then((r) => setAll(r.items ?? []))
       .catch(() => setAll([]));
   }, []);
