@@ -157,6 +157,28 @@ export interface MineResponse {
 export function myListings(): Promise<MineResponse> {
   return get('/catalog/mine/products', true);
 }
+export async function setListingStatus(
+  id: string,
+  status: 'active' | 'sold' | 'archived',
+): Promise<void> {
+  const token = await getToken();
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (token) headers['authorization'] = `Bearer ${token}`;
+  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status }),
+  });
+}
+export async function removeListing(id: string): Promise<void> {
+  const token = await getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['authorization'] = `Bearer ${token}`;
+  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers,
+  });
+}
 export function requestOtp(phone: string): Promise<{ challengeId: string; devCode?: string }> {
   return post('/auth/otp/request', { phone });
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -16,7 +18,9 @@ import {
   formatMZN,
   me,
   myListings,
+  removeListing,
   requestOtp,
+  setListingStatus,
   setToken,
   verifyOtp,
   type AuthUser,
@@ -41,6 +45,7 @@ export default function AccountScreen() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [push, setPush] = useState<PushState>('unknown');
 
   function enablePush() {
@@ -65,6 +70,41 @@ export default function AccountScreen() {
     setStep('done');
     enablePush();
     loadMine();
+  }
+
+  // Seller actions: change a listing's status / remove it, then re-sync.
+  async function changeStatus(id: string, status: 'active' | 'sold') {
+    setBusyId(id);
+    setMine((d) =>
+      d ? { ...d, items: d.items.map((i) => (i.id === id ? { ...i, status } : i)) } : d,
+    );
+    try {
+      await setListingStatus(id, status);
+    } finally {
+      loadMine();
+      setBusyId(null);
+    }
+  }
+
+  function confirmRemove(id: string) {
+    Alert.alert('Remover anúncio', 'Tem a certeza que quer remover este anúncio?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Remover',
+        style: 'destructive',
+        onPress: () => void doRemove(id),
+      },
+    ]);
+  }
+  async function doRemove(id: string) {
+    setBusyId(id);
+    setMine((d) => (d ? { ...d, items: d.items.filter((i) => i.id !== id) } : d));
+    try {
+      await removeListing(id);
+    } finally {
+      loadMine();
+      setBusyId(null);
+    }
   }
 
   // Restore an existing session on mount.
@@ -182,34 +222,69 @@ export default function AccountScreen() {
             {items.length === 0 ? (
               <Text style={styles.muted}>Ainda não tens anúncios.</Text>
             ) : (
-              items.map((it) => (
-                <Pressable
-                  key={it.id}
-                  style={({ pressed }) => [styles.listing, pressed && { opacity: 0.85 }]}
-                  onPress={() =>
-                    router.push({ pathname: '/produto/[slug]', params: { slug: it.slug } })
-                  }>
-                  <View style={styles.listingThumb}>
-                    {it.imageUrl ? (
-                      <Image
-                        source={{ uri: it.imageUrl }}
-                        style={styles.listingImg}
-                        resizeMode="cover"
-                      />
-                    ) : null}
+              items.map((it) => {
+                const rowBusy = busyId === it.id;
+                return (
+                  <View style={styles.listing} key={it.id}>
+                    <Pressable
+                      style={({ pressed }) => [styles.listingMain, pressed && { opacity: 0.7 }]}
+                      onPress={() =>
+                        router.push({ pathname: '/produto/[slug]', params: { slug: it.slug } })
+                      }
+                    >
+                      <View style={styles.listingThumb}>
+                        {it.imageUrl ? (
+                          <Image
+                            source={{ uri: it.imageUrl }}
+                            style={styles.listingImg}
+                            resizeMode="cover"
+                          />
+                        ) : null}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.listingTitle} numberOfLines={1}>
+                          {it.title}
+                        </Text>
+                        <Text style={styles.listingPrice}>{formatMZN(it.priceCents)}</Text>
+                        <Text style={styles.listingMeta}>
+                          {statusLabel(it.status)} · {it.views} vistas · {it.contacts} contactos
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={brand.muted} />
+                    </Pressable>
+
+                    <View style={styles.rowActions}>
+                      {rowBusy ? (
+                        <ActivityIndicator size="small" color={brand.muted} />
+                      ) : it.status === 'active' ? (
+                        <Pressable
+                          style={styles.act}
+                          onPress={() => void changeStatus(it.id, 'sold')}
+                        >
+                          <Ionicons name="checkmark-circle-outline" size={16} color={brand.text} />
+                          <Text style={styles.actText}>Marcar vendido</Text>
+                        </Pressable>
+                      ) : (
+                        <Pressable
+                          style={styles.act}
+                          onPress={() => void changeStatus(it.id, 'active')}
+                        >
+                          <Ionicons name="refresh-outline" size={16} color={brand.text} />
+                          <Text style={styles.actText}>Reativar</Text>
+                        </Pressable>
+                      )}
+                      <Pressable
+                        style={styles.act}
+                        disabled={rowBusy}
+                        onPress={() => confirmRemove(it.id)}
+                      >
+                        <Ionicons name="trash-outline" size={16} color={brand.danger} />
+                        <Text style={[styles.actText, { color: brand.danger }]}>Remover</Text>
+                      </Pressable>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.listingTitle} numberOfLines={1}>
-                      {it.title}
-                    </Text>
-                    <Text style={styles.listingPrice}>{formatMZN(it.priceCents)}</Text>
-                    <Text style={styles.listingMeta}>
-                      {statusLabel(it.status)} · {it.views} vistas · {it.contacts} contactos
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={brand.muted} />
-                </Pressable>
-              ))
+                );
+              })
             )}
           </>
         ) : (
@@ -335,15 +410,38 @@ const styles = StyleSheet.create({
   statN: { fontSize: 18, fontWeight: '800', color: brand.text },
   statLabel: { fontSize: 11, color: brand.muted, marginTop: 2 },
   listing: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    padding: space.sm,
     borderRadius: radius.md,
     backgroundColor: brand.surface,
     borderWidth: 1,
     borderColor: brand.border,
+    overflow: 'hidden',
   },
+  listingMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.sm,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xs,
+    borderTopWidth: 1,
+    borderTopColor: brand.border,
+    backgroundColor: brand.surfaceSunken,
+    minHeight: 40,
+  },
+  act: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: space.sm,
+    paddingVertical: 4,
+  },
+  actText: { fontSize: 12, fontWeight: '600', color: brand.text },
   listingThumb: {
     width: 52,
     height: 52,
