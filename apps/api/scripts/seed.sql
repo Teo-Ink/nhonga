@@ -425,6 +425,23 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
   ('e0000000-0000-4000-8000-000000000235', 'a0000000-0000-4000-8000-000000000235', 'https://live.staticflickr.com/1227/579070390_c69248b25c_b.jpg', 1024, 768, 'Termómetro digital', 0),
   ('e0000000-0000-4000-8000-000000000236', 'a0000000-0000-4000-8000-000000000236', 'https://live.staticflickr.com/5307/5575095686_b58e0b6f7e_b.jpg', 1024, 768, 'Kit de primeiros socorros', 0);
 
+-- ── Extra photos for a few flagship listings (so the swipe gallery shines) ──
+-- Additional real CC-licensed photos (Openverse/Flickr) at sort_order 1+.
+-- Product resolved by slug so no UUID bookkeeping is needed.
+INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort_order) VALUES
+  ('e0000000-0000-4000-8000-000000000301', (SELECT id FROM product WHERE slug = 'nissan-almera-2013'), 'https://live.staticflickr.com/3260/2765757383_6a5c2aca67_b.jpg', 1024, 768, 'Nissan Almera — interior e tablier', 1),
+  ('e0000000-0000-4000-8000-000000000302', (SELECT id FROM product WHERE slug = 'nissan-almera-2013'), 'https://live.staticflickr.com/4913/46155982522_9502b85ef6_b.jpg', 1024, 768, 'Nissan Almera — vista lateral', 2),
+  ('e0000000-0000-4000-8000-000000000303', (SELECT id FROM product WHERE slug = 'toyota-corolla-2016'), 'https://live.staticflickr.com/8529/8482412928_866fb06dd9_b.jpg', 1024, 768, 'Toyota Corolla — vista lateral', 1),
+  ('e0000000-0000-4000-8000-000000000304', (SELECT id FROM product WHERE slug = 'toyota-corolla-2016'), 'https://live.staticflickr.com/3260/2765757383_6a5c2aca67_b.jpg', 1024, 768, 'Toyota Corolla — interior e tablier', 2),
+  ('e0000000-0000-4000-8000-000000000305', (SELECT id FROM product WHERE slug = 'toyota-hilux-2015'), 'https://live.staticflickr.com/4599/25181882108_0ae40fe540_b.jpg', 1024, 768, 'Toyota Hilux — vista frontal', 1),
+  ('e0000000-0000-4000-8000-000000000306', (SELECT id FROM product WHERE slug = 'toyota-hilux-2015'), 'https://live.staticflickr.com/5616/15588642156_ba8baef4fd_b.jpg', 1024, 768, 'Toyota Hilux — caixa de carga', 2),
+  ('e0000000-0000-4000-8000-000000000307', (SELECT id FROM product WHERE slug = 'honda-fit-2014'), 'https://live.staticflickr.com/3260/2765757383_6a5c2aca67_b.jpg', 1024, 768, 'Honda Fit — interior e tablier', 1),
+  ('e0000000-0000-4000-8000-000000000308', (SELECT id FROM product WHERE slug = 'honda-fit-2014'), 'https://live.staticflickr.com/8529/8482412928_866fb06dd9_b.jpg', 1024, 768, 'Honda Fit — vista lateral', 2),
+  ('e0000000-0000-4000-8000-000000000309', (SELECT id FROM product WHERE slug = 't2-polana-arrendar'), 'https://live.staticflickr.com/3099/2609148181_893f0c7d55_b.jpg', 1024, 768, 'T2 Polana — sala de estar', 1),
+  ('e0000000-0000-4000-8000-000000000310', (SELECT id FROM product WHERE slug = 't2-polana-arrendar'), 'https://live.staticflickr.com/2287/2609138801_af674605aa_b.jpg', 1024, 768, 'T2 Polana — segunda divisão', 2),
+  ('e0000000-0000-4000-8000-000000000311', (SELECT id FROM product WHERE slug = 'samsung-galaxy-a14'), 'https://live.staticflickr.com/7502/27160977795_7c5ef43e28_b.jpg', 1024, 768, 'Samsung Galaxy A14 — em uso', 1),
+  ('e0000000-0000-4000-8000-000000000312', (SELECT id FROM product WHERE slug = 'samsung-galaxy-a14'), 'https://live.staticflickr.com/5627/29794402404_6c4c408265_b.jpg', 1024, 768, 'Samsung Galaxy A14 — ecrã', 2);
+
 
 
 -- Demo: one shop on the paid "Loja Pro" subscription (verified selo).
