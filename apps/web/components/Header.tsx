@@ -1,7 +1,7 @@
 import { IconHeart, IconGrid } from './icons';
 import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
-import { AccountLink } from './auth/AccountLink';
+import { AccountMenu } from './auth/AccountMenu';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
 import { MessagesLink } from './messaging/MessagesLink';
@@ -53,7 +53,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           </a>
           <MessagesLink label={t.common.messages} />
           <NotificationBell label={t.common.notifications} />
-          <AccountLink label={t.common.account} hello={t.common.hello} signIn={t.common.sign_in} />
+          <AccountMenu t={t.account} label={t.common.account} signInLabel={t.common.sign_in} />
           <SellButton label={t.common.sell} />
         </div>
       </div>

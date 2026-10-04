@@ -1,127 +1,159 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { pt } from '../../lib/i18n/pt';
-import {
-  IconUser,
-  IconShield,
-  IconChevronLeft,
-  IconHeart,
-  IconChat,
-  IconBell,
-  IconGift,
-} from '../../components/icons';
+import { IconUser, IconHeart, IconBell, IconChat, IconChevronLeft } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
+import { accountGroups } from '../../components/account/items';
+import { MyShopPanel } from '../../components/vender/MyShopPanel';
 
-// Account (classifieds). Signed in (phone OTP) → greeting + shortcuts; otherwise
-// a sign-in prompt. No orders — buying happens off-platform via the seller.
+// Account dashboard (MyOLX-structured): a left menu + a main area whose content
+// depends on buyer vs seller. Sellers land on "Os meus anúncios"; buyers get an
+// activity overview with a prompt to start selling. Signed out → a sign-in card.
 export default function AccountPage() {
   const t = pt.account;
   const router = useRouter();
-  const { user, loading, signOut } = useSession();
+  const { user, shop, isSeller, loading, signOut } = useSession();
 
-  return (
-    <section className="account">
-      <h1 className="section__title">{t.title}</h1>
-
-      {loading ? (
+  if (loading) {
+    return (
+      <section className="account">
         <div className="empty" role="status">
           <p>{pt.common.loading}</p>
         </div>
-      ) : user ? (
-        <SignedIn
-          name={user.displayName}
-          phone={user.phoneE164}
-          onSignOut={async () => {
+      </section>
+    );
+  }
+
+  if (!user) {
+    return (
+      <section className="account">
+        <h1 className="section__title">{t.title}</h1>
+        <div className="card account__signin">
+          <span className="account__icon" aria-hidden="true">
+            <IconUser width={24} height={24} />
+          </span>
+          <h2 className="card__title">{t.guest_title}</h2>
+          <p className="account__muted">{t.guest_body}</p>
+          <a className="btn btn--cta" href="/entrar">
+            {t.sign_in}
+          </a>
+        </div>
+      </section>
+    );
+  }
+
+  const firstName = user.displayName.split(' ')[0] ?? user.displayName;
+  const groups = accountGroups(t, isSeller);
+
+  return (
+    <section className="acctdash">
+      <aside className="acctdash__side">
+        <div className="acctdash__id">
+          <span className="acctdash__avatar" aria-hidden="true">
+            {(firstName[0] ?? 'U').toUpperCase()}
+          </span>
+          <div className="acctdash__idtext">
+            <strong>{firstName}</strong>
+            <span className="acctdash__phone">{user.phoneE164}</span>
+            <span className={`acctdash__badge ${isSeller ? 'is-seller' : ''}`}>
+              {isSeller ? t.seller_badge : t.buyer_badge}
+            </span>
+          </div>
+        </div>
+
+        <nav className="acctdash__nav" aria-label={t.menu_account}>
+          {groups.map((g) => (
+            <div className="acctdash__group" key={g.title}>
+              <p className="acctdash__gtitle">{g.title}</p>
+              {g.items.map((it) => (
+                <a className="acctdash__link" href={it.href} key={it.href}>
+                  {it.icon}
+                  <span>{it.label}</span>
+                  <IconChevronLeft width={15} height={15} className="acctdash__arrow" />
+                </a>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <button
+          type="button"
+          className="btn btn--ghost acctdash__signout"
+          onClick={async () => {
             await signOut();
             router.refresh();
           }}
-        />
-      ) : (
-        <Guest />
-      )}
+        >
+          {t.sign_out}
+        </button>
+      </aside>
+
+      <div className="acctdash__main">
+        {isSeller ? (
+          <MyShopPanel />
+        ) : (
+          <BuyerOverview name={firstName} shopName={shop?.displayName} />
+        )}
+      </div>
     </section>
   );
 }
 
-function SignedIn({
-  name,
-  phone,
-  onSignOut,
-}: {
-  name: string;
-  phone: string;
-  onSignOut: () => void;
-}) {
+// Buyer home: favourites + saved-search counts, quick links, and a prompt to
+// start selling (which turns this account into the seller view).
+function BuyerOverview({ name, shopName }: { name: string; shopName?: string }) {
   const t = pt.account;
-  return (
-    <>
-      <div className="card account__hello">
-        <span className="account__icon" aria-hidden="true">
-          <IconUser width={24} height={24} />
-        </span>
-        <div style={{ flex: 1 }}>
-          <h2 className="card__title" style={{ marginBottom: 2 }}>
-            {t.greeting.replace('{name}', name.split(' ')[0] ?? name)}
-          </h2>
-          <p className="account__muted">{phone}</p>
-        </div>
-        <button
-          type="button"
-          className="btn btn--ghost"
-          style={{ maxWidth: 160 }}
-          onClick={onSignOut}
-        >
-          {t.sign_out}
-        </button>
-      </div>
-      <Shortcuts />
-    </>
-  );
-}
+  void shopName;
+  const [counts, setCounts] = useState({ fav: 0, saved: 0 });
+  useEffect(() => {
+    const read = (k: string): number => {
+      try {
+        const v = JSON.parse(localStorage.getItem(k) ?? '[]') as unknown[];
+        return Array.isArray(v) ? v.length : 0;
+      } catch {
+        return 0;
+      }
+    };
+    setCounts({ fav: read('nhonga_favs'), saved: read('nhonga_saved_searches') });
+  }, []);
 
-function Guest() {
-  const t = pt.account;
   return (
-    <>
-      <div className="card account__signin">
-        <span className="account__icon" aria-hidden="true">
-          <IconUser width={24} height={24} />
-        </span>
-        <h2 className="card__title">{t.guest_title}</h2>
-        <p className="account__muted">{t.guest_body}</p>
-        <a className="btn btn--cta" href="/entrar">
-          {t.sign_in}
+    <div className="buyer">
+      <div className="dash__head">
+        <div>
+          <h1 className="section__title">{t.greeting.replace('{name}', name)}</h1>
+          <p className="account__muted">{t.buyer_overview_sub}</p>
+        </div>
+      </div>
+
+      <div className="buyer__stats">
+        <a className="buyer__stat" href="/favoritos">
+          <IconHeart width={22} height={22} />
+          <strong>{counts.fav}</strong>
+          <span>{t.stat_favorites}</span>
+        </a>
+        <a className="buyer__stat" href="/pesquisas">
+          <IconBell width={22} height={22} />
+          <strong>{counts.saved}</strong>
+          <span>{t.stat_saved}</span>
+        </a>
+        <a className="buyer__stat" href="/mensagens">
+          <IconChat width={22} height={22} />
+          <strong>—</strong>
+          <span>{t.link_messages}</span>
         </a>
       </div>
-      <Shortcuts />
-    </>
-  );
-}
 
-function Shortcuts() {
-  const t = pt.account;
-  const links = [
-    { href: '/vender/comecar', icon: <IconUser width={20} height={20} />, label: t.link_sell },
-    { href: '/favoritos', icon: <IconHeart width={20} height={20} />, label: t.link_favorites },
-    { href: '/pesquisas', icon: <IconBell width={20} height={20} />, label: t.link_saved },
-    { href: '/mensagens', icon: <IconChat width={20} height={20} />, label: t.link_messages },
-    { href: '/convidar', icon: <IconGift width={20} height={20} />, label: t.link_invite },
-    { href: '/ajuda', icon: <IconShield width={20} height={20} />, label: t.link_help },
-  ];
-  return (
-    <>
-      <h2 className="card__title" style={{ marginTop: 'var(--space-2)' }}>
-        {t.links_title}
-      </h2>
-      <nav className="account__links" aria-label={t.links_title}>
-        {links.map((l) => (
-          <a key={l.href} className="account__link" href={l.href}>
-            {l.icon}
-            <span>{l.label}</span>
-            <IconChevronLeft width={16} height={16} className="account__link-arrow" />
-          </a>
-        ))}
-      </nav>
-    </>
+      <div className="buyer__sell">
+        <div>
+          <h2 className="buyer__selltitle">{t.cta_sell_title}</h2>
+          <p className="account__muted">{t.cta_sell_body}</p>
+        </div>
+        <a className="btn btn--cta" href="/vender/comecar">
+          {t.cta_sell_btn}
+        </a>
+      </div>
+    </div>
   );
 }

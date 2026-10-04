@@ -9,8 +9,17 @@ export interface SessionUser {
   phoneVerified: boolean;
 }
 
+export interface SessionShop {
+  slug: string;
+  displayName: string;
+}
+
 interface SessionCtx {
   user: SessionUser | null;
+  /** The signed-in user's shop, or null if they haven't opened one (buyer). */
+  shop: SessionShop | null;
+  /** Convenience: true when the user has a shop. */
+  isSeller: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,6 +29,7 @@ const Ctx = createContext<SessionCtx | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [shop, setShop] = useState<SessionShop | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -37,13 +47,38 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setUser(null);
+    setShop(null);
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  return <Ctx.Provider value={{ user, loading, refresh, signOut }}>{children}</Ctx.Provider>;
+  // Once signed in, find out whether the user has a shop (seller vs buyer view).
+  useEffect(() => {
+    if (!user) {
+      setShop(null);
+      return;
+    }
+    let active = true;
+    void fetch('/api/mine/shop', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: SessionShop | null) => {
+        if (active) setShop(s && typeof s.slug === 'string' ? s : null);
+      })
+      .catch(() => {
+        if (active) setShop(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  return (
+    <Ctx.Provider value={{ user, shop, isSeller: shop !== null, loading, refresh, signOut }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useSession(): SessionCtx {
