@@ -112,9 +112,14 @@ export async function clearToken(): Promise<void> {
 }
 
 // ── Endpoints ─────────────────────────────────────────────────────
-export function listProducts(limit = 48, q?: string): Promise<{ items: ProductListItem[] }> {
+export function listProducts(
+  limit = 48,
+  q?: string,
+  category?: string,
+): Promise<{ items: ProductListItem[] }> {
   const query = q && q.trim() ? `&q=${encodeURIComponent(q.trim())}` : '';
-  return get(`/catalog/products?limit=${limit}${query}`);
+  const cat = category ? `&category=${encodeURIComponent(category)}` : '';
+  return get(`/catalog/products?limit=${limit}${query}${cat}`);
 }
 
 // AI search: derive a catalogue query (+ category) from a photo (or text).
