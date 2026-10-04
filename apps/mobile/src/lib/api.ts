@@ -117,6 +117,7 @@ export interface ListOptions {
   limit?: number;
   q?: string;
   category?: string;
+  vendor?: string;
   sort?: SortKey;
   minPriceCents?: number;
   maxPriceCents?: number;
@@ -126,10 +127,30 @@ export function listProducts(opts: ListOptions = {}): Promise<{ items: ProductLi
   p.set('limit', String(opts.limit ?? 48));
   if (opts.q && opts.q.trim()) p.set('q', opts.q.trim());
   if (opts.category) p.set('category', opts.category);
+  if (opts.vendor) p.set('vendor', opts.vendor);
   if (opts.sort && opts.sort !== 'relevance') p.set('sort', opts.sort);
   if (typeof opts.minPriceCents === 'number') p.set('minPrice', String(opts.minPriceCents));
   if (typeof opts.maxPriceCents === 'number') p.set('maxPrice', String(opts.maxPriceCents));
   return get(`/catalog/products?${p.toString()}`);
+}
+
+// Public seller storefront details (header, rating, counts, contact).
+export interface Shop {
+  slug: string;
+  displayName: string;
+  isVerified: boolean;
+  isPro: boolean;
+  ratingAvg: number | null;
+  ratingCount: number;
+  location: string | null;
+  memberSince: string;
+  activeCount: number;
+  soldCount: number;
+  whatsapp: string | null;
+  phone: string | null;
+}
+export function getShop(slug: string): Promise<Shop | null> {
+  return get(`/catalog/shops/${encodeURIComponent(slug)}`);
 }
 
 // AI search: derive a catalogue query (+ category) from a photo (or text).

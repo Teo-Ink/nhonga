@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { getProduct, recordEvent, formatMZN, type ProductDetail } from '@/lib/api';
 import { ImageGallery } from '@/components/ImageGallery';
 import { useFavorites } from '@/lib/favorites';
@@ -38,6 +38,7 @@ function HeaderHeart({ productId }: { productId: string }) {
 
 export default function ProductScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const router = useRouter();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [error, setError] = useState(false);
 
@@ -113,10 +114,21 @@ export default function ProductScreen() {
           <Text style={styles.was}>{formatMZN(product.compareAtCents)}</Text>
         ) : null}
       </View>
-      <Text style={styles.seller}>
-        {product.vendor.displayName}
-        {product.location ? ` · ${product.location}` : ''}
-      </Text>
+      <Pressable
+        style={(s) => [styles.sellerRow, pressed(s)]}
+        onPress={() =>
+          router.push({ pathname: '/loja/[slug]', params: { slug: product.vendor.slug } })
+        }
+        accessibilityRole="link"
+        accessibilityLabel={`Ver a loja de ${product.vendor.displayName}`}
+      >
+        <Ionicons name="storefront-outline" size={16} color={brand.green} />
+        <Text style={styles.seller} numberOfLines={1}>
+          {product.vendor.displayName}
+          {product.location ? ` · ${product.location}` : ''}
+        </Text>
+        <Ionicons name="chevron-forward" size={16} color={brand.muted} />
+      </Pressable>
 
       {/* Contact block */}
       {whatsapp ? (
@@ -175,7 +187,14 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   price: { fontSize: 22, fontWeight: '800', color: brand.green, letterSpacing: -0.4 },
   was: { fontSize: 15, color: brand.muted, textDecorationLine: 'line-through' },
-  seller: { color: brand.muted, marginBottom: space.sm },
+  sellerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
+    paddingVertical: space.xs,
+    marginBottom: space.xs,
+  },
+  seller: { flex: 1, color: brand.text, fontWeight: '600' },
   contactBtn: {
     flexDirection: 'row',
     gap: space.sm,
