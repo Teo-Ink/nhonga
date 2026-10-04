@@ -1,23 +1,40 @@
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import {
   clearToken,
+  formatMZN,
   me,
+  myListings,
   requestOtp,
   setToken,
   verifyOtp,
   type AuthUser,
+  type MineResponse,
 } from '@/lib/api';
 import { registerForPush, unregisterForPush } from '@/lib/push';
-import { brand, radius, space } from '@/lib/theme';
+import { useFavorites } from '@/lib/favorites';
+import { brand, radius, space, shadow } from '@/lib/theme';
 
 type Step = 'phone' | 'code' | 'done';
 type PushState = 'unknown' | 'on' | 'off' | 'unavailable';
 
 export default function AccountScreen() {
+  const router = useRouter();
+  const { count: favCount } = useFavorites();
   const [step, setStep] = useState<Step>('phone');
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [mine, setMine] = useState<MineResponse | null>(null);
   const [phone, setPhone] = useState('');
   const [challengeId, setChallengeId] = useState('');
   const [devCode, setDevCode] = useState('');
@@ -26,7 +43,6 @@ export default function AccountScreen() {
   const [busy, setBusy] = useState(false);
   const [push, setPush] = useState<PushState>('unknown');
 
-  // Register this device for push alerts (native only), reflecting the result.
   function enablePush() {
     if (Platform.OS === 'web') {
       setPush('unavailable');
@@ -37,15 +53,25 @@ export default function AccountScreen() {
       .catch(() => setPush('off'));
   }
 
-  // Restore an existing session on mount; a signed-in device registers for push.
+  // After a session is known, load the user's shop + listings (seller vs buyer).
+  function loadMine() {
+    myListings()
+      .then(setMine)
+      .catch(() => setMine(null));
+  }
+
+  function onSignedIn(u: AuthUser) {
+    setUser(u);
+    setStep('done');
+    enablePush();
+    loadMine();
+  }
+
+  // Restore an existing session on mount.
   useEffect(() => {
     me()
       .then((r) => {
-        if (r.user) {
-          setUser(r.user);
-          setStep('done');
-          enablePush();
-        }
+        if (r.user) onSignedIn(r.user);
       })
       .catch(() => {});
   }, []);
@@ -71,9 +97,7 @@ export default function AccountScreen() {
     try {
       const r = await verifyOtp(challengeId, code.trim());
       await setToken(r.sessionToken);
-      setUser(r.user);
-      setStep('done');
-      enablePush();
+      onSignedIn(r.user);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro');
     } finally {
@@ -85,6 +109,7 @@ export default function AccountScreen() {
     await unregisterForPush();
     await clearToken();
     setUser(null);
+    setMine(null);
     setPhone('');
     setCode('');
     setStep('phone');
@@ -92,11 +117,30 @@ export default function AccountScreen() {
   }
 
   if (step === 'done' && user) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.hello}>Olá, {user.displayName.split(' ')[0]}!</Text>
-        <Text style={styles.muted}>{user.phoneE164}</Text>
+    const firstName = user.displayName.split(' ')[0] ?? user.displayName;
+    const isSeller = mine?.shop != null;
+    const stats = mine?.stats;
+    const items = mine?.items ?? [];
 
+    return (
+      <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
+        {/* Identity */}
+        <View style={styles.idRow}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{(firstName[0] ?? 'U').toUpperCase()}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.hello}>{firstName}</Text>
+            <Text style={styles.muted}>{user.phoneE164}</Text>
+            <View style={[styles.badge, isSeller && styles.badgeSeller]}>
+              <Text style={[styles.badgeText, isSeller && styles.badgeTextSeller]}>
+                {isSeller ? 'Vendedor' : 'Comprador'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Notifications */}
         <View style={styles.notifyRow}>
           <Ionicons
             name={push === 'on' ? 'notifications' : 'notifications-outline'}
@@ -126,10 +170,70 @@ export default function AccountScreen() {
           ) : null}
         </View>
 
+        {isSeller ? (
+          <>
+            <Text style={styles.sectionTitle}>Os meus anúncios</Text>
+            <View style={styles.statsRow}>
+              <Stat n={stats?.active ?? 0} label="Activos" />
+              <Stat n={stats?.sold ?? 0} label="Vendidos" />
+              <Stat n={stats?.views ?? 0} label="Vistas" />
+              <Stat n={stats?.contacts ?? 0} label="Contactos" />
+            </View>
+            {items.length === 0 ? (
+              <Text style={styles.muted}>Ainda não tens anúncios.</Text>
+            ) : (
+              items.map((it) => (
+                <Pressable
+                  key={it.id}
+                  style={({ pressed }) => [styles.listing, pressed && { opacity: 0.85 }]}
+                  onPress={() =>
+                    router.push({ pathname: '/produto/[slug]', params: { slug: it.slug } })
+                  }>
+                  <View style={styles.listingThumb}>
+                    {it.imageUrl ? (
+                      <Image
+                        source={{ uri: it.imageUrl }}
+                        style={styles.listingImg}
+                        resizeMode="cover"
+                      />
+                    ) : null}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.listingTitle} numberOfLines={1}>
+                      {it.title}
+                    </Text>
+                    <Text style={styles.listingPrice}>{formatMZN(it.priceCents)}</Text>
+                    <Text style={styles.listingMeta}>
+                      {statusLabel(it.status)} · {it.views} vistas · {it.contacts} contactos
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={brand.muted} />
+                </Pressable>
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>A minha atividade</Text>
+            <View style={styles.statsRow}>
+              <Stat n={favCount} label="Favoritos" />
+            </View>
+            <View style={styles.sellBox}>
+              <Ionicons name="storefront-outline" size={22} color={brand.green} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sellTitle}>Vender no Nhonga</Text>
+                <Text style={styles.notifyHint}>
+                  Crie a sua loja grátis no site nhonga.co.mz para começar a anunciar.
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
         <Pressable style={styles.secondary} onPress={onSignOut}>
           <Text style={styles.secondaryText}>Terminar sessão</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     );
   }
 
@@ -177,11 +281,91 @@ export default function AccountScreen() {
   );
 }
 
+function Stat({ n, label }: { n: number; label: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statN}>{n}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function statusLabel(s: string): string {
+  return s === 'active' ? 'Activo' : s === 'sold' ? 'Vendido' : s === 'archived' ? 'Arquivado' : s;
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: space.xl, gap: space.md, backgroundColor: brand.bg },
+  content: { padding: space.lg, gap: space.md },
   title: { fontSize: 20, fontWeight: '700', color: brand.text },
-  hello: { fontSize: 22, fontWeight: '700', color: brand.text },
+  hello: { fontSize: 20, fontWeight: '700', color: brand.text },
   muted: { color: brand.muted },
+  idRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: brand.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { color: '#fff', fontWeight: '800', fontSize: 20 },
+  badge: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    backgroundColor: brand.surfaceSunken,
+  },
+  badgeSeller: { backgroundColor: '#e8f2ec' },
+  badgeText: { fontSize: 11, fontWeight: '800', color: brand.muted },
+  badgeTextSeller: { color: brand.greenDark },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: brand.text, marginTop: space.sm },
+  statsRow: { flexDirection: 'row', gap: space.sm },
+  stat: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: space.md,
+    borderRadius: radius.md,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+  },
+  statN: { fontSize: 18, fontWeight: '800', color: brand.text },
+  statLabel: { fontSize: 11, color: brand.muted, marginTop: 2 },
+  listing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.sm,
+    borderRadius: radius.md,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+  },
+  listingThumb: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    backgroundColor: brand.surfaceSunken,
+  },
+  listingImg: { width: '100%', height: '100%' },
+  listingTitle: { fontSize: 14, fontWeight: '600', color: brand.text },
+  listingPrice: { fontSize: 14, fontWeight: '800', color: brand.green, marginTop: 1 },
+  listingMeta: { fontSize: 11, color: brand.muted, marginTop: 1 },
+  sellBox: {
+    flexDirection: 'row',
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radius.md,
+    backgroundColor: brand.surface,
+    borderWidth: 1,
+    borderColor: brand.border,
+    ...shadow.sm,
+  },
+  sellTitle: { fontSize: 14, fontWeight: '700', color: brand.text },
   input: {
     height: 48,
     paddingHorizontal: space.md,
@@ -219,12 +403,16 @@ const styles = StyleSheet.create({
     backgroundColor: brand.surface,
     borderWidth: 1,
     borderColor: brand.border,
-    marginTop: space.sm,
   },
   notifyTitle: { color: brand.text, fontWeight: '600', fontSize: 14 },
   notifyHint: { color: brand.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   notifyAction: { color: brand.green, fontWeight: '700' },
   link: { color: brand.green, textAlign: 'center', marginTop: space.sm },
-  dev: { color: brand.green, backgroundColor: brand.surfaceSunken, padding: space.sm, borderRadius: radius.sm },
+  dev: {
+    color: brand.green,
+    backgroundColor: brand.surfaceSunken,
+    padding: space.sm,
+    borderRadius: radius.sm,
+  },
   error: { color: brand.danger },
 });

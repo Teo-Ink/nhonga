@@ -129,6 +129,34 @@ export function aiSearch(payload: { text?: string; image?: string }): Promise<Ai
 export function getProduct(slug: string): Promise<ProductDetail> {
   return get(`/catalog/products/${encodeURIComponent(slug)}`);
 }
+
+// ── Seller: my shop + listings (requires a session) ───────────────
+export interface MineItem {
+  id: string;
+  slug: string;
+  title: string;
+  priceCents: number;
+  imageUrl: string | null;
+  status: string;
+  inStock: boolean;
+  views: number;
+  contacts: number;
+}
+export interface MineResponse {
+  shop: { slug: string; displayName: string } | null;
+  stats: {
+    active: number;
+    sold: number;
+    views: number;
+    contacts: number;
+    ratingAvg: number | null;
+    ratingCount: number;
+  };
+  items: MineItem[];
+}
+export function myListings(): Promise<MineResponse> {
+  return get('/catalog/mine/products', true);
+}
 export function requestOtp(phone: string): Promise<{ challengeId: string; devCode?: string }> {
   return post('/auth/otp/request', { phone });
 }
