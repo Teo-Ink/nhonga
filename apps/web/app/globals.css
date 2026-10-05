@@ -1559,6 +1559,38 @@ a.seller:focus-visible {
 }
 
 /* ── Account dashboard (/conta): sidebar + buyer/seller main ───── */
+/* Full-width account page (no sidebar; nav lives in the header dropdown). */
+.acctpage {
+  padding: var(--space-4) 0 var(--space-10);
+}
+/* OLX-style horizontal account section tabs. */
+.accttabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.accttab {
+  position: relative;
+  padding: var(--space-2) 2px var(--space-3);
+  margin-bottom: -1px;
+  font-size: var(--text-base, 1rem);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+}
+.accttab:hover {
+  color: var(--text);
+}
+.accttab.is-on {
+  color: var(--text);
+  border-bottom-color: var(--brand);
+}
+
 .acctdash {
   display: grid;
   grid-template-columns: 1fr;

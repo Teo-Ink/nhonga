@@ -225,6 +225,21 @@ export function MyShopPanel() {
         te leva para fora da plataforma (ex.: WhatsApp) antes de pagares.
       </div>
 
+      <nav className="accttabs" aria-label="Secções da conta">
+        <span className="accttab is-on" aria-current="page">
+          Anúncios
+        </span>
+        <a className="accttab" href="/mensagens">
+          Mensagens
+        </a>
+        <a className="accttab" href="/vender/planos">
+          Pagamentos
+        </a>
+        <a className="accttab" href="/favoritos">
+          Favoritos
+        </a>
+      </nav>
+
       {allItems.length === 0 ? (
         <div className="card myshop__empty">
           <p>{t.m_empty}</p>

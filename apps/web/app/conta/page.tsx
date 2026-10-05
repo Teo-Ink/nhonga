@@ -1,19 +1,18 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { pt } from '../../lib/i18n/pt';
-import { IconUser, IconHeart, IconBell, IconChat, IconChevronLeft } from '../../components/icons';
+import { IconUser, IconHeart, IconBell, IconChat } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
-import { accountGroups } from '../../components/account/items';
 import { MyShopPanel } from '../../components/vender/MyShopPanel';
 
-// Account dashboard (MyOLX-structured): a left menu + a main area whose content
-// depends on buyer vs seller. Sellers land on "Os meus anúncios"; buyers get an
-// activity overview with a prompt to start selling. Signed out → a sign-in card.
+// Account dashboard (MyOLX-structured): full-width content whose section depends
+// on buyer vs seller. Account navigation lives in the header "A tua conta"
+// dropdown (and, for sellers, the horizontal tabs inside the panel). Sellers
+// land on "Os meus anúncios"; buyers get an activity overview. Signed out → a
+// sign-in card.
 export default function AccountPage() {
   const t = pt.account;
-  const router = useRouter();
-  const { user, shop, isSeller, loading, shopLoading, signOut } = useSession();
+  const { user, shop, isSeller, loading, shopLoading } = useSession();
 
   if (loading || (user && shopLoading)) {
     return (
@@ -44,58 +43,14 @@ export default function AccountPage() {
   }
 
   const firstName = user.displayName.split(' ')[0] ?? user.displayName;
-  const groups = accountGroups(t, isSeller);
 
   return (
-    <section className="acctdash">
-      <aside className="acctdash__side">
-        <div className="acctdash__id">
-          <span className="acctdash__avatar" aria-hidden="true">
-            {(firstName[0] ?? 'U').toUpperCase()}
-          </span>
-          <div className="acctdash__idtext">
-            <strong>{firstName}</strong>
-            <span className="acctdash__phone">{user.phoneE164}</span>
-            <span className={`acctdash__badge ${isSeller ? 'is-seller' : ''}`}>
-              {isSeller ? t.seller_badge : t.buyer_badge}
-            </span>
-          </div>
-        </div>
-
-        <nav className="acctdash__nav" aria-label={t.menu_account}>
-          {groups.map((g) => (
-            <div className="acctdash__group" key={g.title}>
-              <p className="acctdash__gtitle">{g.title}</p>
-              {g.items.map((it) => (
-                <a className="acctdash__link" href={it.href} key={it.href}>
-                  {it.icon}
-                  <span>{it.label}</span>
-                  <IconChevronLeft width={15} height={15} className="acctdash__arrow" />
-                </a>
-              ))}
-            </div>
-          ))}
-        </nav>
-
-        <button
-          type="button"
-          className="btn btn--ghost acctdash__signout"
-          onClick={async () => {
-            await signOut();
-            router.refresh();
-          }}
-        >
-          {t.sign_out}
-        </button>
-      </aside>
-
-      <div className="acctdash__main">
-        {isSeller ? (
-          <MyShopPanel />
-        ) : (
-          <BuyerOverview name={firstName} shopName={shop?.displayName} />
-        )}
-      </div>
+    <section className="acctpage">
+      {isSeller ? (
+        <MyShopPanel />
+      ) : (
+        <BuyerOverview name={firstName} shopName={shop?.displayName} />
+      )}
     </section>
   );
 }
