@@ -31,14 +31,13 @@ export function MessagesLink({ label }: { label: string }) {
   }, [user, loading]);
 
   return (
-    <a className="wlact wlact--hide-sm" href="/mensagens" aria-label={label}>
+    <a className="wlact wlact--hide-sm" href="/mensagens" aria-label={label} title={label}>
       <span className="notifbell-hdr__icon">
         <IconChat width={22} height={22} />
         {unread > 0 ? (
           <span className="notifbell__badge">{unread > 9 ? '9+' : unread}</span>
         ) : null}
       </span>
-      <span className="wlact__label">{label}</span>
     </a>
   );
 }

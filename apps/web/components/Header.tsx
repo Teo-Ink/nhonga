@@ -47,6 +47,7 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
 
         <div className="wlhdr__actions">
           <LocaleControls locale={locale} />
+          <span className="wlhdr__sep" aria-hidden="true" />
           <a className="wlact wlact--hide-sm" href="/favoritos" aria-label={t.common.favorites}>
             <IconHeart width={22} height={22} />
           </a>

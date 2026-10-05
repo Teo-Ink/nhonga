@@ -1,5 +1,5 @@
 'use client';
-import { IconGlobe, IconSun } from './icons';
+import { IconSun } from './icons';
 
 // Language and theme controls. Both persist in a cookie/localStorage and reload
 // the current route so the server re-renders with the chosen locale/theme.
@@ -23,15 +23,27 @@ export function LocaleControls({ locale }: { locale: 'pt' | 'en' }) {
   }
   return (
     <>
-      <button
-        className="iconbtn iconbtn--lang"
-        onClick={() => setLocale(locale === 'pt' ? 'en' : 'pt')}
-        aria-label={locale === 'pt' ? 'Mudar para Inglês' : 'Switch to Portuguese'}
-        title={locale.toUpperCase()}
-      >
-        <IconGlobe />
-        <span className="iconbtn__lang">{locale.toUpperCase()}</span>
-      </button>
+      <div className="langsel" role="group" aria-label="Idioma / Language">
+        <button
+          type="button"
+          className={`langsel__opt ${locale === 'pt' ? 'is-on' : ''}`}
+          aria-pressed={locale === 'pt'}
+          onClick={() => locale !== 'pt' && setLocale('pt')}
+        >
+          PT
+        </button>
+        <span className="langsel__sep" aria-hidden="true">
+          |
+        </span>
+        <button
+          type="button"
+          className={`langsel__opt ${locale === 'en' ? 'is-on' : ''}`}
+          aria-pressed={locale === 'en'}
+          onClick={() => locale !== 'en' && setLocale('en')}
+        >
+          EN
+        </button>
+      </div>
       <button className="iconbtn" onClick={toggleTheme} aria-label="Alternar tema claro/escuro">
         <IconSun />
       </button>

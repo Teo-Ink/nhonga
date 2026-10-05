@@ -151,6 +151,38 @@ button {
   border-radius: var(--radius-md);
   position: relative;
 }
+
+/* Inline language toggle: PT | EN, active option highlighted. */
+.langsel {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: inherit;
+}
+.langsel__opt {
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 4px 3px;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.langsel__opt:hover {
+  opacity: 0.85;
+}
+.langsel__opt.is-on {
+  opacity: 1;
+  font-weight: 800;
+}
+.langsel__sep {
+  opacity: 0.4;
+  font-size: 0.85rem;
+}
 .iconbtn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -3959,7 +3991,14 @@ a.seller:focus-visible {
 .wlhdr__actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+}
+.wlhdr__sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 8px 6px;
+  background: currentColor;
+  opacity: 0.18;
 }
 .wlact {
   display: flex;
