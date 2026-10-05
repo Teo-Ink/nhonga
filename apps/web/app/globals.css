@@ -6722,9 +6722,15 @@ a.seller:focus-visible {
   gap: var(--space-2);
   flex: none;
 }
-.mrow__del:hover {
+.mrow__del {
+  background: var(--surface);
+  border-color: var(--border);
   color: #c0392b;
+}
+.mrow__del:hover {
+  color: #a93226;
   border-color: #c0392b;
+  background: var(--surface);
 }
 @media (max-width: 560px) {
   .mrow {
@@ -6900,9 +6906,14 @@ a.seller:focus-visible {
 }
 .myshop__headright {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: var(--space-3);
+}
+/* The wallet strip and the "Novo anúncio" button share the column width. */
+.myshop__headright > .btn {
+  width: 100%;
+  justify-content: center;
 }
 .myshop__notice {
   padding: var(--space-3);
