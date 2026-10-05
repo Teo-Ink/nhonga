@@ -49,7 +49,6 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           <LocaleControls locale={locale} />
           <a className="wlact wlact--hide-sm" href="/favoritos" aria-label={t.common.favorites}>
             <IconHeart width={22} height={22} />
-            <span className="wlact__label">{t.common.favorites}</span>
           </a>
           <MessagesLink label={t.common.messages} />
           <NotificationBell label={t.common.notifications} />

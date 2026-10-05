@@ -41,7 +41,6 @@ export function NotificationBell({ label }: { label: string }) {
           <span className="notifbell__badge">{unread > 9 ? '9+' : unread}</span>
         ) : null}
       </span>
-      <span className="wlact__label">{label}</span>
     </a>
   );
 }

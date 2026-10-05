@@ -1438,6 +1438,11 @@ a.seller:focus-visible {
 .acctmenu__btn {
   gap: 4px;
 }
+.acctmenu__name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .acctmenu__caret {
   display: inline-flex;
   transform: rotate(-90deg);
@@ -3925,8 +3930,8 @@ a.seller:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  max-width: 620px;
-  min-height: 46px;
+  max-width: 720px;
+  min-height: 54px;
   padding: 0 var(--space-4);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
@@ -3958,14 +3963,22 @@ a.seller:focus-visible {
 }
 .wlact {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  padding: 4px 8px;
-  min-width: 44px;
+  gap: 6px;
+  padding: 6px 10px;
+  min-height: 40px;
   border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
+  /* reset UA button styling so the account <button> matches the anchor actions */
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.wlact:hover {
+  background: var(--surface-sunken);
 }
 .wlact:hover {
   background: var(--surface-sunken);

@@ -68,7 +68,7 @@ export function AccountMenu({
         onClick={() => setOpen((o) => !o)}
       >
         <IconUser width={22} height={22} />
-        <span className="wlact__label wlact__label--hide-sm">{firstName || label}</span>
+        <span className="wlact__label acctmenu__name">{firstName || label}</span>
         <span className={`acctmenu__caret ${open ? 'is-open' : ''}`} aria-hidden="true">
           <IconChevronLeft width={14} height={14} />
         </span>
