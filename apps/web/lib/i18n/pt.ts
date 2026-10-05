@@ -36,7 +36,7 @@ export const pt = {
     nav_sell: 'Vender',
     nav_help: 'Ajuda',
     post_ad: 'Anunciar',
-    sell: 'Vender',
+    sell: 'Anunciar e Vender',
     favorites: 'Favoritos',
     messages: 'Mensagens',
     notifications: 'Notificações',

@@ -37,7 +37,7 @@ export const en: Dictionary = {
     nav_sell: 'Sell',
     nav_help: 'Help',
     post_ad: 'Post ad',
-    sell: 'Sell',
+    sell: 'Advertise & Sell',
     favorites: 'Favourites',
     messages: 'Messages',
     notifications: 'Notifications',
