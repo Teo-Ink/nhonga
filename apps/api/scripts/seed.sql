@@ -241,8 +241,14 @@ INSERT INTO app_user (id, phone_e164, phone_verified_at, display_name, status) V
   ('99990000-0000-4000-8000-000000000002', '+258843000002', now(), 'João M.', 'active'),
   ('99990000-0000-4000-8000-000000000003', '+258844000003', now(), 'Rita S.', 'active');
 
+-- Demo seller login: Ana owns "Lojas Xitique", so signing in with +258842000001
+-- lands on the seller dashboard (wallet + "Os teus anúncios"). João and Rita
+-- stay buyers, so both views are demoable.
+INSERT INTO vendor_user (id, vendor_id, user_id, role) VALUES
+  ('88880000-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000001', '99990000-0000-4000-8000-000000000001', 'owner');
+
 INSERT INTO review (id, vendor_id, product_id, author_user_id, author_name, rating, comment, created_at) VALUES
-  ('77770000-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002', '99990000-0000-4000-8000-000000000001', 'Ana C.', 5, 'Vendedor rápido e honesto. O produto estava tal como no anúncio.', now() - interval '3 days'),
+  ('77770000-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000002', '99990000-0000-4000-8000-000000000003', 'Rita S.', 5, 'Vendedor rápido e honesto. O produto estava tal como no anúncio.', now() - interval '3 days'),
   ('77770000-0000-4000-8000-000000000002', '11111111-0000-4000-8000-000000000001', NULL, '99990000-0000-4000-8000-000000000002', 'João M.', 4, 'Boa comunicação pelo WhatsApp e entrega combinada sem problemas.', now() - interval '8 days'),
   ('77770000-0000-4000-8000-000000000003', '11111111-0000-4000-8000-000000000002', NULL, '99990000-0000-4000-8000-000000000001', 'Ana C.', 5, 'A Mama Rosa é impecável, capulanas lindas e atendimento simpático.', now() - interval '2 days'),
   ('77770000-0000-4000-8000-000000000004', '11111111-0000-4000-8000-000000000002', NULL, '99990000-0000-4000-8000-000000000003', 'Rita S.', 5, 'Recomendo! Respondeu rápido e o preço foi justo.', now() - interval '12 days'),
