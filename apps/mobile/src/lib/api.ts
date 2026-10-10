@@ -277,6 +277,8 @@ export interface WalletView {
   shopName: string | null;
   balanceCents: number;
   points: number;
+  isPro: boolean;
+  proUntil: string | null;
   transactions: WalletTx[];
 }
 export function getWallet(): Promise<WalletView> {
@@ -290,6 +292,9 @@ export function topupWallet(amountCents: number): Promise<WalletView> {
 }
 export function purchasePackage(packageId: string): Promise<WalletView> {
   return post('/wallet/purchase', { packageId }, true);
+}
+export function subscribePro(): Promise<WalletView> {
+  return post('/wallet/pro', {}, true);
 }
 export interface BoostPlan {
   code: string;

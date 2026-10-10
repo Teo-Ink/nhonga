@@ -6,6 +6,7 @@ import {
   getWallet,
   getWalletPackages,
   purchasePackage,
+  subscribePro,
   topupWallet,
   type WalletPackage,
   type WalletView,
@@ -27,7 +28,15 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
     getWallet()
       .then(setW)
       .catch(() =>
-        setW({ hasShop: false, shopName: null, balanceCents: 0, points: 0, transactions: [] }),
+        setW({
+          hasShop: false,
+          shopName: null,
+          balanceCents: 0,
+          points: 0,
+          isPro: false,
+          proUntil: null,
+          transactions: [],
+        }),
       );
   }, []);
 
@@ -85,6 +94,24 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
     }
   }
 
+  async function doPro() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const d = await subscribePro();
+      setW(d);
+      setMsg('Loja Pro ativada.');
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Não foi possível ativar a Loja Pro.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const proUntilLabel = w?.proUntil
+    ? new Date(w.proUntil).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })
+    : null;
+
   if (!w) {
     return (
       <View style={[styles.card, styles.center]}>
@@ -116,6 +143,19 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
           onPress={openPackages}
         >
           <Text style={styles.btnCtaText}>Comprar pacote</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.proRow}>
+        <Text style={[styles.proLabel, w.isPro && styles.proLabelOn]}>
+          {w.isPro ? `★ Loja Pro ativa até ${proUntilLabel}` : 'Loja Pro · 750 MT/mês'}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.proBtn, pressed && styles.pressed]}
+          onPress={() => void doPro()}
+          disabled={busy}
+        >
+          <Text style={styles.proBtnText}>{w.isPro ? 'Renovar' : 'Ativar'}</Text>
         </Pressable>
       </View>
 
@@ -218,6 +258,25 @@ const styles = StyleSheet.create({
   btnCtaText: { color: '#fff', fontWeight: '700' },
   pressed: { opacity: 0.9, transform: [{ scale: 0.99 }] },
   msg: { fontSize: 13, color: brand.green },
+  proRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.sm,
+    paddingTop: space.sm,
+    borderTopWidth: 1,
+    borderTopColor: brand.border,
+  },
+  proLabel: { flex: 1, fontSize: 12, color: brand.muted },
+  proLabelOn: { color: brand.green, fontWeight: '700' },
+  proBtn: {
+    paddingHorizontal: space.md,
+    paddingVertical: 6,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: brand.green,
+  },
+  proBtnText: { color: brand.green, fontWeight: '700', fontSize: 13 },
   panel: { gap: space.sm, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: brand.border },
   panelLabel: { fontSize: 13, color: brand.muted },
   input: {

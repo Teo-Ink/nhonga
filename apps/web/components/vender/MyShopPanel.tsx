@@ -166,6 +166,7 @@ export function MyShopPanel() {
   }
 
   const allItems = data?.items ?? [];
+  const isSeller = data?.shop != null;
   const byStatus = filter === 'all' ? allItems : allItems.filter((i) => i.status === filter);
   const byCat = cat ? byStatus.filter((i) => i.categorySlug === cat) : byStatus;
   const q = search.trim().toLowerCase();
@@ -213,10 +214,18 @@ export function MyShopPanel() {
           {data?.shop ? <p className="dash__store">{data.shop.displayName}</p> : null}
         </div>
         <div className="myshop__headright">
-          <WalletBar reloadSignal={walletSignal} />
-          <a className="btn btn--cta" href="/vender/novo">
-            {t.m_new}
-          </a>
+          {isSeller ? (
+            <>
+              <WalletBar reloadSignal={walletSignal} />
+              <a className="btn btn--cta" href="/vender/novo">
+                {t.m_new}
+              </a>
+            </>
+          ) : (
+            <a className="btn btn--cta" href="/vender/comecar">
+              Criar a minha loja
+            </a>
+          )}
         </div>
       </div>
 
@@ -242,10 +251,21 @@ export function MyShopPanel() {
 
       {allItems.length === 0 ? (
         <div className="card myshop__empty">
-          <p>{t.m_empty}</p>
-          <a className="btn btn--cta" href="/vender/novo">
-            {t.m_empty_cta}
-          </a>
+          {isSeller ? (
+            <>
+              <p>{t.m_empty}</p>
+              <a className="btn btn--cta" href="/vender/novo">
+                {t.m_empty_cta}
+              </a>
+            </>
+          ) : (
+            <>
+              <p>Ainda não tens anúncios. Cria a tua loja grátis e começa a vender em minutos.</p>
+              <a className="btn btn--cta" href="/vender/comecar">
+                Criar a minha loja
+              </a>
+            </>
+          )}
         </div>
       ) : (
         <>
