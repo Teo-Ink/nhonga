@@ -98,6 +98,9 @@ export interface ListItemInput {
   readonly ratingCount: number;
   readonly postedAt: Date | null;
   readonly featuredUntil: Date | null;
+  readonly categorySlug: string;
+  readonly categoryNamePt: string;
+  readonly categoryNameEn: string;
   readonly attributes: Record<string, string>;
   readonly vendor: {
     id: string;
@@ -133,6 +136,10 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     location: input.vendor.location,
     postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
     featured: input.featuredUntil !== null && input.featuredUntil.getTime() > Date.now(),
+    category: {
+      slug: input.categorySlug,
+      name: pickText(input.categoryNamePt, input.categoryNameEn, lang),
+    },
     attributes: input.attributes,
     vendor: {
       id: input.vendor.id,

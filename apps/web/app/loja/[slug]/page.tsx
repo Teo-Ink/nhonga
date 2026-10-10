@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { ProductCard } from '../../../components/ProductCard';
+import { StoreGrid } from '../../../components/StoreGrid';
 import { SellerReviews } from '../../../components/SellerReviews';
 import { EmptyState, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
 import { IconBox } from '../../../components/icons';
@@ -136,17 +136,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
         ) : null}
       </ul>
 
-      <section className="section" aria-label={t.seller.products}>
-        {count === 0 ? (
+      {count === 0 ? (
+        <section className="section" aria-label={t.seller.products}>
           <EmptyState icon={<IconBox />}>{t.seller.no_products}</EmptyState>
-        ) : (
-          <div className="grid">
-            {items.map((p) => (
-              <ProductCard key={p.id} p={p} t={t} />
-            ))}
-          </div>
-        )}
-      </section>
+        </section>
+      ) : (
+        <StoreGrid items={items} t={t} />
+      )}
 
       {vendor ? <SellerReviews vendorId={vendor.id} initial={reviews} t={t.reviews} /> : null}
     </>

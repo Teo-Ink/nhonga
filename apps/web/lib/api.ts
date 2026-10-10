@@ -44,6 +44,7 @@ export interface ProductListItem {
   postedAt: string | null;
   featured: boolean;
   attributes: Record<string, string>;
+  category: { slug: string; name: string };
   vendor: VendorSummary;
 }
 export interface ProductVariant {

@@ -1814,6 +1814,35 @@ a.seller:focus-visible {
   font-weight: var(--weight-medium);
 }
 
+/* Store page category chips (filter a shop's listings by vertical). */
+.storecats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.storecat {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.storecat:hover {
+  border-color: var(--brand);
+}
+.storecat.is-on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
 /* PDP "Anúncios semelhantes" rail. */
 .pdpsimilar {
   margin-top: var(--space-8);
