@@ -19,7 +19,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { aiSearch, listProducts, type ProductListItem, type SortKey } from '@/lib/api';
 import { ProductGridCard } from '@/components/ProductGridCard';
 import { ProductGridSkeleton } from '@/components/Skeleton';
-import { brand, radius, space } from '@/lib/theme';
+import { brand, radius, shadow, space } from '@/lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 const SORTS: { key: SortKey; label: string }[] = [
@@ -376,13 +376,14 @@ const styles = StyleSheet.create({
     marginTop: space.md,
     marginBottom: space.sm,
     paddingHorizontal: space.md,
-    height: 44,
+    height: 50,
     borderRadius: radius.pill,
     backgroundColor: brand.surface,
     borderWidth: 1,
     borderColor: brand.border,
+    ...shadow.sm,
   },
-  searchInput: { flex: 1, color: brand.text, fontSize: 15, paddingVertical: 0 },
+  searchInput: { flex: 1, color: brand.text, fontSize: 16, paddingVertical: 0 },
   camBtn: { width: 24, alignItems: 'center', justifyContent: 'center' },
   filterDot: {
     position: 'absolute',
