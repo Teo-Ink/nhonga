@@ -11,8 +11,14 @@ import {
   IconWallet,
   IconStar,
 } from '../../../components/icons';
-import { getCategoryAttributes, getProduct, type ProductDetail } from '../../../lib/api';
+import {
+  getCategoryAttributes,
+  getProduct,
+  searchProducts,
+  type ProductDetail,
+} from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
+import { ProductCard } from '../../../components/ProductCard';
 import { ContactSeller } from '../../../components/ContactSeller';
 import { ReportListing } from '../../../components/ReportListing';
 import { OwnerControls } from '../../../components/vender/OwnerControls';
@@ -71,6 +77,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const attrDefs = catSlug ? await getCategoryAttributes(catSlug) : [];
   const labelOf = new Map(attrDefs.map((a) => [a.key, a.label]));
   const specs = Object.entries(product.attributes);
+
+  // Other listings in the same category (classifieds "similar" rail).
+  const similar = catSlug
+    ? (await searchProducts({ category: catSlug })).items
+        .filter((p) => p.id !== product.id)
+        .slice(0, 6)
+    : [];
 
   // Trust tips adapt to the listing's vertical (a job isn't "delivered"; a
   // property is visited; a service is agreed up front). Falls back to the
@@ -215,6 +228,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <ReportListing slug={product.slug} t={t.report} />
         </div>
       </div>
+
+      {similar.length > 0 ? (
+        <section className="pdpsimilar" aria-label={t.pdp.similar}>
+          <h2 className="section__title">{t.pdp.similar}</h2>
+          <div className="grid">
+            {similar.map((p) => (
+              <ProductCard key={p.id} p={p} t={t} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </article>
   );
 }

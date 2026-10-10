@@ -175,6 +175,7 @@ export const pt = {
     only_left: 'Restam apenas {n}',
     ratings: '{n} avaliações',
     specifications: 'Especificações',
+    similar: "Anúncios semelhantes",
     demo_notice: 'Ambiente de teste · catálogo de demonstração (fotos e produtos são exemplos).',
     not_found: 'Produto não encontrado.',
     info_delivery: 'Entrega combinada',

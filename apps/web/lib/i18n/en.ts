@@ -176,6 +176,7 @@ export const en: Dictionary = {
     only_left: 'Only {n} left',
     ratings: '{n} reviews',
     specifications: 'Specifications',
+    similar: "Similar listings",
     demo_notice: 'Test environment · demo catalogue (photos and products are samples).',
     not_found: 'Product not found.',
     info_delivery: 'Delivery arranged',

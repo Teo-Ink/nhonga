@@ -1813,6 +1813,14 @@ a.seller:focus-visible {
 .buyer__linklabel {
   font-weight: var(--weight-medium);
 }
+
+/* PDP "Anúncios semelhantes" rail. */
+.pdpsimilar {
+  margin-top: var(--space-8);
+}
+.pdpsimilar .section__title {
+  margin-bottom: var(--space-4);
+}
 @media (min-width: 900px) {
   .acctdash {
     grid-template-columns: 280px 1fr;
