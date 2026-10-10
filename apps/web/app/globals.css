@@ -6780,16 +6780,20 @@ a.seller:focus-visible {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2);
+  padding: var(--space-3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
+  transition: box-shadow var(--dur-base) var(--ease-out);
+}
+.mrow:hover {
+  box-shadow: var(--shadow-sm);
 }
 .mrow__thumb {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 72px;
   flex: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background-size: cover;
   background-position: center;
   background-color: var(--surface-sunken);
@@ -6802,12 +6806,16 @@ a.seller:focus-visible {
   gap: 2px;
 }
 .mrow__title {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: var(--text-base, 1rem);
   color: var(--text);
   text-decoration: none;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.mrow__title:hover {
+  color: var(--brand);
 }
 .mrow__price {
   color: var(--brand);
