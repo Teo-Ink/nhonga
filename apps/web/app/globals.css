@@ -1769,6 +1769,50 @@ a.seller:focus-visible {
   font-weight: var(--weight-bold);
   margin-bottom: 2px;
 }
+/* Buyer account home: keep it from stretching on wide screens. */
+.buyer {
+  max-width: 900px;
+}
+/* Quick-link cards for the account sections (replaces the old sidebar nav). */
+.buyer__links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.buyer__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+.buyer__link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-strong);
+}
+.buyer__linkicon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+}
+.buyer__linklabel {
+  font-weight: var(--weight-medium);
+}
 @media (min-width: 900px) {
   .acctdash {
     grid-template-columns: 280px 1fr;

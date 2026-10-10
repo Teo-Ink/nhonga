@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { pt } from '../../lib/i18n/pt';
 import { IconUser, IconHeart, IconBell, IconChat } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
+import { accountGroups } from '../../components/account/items';
 import { MyShopPanel } from '../../components/vender/MyShopPanel';
 
 // Account dashboard (MyOLX-structured): full-width content whose section depends
@@ -108,6 +109,19 @@ function BuyerOverview({ name, shopName }: { name: string; shopName?: string }) 
         <a className="btn btn--cta" href="/vender/comecar">
           {t.cta_sell_btn}
         </a>
+      </div>
+
+      <div className="buyer__links">
+        {accountGroups(t, false)
+          .flatMap((g) => g.items)
+          .map((it) => (
+            <a className="buyer__link" href={it.href} key={it.href}>
+              <span className="buyer__linkicon" aria-hidden="true">
+                {it.icon}
+              </span>
+              <span className="buyer__linklabel">{it.label}</span>
+            </a>
+          ))}
       </div>
     </div>
   );
