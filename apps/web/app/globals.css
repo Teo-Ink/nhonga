@@ -7444,7 +7444,7 @@ a.seller:focus-visible {
     transform var(--dur-fast) var(--ease-spring);
 }
 .searchbox--header .searchbox__tool {
-  color: #fff;
+  color: var(--brand);
 }
 .searchbox__tool:hover {
   background: color-mix(in srgb, currentColor 16%, transparent);
