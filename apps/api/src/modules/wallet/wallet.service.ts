@@ -33,8 +33,15 @@ export interface WalletView {
   shopName: string | null;
   balanceCents: number;
   points: number;
+  /** "Loja Pro" subscription: active flag + expiry (ISO) when active. */
+  isPro: boolean;
+  proUntil: string | null;
   transactions: WalletTx[];
 }
+
+/** Loja Pro subscription: monthly price and duration. */
+export const PRO_PRICE_CENTS = 75000; // 750 MT / month
+const PRO_DAYS = 30;
 
 export interface BoostResult {
   wallet: WalletView;
@@ -120,6 +127,13 @@ export class WalletService {
   private async snapshot(vendorId: string, shopName: string): Promise<WalletView> {
     await this.ensureWallet(vendorId);
     const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, vendorId)))[0];
+    const v = (
+      await this.db
+        .select({ proUntil: vendor.proUntil })
+        .from(vendor)
+        .where(eq(vendor.id, vendorId))
+    )[0];
+    const proActive = v?.proUntil != null && v.proUntil.getTime() > Date.now();
     const txs = await this.db
       .select()
       .from(walletTransaction)
@@ -131,6 +145,8 @@ export class WalletService {
       shopName,
       balanceCents: Number(w?.balanceCents ?? 0),
       points: w?.points ?? 0,
+      isPro: proActive,
+      proUntil: proActive ? v!.proUntil!.toISOString() : null,
       transactions: txs.map((t) => ({
         id: t.id,
         kind: t.kind,
@@ -145,7 +161,15 @@ export class WalletService {
   async get(token: string | null): Promise<WalletView> {
     const v = await this.vendorOf(token);
     if (!v) {
-      return { hasShop: false, shopName: null, balanceCents: 0, points: 0, transactions: [] };
+      return {
+        hasShop: false,
+        shopName: null,
+        balanceCents: 0,
+        points: 0,
+        isPro: false,
+        proUntil: null,
+        transactions: [],
+      };
     }
     return this.snapshot(v.id, v.name);
   }
@@ -258,6 +282,39 @@ export class WalletService {
       planName: applied.planName,
       endsAt: applied.endsAt ? applied.endsAt.toISOString() : null,
     };
+  }
+
+  /** Subscribe / renew "Loja Pro" for 30 days, paid from wallet balance. */
+  async subscribePro(token: string | null): Promise<WalletView> {
+    const v = await this.requireVendor(token);
+    await this.ensureWallet(v.id);
+    const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, v.id)))[0];
+    if (Number(w?.balanceCents ?? 0) < PRO_PRICE_CENTS) {
+      throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+    }
+    const row = (
+      await this.db.select({ proUntil: vendor.proUntil }).from(vendor).where(eq(vendor.id, v.id))
+    )[0];
+    const now = Date.now();
+    const base = row?.proUntil != null && row.proUntil.getTime() > now ? row.proUntil.getTime() : now;
+    const newUntil = new Date(base + PRO_DAYS * 86_400_000);
+    // Charge the wallet and extend the subscription.
+    await this.db
+      .update(wallet)
+      .set({
+        balanceCents: sql`${wallet.balanceCents} - ${PRO_PRICE_CENTS}`,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(wallet.vendorId, v.id));
+    await this.db.update(vendor).set({ proUntil: newUntil }).where(eq(vendor.id, v.id));
+    await this.db.insert(walletTransaction).values({
+      vendorId: v.id,
+      kind: 'spend',
+      amountCents: -PRO_PRICE_CENTS,
+      points: 0,
+      description: 'Loja Pro (30 dias)',
+    });
+    return this.snapshot(v.id, v.name);
   }
 
   private async requireVendor(token: string | null): Promise<{ id: string; name: string }> {

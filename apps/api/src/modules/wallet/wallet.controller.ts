@@ -23,6 +23,12 @@ export class WalletController {
     return this.wallet.boostPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
   }
 
+  @Post('pro')
+  @HttpCode(200)
+  subscribePro(@Headers('authorization') authz?: string): Promise<WalletView> {
+    return this.wallet.subscribePro(bearer(authz));
+  }
+
   @Post('boost')
   @HttpCode(200)
   boost(

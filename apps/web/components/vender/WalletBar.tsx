@@ -14,6 +14,8 @@ interface WalletView {
   shopName: string | null;
   balanceCents: number;
   points: number;
+  isPro: boolean;
+  proUntil: string | null;
   transactions: { id: string; kind: string; amountCents: number; points: number }[];
 }
 
@@ -32,7 +34,17 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     return fetch('/api/wallet', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d: WalletView) => setW(d))
-      .catch(() => setW({ hasShop: false, shopName: null, balanceCents: 0, points: 0, transactions: [] }));
+      .catch(() =>
+        setW({
+          hasShop: false,
+          shopName: null,
+          balanceCents: 0,
+          points: 0,
+          isPro: false,
+          proUntil: null,
+          transactions: [],
+        }),
+      );
   }
 
   useEffect(() => {
@@ -105,8 +117,28 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     }
   }
 
+  async function subscribePro() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch('/api/wallet/pro', { method: 'POST' });
+      const d = await res.json();
+      if (!res.ok) {
+        setMsg(d.detail ?? d.message ?? 'Não foi possível ativar a Loja Pro.');
+        return;
+      }
+      setW(d);
+      setMsg('Loja Pro ativada — os teus anúncios ganham destaque de loja verificada.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const balance = w ? formatMZN(cents(w.balanceCents)) : '—';
   const points = w ? w.points : 0;
+  const proUntilLabel = w?.proUntil
+    ? new Date(w.proUntil).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })
+    : null;
 
   return (
     <div className="wallet">
@@ -128,6 +160,30 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
           </button>
         </div>
       </div>
+
+      {w?.hasShop ? (
+        <div className={`wallet__pro ${w.isPro ? 'is-on' : ''}`}>
+          <span className="wallet__prolabel">
+            {w.isPro ? (
+              <>
+                ★ <strong>Loja Pro</strong> ativa até {proUntilLabel}
+              </>
+            ) : (
+              <>
+                <strong>Loja Pro</strong> — selo verificado + destaque · 750 MT/mês
+              </>
+            )}
+          </span>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() => void subscribePro()}
+            disabled={busy}
+          >
+            {w.isPro ? 'Renovar' : 'Ativar'}
+          </button>
+        </div>
+      ) : null}
 
       {w && !w.hasShop ? (
         <p className="wallet__hint">Cria a tua loja (publica um anúncio) para ativar a carteira.</p>
