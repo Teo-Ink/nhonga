@@ -71,6 +71,9 @@ describe('catalog mappers', () => {
       ratingCount: 0,
       postedAt: new Date('2026-01-02T00:00:00Z'),
       featuredUntil: null,
+      categorySlug: 'viaturas',
+      categoryNamePt: 'Viaturas',
+      categoryNameEn: 'Vehicles',
       vendor: {
         id: 'x',
         slug: 'x',
@@ -93,6 +96,35 @@ describe('catalog mappers', () => {
     expect(item.featured).toBe(false);
   });
 
+  it('maps the listing category, localized (PT-first, EN when asked)', () => {
+    const input: ListItemInput = {
+      id: 'p',
+      slug: 'p',
+      titlePt: 'P',
+      titleEn: 'P',
+      ratingAvg: null,
+      ratingCount: 0,
+      postedAt: null,
+      featuredUntil: null,
+      categorySlug: 'viaturas',
+      categoryNamePt: 'Viaturas',
+      categoryNameEn: 'Vehicles',
+      vendor: {
+        id: 'x',
+        slug: 'x',
+        displayName: 'Loja',
+        status: 'active',
+        ratingAvg: null,
+        ratingCount: 0,
+        location: null,
+      },
+      variants: [v({ priceCents: 1000, stockQuantity: 1 })],
+      primaryImage: null,
+    };
+    expect(toListItem(input, 'pt').category).toEqual({ slug: 'viaturas', name: 'Viaturas' });
+    expect(toListItem(input, 'en').category).toEqual({ slug: 'viaturas', name: 'Vehicles' });
+  });
+
   it('marks a listing featured only while featuredUntil is in the future', () => {
     const base = {
       id: 'p',
@@ -102,6 +134,9 @@ describe('catalog mappers', () => {
       ratingAvg: null,
       ratingCount: 0,
       postedAt: null,
+      categorySlug: 'moda',
+      categoryNamePt: 'Moda',
+      categoryNameEn: 'Fashion',
       vendor: {
         id: 'x',
         slug: 'x',
