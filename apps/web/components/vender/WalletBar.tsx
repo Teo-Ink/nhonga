@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { cents, formatMZN } from '@nhonga/shared';
+import { useDict } from '../i18n/DictProvider';
 
 interface Pkg {
   id: string;
@@ -23,6 +24,7 @@ interface WalletView {
 // with inline top-up and prepaid-package panels. Mirrors the marketplace
 // "Saldo em conta / Comprar pacote" header. Top-ups are demo credits.
 export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
+  const dash = useDict().dash;
   const [w, setW] = useState<WalletView | null>(null);
   const [panel, setPanel] = useState<'none' | 'topup' | 'packages'>('none');
   const [amount, setAmount] = useState('');
@@ -70,7 +72,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   async function submitTopup() {
     const mt = Number(amount.replace(/[^\d]/g, ''));
     if (!mt || mt <= 0) {
-      setMsg('Indica um montante válido.');
+      setMsg(dash.invalid_amount);
       return;
     }
     setBusy(true);
@@ -83,13 +85,13 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       });
       const d = await res.json();
       if (!res.ok) {
-        setMsg(d.detail ?? d.message ?? 'Não foi possível carregar.');
+        setMsg(d.detail ?? d.message ?? dash.topup_fail);
         return;
       }
       setW(d);
       setAmount('');
       setPanel('none');
-      setMsg(`Saldo carregado: +${formatMZN(cents(mt * 100))}`);
+      setMsg(`${dash.topped_up}: +${formatMZN(cents(mt * 100))}`);
     } finally {
       setBusy(false);
     }
@@ -106,12 +108,12 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       });
       const d = await res.json();
       if (!res.ok) {
-        setMsg(d.detail ?? d.message ?? 'Não foi possível comprar.');
+        setMsg(d.detail ?? d.message ?? dash.buy_fail);
         return;
       }
       setW(d);
       setPanel('none');
-      setMsg('Pacote adicionado à tua conta.');
+      setMsg(dash.package_added);
     } finally {
       setBusy(false);
     }
@@ -124,11 +126,11 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       const res = await fetch('/api/wallet/pro', { method: 'POST' });
       const d = await res.json();
       if (!res.ok) {
-        setMsg(d.detail ?? d.message ?? 'Não foi possível ativar a Loja Pro.');
+        setMsg(d.detail ?? d.message ?? dash.pro_fail);
         return;
       }
       setW(d);
-      setMsg('Loja Pro ativada — os teus anúncios ganham destaque de loja verificada.');
+      setMsg(dash.pro_activated);
     } finally {
       setBusy(false);
     }
@@ -145,18 +147,18 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       <div className="wallet__bar">
         <div className="wallet__figures">
           <span className="wallet__label">
-            Saldo em conta: <strong>{balance}</strong>
+            {dash.balance}: <strong>{balance}</strong>
           </span>
           <span className="wallet__label wallet__label--pts">
-            Pontos disponíveis: <strong>{points} pts</strong>
+            {dash.points}: <strong>{points} {dash.pts}</strong>
           </span>
         </div>
         <div className="wallet__actions">
           <button type="button" className="btn btn--ghost btn--sm" onClick={openTopup}>
-            Carregar conta
+            {dash.topup}
           </button>
           <button type="button" className="btn btn--cta btn--sm" onClick={openPackages}>
-            Comprar pacote
+            {dash.buy_package}
           </button>
         </div>
       </div>
@@ -166,11 +168,11 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
           <span className="wallet__prolabel">
             {w.isPro ? (
               <>
-                ★ <strong>Loja Pro</strong> ativa até {proUntilLabel}
+                ★ <strong>{dash.pro_name}</strong> {dash.pro_active_until} {proUntilLabel}
               </>
             ) : (
               <>
-                <strong>Loja Pro</strong> — selo verificado + destaque · 750 MT/mês
+                <strong>{dash.pro_name}</strong> — {dash.pro_offer}
               </>
             )}
           </span>
@@ -180,27 +182,27 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
             onClick={() => void subscribePro()}
             disabled={busy}
           >
-            {w.isPro ? 'Renovar' : 'Ativar'}
+            {w.isPro ? dash.renew : dash.activate}
           </button>
         </div>
       ) : null}
 
       {w && !w.hasShop ? (
-        <p className="wallet__hint">Cria a tua loja (publica um anúncio) para ativar a carteira.</p>
+        <p className="wallet__hint">{dash.wallet_hint}</p>
       ) : null}
       {msg ? <p className="wallet__msg">{msg}</p> : null}
 
       {panel === 'topup' ? (
         <div className="wallet__panel">
           <label className="wallet__field">
-            <span>Montante a carregar (MT)</span>
+            <span>{dash.topup_amount}</span>
             <input
               type="text"
               inputMode="numeric"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Ex.: 500"
-              aria-label="Montante a carregar em meticais"
+              aria-label={dash.topup_amount}
             />
           </label>
           <div className="wallet__quick">
@@ -221,7 +223,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
             onClick={() => void submitTopup()}
             disabled={busy || !w?.hasShop}
           >
-            {busy ? 'A carregar…' : 'Carregar (demo)'}
+            {busy ? dash.loading : dash.topup_submit}
           </button>
         </div>
       ) : null}
@@ -236,7 +238,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
                 <div>
                   <strong>{p.name}</strong>
                   <span className="wallet__pkgmeta">
-                    {formatMZN(cents(p.balanceCents))} de saldo · {p.points} pts
+                    {formatMZN(cents(p.balanceCents))} {dash.of_balance} · {p.points} {dash.pts}
                   </span>
                 </div>
                 <button

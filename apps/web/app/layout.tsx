@@ -5,6 +5,7 @@ import { Footer } from '../components/Footer';
 import { PromoBar } from '../components/PromoBar';
 import { BottomNav } from '../components/BottomNav';
 import { SessionProvider } from '../components/auth/SessionProvider';
+import { DictProvider } from '../components/i18n/DictProvider';
 import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
 import { getDictionary } from '../lib/i18n/index';
@@ -65,17 +66,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <a href="#main" className="skip-link">
           {locale === 'pt' ? 'Saltar para o conteúdo' : 'Skip to content'}
         </a>
-        <SessionProvider>
-          <PromoBar t={t} />
-          <Header t={t} locale={locale} />
-          <main id="main" className="container">
-            {children}
-          </main>
-          <Footer t={t} />
-          <BottomNav t={t} />
-          <ChatWidget t={t.assistant} />
-          <PwaProvider t={t.pwa} />
-        </SessionProvider>
+        <DictProvider locale={locale}>
+          <SessionProvider>
+            <PromoBar t={t} />
+            <Header t={t} locale={locale} />
+            <main id="main" className="container">
+              {children}
+            </main>
+            <Footer t={t} />
+            <BottomNav t={t} />
+            <ChatWidget t={t.assistant} />
+            <PwaProvider t={t.pwa} />
+          </SessionProvider>
+        </DictProvider>
       </body>
     </html>
   );

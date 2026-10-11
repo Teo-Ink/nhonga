@@ -1,7 +1,7 @@
 'use client';
-import { pt } from '../../lib/i18n/pt';
 import { IconUser } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
+import { useDict } from '../../components/i18n/DictProvider';
 import { MyShopPanel } from '../../components/vender/MyShopPanel';
 
 // Account page. Buyers and sellers share one layout (MyOLX / "Os teus
@@ -9,14 +9,15 @@ import { MyShopPanel } from '../../components/vender/MyShopPanel';
 // has a shop yet. Account navigation lives in the header "A tua conta"
 // dropdown, so there is no sidebar or duplicate shortcut list here.
 export default function AccountPage() {
-  const t = pt.account;
+  const d = useDict();
+  const t = d.account;
   const { user, loading } = useSession();
 
   if (loading) {
     return (
       <section className="account">
         <div className="empty" role="status">
-          <p>{pt.common.loading}</p>
+          <p>{d.common.loading}</p>
         </div>
       </section>
     );

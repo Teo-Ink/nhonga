@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { cents, formatMZN } from '@nhonga/shared';
-import { pt } from '../../lib/i18n/pt';
+import { useDict } from '../i18n/DictProvider';
 import { IconSearch } from '../icons';
 import { useSession } from '../auth/SessionProvider';
 import { WalletBar } from './WalletBar';
@@ -47,7 +47,9 @@ interface MineResponse {
 // Client component: it reads the session, loads /api/mine/products, and lets the
 // seller edit or remove each listing. Falls back to sign-in / empty states.
 export function MyShopPanel() {
-  const t = pt.sell;
+  const dict = useDict();
+  const t = dict.sell;
+  const dash = dict.dash;
   const { user, loading: sessionLoading } = useSession();
   const [data, setData] = useState<MineResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,11 +140,11 @@ export function MyShopPanel() {
       });
       const d = await res.json();
       if (!res.ok) {
-        setBoostMsg(d.detail ?? d.message ?? 'Não foi possível destacar.');
+        setBoostMsg(d.detail ?? d.message ?? dash.promote_fail);
         return;
       }
       setBoostFor(null);
-      setBoostMsg(`Anúncio promovido (${d.planName}).`);
+      setBoostMsg(`${dash.promoted} (${d.planName}).`);
       setWalletSignal((s) => s + 1);
       await load();
     } finally {
@@ -223,29 +225,28 @@ export function MyShopPanel() {
             </>
           ) : (
             <a className="btn btn--cta" href="/vender/comecar">
-              Criar a minha loja
+              {dash.create_shop}
             </a>
           )}
         </div>
       </div>
 
       <div className="myshop__notice" role="note">
-        Dica de segurança: combina entregas e pagamentos sempre dentro do Nhonga. Desconfia de quem
-        te leva para fora da plataforma (ex.: WhatsApp) antes de pagares.
+        {dash.safety_tip}
       </div>
 
-      <nav className="accttabs" aria-label="Secções da conta">
+      <nav className="accttabs" aria-label={dash.sections}>
         <span className="accttab is-on" aria-current="page">
-          Anúncios
+          {dash.tab_listings}
         </span>
         <a className="accttab" href="/mensagens">
-          Mensagens
+          {dash.tab_messages}
         </a>
         <a className="accttab" href="/vender/planos">
-          Pagamentos
+          {dash.tab_payments}
         </a>
         <a className="accttab" href="/favoritos">
-          Favoritos
+          {dash.tab_favorites}
         </a>
       </nav>
 
@@ -260,9 +261,9 @@ export function MyShopPanel() {
             </>
           ) : (
             <>
-              <p>Ainda não tens anúncios. Cria a tua loja grátis e começa a vender em minutos.</p>
+              <p>{dash.buyer_empty}</p>
               <a className="btn btn--cta" href="/vender/comecar">
-                Criar a minha loja
+                {dash.create_shop}
               </a>
             </>
           )}
@@ -286,7 +287,7 @@ export function MyShopPanel() {
             </div>
             <div className="myshop__tabsactions">
               <a className="btn btn--ghost btn--sm" href="/vender/novo">
-                Ver limite de anúncios grátis
+                {dash.free_limit}
               </a>
               <button
                 type="button"
@@ -294,7 +295,7 @@ export function MyShopPanel() {
                 aria-pressed={showStats}
                 onClick={() => setShowStats((s) => !s)}
               >
-                Estatísticas
+                {dash.stats}
               </button>
             </div>
           </div>
@@ -337,7 +338,7 @@ export function MyShopPanel() {
                   setSort('recent');
                 }}
               >
-                Limpar filtros
+                {dash.clear_filters}
               </button>
             ) : null}
             <label className="myshop__search">
@@ -346,19 +347,19 @@ export function MyShopPanel() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Pesquisar por título ou ID…"
-                aria-label="Pesquisar por título ou ID"
+                placeholder={dash.search_ph}
+                aria-label={dash.search_ph}
               />
             </label>
             <label className="myshop__sort">
-              <span className="sr-only">Categoria</span>
+              <span className="sr-only">{dash.category}</span>
               <select
                 className="field__input"
                 value={cat}
                 onChange={(e) => setCat(e.target.value)}
-                aria-label="Filtrar por categoria"
+                aria-label={dash.filter_category}
               >
-                <option value="">Qualquer categoria</option>
+                <option value="">{dash.any_category}</option>
                 {catOptions.map(([slug, name]) => (
                   <option key={slug} value={slug}>
                     {name}
@@ -373,7 +374,7 @@ export function MyShopPanel() {
                 value={sort}
                 onChange={(e) => setSort(e.target.value as typeof sort)}
               >
-                <option value="recent">Data de publicação: Mais recente</option>
+                <option value="recent">{dash.sort_recent}</option>
                 <option value="price_asc">{t.m_sort_price_asc}</option>
                 <option value="price_desc">{t.m_sort_price_desc}</option>
               </select>
@@ -408,7 +409,7 @@ export function MyShopPanel() {
                         <span className={`mstatus mstatus--${p.status}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
-                        {p.featured ? <span className="mstatus mstatus--featured">★ Destacado</span> : null}
+                        {p.featured ? <span className="mstatus mstatus--featured">★ {dash.featured_badge}</span> : null}
                       </span>
                       <span className="mrow__counts">
                         {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}
@@ -423,7 +424,7 @@ export function MyShopPanel() {
                             onClick={() => openBoost(p.id)}
                             disabled={boostBusy === p.id}
                           >
-                            {p.featured ? 'Renovar destaque' : 'Destacar'}
+                            {p.featured ? dash.refeature : dash.feature}
                           </button>
                           <a
                             className="btn btn--ghost btn--sm"
@@ -473,9 +474,9 @@ export function MyShopPanel() {
                     </div>
                     {boostFor === p.id ? (
                       <div className="mrow__boost">
-                        <span className="mrow__boostlabel">Promover com saldo:</span>
+                        <span className="mrow__boostlabel">{dash.promote_with_balance}</span>
                         {plans.length === 0 ? (
-                          <span className="account__muted">A carregar planos…</span>
+                          <span className="account__muted">{dash.loading_plans}</span>
                         ) : (
                           plans.map((pl) => (
                             <button
