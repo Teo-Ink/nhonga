@@ -12,10 +12,11 @@ import {
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
 
-// Create listing. Publishing is not wired (no seller auth, no create endpoint),
-// so this is the correct form with a live preview, but "Publish" persists
-// nothing and surfaces an honest "not available in this demo" message. Photo
-// upload is deliberately disabled and labelled.
+// Create listing — fully wired. The form POSTs to /api/listings (real
+// createListing under the signed-in seller's shop); photos are picked and
+// compressed in the browser, uploaded as data URLs and served from
+// /api/media/:id; a paid plan boosts the fresh listing. A live preview mirrors
+// the form as you type.
 const CATEGORY_KEYS = [
   'viaturas',
   'imoveis',
