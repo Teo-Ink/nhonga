@@ -1510,8 +1510,7 @@ a.seller:focus-visible {
 .acctmenu__head:hover {
   background: var(--bg-subtle);
 }
-.acctmenu__avatar,
-.acctdash__avatar {
+.acctmenu__avatar {
   flex: 0 0 auto;
   width: 40px;
   height: 40px;
@@ -1628,191 +1627,6 @@ a.seller:focus-visible {
   border-bottom-color: var(--brand);
 }
 
-.acctdash {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
-  padding: var(--space-4) 0 var(--space-10);
-}
-.acctdash__side {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  box-shadow: var(--shadow-xs);
-  align-self: start;
-}
-.acctdash__id {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-2) var(--space-3);
-}
-.acctdash__idtext {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.acctdash__phone {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-.acctdash__badge {
-  align-self: flex-start;
-  margin-top: 4px;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-sunken);
-  color: var(--text-muted);
-}
-.acctdash__badge.is-seller {
-  background: var(--color-primary-50);
-  color: var(--color-primary-700);
-}
-.acctdash__group {
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-1);
-  margin-top: var(--space-1);
-}
-.acctdash__gtitle {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  padding: var(--space-2) var(--space-2) 2px;
-}
-.acctdash__link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 10px var(--space-2);
-  border-radius: var(--radius-md);
-  color: var(--text);
-}
-.acctdash__link:hover {
-  background: var(--bg-subtle);
-}
-.acctdash__link > svg:first-child {
-  color: var(--text-muted);
-  flex: 0 0 auto;
-}
-.acctdash__link > span {
-  flex: 1;
-}
-.acctdash__arrow {
-  transform: rotate(180deg);
-  color: var(--text-muted);
-}
-.acctdash__signout {
-  width: 100%;
-  margin-top: var(--space-3);
-  color: var(--color-error-700);
-}
-.acctdash__main {
-  min-width: 0;
-}
-.buyer__stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-  margin: var(--space-3) 0 var(--space-4);
-}
-.buyer__stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: var(--space-4) var(--space-2);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-xs);
-  color: var(--text);
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out);
-}
-.buyer__stat:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-}
-.buyer__stat > svg {
-  color: var(--brand);
-}
-.buyer__stat strong {
-  font-size: var(--text-2xl);
-  line-height: 1.1;
-}
-.buyer__stat span {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-.buyer__sell {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-primary-50), var(--surface));
-  border: 1px solid var(--color-primary-100);
-}
-.buyer__sell .btn {
-  width: auto;
-}
-.buyer__selltitle {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  margin-bottom: 2px;
-}
-/* Buyer account home: keep it from stretching on wide screens. */
-.buyer {
-  max-width: 900px;
-}
-/* Quick-link cards for the account sections (replaces the old sidebar nav). */
-.buyer__links {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-.buyer__link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  color: var(--text);
-  text-decoration: none;
-  box-shadow: var(--shadow-xs);
-  transition:
-    transform var(--dur-base) var(--ease-out),
-    box-shadow var(--dur-base) var(--ease-out);
-}
-.buyer__link:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--border-strong);
-}
-.buyer__linkicon {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--color-primary-50);
-  color: var(--color-primary-700);
-}
-.buyer__linklabel {
-  font-weight: var(--weight-medium);
-}
 
 /* Store page category chips (filter a shop's listings by vertical). */
 .storecats {
@@ -1849,15 +1663,6 @@ a.seller:focus-visible {
 }
 .pdpsimilar .section__title {
   margin-bottom: var(--space-4);
-}
-@media (min-width: 900px) {
-  .acctdash {
-    grid-template-columns: 280px 1fr;
-  }
-  .acctdash__side {
-    position: sticky;
-    top: calc(var(--header-h) + var(--space-3));
-  }
 }
 
 @media (min-width: 720px) {
