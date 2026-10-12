@@ -80,6 +80,8 @@ export interface ProductDetail extends ProductListItem {
   readonly variants: readonly ProductVariantDto[];
   readonly options: readonly OptionGroup[];
   readonly stats: ListingStats;
+  /** Applied AI banner SVG url, or null. Shown as the listing's hero banner. */
+  readonly bannerUrl: string | null;
 }
 
 export type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest';

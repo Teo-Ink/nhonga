@@ -69,6 +69,7 @@ export interface ProductDetail extends ProductListItem {
   variants: ProductVariant[];
   options: OptionGroup[];
   stats: ListingStats;
+  bannerUrl: string | null;
 }
 
 /** A filterable, typed field defined for a category (e.g. Viaturas → marca). */

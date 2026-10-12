@@ -3733,6 +3733,167 @@ a.seller:focus-visible {
   margin-top: 2px;
 }
 
+/* ── AI Banner Studio ─────────────────────────────────────────── */
+.ownerbar__banner {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.bstudio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.bstudio__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.bstudio__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  margin: 0;
+}
+.bstudio__sub {
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+.bstudio__quota {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+.bstudio__controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+.bstudio__group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bstudio__group > legend,
+.bstudio__legend {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  padding: 0;
+}
+.bstudio__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bchip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.bchip:hover {
+  border-color: var(--brand);
+}
+.bchip--on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: var(--weight-medium);
+}
+.bstudio__gen {
+  align-self: flex-start;
+}
+.bstudio__hint {
+  color: var(--text-muted);
+  margin: 0;
+}
+.bstudio__note {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+.bstudio__error {
+  color: var(--danger, #dc2626);
+  font-weight: var(--weight-medium);
+  margin: 0;
+}
+.bstudio__rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.bstudio__rail--portrait {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+.bcard {
+  border: 3px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0;
+  background: var(--surface-sunken);
+  cursor: pointer;
+  overflow: hidden;
+  line-height: 0;
+  transition: border-color 0.12s ease;
+}
+.bcard:hover {
+  border-color: var(--border);
+}
+.bcard--on {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.bcard__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.bstudio__apply {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.bstudio__wm {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Applied banner on the listing detail page. */
+.pdpbanner {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  line-height: 0;
+}
+.pdpbanner__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* Listings grid: 2 -> 3 -> 4 -> 5 columns */
 .grid--listings {
   display: grid;

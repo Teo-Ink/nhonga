@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { pt } from '../../lib/i18n/pt';
+import { useDict } from '../i18n/DictProvider';
 import { useSession } from '../auth/SessionProvider';
 
 // Owner-only control bar on a listing's detail page. If the signed-in viewer
@@ -10,6 +11,7 @@ import { useSession } from '../auth/SessionProvider';
 // sold/remove we send the owner back to their shop panel.
 export function OwnerControls({ productId, slug }: { productId: string; slug: string }) {
   const t = pt.sell;
+  const tb = useDict().banner;
   const { user, loading } = useSession();
   const [isOwner, setIsOwner] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,6 +59,9 @@ export function OwnerControls({ productId, slug }: { productId: string; slug: st
       <div className="ownerbar__actions">
         <a className="btn btn--ghost btn--sm" href={`/vender/anuncio/${slug}/editar`}>
           {t.m_edit}
+        </a>
+        <a className="btn btn--ghost btn--sm ownerbar__banner" href={`/vender/anuncio/${slug}/banner`}>
+          ✨ {tb.open_cta}
         </a>
         <button type="button" className="btn btn--ghost btn--sm" onClick={markSold} disabled={busy}>
           {t.m_sold}

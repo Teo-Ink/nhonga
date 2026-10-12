@@ -46,7 +46,7 @@ export class BannersController {
   async generate(
     @Body() body: { productId?: unknown; ratio?: unknown; preset?: unknown; prompt?: unknown },
     @Headers('authorization') authz?: string,
-  ): Promise<{ variants: BannerVariant[]; quota: QuotaView }> {
+  ): Promise<{ variants: BannerVariant[]; aiUsed: boolean; quota: QuotaView }> {
     const productId = typeof body.productId === 'string' ? body.productId : '';
     if (!productId) throw new HttpException({ message: 'productId is required' }, HttpStatus.BAD_REQUEST);
     const arg: { productId: string; ratio?: string; preset?: string; prompt?: string } = { productId };

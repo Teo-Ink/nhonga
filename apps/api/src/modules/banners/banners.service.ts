@@ -110,7 +110,7 @@ export class BannersService {
       preset?: string;
       prompt?: string;
     },
-  ): Promise<{ variants: BannerVariant[]; quota: QuotaView }> {
+  ): Promise<{ variants: BannerVariant[]; aiUsed: boolean; quota: QuotaView }> {
     const v = await this.requireVendor(token);
     const ratio = this.normRatio(input.ratio);
     const preset = this.normPreset(input.preset);
@@ -128,7 +128,7 @@ export class BannersService {
       }
     }
 
-    const specs = await this.artDirection(p, preset, prompt);
+    const { specs, aiUsed } = await this.artDirection(p, preset, prompt);
     const photoDataUri = await this.photoDataUri(p.productId);
     const watermarked = !isPro;
     const priceLabel = formatMZN(cents(p.priceCents));
@@ -159,7 +159,7 @@ export class BannersService {
       variants.push({ id, svg, preset, ratio, spec });
     }
 
-    return { variants, quota: await this.quota(token) };
+    return { variants, aiUsed, quota: await this.quota(token) };
   }
 
   /** Mark one generated banner as the listing's applied banner. */
@@ -204,16 +204,16 @@ export class BannersService {
     p: OwnedProduct,
     preset: BannerPreset,
     prompt: string,
-  ): Promise<BannerSpec[]> {
+  ): Promise<{ specs: BannerSpec[]; aiUsed: boolean }> {
     const pal = PRESET_PALETTE[preset];
     const key = createHash('sha1')
       .update(`${p.productId}|${preset}|${prompt}|${p.title}|${p.priceCents}`)
       .digest('hex');
     const cached = this.specCache.get(key);
-    if (cached) return cached;
+    if (cached) return { specs: cached, aiUsed: true };
 
     const fallback = this.fallbackSpecs(p, pal);
-    if (!this.provider) return fallback;
+    if (!this.provider) return { specs: fallback, aiUsed: false };
 
     const attrs = Object.entries(p.attributes)
       .slice(0, 6)
@@ -235,12 +235,12 @@ export class BannersService {
     try {
       const { text } = await this.provider.complete(SYSTEM, [{ role: 'user', content: user }]);
       const specs = parseSpecs(text, pal);
-      const out = specs.length > 0 ? specs : fallback;
-      this.specCache.set(key, out);
-      return out;
+      if (specs.length === 0) return { specs: fallback, aiUsed: false };
+      this.specCache.set(key, specs);
+      return { specs, aiUsed: true };
     } catch (e) {
       this.log.warn(`art-direction failed, using fallback: ${e instanceof Error ? e.message : e}`);
-      return fallback;
+      return { specs: fallback, aiUsed: false };
     }
   }
 

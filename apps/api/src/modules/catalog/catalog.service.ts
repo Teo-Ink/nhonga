@@ -836,6 +836,7 @@ export class CatalogService {
         contactCount: product.contactCount,
         shareCount: product.shareCount,
         featuredUntil: product.featuredUntil,
+        bannerId: product.bannerId,
         cSlug: category.slug,
         cNamePt: category.namePt,
         cNameEn: category.nameEn,
@@ -923,6 +924,7 @@ export class CatalogService {
       variants: active.map(toVariantDto),
       options: buildOptions(active),
       stats: { views: p.viewCount, contacts: p.contactCount, shares: p.shareCount },
+      bannerUrl: p.bannerId ? `/api/banners/${p.bannerId}.svg` : null,
     };
   }
 
