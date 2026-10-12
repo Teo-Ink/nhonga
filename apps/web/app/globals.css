@@ -3752,14 +3752,20 @@ a.seller:focus-visible {
   color: var(--text-muted);
   flex: 0 0 auto;
 }
+.locpick__trigger.is-selected > svg:first-child {
+  color: var(--brand);
+}
 .locpick__label {
   max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--brand);
+  font-weight: var(--weight-medium);
 }
 .locpick__label.is-placeholder {
   color: var(--text-muted);
+  font-weight: var(--weight-regular, 400);
 }
 .locpick__clear {
   color: var(--text-muted);
@@ -6568,7 +6574,10 @@ a.seller:focus-visible {
 /* ── Fiverr-structured home: search hero, popular categories, how-it-works ── */
 .herofind {
   position: relative;
-  overflow: hidden;
+  /* overflow is visible so the location dropdown can extend below the hero;
+     the full-bleed media are inset:0 (exactly hero-sized) so they never spill,
+     and html/body use overflow-x:clip so there is no horizontal scroll. */
+  overflow: visible;
   /* Full-bleed: break out of the centred, padded page container to span the
      whole viewport width, flush under the header (edge-to-edge like the ref). */
   width: 100vw;

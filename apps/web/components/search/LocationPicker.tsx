@@ -81,7 +81,7 @@ export function LocationPicker({
 
       <button
         type="button"
-        className="locpick__trigger"
+        className={`locpick__trigger ${hasSelection ? 'is-selected' : ''}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => {
