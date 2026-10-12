@@ -3883,6 +3883,30 @@ a.seller:focus-visible {
 .bstudio__gen {
   align-self: flex-start;
 }
+.bstudio__aibg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  cursor: pointer;
+}
+.bstudio__aibg input {
+  margin-top: 3px;
+  accent-color: var(--brand);
+}
+.bstudio__aibgtitle {
+  display: block;
+  font-weight: var(--weight-medium);
+}
+.bstudio__aibghint {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
 .bstudio__hint {
   color: var(--text-muted);
   margin: 0;

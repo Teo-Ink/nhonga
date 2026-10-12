@@ -35,6 +35,11 @@ export interface AppConfig {
   readonly bannerFreeQuota: number;
   /** Loyalty points charged per generation once the free quota is spent. */
   readonly bannerPointCost: number;
+  /** fal.ai key for FLUX-schnell AI banner backgrounds. Optional: without it the
+   *  studio simply offers photo backgrounds only. */
+  readonly falApiKey: string | null;
+  /** fal.ai model id for background generation. */
+  readonly falModel: string;
   /**
    * Browser origins allowed to call the API cross-origin (CORS). The web app
    * talks to the API server-side through its BFF, and native mobile fetches are
@@ -144,6 +149,8 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
     assistantMonthlyTokenCap: requireInt(raw, 'ASSISTANT_MONTHLY_TOKEN_CAP', 0),
     bannerFreeQuota: requireInt(raw, 'BANNER_FREE_QUOTA', 5),
     bannerPointCost: requireInt(raw, 'BANNER_POINT_COST', 5),
+    falApiKey: raw['FAL_KEY']?.trim() ? raw['FAL_KEY']!.trim() : null,
+    falModel: raw['FAL_MODEL']?.trim() ? raw['FAL_MODEL']!.trim() : 'fal-ai/flux/schnell',
     corsOrigins: (raw['CORS_ORIGINS'] ?? '')
       .split(',')
       .map((o) => o.trim())

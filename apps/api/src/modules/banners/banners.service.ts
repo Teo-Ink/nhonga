@@ -22,6 +22,12 @@ import {
   type BannerPreset,
   type BannerRatio,
 } from './banner-render.js';
+import {
+  FalImageProvider,
+  NullImageProvider,
+  backgroundPrompt,
+  type ImageProvider,
+} from './image-provider.js';
 
 export class BannerError extends Error {
   constructor(
@@ -48,6 +54,8 @@ export interface QuotaView {
   isPro: boolean;
   /** Points charged per generation once the free quota is spent (0 for Pro). */
   pointCost: number;
+  /** Whether AI-generated backgrounds are available (an image provider is set). */
+  aiBackgrounds: boolean;
 }
 
 const VARIANTS_PER_REQUEST = 3;
@@ -70,12 +78,17 @@ Responde SÓ com JSON válido, sem texto à volta:
 export class BannersService {
   private readonly log = new Logger(BannersService.name);
   private readonly provider: AnthropicProvider | null;
+  private readonly images: ImageProvider;
   private readonly freeQuota: number;
   private readonly pointCost: number;
   /** spec cache keyed by input hash — avoids a Claude call for identical inputs. */
   private readonly specCache = new Map<string, BannerSpec[]>();
   /** Rasterised PNG cache keyed by SVG content hash (immutable per content). */
   private readonly pngCache = new Map<string, Buffer>();
+  /** AI background cache keyed by preset|ratio|category — a background is a style
+   *  backdrop, not per-listing, so one generation is reused across many banners.
+   *  This is the cost lever: pennies total instead of per-banner. */
+  private readonly bgCache = new Map<string, string>();
 
   constructor(
     @Inject(DB) private readonly db: Db,
@@ -88,6 +101,9 @@ export class BannersService {
     this.provider = key ? new AnthropicProvider(key, model, 600) : null;
     this.freeQuota = config.get('bannerFreeQuota', { infer: true });
     this.pointCost = config.get('bannerPointCost', { infer: true });
+    const falKey = config.get('falApiKey', { infer: true });
+    const falModel = config.get('falModel', { infer: true });
+    this.images = falKey ? new FalImageProvider(falKey, falModel) : NullImageProvider;
   }
 
   async quota(token: string | null): Promise<QuotaView> {
@@ -100,6 +116,7 @@ export class BannersService {
       remaining: isPro ? -1 : Math.max(0, this.freeQuota - used),
       isPro,
       pointCost: isPro ? 0 : this.pointCost,
+      aiBackgrounds: this.images.configured,
     };
   }
 
@@ -111,12 +128,19 @@ export class BannersService {
       ratio?: string;
       preset?: string;
       prompt?: string;
+      background?: string;
     },
-  ): Promise<{ variants: BannerVariant[]; aiUsed: boolean; quota: QuotaView }> {
+  ): Promise<{
+    variants: BannerVariant[];
+    aiUsed: boolean;
+    aiBackground: boolean;
+    quota: QuotaView;
+  }> {
     const v = await this.requireVendor(token);
     const ratio = this.normRatio(input.ratio);
     const preset = this.normPreset(input.preset);
     const prompt = (input.prompt ?? '').trim().slice(0, 200);
+    const wantAiBg = input.background === 'ai' && this.images.configured;
 
     const p = await this.ownedProduct(v.id, input.productId);
     const isPro = await this.isPro(v.id);
@@ -131,7 +155,10 @@ export class BannersService {
     }
 
     const { specs, aiUsed } = await this.artDirection(p, preset, prompt);
-    const photoDataUri = await this.photoDataUri(p.productId);
+    // AI background (optional): a generated backdrop replaces the listing photo.
+    // Falls back to the photo if generation is unavailable (e.g. fal unfunded).
+    const aiBg = wantAiBg ? await this.aiBackground(preset, ratio, p.categoryName) : null;
+    const photoDataUri = aiBg ?? (await this.photoDataUri(p.productId));
     const watermarked = !isPro;
     const priceLabel = formatMZN(cents(p.priceCents));
 
@@ -161,7 +188,25 @@ export class BannersService {
       variants.push({ id, svg, preset, ratio, spec });
     }
 
-    return { variants, aiUsed, quota: await this.quota(token) };
+    return { variants, aiUsed, aiBackground: aiBg != null, quota: await this.quota(token) };
+  }
+
+  /** Generate (or reuse) an AI background for a preset×ratio×category. Cached, so
+   *  the paid generation happens once and is shared across many listings. */
+  private async aiBackground(
+    preset: BannerPreset,
+    ratio: BannerRatio,
+    categoryLabel: string,
+  ): Promise<string | null> {
+    const key = `${preset}|${ratio}|${categoryLabel.toLowerCase()}`;
+    const cached = this.bgCache.get(key);
+    if (cached) return cached;
+    const uri = await this.images.background(backgroundPrompt(preset, categoryLabel), ratio);
+    if (uri) {
+      if (this.bgCache.size > 128) this.bgCache.delete(this.bgCache.keys().next().value!);
+      this.bgCache.set(key, uri);
+    }
+    return uri;
   }
 
   /** Edit a generated banner's copy/preset and re-render it. Does not consume

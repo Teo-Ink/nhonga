@@ -19,6 +19,7 @@ interface Quota {
   remaining: number;
   isPro: boolean;
   pointCost: number;
+  aiBackgrounds: boolean;
 }
 
 const RATIOS = ['square', 'landscape', 'portrait'] as const;
@@ -38,6 +39,8 @@ export function BannerStudio({ productId }: { productId: string }) {
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
   const [aiUsed, setAiUsed] = useState<boolean | null>(null);
+  const [aiBg, setAiBg] = useState(false);
+  const [aiBgResult, setAiBgResult] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [quota, setQuota] = useState<Quota | null>(null);
   // Per-banner cache-buster so an edited SVG (same url) reloads in the preview.
@@ -61,7 +64,13 @@ export function BannerStudio({ productId }: { productId: string }) {
       const res = await fetch('/api/banners/generate', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ productId, ratio, preset, prompt: prompt.trim() || undefined }),
+        body: JSON.stringify({
+          productId,
+          ratio,
+          preset,
+          prompt: prompt.trim() || undefined,
+          background: aiBg ? 'ai' : 'photo',
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -74,6 +83,7 @@ export function BannerStudio({ productId }: { productId: string }) {
       if (vs[0]) pick(vs[0]);
       else setSelected(null);
       setAiUsed(Boolean(data.aiUsed));
+      setAiBgResult(aiBg ? Boolean(data.aiBackground) : null);
       if (data.quota) setQuota(data.quota);
     } catch {
       setError(t.error);
@@ -199,6 +209,16 @@ export function BannerStudio({ productId }: { productId: string }) {
           />
         </label>
 
+        {quota?.aiBackgrounds ? (
+          <label className="bstudio__aibg">
+            <input type="checkbox" checked={aiBg} onChange={(e) => setAiBg(e.target.checked)} />
+            <span>
+              <span className="bstudio__aibgtitle">✨ {t.ai_bg}</span>
+              <span className="bstudio__aibghint">{t.ai_bg_hint}</span>
+            </span>
+          </label>
+        ) : null}
+
         <button
           type="button"
           className="btn btn--cta bstudio__gen"
@@ -218,6 +238,8 @@ export function BannerStudio({ productId }: { productId: string }) {
       {variants.length > 0 ? (
         <>
           {aiUsed === false ? <p className="bstudio__note">{t.ai_offline}</p> : null}
+          {aiBgResult === true ? <p className="bstudio__note">{t.ai_bg_used}</p> : null}
+          {aiBgResult === false ? <p className="bstudio__note">{t.ai_bg_unavailable}</p> : null}
           <p className="bstudio__hint">{t.pick_hint}</p>
           <div className={`bstudio__rail bstudio__rail--${ratio}`}>
             {variants.map((v) => (

@@ -49,18 +49,37 @@ export class BannersController {
   @Post('generate')
   @HttpCode(200)
   async generate(
-    @Body() body: { productId?: unknown; ratio?: unknown; preset?: unknown; prompt?: unknown },
+    @Body()
+    body: {
+      productId?: unknown;
+      ratio?: unknown;
+      preset?: unknown;
+      prompt?: unknown;
+      background?: unknown;
+    },
     @Headers('authorization') authz?: string,
-  ): Promise<{ variants: BannerVariant[]; aiUsed: boolean; quota: QuotaView }> {
+  ): Promise<{
+    variants: BannerVariant[];
+    aiUsed: boolean;
+    aiBackground: boolean;
+    quota: QuotaView;
+  }> {
     const productId = typeof body.productId === 'string' ? body.productId : '';
     if (!productId)
       throw new HttpException({ message: 'productId is required' }, HttpStatus.BAD_REQUEST);
-    const arg: { productId: string; ratio?: string; preset?: string; prompt?: string } = {
+    const arg: {
+      productId: string;
+      ratio?: string;
+      preset?: string;
+      prompt?: string;
+      background?: string;
+    } = {
       productId,
     };
     if (typeof body.ratio === 'string') arg.ratio = body.ratio;
     if (typeof body.preset === 'string') arg.preset = body.preset;
     if (typeof body.prompt === 'string') arg.prompt = body.prompt;
+    if (typeof body.background === 'string') arg.background = body.background;
     try {
       return await this.banners.generate(bearer(authz), arg);
     } catch (e) {
