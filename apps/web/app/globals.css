@@ -7856,6 +7856,11 @@ a.seller:focus-visible {
 .searchbox--header .searchbox__tool {
   color: var(--brand);
 }
+/* Hero search: the mic/camera match the location pin's fixed green on the
+   always-white pill, so all three accents are the same clear green. */
+.searchbox--hero .searchbox__tool {
+  color: var(--logo-green, #007a5e);
+}
 .searchbox__tool:hover {
   background: color-mix(in srgb, currentColor 16%, transparent);
 }
