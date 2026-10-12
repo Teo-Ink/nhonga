@@ -60,6 +60,27 @@ export class BannersController {
     }
   }
 
+  @Post('edit')
+  @HttpCode(200)
+  async edit(
+    @Body()
+    body: { bannerId?: unknown; headline?: unknown; subheadline?: unknown; cta?: unknown; preset?: unknown },
+    @Headers('authorization') authz?: string,
+  ): Promise<BannerVariant> {
+    const bannerId = typeof body.bannerId === 'string' ? body.bannerId : '';
+    if (!bannerId) throw new HttpException({ message: 'bannerId is required' }, HttpStatus.BAD_REQUEST);
+    const patch: { headline?: string; subheadline?: string; cta?: string; preset?: string } = {};
+    if (typeof body.headline === 'string') patch.headline = body.headline;
+    if (typeof body.subheadline === 'string') patch.subheadline = body.subheadline;
+    if (typeof body.cta === 'string') patch.cta = body.cta;
+    if (typeof body.preset === 'string') patch.preset = body.preset;
+    try {
+      return await this.banners.edit(bearer(authz), bannerId, patch);
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
   @Post('apply')
   @HttpCode(200)
   async apply(

@@ -2,10 +2,16 @@
 import { useEffect, useState } from 'react';
 import { useDict } from '../i18n/DictProvider';
 
+interface Spec {
+  headline: string;
+  subheadline: string;
+  cta: string;
+}
 interface Variant {
   id: string;
   preset: string;
   ratio: string;
+  spec: Spec;
 }
 interface Quota {
   used: number;
@@ -34,6 +40,11 @@ export function BannerStudio({ productId }: { productId: string }) {
   const [aiUsed, setAiUsed] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [quota, setQuota] = useState<Quota | null>(null);
+  // Per-banner cache-buster so an edited SVG (same url) reloads in the preview.
+  const [rev, setRev] = useState<Record<string, number>>({});
+  const [editing, setEditing] = useState(false);
+  const [editBusy, setEditBusy] = useState(false);
+  const [draft, setDraft] = useState<Spec>({ headline: '', subheadline: '', cta: '' });
 
   useEffect(() => {
     void fetch('/api/banners/quota', { cache: 'no-store' })
@@ -57,14 +68,48 @@ export function BannerStudio({ productId }: { productId: string }) {
         setError(data?.code === 'quota' ? t.no_points : data?.message || t.error);
         return;
       }
-      setVariants(data.variants ?? []);
-      setSelected(data.variants?.[0]?.id ?? null);
+      const vs: Variant[] = data.variants ?? [];
+      setVariants(vs);
+      setEditing(false);
+      if (vs[0]) pick(vs[0]);
+      else setSelected(null);
       setAiUsed(Boolean(data.aiUsed));
       if (data.quota) setQuota(data.quota);
     } catch {
       setError(t.error);
     } finally {
       setBusy(false);
+    }
+  }
+
+  function pick(v: Variant) {
+    setSelected(v.id);
+    setDraft({ headline: v.spec.headline, subheadline: v.spec.subheadline, cta: v.spec.cta });
+    setEditing(false);
+  }
+
+  async function applyEdit() {
+    if (!selected) return;
+    setEditBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/banners/edit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ bannerId: selected, ...draft }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data?.message || t.error);
+        return;
+      }
+      // Reflect the re-rendered spec and bust the SVG cache for this banner.
+      setVariants((vs) => vs.map((v) => (v.id === selected ? { ...v, spec: data.spec } : v)));
+      setRev((r) => ({ ...r, [selected]: (r[selected] ?? 0) + 1 }));
+    } catch {
+      setError(t.error);
+    } finally {
+      setEditBusy(false);
     }
   }
 
@@ -176,13 +221,70 @@ export function BannerStudio({ productId }: { productId: string }) {
                 type="button"
                 className={`bcard${selected === v.id ? ' bcard--on' : ''}`}
                 aria-pressed={selected === v.id}
-                onClick={() => setSelected(v.id)}
+                onClick={() => pick(v)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="bcard__img" src={`/api/banners/${v.id}.svg`} alt="" loading="lazy" />
+                <img
+                  className="bcard__img"
+                  src={`/api/banners/${v.id}.svg${rev[v.id] ? `?v=${rev[v.id]}` : ''}`}
+                  alt=""
+                  loading="lazy"
+                />
               </button>
             ))}
           </div>
+
+          {selected ? (
+            <div className="bstudio__edit">
+              <button
+                type="button"
+                className="bstudio__editToggle"
+                onClick={() => setEditing((e) => !e)}
+                aria-expanded={editing}
+              >
+                ✎ {editing ? t.edit_hide : t.edit_toggle}
+              </button>
+              {editing ? (
+                <div className="bstudio__editForm">
+                  <label className="bstudio__group">
+                    <span className="bstudio__legend">{t.f_headline}</span>
+                    <input
+                      className="field__input"
+                      value={draft.headline}
+                      maxLength={40}
+                      onChange={(e) => setDraft((d) => ({ ...d, headline: e.target.value }))}
+                    />
+                  </label>
+                  <label className="bstudio__group">
+                    <span className="bstudio__legend">{t.f_subheadline}</span>
+                    <input
+                      className="field__input"
+                      value={draft.subheadline}
+                      maxLength={60}
+                      onChange={(e) => setDraft((d) => ({ ...d, subheadline: e.target.value }))}
+                    />
+                  </label>
+                  <label className="bstudio__group">
+                    <span className="bstudio__legend">{t.f_cta}</span>
+                    <input
+                      className="field__input"
+                      value={draft.cta}
+                      maxLength={24}
+                      onChange={(e) => setDraft((d) => ({ ...d, cta: e.target.value }))}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    onClick={applyEdit}
+                    disabled={editBusy}
+                  >
+                    {editBusy ? t.editing : t.edit_apply}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="bstudio__apply">
             <button

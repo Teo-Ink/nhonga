@@ -162,6 +162,56 @@ export class BannersService {
     return { variants, aiUsed, quota: await this.quota(token) };
   }
 
+  /** Edit a generated banner's copy/preset and re-render it. Does not consume
+   *  quota (it refines an existing banner rather than generating new ones). */
+  async edit(
+    token: string | null,
+    bannerId: string,
+    patch: { headline?: string; subheadline?: string; cta?: string; preset?: string },
+  ): Promise<BannerVariant> {
+    const v = await this.requireVendor(token);
+    const row = (
+      await this.db
+        .select()
+        .from(listingBanner)
+        .where(eq(listingBanner.id, asUuid(bannerId)))
+        .limit(1)
+    )[0];
+    if (!row) throw new BannerError('Banner não encontrado.', 'not_found');
+    if (row.vendorId !== v.id) throw new BannerError('Sem permissão.', 'forbidden');
+
+    const preset = patch.preset ? this.normPreset(patch.preset) : (row.preset as BannerPreset);
+    const pal = PRESET_PALETTE[preset];
+    // Keep the existing palette unless the preset changed (then adopt its palette).
+    const presetChanged = preset !== row.preset;
+    const spec: BannerSpec = {
+      headline: clampText(patch.headline ?? row.spec.headline, 40),
+      subheadline: clampText(patch.subheadline ?? row.spec.subheadline, 60),
+      cta: clampText(patch.cta ?? row.spec.cta, 24) || 'Contacta já',
+      bg: presetChanged ? pal.bg : row.spec.bg,
+      accent: presetChanged ? pal.accent : row.spec.accent,
+      text: presetChanged ? pal.text : row.spec.text,
+    };
+
+    const p = await this.ownedProduct(v.id, row.productId);
+    const photoDataUri = await this.photoDataUri(p.productId);
+    const svg = renderBanner({
+      spec,
+      preset,
+      ratio: row.ratio as BannerRatio,
+      photoDataUri,
+      priceLabel: formatMZN(cents(p.priceCents)),
+      categoryLabel: p.categoryName,
+      location: p.location,
+      watermarked: row.watermarked,
+    });
+    await this.db
+      .update(listingBanner)
+      .set({ spec, svg, preset })
+      .where(eq(listingBanner.id, row.id));
+    return { id: row.id, svg, preset, ratio: row.ratio as BannerRatio, spec };
+  }
+
   /** Mark one generated banner as the listing's applied banner. */
   async apply(token: string | null, bannerId: string): Promise<{ bannerId: string }> {
     const v = await this.requireVendor(token);
@@ -412,6 +462,11 @@ interface OwnedProduct {
 
 function asUuid(v: string): string {
   return /^[0-9a-f-]{36}$/i.test(v) ? v : '00000000-0000-0000-0000-000000000000';
+}
+
+/** Trim a seller-edited field to a safe length. */
+function clampText(s: string, max: number): string {
+  return (s ?? '').trim().slice(0, max);
 }
 
 // Hosts whose images the seed references. External fetch is limited to these so

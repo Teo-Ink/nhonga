@@ -3868,6 +3868,30 @@ a.seller:focus-visible {
   height: auto;
   display: block;
 }
+.bstudio__edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.bstudio__editToggle {
+  align-self: flex-start;
+  background: none;
+  border: 0;
+  color: var(--brand);
+  font: inherit;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.bstudio__editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
 .bstudio__apply {
   display: flex;
   align-items: center;
