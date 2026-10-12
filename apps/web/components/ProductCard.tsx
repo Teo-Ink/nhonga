@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { cents, formatMZN } from '@nhonga/shared';
-import { IconMapPin } from './icons';
+import { IconMapPin, IconEye } from './icons';
 import { FavoriteButton } from './FavoriteButton';
 import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
@@ -66,6 +66,11 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
               {p.location ?? p.vendor.displayName}
             </span>
             {posted ? <span className="lcard__date">{posted}</span> : null}
+            {p.views > 0 ? (
+              <span className="lcard__views" title={t.listing.views.replace('{n}', String(p.views))}>
+                <IconEye width={12} height={12} aria-hidden /> {p.views}
+              </span>
+            ) : null}
           </div>
         </div>
       </a>

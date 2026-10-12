@@ -22,6 +22,7 @@ import {
   Plus,
   LayoutGrid,
   MapPin,
+  Eye,
   Undo2,
   Shirt,
   Monitor,
@@ -86,6 +87,7 @@ export const IconHeartFilled = icon(Heart, 20, { fill: 'currentColor' });
 export const IconChat = icon(MessageCircle);
 export const IconShare = icon(Share2);
 export const IconMapPin = icon(MapPin);
+export const IconEye = icon(Eye);
 export const IconReturn = icon(Undo2);
 
 // Category glyphs (home tiles + verticals)

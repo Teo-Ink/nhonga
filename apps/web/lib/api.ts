@@ -43,6 +43,7 @@ export interface ProductListItem {
   location: string | null;
   postedAt: string | null;
   featured: boolean;
+  views: number;
   attributes: Record<string, string>;
   category: { slug: string; name: string };
   vendor: VendorSummary;

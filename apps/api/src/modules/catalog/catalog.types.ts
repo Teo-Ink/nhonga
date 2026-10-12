@@ -47,6 +47,8 @@ export interface ProductListItem {
   readonly postedAt: string | null;
   /** Paid-visibility: currently featured (Destaque). Ranked above the rest. */
   readonly featured: boolean;
+  /** Public view count, for social-proof on cards. */
+  readonly views: number;
   /** The listing category (slug + localized name), for per-vendor filtering. */
   readonly category: { readonly slug: string; readonly name: string };
   /** Typed attribute values (verticals), for the list-view summary line. */

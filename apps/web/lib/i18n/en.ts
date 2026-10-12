@@ -56,6 +56,7 @@ export const en: Dictionary = {
   },
   listing: {
     today: 'Today',
+    views: '{n} views',
     yesterday: 'Yesterday',
     days_ago: '{n} days ago',
     weeks_ago: '{n} wk ago',

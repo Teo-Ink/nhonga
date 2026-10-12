@@ -55,6 +55,7 @@ export const pt = {
   },
   listing: {
     today: 'Hoje',
+    views: '{n} visualizações',
     yesterday: 'Ontem',
     days_ago: 'há {n} dias',
     weeks_ago: 'há {n} sem.',

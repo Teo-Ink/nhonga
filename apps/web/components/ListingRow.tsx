@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { cents, formatMZN } from '@nhonga/shared';
-import { IconMapPin } from './icons';
+import { IconMapPin, IconEye } from './icons';
 import { FavoriteButton } from './FavoriteButton';
 import { postedLabel } from './ProductCard';
 import type { ProductListItem } from '../lib/api';
@@ -52,6 +52,11 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
               {p.location ?? p.vendor.displayName}
             </span>
             {posted ? <span className="lrow__date">{posted}</span> : null}
+            {p.views > 0 ? (
+              <span className="lrow__views">
+                <IconEye width={13} height={13} aria-hidden /> {p.views}
+              </span>
+            ) : null}
           </div>
         </div>
         <div className="lrow__aside">

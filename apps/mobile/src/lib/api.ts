@@ -24,6 +24,7 @@ export interface ProductListItem {
   location: string | null;
   vendor: { displayName: string };
   featured?: boolean;
+  views?: number;
   category?: { slug: string; name: string };
 }
 export interface ProductVariant {

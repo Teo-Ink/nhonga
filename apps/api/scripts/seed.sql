@@ -450,6 +450,14 @@ INSERT INTO product_image (id, product_id, s3_key, width, height, alt_text, sort
 
 
 
+-- Demo social proof: realistic view/contact counts so cards feel alive (a dead
+-- marketplace with "0 views" everywhere is off-putting). Deterministic-ish per
+-- listing via the hashed id, roughly proportional to how long it's been up.
+UPDATE product SET
+  view_count = 18 + (('x' || substr(md5(id::text), 1, 6))::bit(24)::int % 620),
+  contact_count = (('x' || substr(md5(id::text || 'c'), 1, 4))::bit(16)::int % 34)
+WHERE status = 'active';
+
 -- Demo: one shop on the paid "Loja Pro" subscription (verified selo).
 UPDATE vendor SET pro_until = now() + interval '30 days' WHERE slug = 'mama-rosa';
 

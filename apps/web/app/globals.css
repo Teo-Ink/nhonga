@@ -3680,6 +3680,19 @@ a.seller:focus-visible {
   flex: 0 0 auto;
   white-space: nowrap;
 }
+/* Social-proof view count on cards + list rows. */
+.lcard__views,
+.lrow__views {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.lcard__views {
+  margin-left: auto;
+}
 
 /* Listings grid: 2 -> 3 -> 4 -> 5 columns */
 .grid--listings {
