@@ -3753,14 +3753,17 @@ a.seller:focus-visible {
   flex: 0 0 auto;
 }
 .locpick__trigger.is-selected > svg:first-child {
-  color: var(--brand);
+  /* The search pill is always white, so use a fixed mid-green that reads
+     clearly in both themes (brand is too dark in light / too pale in dark). */
+  color: var(--logo-green, #007a5e);
 }
 .locpick__label {
   max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--brand);
+  /* Always on the white search pill → fixed mid-green, readable in both themes. */
+  color: var(--logo-green, #007a5e);
   font-weight: var(--weight-medium);
 }
 .locpick__label.is-placeholder {
