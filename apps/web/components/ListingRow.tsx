@@ -22,7 +22,10 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
       <a className="lrow__link" href={`/produto/${p.slug}`}>
         <div className="lrow__media">
           {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
-          {(() => {
+          {p.bannerUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img className="lcard__bannerimg" src={p.bannerUrl} alt={p.title} loading="lazy" />
+          ) : (() => {
             const src = p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`;
             const alt = p.image?.alt ?? p.title;
             return src.startsWith('/ph') ? (

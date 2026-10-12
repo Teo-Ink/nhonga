@@ -115,6 +115,8 @@ export interface ListItemInput {
   };
   readonly variants: readonly VariantRow[];
   readonly primaryImage: ImageRow | null;
+  /** Applied AI banner id, or null. */
+  readonly bannerId: string | null;
 }
 
 export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
@@ -138,6 +140,7 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
     featured: input.featuredUntil !== null && input.featuredUntil.getTime() > Date.now(),
     views: input.viewCount,
+    bannerUrl: input.bannerId ? `/api/banners/${input.bannerId}.svg` : null,
     category: {
       slug: input.categorySlug,
       name: pickText(input.categoryNamePt, input.categoryNameEn, lang),

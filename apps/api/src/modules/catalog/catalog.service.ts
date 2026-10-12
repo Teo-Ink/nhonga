@@ -707,6 +707,7 @@ export class CatalogService {
         featuredUntil: product.featuredUntil,
         bumpedAt: product.bumpedAt,
         viewCount: product.viewCount,
+        bannerId: product.bannerId,
         catSlug: category.slug,
         catPt: category.namePt,
         catEn: category.nameEn,
@@ -758,6 +759,7 @@ export class CatalogService {
           },
           variants: variantsByProduct.get(p.id) ?? [],
           primaryImage: imagesByProduct.get(p.id) ?? null,
+          bannerId: p.bannerId,
         },
         lang,
       ),
@@ -899,6 +901,7 @@ export class CatalogService {
         },
         variants,
         primaryImage: images[0] ?? null,
+        bannerId: p.bannerId,
       },
       lang,
     );
@@ -924,7 +927,6 @@ export class CatalogService {
       variants: active.map(toVariantDto),
       options: buildOptions(active),
       stats: { views: p.viewCount, contacts: p.contactCount, shares: p.shareCount },
-      bannerUrl: p.bannerId ? `/api/banners/${p.bannerId}.svg` : null,
     };
   }
 

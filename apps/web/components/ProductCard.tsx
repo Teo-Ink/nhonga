@@ -28,7 +28,12 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
         <div className="lcard__media">
           {p.featured ? <span className="lcard__featured">{t.listing.featured}</span> : null}
           {p.discountPercent ? <span className="lcard__badge">-{p.discountPercent}%</span> : null}
-          {(() => {
+          {p.bannerUrl ? (
+            // A designed banner replaces the plain photo on the card — it already
+            // carries the photo, price and a hook, so it stands out in the grid.
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img className="lcard__bannerimg" src={p.bannerUrl} alt={p.title} loading="lazy" />
+          ) : (() => {
             const src = p.image?.url ?? `/ph?t=${encodeURIComponent(p.title)}`;
             const alt = p.image?.alt ?? p.title;
             // Generated /ph placeholders paint as a CSS background (reliable, never

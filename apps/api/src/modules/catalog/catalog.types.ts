@@ -49,6 +49,8 @@ export interface ProductListItem {
   readonly featured: boolean;
   /** Public view count, for social-proof on cards. */
   readonly views: number;
+  /** Applied AI banner SVG url, or null. Lets cards/storefront show the banner. */
+  readonly bannerUrl: string | null;
   /** The listing category (slug + localized name), for per-vendor filtering. */
   readonly category: { readonly slug: string; readonly name: string };
   /** Typed attribute values (verticals), for the list-view summary line. */
@@ -80,8 +82,6 @@ export interface ProductDetail extends ProductListItem {
   readonly variants: readonly ProductVariantDto[];
   readonly options: readonly OptionGroup[];
   readonly stats: ListingStats;
-  /** Applied AI banner SVG url, or null. Shown as the listing's hero banner. */
-  readonly bannerUrl: string | null;
 }
 
 export type SortKey = 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest';

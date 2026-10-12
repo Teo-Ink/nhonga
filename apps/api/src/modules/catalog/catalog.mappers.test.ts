@@ -85,6 +85,7 @@ describe('catalog mappers', () => {
       },
       variants: [v({ priceCents: 1200, stockQuantity: 2 })],
       primaryImage: null,
+      bannerId: null,
     };
     const item = toListItem(input, 'pt');
     expect(item.freeDelivery).toBe(false);
@@ -120,6 +121,7 @@ describe('catalog mappers', () => {
       },
       variants: [v({ priceCents: 1000, stockQuantity: 1 })],
       primaryImage: null,
+      bannerId: null,
     };
     expect(toListItem(input, 'pt').category).toEqual({ slug: 'viaturas', name: 'Viaturas' });
     expect(toListItem(input, 'en').category).toEqual({ slug: 'viaturas', name: 'Vehicles' });
@@ -148,6 +150,7 @@ describe('catalog mappers', () => {
       },
       variants: [v({ priceCents: 1000, stockQuantity: 1 })],
       primaryImage: null,
+      bannerId: null,
     };
     const future = toListItem({ ...base, featuredUntil: new Date(Date.now() + 60_000) }, 'pt');
     const past = toListItem({ ...base, featuredUntil: new Date(Date.now() - 60_000) }, 'pt');
