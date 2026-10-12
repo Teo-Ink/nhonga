@@ -123,6 +123,17 @@ export class BannersController {
       disposition: 'inline',
     });
   }
+
+  /** Public PNG — a real raster image for social cards (og:image) and downloads. */
+  @Get(':id.png')
+  @Header('cache-control', 'public, max-age=31536000, immutable')
+  @Header('cross-origin-resource-policy', 'cross-origin')
+  @Header('access-control-allow-origin', '*')
+  async png(@Param('id') id: string): Promise<StreamableFile> {
+    const png = await this.banners.png(id.replace(/\.png$/i, ''));
+    if (!png) throw new NotFoundException({ message: 'No such banner' });
+    return new StreamableFile(png, { type: 'image/png', disposition: 'inline' });
+  }
 }
 
 function toHttp(e: unknown): HttpException {

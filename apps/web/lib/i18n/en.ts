@@ -1139,6 +1139,7 @@ export const en: Dictionary = {
     f_cta: 'Button',
     edit_apply: 'Update banner',
     editing: 'Updating…',
+    download: 'Download PNG',
     apply: 'Apply to listing',
     applied: 'Banner applied ✓',
     applying: 'Applying…',

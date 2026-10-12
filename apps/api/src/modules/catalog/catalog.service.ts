@@ -792,6 +792,10 @@ export class CatalogService {
     }
 
     mapped.sort(sorter(filters.sort ?? 'relevance'));
+    // A designed banner earns a gentle lift (stable tiebreaker): among listings
+    // of equal rank, the ones with a banner surface first. Applied before the
+    // featured sort, so it never outranks a paid Destaque.
+    mapped.sort((a, b) => Number(b.item.bannerUrl != null) - Number(a.item.bannerUrl != null));
     // Featured (Destaque) listings rank above the rest, preserving the order
     // within each group (stable sort). Price sorts keep featured-first too.
     mapped.sort((a, b) => Number(b.item.featured) - Number(a.item.featured));

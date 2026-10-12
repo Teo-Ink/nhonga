@@ -295,6 +295,15 @@ export function BannerStudio({ productId }: { productId: string }) {
             >
               {applied === selected ? t.applied : applying ? t.applying : t.apply}
             </button>
+            {selected ? (
+              <a
+                className="btn btn--ghost"
+                href={`/api/banners/${selected}.png`}
+                download={`nhonga-banner.png`}
+              >
+                ⬇ {t.download}
+              </a>
+            ) : null}
             <span className="bstudio__wm">{quota?.isPro ? t.demo_note : t.watermark_note}</span>
           </div>
         </>

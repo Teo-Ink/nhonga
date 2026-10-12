@@ -1166,6 +1166,7 @@ export const pt = {
     f_cta: 'Botão',
     edit_apply: 'Atualizar banner',
     editing: 'A atualizar…',
+    download: 'Descarregar PNG',
     apply: 'Aplicar ao anúncio',
     applied: 'Banner aplicado ✓',
     applying: 'A aplicar…',

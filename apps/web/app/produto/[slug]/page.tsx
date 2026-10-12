@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { ProductGallery } from '../../../components/ProductGallery';
 import { RecordRecentView } from '../../../components/RecentlyViewed';
 import { notFound } from 'next/navigation';
@@ -40,7 +41,17 @@ export async function generateMetadata({
     const where = p.location ? ` · ${p.location}` : '';
     const title = `${p.title} — ${price}${where}`;
     const description = p.description?.slice(0, 160) || `${p.title} no Nhonga${where}`;
-    const image = p.images[0]?.url ?? p.image?.url;
+    // A designed banner makes a far better WhatsApp/Facebook card than the raw
+    // photo. og:image must be a raster absolute URL, so use the banner's PNG.
+    const h = await headers();
+    const host = h.get('x-forwarded-host') ?? h.get('host');
+    const proto = h.get('x-forwarded-proto') ?? 'http';
+    const origin = host ? `${proto}://${host}` : '';
+    const rawImage = p.bannerUrl
+      ? p.bannerUrl.replace(/\.svg$/i, '.png')
+      : (p.images[0]?.url ?? p.image?.url);
+    const image =
+      rawImage && rawImage.startsWith('/') && origin ? `${origin}${rawImage}` : rawImage;
     return {
       title,
       description,

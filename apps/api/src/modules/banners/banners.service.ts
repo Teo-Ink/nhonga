@@ -74,6 +74,8 @@ export class BannersService {
   private readonly pointCost: number;
   /** spec cache keyed by input hash — avoids a Claude call for identical inputs. */
   private readonly specCache = new Map<string, BannerSpec[]>();
+  /** Rasterised PNG cache keyed by SVG content hash (immutable per content). */
+  private readonly pngCache = new Map<string, Buffer>();
 
   constructor(
     @Inject(DB) private readonly db: Db,
@@ -246,6 +248,24 @@ export class BannersService {
         .limit(1)
     )[0];
     return row?.svg ?? null;
+  }
+
+  /** Public: a rasterised PNG of one banner — a real image for WhatsApp/Facebook
+   *  cards and for the seller to download and post. Rendered on demand (the SVG
+   *  is self-contained, so the photo is baked in), cached by SVG content. */
+  async png(id: string): Promise<Buffer | null> {
+    const svg = await this.svg(id);
+    if (!svg) return null;
+    const key = createHash('sha1').update(svg).digest('hex');
+    const cached = this.pngCache.get(key);
+    if (cached) return cached;
+    const { Resvg } = await import('@resvg/resvg-js');
+    const png = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } }).render().asPng();
+    const buf = Buffer.from(png);
+    // Keep the cache small (banners are large); drop the oldest when it grows.
+    if (this.pngCache.size > 64) this.pngCache.delete(this.pngCache.keys().next().value!);
+    this.pngCache.set(key, buf);
+    return buf;
   }
 
   // ---- internals -----------------------------------------------------------
