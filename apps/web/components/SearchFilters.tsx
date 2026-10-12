@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Dictionary } from '../lib/i18n/index';
-import type { CategoryAttribute, Province } from '../lib/api';
+import type { CategoryAttribute, District, Province } from '../lib/api';
 
 const CATEGORY_KEYS = [
   'moda',
@@ -35,17 +35,32 @@ export function SearchFilters({
 
   const activeCategory = params.get('category') ?? '';
   const activeProvince = params.get('province') ?? '';
+  const activeDistrict = params.get('district') ?? '';
   const minCents = params.get('minPrice');
   const maxCents = params.get('maxPrice');
   const inStock = params.get('inStock') === 'true';
 
   const [provinces, setProvinces] = useState<Province[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
   useEffect(() => {
     void fetch('/api/provinces')
       .then((r) => (r.ok ? r.json() : []))
       .then((p: Province[]) => setProvinces(Array.isArray(p) ? p : []))
       .catch(() => setProvinces([]));
+    void fetch('/api/districts')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d: District[]) => setDistricts(Array.isArray(d) ? d : []))
+      .catch(() => setDistricts([]));
   }, []);
+
+  // Changing province clears any district; set both in one navigation.
+  function setProvince(code: string | null) {
+    const next = new URLSearchParams(params.toString());
+    if (code) next.set('province', code);
+    else next.delete('province');
+    next.delete('district');
+    push(next);
+  }
 
   const [min, setMin] = useState(minCents ? String(Math.round(Number(minCents) / 100)) : '');
   const [max, setMax] = useState(maxCents ? String(Math.round(Number(maxCents) / 100)) : '');
@@ -109,7 +124,7 @@ export function SearchFilters({
             <select
               className="field__input filterloc"
               value={activeProvince}
-              onChange={(e) => setParam('province', e.target.value || null)}
+              onChange={(e) => setProvince(e.target.value || null)}
             >
               <option value="">{t.search.all_country}</option>
               {provinces.map((p) => (
@@ -118,6 +133,22 @@ export function SearchFilters({
                 </option>
               ))}
             </select>
+            {activeProvince && districts.some((d) => d.province === activeProvince) ? (
+              <select
+                className="field__input filterloc"
+                value={activeDistrict}
+                onChange={(e) => setParam('district', e.target.value || null)}
+              >
+                <option value="">{t.search.whole_region}</option>
+                {districts
+                  .filter((d) => d.province === activeProvince)
+                  .map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+              </select>
+            ) : null}
           </div>
         ) : null}
 

@@ -37,6 +37,44 @@ INSERT INTO district (id, province_code, name) VALUES
   ('d0000000-0000-4000-8000-00000000000a', 'CDL', 'Pemba'),
   ('d0000000-0000-4000-8000-00000000000b', 'NIA', 'Lichinga');
 
+-- More real districts per province, for the hierarchical location picker. See
+-- scripts/districts.sql (kept in sync); idempotent via the (province,name) index.
+INSERT INTO district (id, province_code, name) VALUES
+  (gen_random_uuid(), 'MPM', 'KaMpfumo'), (gen_random_uuid(), 'MPM', 'Nlhamankulu'),
+  (gen_random_uuid(), 'MPM', 'KaMaxaquene'), (gen_random_uuid(), 'MPM', 'KaMavota'),
+  (gen_random_uuid(), 'MPM', 'KaMubukwana'), (gen_random_uuid(), 'MPM', 'KaTembe'),
+  (gen_random_uuid(), 'MPT', 'Boane'), (gen_random_uuid(), 'MPT', 'Marracuene'),
+  (gen_random_uuid(), 'MPT', 'Manhiça'), (gen_random_uuid(), 'MPT', 'Namaacha'),
+  (gen_random_uuid(), 'MPT', 'Moamba'), (gen_random_uuid(), 'MPT', 'Magude'),
+  (gen_random_uuid(), 'MPT', 'Matutuíne'),
+  (gen_random_uuid(), 'GAZ', 'Chókwè'), (gen_random_uuid(), 'GAZ', 'Bilene'),
+  (gen_random_uuid(), 'GAZ', 'Chibuto'), (gen_random_uuid(), 'GAZ', 'Mandlakazi'),
+  (gen_random_uuid(), 'GAZ', 'Massingir'), (gen_random_uuid(), 'GAZ', 'Chicualacuala'),
+  (gen_random_uuid(), 'INH', 'Maxixe'), (gen_random_uuid(), 'INH', 'Vilankulo'),
+  (gen_random_uuid(), 'INH', 'Massinga'), (gen_random_uuid(), 'INH', 'Morrumbene'),
+  (gen_random_uuid(), 'INH', 'Jangamo'), (gen_random_uuid(), 'INH', 'Homoíne'),
+  (gen_random_uuid(), 'SOF', 'Dondo'), (gen_random_uuid(), 'SOF', 'Nhamatanda'),
+  (gen_random_uuid(), 'SOF', 'Gorongosa'), (gen_random_uuid(), 'SOF', 'Búzi'),
+  (gen_random_uuid(), 'SOF', 'Marromeu'), (gen_random_uuid(), 'SOF', 'Caia'),
+  (gen_random_uuid(), 'MAN', 'Gondola'), (gen_random_uuid(), 'MAN', 'Manica'),
+  (gen_random_uuid(), 'MAN', 'Sussundenga'), (gen_random_uuid(), 'MAN', 'Báruè'),
+  (gen_random_uuid(), 'MAN', 'Catandica'),
+  (gen_random_uuid(), 'TET', 'Moatize'), (gen_random_uuid(), 'TET', 'Angónia'),
+  (gen_random_uuid(), 'TET', 'Cahora Bassa'), (gen_random_uuid(), 'TET', 'Changara'),
+  (gen_random_uuid(), 'TET', 'Mutarara'),
+  (gen_random_uuid(), 'ZAM', 'Mocuba'), (gen_random_uuid(), 'ZAM', 'Gurué'),
+  (gen_random_uuid(), 'ZAM', 'Milange'), (gen_random_uuid(), 'ZAM', 'Alto Molócuè'),
+  (gen_random_uuid(), 'ZAM', 'Nicoadala'), (gen_random_uuid(), 'ZAM', 'Pebane'),
+  (gen_random_uuid(), 'NAM', 'Nacala'), (gen_random_uuid(), 'NAM', 'Angoche'),
+  (gen_random_uuid(), 'NAM', 'Monapo'), (gen_random_uuid(), 'NAM', 'Ribáuè'),
+  (gen_random_uuid(), 'NAM', 'Malema'), (gen_random_uuid(), 'NAM', 'Moma'),
+  (gen_random_uuid(), 'CDL', 'Montepuez'), (gen_random_uuid(), 'CDL', 'Mocímboa da Praia'),
+  (gen_random_uuid(), 'CDL', 'Chiúre'), (gen_random_uuid(), 'CDL', 'Mueda'),
+  (gen_random_uuid(), 'CDL', 'Palma'),
+  (gen_random_uuid(), 'NIA', 'Cuamba'), (gen_random_uuid(), 'NIA', 'Marrupa'),
+  (gen_random_uuid(), 'NIA', 'Mandimba'), (gen_random_uuid(), 'NIA', 'Mecanhelas')
+ON CONFLICT (province_code, name) DO NOTHING;
+
 -- Vendors (status 'active' shows as verified in the storefront)
 INSERT INTO vendor (id, slug, legal_name, display_name, vendor_type, district_id, status, rating_avg, rating_count) VALUES
   ('11111111-0000-4000-8000-000000000001', 'lojas-xitique', 'Xitique Comercial Lda', 'Lojas Xitique', 'company', 'd0000000-0000-4000-8000-000000000001', 'active', 4.6, 128),

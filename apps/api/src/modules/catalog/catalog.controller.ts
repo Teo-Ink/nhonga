@@ -46,6 +46,7 @@ export class CatalogController {
     @Query('category') category?: string,
     @Query('vendor') vendor?: string,
     @Query('province') province?: string,
+    @Query('district') district?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('inStock') inStock?: string,
@@ -63,6 +64,7 @@ export class CatalogController {
       ...(category ? { categorySlug: category } : {}),
       ...(vendor ? { vendorSlug: vendor } : {}),
       ...(province ? { province } : {}),
+      ...(district ? { district } : {}),
       ...(min !== undefined ? { minPriceCents: min } : {}),
       ...(max !== undefined ? { maxPriceCents: max } : {}),
       ...(inStock === 'true' ? { inStockOnly: true } : {}),
@@ -83,6 +85,12 @@ export class CatalogController {
   @Get('provinces')
   provinces(): Promise<ReadonlyArray<{ code: string; name: string }>> {
     return this.catalog.provinces();
+  }
+
+  /** Districts (grouped by province client-side) for the location drill-down. */
+  @Get('districts')
+  districts(): Promise<ReadonlyArray<{ id: string; name: string; province: string }>> {
+    return this.catalog.districts();
   }
 
   /** Create a listing (real "Publicar"). No auth in the demo. */

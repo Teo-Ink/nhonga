@@ -3729,33 +3729,142 @@ a.seller:focus-visible {
   line-height: 1.5;
 }
 
-/* Location picker inside the search bar (province select) — OLX-style segment
-   on the right, before the submit button, with a divider. */
-.searchbox__loc {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* OLX-style hierarchical location picker in the search bar (province → district
+   drill-down). A right-side segment with a divider; the popover drops below. */
+.locpick {
+  position: relative;
   flex: 0 0 auto;
-  color: var(--text-muted);
-  padding: 0 var(--space-3);
   border-left: 1px solid var(--border);
 }
-.searchbox__loc select {
+.locpick__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   border: 0;
   background: transparent;
-  font: inherit;
   color: var(--text);
+  font: inherit;
   cursor: pointer;
+  padding: 10px var(--space-3);
+  max-width: 220px;
+}
+.locpick__trigger > svg {
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+.locpick__label {
   max-width: 150px;
-  padding: 10px 2px;
-  outline: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.searchbox--header .searchbox__loc select {
-  max-width: 120px;
+.locpick__label.is-placeholder {
+  color: var(--text-muted);
 }
-/* Location select in the filter rail. */
+.locpick__clear {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 2px;
+  border-radius: 50%;
+}
+.locpick__clear:hover {
+  color: var(--text);
+  background: var(--surface-sunken);
+}
+.locpick__caret {
+  color: var(--text);
+  flex: 0 0 auto;
+  stroke-width: 2.5;
+}
+.locpick__pop {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  max-height: 360px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.22);
+  padding: var(--space-2);
+  text-align: left;
+  color: var(--text);
+}
+.locpick__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.locpick__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 11px var(--space-3);
+  border-radius: var(--radius-md);
+}
+.locpick__row:hover {
+  background: var(--surface-sunken);
+}
+.locpick__row--all {
+  font-weight: var(--weight-medium);
+}
+.locpick__regionrow + .locpick__regionrow .locpick__row {
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+}
+.locpick__chev {
+  color: var(--text-muted);
+}
+.locpick__back {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font: inherit;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  padding: 6px var(--space-2);
+}
+.locpick__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) 0;
+}
+.locpick__whole {
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.locpick__sub {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  padding: var(--space-2) var(--space-3) 4px;
+  margin: 0;
+}
+/* Location selects in the filter rail. */
 .filterloc {
   width: 100%;
+}
+.filterloc + .filterloc {
+  margin-top: 8px;
 }
 
 /* Live social-proof strip under the hero. */

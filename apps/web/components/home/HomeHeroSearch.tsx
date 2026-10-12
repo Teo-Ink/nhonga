@@ -1,5 +1,5 @@
 import type { Dictionary } from '../../lib/i18n/index';
-import type { Province } from '../../lib/api';
+import type { District, Province } from '../../lib/api';
 import { HeroVideo } from './HeroVideo';
 import { SearchBox } from '../search/SearchBox';
 
@@ -8,7 +8,15 @@ import { SearchBox } from '../search/SearchBox';
 // search is a plain GET form → /pesquisa, so it needs no client JS.
 const POPULAR = ['viaturas', 'imoveis', 'empregos', 'servicos', 'telemoveis', 'eventos'] as const;
 
-export function HomeHeroSearch({ t, provinces = [] }: { t: Dictionary; provinces?: Province[] }) {
+export function HomeHeroSearch({
+  t,
+  provinces = [],
+  districts = [],
+}: {
+  t: Dictionary;
+  provinces?: Province[];
+  districts?: District[];
+}) {
   return (
     <section className="herofind" aria-label={t.home.search_title}>
       {/* Mozambique-reality still (Maputo municipal market). Sits under the video
@@ -36,7 +44,13 @@ export function HomeHeroSearch({ t, provinces = [] }: { t: Dictionary; provinces
           variant="hero"
           submitLabel={t.home.search_btn}
           provinces={provinces}
-          location={{ all: t.search.all_country }}
+          districts={districts}
+          location={{
+            all: t.search.all_country,
+            whole_region: t.search.whole_region,
+            choose_district: t.search.choose_district,
+            back: t.search.back,
+          }}
           tools={{
             voice: t.common.search_voice,
             image: t.common.search_image,

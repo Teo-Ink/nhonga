@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { IconSearch, IconMic, IconCamera, IconMapPin } from '../icons';
+import { IconSearch, IconMic, IconCamera } from '../icons';
+import { LocationPicker, type LocationLabels } from './LocationPicker';
+import type { District, Province } from '../../lib/api';
 
 interface Cat {
   slug: string;
@@ -63,7 +65,10 @@ export function SearchBox({
   submitLabel,
   tools,
   provinces,
+  districts,
   location,
+  initialProvince,
+  initialDistrict,
 }: {
   placeholder: string;
   categories: Cat[];
@@ -71,10 +76,14 @@ export function SearchBox({
   initialQuery?: string;
   submitLabel?: string;
   tools?: SearchTools;
-  /** When provided, a location picker (province) is shown in the search bar. */
-  provinces?: { code: string; name: string }[];
-  /** { all } label for the "whole country" option. */
-  location?: { all: string };
+  /** When provided, a location picker (province → district) is shown. */
+  provinces?: Province[];
+  districts?: District[];
+  /** Localised labels for the location picker. */
+  location?: LocationLabels;
+  /** Prefill the picker (results page). */
+  initialProvince?: string;
+  initialDistrict?: string;
 }) {
   const [q, setQ] = useState(initialQuery);
   const [sugs, setSugs] = useState<Sug[]>([]);
@@ -300,18 +309,14 @@ export function SearchBox({
             />
           </>
         ) : null}
-        {provinces && provinces.length > 0 ? (
-          <span className="searchbox__loc">
-            <IconMapPin width={16} height={16} aria-hidden />
-            <select name="province" defaultValue="" aria-label={location?.all ?? 'Localização'}>
-              <option value="">{location?.all ?? 'Todo o país'}</option>
-              {provinces.map((p) => (
-                <option key={p.code} value={p.code}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </span>
+        {provinces && provinces.length > 0 && location ? (
+          <LocationPicker
+            provinces={provinces}
+            districts={districts ?? []}
+            labels={location}
+            initialProvince={initialProvince ?? ''}
+            initialDistrict={initialDistrict ?? ''}
+          />
         ) : null}
         {variant === 'hero' && submitLabel ? (
           <button type="submit" className="btn btn--cta herofind__btn">

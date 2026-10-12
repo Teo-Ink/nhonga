@@ -102,6 +102,8 @@ export interface ProductFilters {
   readonly vendorSlug?: string;
   /** Province code (vendor's district → province), for location search. */
   readonly province?: string;
+  /** District id (vendor's district), for the finer location filter. */
+  readonly district?: string;
   readonly minPriceCents?: number;
   readonly maxPriceCents?: number;
   readonly inStockOnly?: boolean;

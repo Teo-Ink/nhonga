@@ -11,10 +11,12 @@ import { StatStrip } from '../components/home/StatStrip';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
 import {
+  getDistricts,
   getHomeStats,
   getProvinces,
   listProducts,
   searchProducts,
+  type District,
   type HomeStats,
   type ProductListItem,
   type Province,
@@ -59,10 +61,12 @@ export default async function HomePage() {
   }
 
   let provinces: Province[] = [];
+  let districts: District[] = [];
   try {
-    provinces = await getProvinces();
+    [provinces, districts] = await Promise.all([getProvinces(), getDistricts()]);
   } catch {
     provinces = [];
+    districts = [];
   }
 
   const perCategory = await Promise.all(
@@ -88,7 +92,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HomeHeroSearch t={t} provinces={provinces} />
+      <HomeHeroSearch t={t} provinces={provinces} districts={districts} />
 
       {stats ? <StatStrip stats={stats} t={t.home} /> : null}
 

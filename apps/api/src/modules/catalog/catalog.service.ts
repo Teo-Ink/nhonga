@@ -686,6 +686,7 @@ export class CatalogService {
     if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
     if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
     if (filters.province) conds.push(eq(district.provinceCode, filters.province));
+    if (filters.district) conds.push(eq(vendor.districtId, asUuidOrNil(filters.district)));
     if (filters.q && filters.q.trim() !== '') {
       const needle = `%${filters.q.trim()}%`;
       const m = or(ilike(product.titlePt, needle), ilike(product.titleEn, needle));
@@ -809,6 +810,14 @@ export class CatalogService {
       .select({ code: province.code, name: province.name })
       .from(province)
       .orderBy(asc(province.name));
+  }
+
+  /** All districts (for the province → district location drill-down). */
+  async districts(): Promise<ReadonlyArray<{ id: string; name: string; province: string }>> {
+    return this.db
+      .select({ id: district.id, name: district.name, province: district.provinceCode })
+      .from(district)
+      .orderBy(asc(district.provinceCode), asc(district.name));
   }
 
   /** Live marketplace totals for the home social-proof strip (real counts). */

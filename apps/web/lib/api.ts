@@ -152,6 +152,8 @@ export interface SearchParams {
   maxPrice?: number;
   /** Province code — location search. */
   province?: string;
+  /** District id — finer location search. */
+  district?: string;
   /** Per-category attribute filters, e.g. { marca: 'Honda', ano: { min: 2015 } }. */
   attributes?: Record<string, AttributeFilter>;
 }
@@ -160,8 +162,16 @@ export interface Province {
   code: string;
   name: string;
 }
+export interface District {
+  id: string;
+  name: string;
+  province: string;
+}
 export async function getProvinces(): Promise<Province[]> {
   return get<Province[]>('/catalog/provinces');
+}
+export async function getDistricts(): Promise<District[]> {
+  return get<District[]>('/catalog/districts');
 }
 
 export async function searchProducts(
@@ -171,6 +181,7 @@ export async function searchProducts(
   if (p.q) qs.set('q', p.q);
   if (p.category) qs.set('category', p.category);
   if (p.province) qs.set('province', p.province);
+  if (p.district) qs.set('district', p.district);
   if (p.sort) qs.set('sort', p.sort);
   if (p.inStock) qs.set('inStock', 'true');
   if (p.minPrice !== undefined) qs.set('minPrice', String(p.minPrice));

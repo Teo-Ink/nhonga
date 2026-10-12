@@ -1,5 +1,12 @@
 import { SearchResults, type ActiveChip } from '../../components/SearchResults';
-import { getProvinces, searchProducts, type ProductListItem, type Province } from '../../lib/api';
+import {
+  getDistricts,
+  getProvinces,
+  searchProducts,
+  type District,
+  type ProductListItem,
+  type Province,
+} from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -22,13 +29,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const sort = one(sp.sort);
   const category = one(sp.category);
   const province = one(sp.province);
+  const district = one(sp.district);
   const minPrice = one(sp.minPrice);
   const maxPrice = one(sp.maxPrice);
   const inStock = one(sp.inStock) === 'true';
 
   let provinces: Province[] = [];
+  let districts: District[] = [];
   try {
-    provinces = await getProvinces();
+    [provinces, districts] = await Promise.all([getProvinces(), getDistricts()]);
   } catch {
     /* location picker just hides */
   }
@@ -41,6 +50,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       ...(sort ? { sort } : {}),
       ...(category ? { category } : {}),
       ...(province ? { province } : {}),
+      ...(district ? { district } : {}),
       ...(minPrice ? { minPrice: Number(minPrice) } : {}),
       ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
       inStock,
@@ -57,7 +67,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     if (q && drop !== 'q') p.set('q', q);
     if (sort && drop !== 'sort') p.set('sort', sort);
     if (category && drop !== 'category') p.set('category', category);
-    if (province && drop !== 'province') p.set('province', province);
+    // Location is one chip: dropping it clears both province and district.
+    if (province && drop !== 'province' && drop !== 'location') p.set('province', province);
+    if (district && drop !== 'district' && drop !== 'location') p.set('district', district);
     if (minPrice && drop !== 'minPrice') p.set('minPrice', minPrice);
     if (maxPrice && drop !== 'maxPrice') p.set('maxPrice', maxPrice);
     if (inStock && drop !== 'inStock') p.set('inStock', 'true');
@@ -78,6 +90,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     if (sort) p.set('sort', sort);
     if (category) p.set('category', category);
     if (province) p.set('province', province);
+    if (district) p.set('district', district);
     if (inStock) p.set('inStock', 'true');
     const s = p.toString();
     return s ? `/pesquisa?${s}` : '/pesquisa';
@@ -85,11 +98,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   const provinceName = (code: string): string =>
     provinces.find((pr) => pr.code === code)?.name ?? code;
+  const districtName = (id: string): string => districts.find((d) => d.id === id)?.name ?? id;
+  // The location chip shows the most specific choice (district, else province).
+  const locationLabel = district ? districtName(district) : province ? provinceName(province) : '';
 
   const chips: ActiveChip[] = [];
   if (q) chips.push({ label: `“${q}”`, removeHref: keep('q') });
   if (category) chips.push({ label: catLabel(category), removeHref: keep('category') });
-  if (province) chips.push({ label: `📍 ${provinceName(province)}`, removeHref: keep('province') });
+  if (locationLabel) chips.push({ label: `📍 ${locationLabel}`, removeHref: keep('location') });
   if (minPrice || maxPrice) {
     const lo = minPrice ? mt(minPrice) : '0';
     const hi = maxPrice ? mt(maxPrice) : '∞';

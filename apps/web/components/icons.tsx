@@ -14,6 +14,7 @@ import {
   Wallet,
   Check,
   ChevronLeft,
+  ChevronDown,
   Globe,
   Sun,
   Package,
@@ -65,6 +66,7 @@ export const IconCart = icon(ShoppingCart);
 export const IconUser = icon(User);
 export const IconMenu = icon(Menu);
 export const IconChevronLeft = icon(ChevronLeft);
+export const IconChevronDown = icon(ChevronDown);
 export const IconGlobe = icon(Globe);
 export const IconSun = icon(Sun);
 export const IconPlus = icon(Plus);
