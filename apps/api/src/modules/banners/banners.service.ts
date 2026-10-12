@@ -528,8 +528,12 @@ async function fetchImageDataUri(url: string): Promise<string | null> {
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
-/** Parse the model's JSON into validated specs; tolerant of code fences. */
-function parseSpecs(text: string, pal: { bg: string; accent: string; text: string }): BannerSpec[] {
+/** Parse the model's JSON into validated specs; tolerant of code fences.
+ *  Exported for unit testing — it handles untrusted model output. */
+export function parseSpecs(
+  text: string,
+  pal: { bg: string; accent: string; text: string },
+): BannerSpec[] {
   const cleaned = text
     .trim()
     .replace(/^```(?:json)?/i, '')
