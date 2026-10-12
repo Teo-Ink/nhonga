@@ -3749,12 +3749,12 @@ a.seller:focus-visible {
   max-width: 220px;
 }
 .locpick__trigger > svg {
-  color: var(--text-muted);
   flex: 0 0 auto;
 }
-.locpick__trigger.is-selected > svg:first-child {
-  /* The search pill is always white, so use a fixed mid-green that reads
-     clearly in both themes (brand is too dark in light / too pale in dark). */
+/* The search pill is always white, so a fixed mid-green reads clearly in both
+   themes (brand is too dark in light / too pale in dark). The location control
+   is green in every state (pin, label and caret). */
+.locpick__trigger > svg:first-child {
   color: var(--logo-green, #007a5e);
 }
 .locpick__label {
@@ -3762,13 +3762,10 @@ a.seller:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* Always on the white search pill → fixed mid-green, readable in both themes. */
+  /* Always on the white search pill → fixed mid-green, readable in both themes,
+     in every state (including the default "Todo o país"). */
   color: var(--logo-green, #007a5e);
   font-weight: var(--weight-medium);
-}
-.locpick__label.is-placeholder {
-  color: var(--text-muted);
-  font-weight: var(--weight-regular, 400);
 }
 .locpick__clear {
   color: var(--text-muted);

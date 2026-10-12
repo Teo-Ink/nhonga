@@ -89,7 +89,7 @@ export function LocationPicker({
           setView(province || null);
         }}
       >
-        <IconMapPin width={16} height={16} aria-hidden />
+        <IconMapPin width={20} height={20} aria-hidden />
         <span className={`locpick__label ${hasSelection ? '' : 'is-placeholder'}`}>{label}</span>
         {hasSelection ? (
           <span className="locpick__clear" role="button" aria-label="×" onClick={clear}>
