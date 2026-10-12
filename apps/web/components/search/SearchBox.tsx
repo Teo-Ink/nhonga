@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { IconSearch, IconMic, IconCamera } from '../icons';
+import { IconSearch, IconMic, IconCamera, IconMapPin } from '../icons';
 
 interface Cat {
   slug: string;
@@ -242,21 +242,6 @@ export function SearchBox({
         method="get"
         autoComplete="off"
       >
-        {provinces && provinces.length > 0 ? (
-          <select
-            name="province"
-            className="searchbox__loc"
-            defaultValue=""
-            aria-label={location?.all ?? 'Localização'}
-          >
-            <option value="">{location?.all ?? 'Todo o país'}</option>
-            {provinces.map((p) => (
-              <option key={p.code} value={p.code}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        ) : null}
         <IconSearch
           width={variant === 'hero' ? 22 : 20}
           height={variant === 'hero' ? 22 : 20}
@@ -314,6 +299,19 @@ export function SearchBox({
               }}
             />
           </>
+        ) : null}
+        {provinces && provinces.length > 0 ? (
+          <span className="searchbox__loc">
+            <IconMapPin width={16} height={16} aria-hidden />
+            <select name="province" defaultValue="" aria-label={location?.all ?? 'Localização'}>
+              <option value="">{location?.all ?? 'Todo o país'}</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </span>
         ) : null}
         {variant === 'hero' && submitLabel ? (
           <button type="submit" className="btn btn--cta herofind__btn">
