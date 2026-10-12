@@ -71,6 +71,12 @@ export class CatalogController {
     return this.catalog.listProducts(langOf(acceptLanguage), filters);
   }
 
+  /** Live marketplace totals for the home social-proof strip. */
+  @Get('stats')
+  stats(): Promise<{ listings: number; vendors: number; verifiedVendors: number }> {
+    return this.catalog.homeStats();
+  }
+
   /** Create a listing (real "Publicar"). No auth in the demo. */
   @Post('products')
   @HttpCode(201)

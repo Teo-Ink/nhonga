@@ -801,6 +801,34 @@ export class CatalogService {
     return { total, items: page, page: { cursor: null, hasMore: total > limit } };
   }
 
+  /** Live marketplace totals for the home social-proof strip (real counts). */
+  async homeStats(): Promise<{
+    listings: number;
+    vendors: number;
+    verifiedVendors: number;
+  }> {
+    const [listings] = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(product)
+      .where(eq(product.status, 'active'));
+    // A vendor "counts" once it has at least one active listing; verified =
+    // status 'active' (the selo shown across the app).
+    const [vendors] = await this.db
+      .select({ n: sql<number>`count(distinct ${product.vendorId})::int` })
+      .from(product)
+      .where(eq(product.status, 'active'));
+    const [verified] = await this.db
+      .select({ n: sql<number>`count(distinct ${product.vendorId})::int` })
+      .from(product)
+      .innerJoin(vendor, eq(vendor.id, product.vendorId))
+      .where(and(eq(product.status, 'active'), eq(vendor.status, 'active')));
+    return {
+      listings: listings?.n ?? 0,
+      vendors: vendors?.n ?? 0,
+      verifiedVendors: verified?.n ?? 0,
+    };
+  }
+
   /** Lightweight title suggestions for the search autocomplete. */
   async suggest(q: string, lang: Lang): Promise<{ slug: string; title: string }[]> {
     const term = q.trim();

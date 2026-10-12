@@ -119,6 +119,15 @@ export async function getProduct(slug: string): Promise<ProductDetail> {
   return get<ProductDetail>(`/catalog/products/${encodeURIComponent(slug)}`);
 }
 
+export interface HomeStats {
+  listings: number;
+  vendors: number;
+  verifiedVendors: number;
+}
+export async function getHomeStats(): Promise<HomeStats> {
+  return get<HomeStats>('/catalog/stats');
+}
+
 export async function listProductsByVendor(
   slug: string,
 ): Promise<{ items: ProductListItem[]; vendor: VendorSummary | null }> {

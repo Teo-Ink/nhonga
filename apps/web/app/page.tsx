@@ -7,9 +7,16 @@ import { HomeHeroSearch } from '../components/home/HomeHeroSearch';
 import { PopularCategories } from '../components/home/PopularCategories';
 import { RecentlyViewed } from '../components/RecentlyViewed';
 import { HowItWorks } from '../components/home/HowItWorks';
+import { StatStrip } from '../components/home/StatStrip';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
-import { listProducts, searchProducts, type ProductListItem } from '../lib/api';
+import {
+  getHomeStats,
+  listProducts,
+  searchProducts,
+  type HomeStats,
+  type ProductListItem,
+} from '../lib/api';
 import { getDictionary } from '../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +49,13 @@ export default async function HomePage() {
     failed = true;
   }
 
+  let stats: HomeStats | null = null;
+  try {
+    stats = await getHomeStats();
+  } catch {
+    stats = null;
+  }
+
   const perCategory = await Promise.all(
     CATEGORY_KEYS.map(async (slug) => {
       try {
@@ -66,6 +80,8 @@ export default async function HomePage() {
   return (
     <>
       <HomeHeroSearch t={t} />
+
+      {stats ? <StatStrip stats={stats} t={t.home} /> : null}
 
       <section className="section">
         <AdSlot t={t} placement="leaderboard" />

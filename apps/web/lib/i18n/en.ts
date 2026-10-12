@@ -104,6 +104,9 @@ export const en: Dictionary = {
   home: {
     categories: 'Categories',
     recent_viewed: 'Recently viewed',
+    stat_listings: 'active listings',
+    stat_vendors: 'sellers',
+    stat_verified: 'verified shops',
     hero_title: 'Buy and sell across Mozambique',
     hero_subtitle:
       'Pay with M-Pesa, e-Mola, mKesh or on delivery. Delivery arranged with the seller.',
