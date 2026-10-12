@@ -258,6 +258,8 @@ export const en: Dictionary = {
     category: 'Category',
     categories: 'Categories',
     all_categories: 'All categories',
+    location: 'Location',
+    all_country: 'Whole country',
     price: 'Price (MT)',
     price_from: 'Min.',
     price_to: 'Max.',

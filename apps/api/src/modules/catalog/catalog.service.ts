@@ -17,7 +17,7 @@ import {
   productVariant,
 } from '../../db/schema/catalog.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
-import { district } from '../../db/schema/identity.js';
+import { district, province } from '../../db/schema/identity.js';
 import { MediaService } from '../media/media.service.js';
 import { AuthService, type AuthUser } from '../auth/auth.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
@@ -685,6 +685,7 @@ export class CatalogService {
     const conds: SQL[] = [eq(product.status, 'active')];
     if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
     if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
+    if (filters.province) conds.push(eq(district.provinceCode, filters.province));
     if (filters.q && filters.q.trim() !== '') {
       const needle = `%${filters.q.trim()}%`;
       const m = or(ilike(product.titlePt, needle), ilike(product.titleEn, needle));
@@ -800,6 +801,14 @@ export class CatalogService {
     const total = mapped.length;
     const page = mapped.slice(0, limit).map((m) => m.item);
     return { total, items: page, page: { cursor: null, hasMore: total > limit } };
+  }
+
+  /** All provinces (for the location search picker), ordered by name. */
+  async provinces(): Promise<ReadonlyArray<{ code: string; name: string }>> {
+    return this.db
+      .select({ code: province.code, name: province.name })
+      .from(province)
+      .orderBy(asc(province.name));
   }
 
   /** Live marketplace totals for the home social-proof strip (real counts). */

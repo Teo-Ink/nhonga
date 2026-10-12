@@ -45,6 +45,7 @@ export class CatalogController {
     @Query('q') q?: string,
     @Query('category') category?: string,
     @Query('vendor') vendor?: string,
+    @Query('province') province?: string,
     @Query('minPrice') minPrice?: string,
     @Query('maxPrice') maxPrice?: string,
     @Query('inStock') inStock?: string,
@@ -61,6 +62,7 @@ export class CatalogController {
       ...(q ? { q } : {}),
       ...(category ? { categorySlug: category } : {}),
       ...(vendor ? { vendorSlug: vendor } : {}),
+      ...(province ? { province } : {}),
       ...(min !== undefined ? { minPriceCents: min } : {}),
       ...(max !== undefined ? { maxPriceCents: max } : {}),
       ...(inStock === 'true' ? { inStockOnly: true } : {}),
@@ -75,6 +77,12 @@ export class CatalogController {
   @Get('stats')
   stats(): Promise<{ listings: number; vendors: number; verifiedVendors: number }> {
     return this.catalog.homeStats();
+  }
+
+  /** Provinces for the location search picker. */
+  @Get('provinces')
+  provinces(): Promise<ReadonlyArray<{ code: string; name: string }>> {
+    return this.catalog.provinces();
   }
 
   /** Create a listing (real "Publicar"). No auth in the demo. */

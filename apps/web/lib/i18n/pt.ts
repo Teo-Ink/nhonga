@@ -273,6 +273,8 @@ export const pt = {
     category: 'Categoria',
     categories: 'Categorias',
     all_categories: 'Todas as categorias',
+    location: 'Localização',
+    all_country: 'Todo o país',
     price: 'Preço (MT)',
     price_from: 'Mín.',
     price_to: 'Máx.',

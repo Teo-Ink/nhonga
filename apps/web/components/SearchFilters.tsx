@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Dictionary } from '../lib/i18n/index';
-import type { CategoryAttribute } from '../lib/api';
+import type { CategoryAttribute, Province } from '../lib/api';
 
 const CATEGORY_KEYS = [
   'moda',
@@ -34,9 +34,18 @@ export function SearchFilters({
   const [open, setOpen] = useState(false);
 
   const activeCategory = params.get('category') ?? '';
+  const activeProvince = params.get('province') ?? '';
   const minCents = params.get('minPrice');
   const maxCents = params.get('maxPrice');
   const inStock = params.get('inStock') === 'true';
+
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  useEffect(() => {
+    void fetch('/api/provinces')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((p: Province[]) => setProvinces(Array.isArray(p) ? p : []))
+      .catch(() => setProvinces([]));
+  }, []);
 
   const [min, setMin] = useState(minCents ? String(Math.round(Number(minCents) / 100)) : '');
   const [max, setMax] = useState(maxCents ? String(Math.round(Number(maxCents) / 100)) : '');
@@ -94,6 +103,24 @@ export function SearchFilters({
       </button>
 
       <div className={`filters__body ${open ? 'is-open' : ''}`}>
+        {provinces.length > 0 ? (
+          <div className="filtergroup">
+            <h2 className="filtergroup__title">{t.search.location}</h2>
+            <select
+              className="field__input filterloc"
+              value={activeProvince}
+              onChange={(e) => setParam('province', e.target.value || null)}
+            >
+              <option value="">{t.search.all_country}</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.code}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
+
         {lockedCategory === undefined ? (
           <div className="filtergroup">
             <h2 className="filtergroup__title">{t.search.categories}</h2>

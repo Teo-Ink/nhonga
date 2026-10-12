@@ -12,10 +12,12 @@ import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
 import {
   getHomeStats,
+  getProvinces,
   listProducts,
   searchProducts,
   type HomeStats,
   type ProductListItem,
+  type Province,
 } from '../lib/api';
 import { getDictionary } from '../lib/i18n/index';
 
@@ -56,6 +58,13 @@ export default async function HomePage() {
     stats = null;
   }
 
+  let provinces: Province[] = [];
+  try {
+    provinces = await getProvinces();
+  } catch {
+    provinces = [];
+  }
+
   const perCategory = await Promise.all(
     CATEGORY_KEYS.map(async (slug) => {
       try {
@@ -79,7 +88,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HomeHeroSearch t={t} />
+      <HomeHeroSearch t={t} provinces={provinces} />
 
       {stats ? <StatStrip stats={stats} t={t.home} /> : null}
 

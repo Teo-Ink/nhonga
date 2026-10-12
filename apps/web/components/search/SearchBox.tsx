@@ -62,6 +62,8 @@ export function SearchBox({
   initialQuery = '',
   submitLabel,
   tools,
+  provinces,
+  location,
 }: {
   placeholder: string;
   categories: Cat[];
@@ -69,6 +71,10 @@ export function SearchBox({
   initialQuery?: string;
   submitLabel?: string;
   tools?: SearchTools;
+  /** When provided, a location picker (province) is shown in the search bar. */
+  provinces?: { code: string; name: string }[];
+  /** { all } label for the "whole country" option. */
+  location?: { all: string };
 }) {
   const [q, setQ] = useState(initialQuery);
   const [sugs, setSugs] = useState<Sug[]>([]);
@@ -236,6 +242,21 @@ export function SearchBox({
         method="get"
         autoComplete="off"
       >
+        {provinces && provinces.length > 0 ? (
+          <select
+            name="province"
+            className="searchbox__loc"
+            defaultValue=""
+            aria-label={location?.all ?? 'Localização'}
+          >
+            <option value="">{location?.all ?? 'Todo o país'}</option>
+            {provinces.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <IconSearch
           width={variant === 'hero' ? 22 : 20}
           height={variant === 'hero' ? 22 : 20}

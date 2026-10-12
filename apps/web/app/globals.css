@@ -3729,6 +3729,28 @@ a.seller:focus-visible {
   line-height: 1.5;
 }
 
+/* Location picker inside the search bar (province select). */
+.searchbox__loc {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--text);
+  max-width: 128px;
+  cursor: pointer;
+  padding: 0 6px;
+  flex: 0 0 auto;
+  border-right: 1px solid var(--border);
+  margin-right: 4px;
+}
+.searchbox__loc:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--brand));
+  border-radius: 4px;
+}
+/* Location select in the filter rail. */
+.filterloc {
+  width: 100%;
+}
+
 /* Live social-proof strip under the hero. */
 .statstrip {
   display: flex;
