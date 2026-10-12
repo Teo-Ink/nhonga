@@ -186,7 +186,14 @@ export class AssistantService {
         configured: true,
       };
     } catch (e) {
-      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+      // A provider outage (e.g. no credit) shouldn't 502 the chat — serve a
+      // calm notice and point to Help, like the over-capacity path.
+      this.log.warn(`chat upstream error: ${e instanceof Error ? e.message : e}`);
+      return {
+        reply:
+          'O assistente está indisponível neste momento. Tenta mais tarde ou consulta a página de Ajuda (/ajuda) ou contacta o vendedor.',
+        configured: true,
+      };
     }
   }
 
@@ -219,7 +226,11 @@ export class AssistantService {
       this.record(usage.inputTokens, usage.outputTokens);
       return { ...parseDraft(text), configured: true };
     } catch (e) {
-      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+      // Degrade gracefully: if the provider is unreachable (e.g. no credit),
+      // report the assistant as unavailable so the seller just fills the form
+      // manually, instead of failing the request with a 502.
+      this.log.warn(`draftListing upstream error: ${e instanceof Error ? e.message : e}`);
+      return { title: '', description: '', configured: false };
     }
   }
 
@@ -267,7 +278,8 @@ export class AssistantService {
         configured: true,
       };
     } catch (e) {
-      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+      this.log.warn(`draftListingFromPhoto upstream error: ${e instanceof Error ? e.message : e}`);
+      return { title: '', description: '', configured: false };
     }
   }
 
@@ -314,7 +326,9 @@ export class AssistantService {
           : undefined;
       return { query: parsed.query, ...(category ? { category } : {}), configured: true };
     } catch (e) {
-      throw new AssistantError(e instanceof Error ? e.message : 'upstream error', 'upstream');
+      // Degrade gracefully — the caller falls back to the raw text as the query.
+      this.log.warn(`searchQuery upstream error: ${e instanceof Error ? e.message : e}`);
+      return { query: text, configured: false };
     }
   }
 
