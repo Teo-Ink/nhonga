@@ -5,6 +5,7 @@ import { PostAdBanner } from '../components/home/PostAdBanner';
 import { AppPromo } from '../components/home/AppPromo';
 import { HomeHeroSearch } from '../components/home/HomeHeroSearch';
 import { PopularCategories } from '../components/home/PopularCategories';
+import { RecentlyViewed } from '../components/RecentlyViewed';
 import { HowItWorks } from '../components/home/HowItWorks';
 import { EmptyState, TrustStrip } from '../components/ui';
 import { IconBox } from '../components/icons';
@@ -71,6 +72,8 @@ export default async function HomePage() {
       </section>
 
       <PopularCategories t={t} />
+
+      <RecentlyViewed title={t.home.recent_viewed} />
 
       <HowItWorks t={t} />
 

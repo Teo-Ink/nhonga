@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ProductGallery } from '../../../components/ProductGallery';
+import { RecordRecentView } from '../../../components/RecentlyViewed';
 import { notFound } from 'next/navigation';
 import { cents, formatMZN } from '@nhonga/shared';
 import { Price, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
@@ -119,6 +120,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <article className="pdp">
+      <RecordRecentView
+        item={{
+          slug: product.slug,
+          title: product.title,
+          image: galleryImages[0]?.url ?? null,
+          priceCents: product.priceCents,
+        }}
+      />
       <nav className="crumbs" aria-label="breadcrumb">
         <span className="crumbs__item">
           <a href="/">{t.common.brand}</a>

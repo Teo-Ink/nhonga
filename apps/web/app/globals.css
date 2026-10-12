@@ -3694,6 +3694,45 @@ a.seller:focus-visible {
   margin-left: auto;
 }
 
+/* "Vistos recentemente" rail (per-device re-engagement). */
+.recentview__rail {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scroll-snap-type: x proximity;
+}
+.recentcard {
+  flex: 0 0 140px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--text);
+  scroll-snap-align: start;
+}
+.recentcard__media {
+  width: 140px;
+  height: 105px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken) center / cover no-repeat;
+  margin-bottom: 6px;
+}
+.recentcard__title {
+  font-size: var(--text-sm);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.recentcard__price {
+  font-weight: var(--weight-bold);
+  color: var(--brand);
+  font-size: var(--text-sm);
+  margin-top: 2px;
+}
+
 /* Listings grid: 2 -> 3 -> 4 -> 5 columns */
 .grid--listings {
   display: grid;

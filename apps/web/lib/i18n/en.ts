@@ -103,6 +103,7 @@ export const en: Dictionary = {
   },
   home: {
     categories: 'Categories',
+    recent_viewed: 'Recently viewed',
     hero_title: 'Buy and sell across Mozambique',
     hero_subtitle:
       'Pay with M-Pesa, e-Mola, mKesh or on delivery. Delivery arranged with the seller.',

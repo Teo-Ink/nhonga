@@ -102,6 +102,7 @@ export const pt = {
   },
   home: {
     categories: 'Categorias',
+    recent_viewed: 'Vistos recentemente',
     hero_title: 'Compre e venda em Moçambique',
     hero_subtitle:
       'Pague com M-Pesa, e-Mola, mKesh ou na entrega. Entrega combinada com o vendedor.',
