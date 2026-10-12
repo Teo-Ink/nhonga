@@ -30,6 +30,11 @@ export interface AppConfig {
   readonly assistantRatePerMin: number;
   /** Monthly token budget; 0 disables the cap. */
   readonly assistantMonthlyTokenCap: number;
+  // AI Banner Studio.
+  /** Free banner generations per seller per calendar month. */
+  readonly bannerFreeQuota: number;
+  /** Loyalty points charged per generation once the free quota is spent. */
+  readonly bannerPointCost: number;
   /**
    * Browser origins allowed to call the API cross-origin (CORS). The web app
    * talks to the API server-side through its BFF, and native mobile fetches are
@@ -137,6 +142,8 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
       : 'claude-sonnet-5',
     assistantRatePerMin: requireInt(raw, 'ASSISTANT_RATE_PER_MIN', 15),
     assistantMonthlyTokenCap: requireInt(raw, 'ASSISTANT_MONTHLY_TOKEN_CAP', 0),
+    bannerFreeQuota: requireInt(raw, 'BANNER_FREE_QUOTA', 5),
+    bannerPointCost: requireInt(raw, 'BANNER_POINT_COST', 5),
     corsOrigins: (raw['CORS_ORIGINS'] ?? '')
       .split(',')
       .map((o) => o.trim())

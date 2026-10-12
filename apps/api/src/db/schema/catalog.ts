@@ -108,6 +108,9 @@ export const product = pgTable(
      *  bumpedAt is the last "subir para o topo" time. Both drive search order. */
     featuredUntil: timestamp('featured_until', { withTimezone: true }),
     bumpedAt: timestamp('bumped_at', { withTimezone: true }),
+    /** Applied AI banner (listing_banner.id). The FK is declared in the
+     *  migration, not here, to avoid a schema import cycle with banners.ts. */
+    bannerId: uuid('banner_id'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
