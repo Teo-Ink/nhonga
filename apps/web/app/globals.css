@@ -5325,6 +5325,26 @@ a.seller:focus-visible {
 .contactbtn--share:hover {
   background: var(--surface-sunken);
 }
+/* Share row: prominent WhatsApp share + the generic share, side by side. */
+.contactbox__share {
+  display: flex;
+  gap: var(--space-2);
+}
+.contactbox__share .contactbtn {
+  flex: 1;
+}
+.contactbtn--sharewa {
+  background: color-mix(in srgb, #25d366 14%, transparent);
+  color: #128c4a;
+  border: 1px solid #25d366;
+}
+.contactbtn--sharewa:hover {
+  background: color-mix(in srgb, #25d366 22%, transparent);
+}
+:root:not([data-theme='light']) .contactbtn--sharewa,
+:root[data-theme='dark'] .contactbtn--sharewa {
+  color: #4ae08a;
+}
 .contactbox__none {
   color: var(--text-muted);
   font-size: var(--text-sm);

@@ -718,6 +718,8 @@ export const pt = {
         'Dica de segurança: confirme o evento e a validade do bilhete e compre de fontes de confiança. Nunca envie dinheiro adiantado nem partilhe códigos ou PIN.',
     },
     wa_message: 'Olá! Tenho interesse no anúncio «{title}» ({price}) no Nhonga.',
+    share_wa: 'Partilhar no WhatsApp',
+    share_wa_text: 'Vê este anúncio no Nhonga: «{title}» — {price}.',
     cta_apply: 'Candidatar-me pelo WhatsApp',
     wa_apply: 'Olá! Vi a vaga «{title}» no Nhonga e gostaria de me candidatar.',
     cta_quote: 'Pedir orçamento pelo WhatsApp',

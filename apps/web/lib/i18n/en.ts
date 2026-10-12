@@ -697,6 +697,8 @@ export const en: Dictionary = {
         'Safety tip: confirm the event and ticket validity and buy from trusted sources. Never send money in advance or share codes or PINs.',
     },
     wa_message: 'Hi! I am interested in your “{title}” ({price}) listing on Nhonga.',
+    share_wa: 'Share on WhatsApp',
+    share_wa_text: 'Check out this listing on Nhonga: “{title}” — {price}.',
     cta_apply: 'Apply on WhatsApp',
     wa_apply: 'Hi! I saw the “{title}” job on Nhonga and would like to apply.',
     cta_quote: 'Request a quote on WhatsApp',

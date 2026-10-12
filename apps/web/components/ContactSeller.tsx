@@ -78,6 +78,14 @@ export function ContactSeller({
     }
   }
 
+  // Dedicated "share to WhatsApp" — the dominant sharing channel in Mozambique.
+  // No phone number means wa.me opens the contact/group picker. Distinct from the
+  // contact-seller button above (which targets the seller's own number).
+  const shareText = t.share_wa_text.replace('{title}', title).replace('{price}', priceLabel);
+  const shareWaHref = pageUrl
+    ? `https://wa.me/?text=${encodeURIComponent(`${shareText} ${pageUrl}`)}`
+    : '';
+
   const hasContact = Boolean(waHref || phone);
 
   return (
@@ -112,9 +120,22 @@ export function ContactSeller({
           <IconChat width={18} height={18} /> {t.message}
         </a>
       ) : null}
-      <button type="button" className="btn contactbtn contactbtn--share" onClick={share}>
-        <IconShare width={18} height={18} /> {t.share}
-      </button>
+      <div className="contactbox__share">
+        {shareWaHref ? (
+          <a
+            className="btn contactbtn contactbtn--sharewa"
+            href={shareWaHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track('share')}
+          >
+            <IconWhatsApp width={18} height={18} /> {t.share_wa}
+          </a>
+        ) : null}
+        <button type="button" className="btn contactbtn contactbtn--share" onClick={share}>
+          <IconShare width={18} height={18} /> {t.share}
+        </button>
+      </div>
       {!hasContact ? <p className="contactbox__none">{t.no_contact}</p> : null}
       <p className="contactbox__safe">{safetyNote ?? t.safety}</p>
     </div>
