@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { IconGift } from '../../../components/icons';
+import { CaptureReferral } from '../../../components/CaptureReferral';
 import { getDictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,7 @@ export default async function InviteLanding({ params }: { params: Promise<{ code
 
   return (
     <section className="section invite">
+      <CaptureReferral code={safeCode} />
       <span className="invite__badge" aria-hidden="true">
         <IconGift width={40} height={40} />
       </span>

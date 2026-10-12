@@ -5,6 +5,9 @@ import { normaliseMzMsisdn } from '@nhonga/shared';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { appUser, otpChallenge, refreshToken } from '../../db/schema/identity.js';
+import { referral } from '../../db/schema/referrals.js';
+import { vendor, vendorUser } from '../../db/schema/vendors.js';
+import { wallet, walletTransaction } from '../../db/schema/wallet.js';
 import {
   order as orderTable,
   orderItem,
@@ -112,7 +115,11 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(challengeId: string, code: string): Promise<VerifyResult> {
+  async verifyOtp(
+    challengeId: string,
+    code: string,
+    referralCode?: string,
+  ): Promise<VerifyResult> {
     const rows = await this.db
       .select()
       .from(otpChallenge)
@@ -145,7 +152,7 @@ export class AuthService {
       .set({ consumedAt: new Date() })
       .where(eq(otpChallenge.id, challengeId));
 
-    const user = await this.upsertUser(ch.phoneE164);
+    const { user, created } = await this.upsertUser(ch.phoneE164);
     const token = newSessionToken();
     const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 3600 * 1000);
     await this.db.insert(refreshToken).values({
@@ -156,6 +163,14 @@ export class AuthService {
       deviceLabel: 'web',
       expiresAt,
     });
+
+    // Referral attribution happens once, only for a brand-new account. Never let
+    // it break sign-in.
+    if (created && referralCode) {
+      await this.recordReferral(user.id, referralCode).catch((e) =>
+        this.log.warn(`referral attribution failed: ${e instanceof Error ? e.message : e}`),
+      );
+    }
 
     return { sessionToken: token.raw, expiresAt: expiresAt.toISOString(), user };
   }
@@ -239,7 +254,7 @@ export class AuthService {
     return row.userId;
   }
 
-  private async upsertUser(phoneE164: string): Promise<AuthUser> {
+  private async upsertUser(phoneE164: string): Promise<{ user: AuthUser; created: boolean }> {
     const existing = await this.db
       .select()
       .from(appUser)
@@ -252,10 +267,13 @@ export class AuthService {
           .set({ phoneVerifiedAt: new Date() })
           .where(eq(appUser.id, existing[0].id));
       }
-      return toAuthUser({
-        ...existing[0],
-        phoneVerifiedAt: existing[0].phoneVerifiedAt ?? new Date(),
-      });
+      return {
+        user: toAuthUser({
+          ...existing[0],
+          phoneVerifiedAt: existing[0].phoneVerifiedAt ?? new Date(),
+        }),
+        created: false,
+      };
     }
 
     const id = randomUUID();
@@ -269,7 +287,93 @@ export class AuthService {
       .from(appUser)
       .where(eq(appUser.phoneE164, phoneE164))
       .limit(1);
-    return toAuthUser(rows[0]!);
+    // onConflictDoNothing means a race could find an existing row — treat a row
+    // whose id matches the one we generated as the freshly created account.
+    return { user: toAuthUser(rows[0]!), created: rows[0]!.id === id };
+  }
+
+  // ── Referrals (H) ─────────────────────────────────────────────────
+  private static readonly REFERRAL_POINTS = 20;
+
+  /** The short invite code for a user id: the first UUID block, uppercased. */
+  private static codeForUser(id: string): string {
+    return id.replace(/-/g, '').slice(0, 8).toUpperCase();
+  }
+
+  /** Attribute a new signup to the referrer the code resolves to, and reward
+   *  the referrer with loyalty points if they have a seller wallet. */
+  private async recordReferral(referredUserId: string, rawCode: string): Promise<void> {
+    const code = rawCode.replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toLowerCase();
+    if (code.length !== 8) return;
+    // The code is the first UUID segment — match a user whose id starts with it.
+    const referrer = (
+      await this.db
+        .select({ id: appUser.id })
+        .from(appUser)
+        .where(sql`replace(${appUser.id}::text, '-', '') like ${`${code}%`}`)
+        .limit(1)
+    )[0];
+    if (!referrer || referrer.id === referredUserId) return;
+
+    // Reward only if the referrer is a seller (points live in the seller wallet).
+    const sellerVendor = (
+      await this.db
+        .select({ vendorId: vendorUser.vendorId })
+        .from(vendorUser)
+        .innerJoin(vendor, eq(vendor.id, vendorUser.vendorId))
+        .where(eq(vendorUser.userId, referrer.id))
+        .limit(1)
+    )[0];
+    const rewarded = sellerVendor != null;
+    const points = rewarded ? AuthService.REFERRAL_POINTS : 0;
+
+    await this.db
+      .insert(referral)
+      .values({
+        id: randomUUID(),
+        referrerUserId: referrer.id,
+        referredUserId,
+        code: code.toUpperCase(),
+        rewardPoints: points,
+        status: rewarded ? 'rewarded' : 'pending',
+      })
+      .onConflictDoNothing({ target: referral.referredUserId });
+
+    if (rewarded && sellerVendor) {
+      await this.db.insert(wallet).values({ vendorId: sellerVendor.vendorId }).onConflictDoNothing();
+      await this.db
+        .update(wallet)
+        .set({ points: sql`${wallet.points} + ${points}`, updatedAt: sql`now()` })
+        .where(eq(wallet.vendorId, sellerVendor.vendorId));
+      await this.db.insert(walletTransaction).values({
+        id: randomUUID(),
+        vendorId: sellerVendor.vendorId,
+        kind: 'purchase',
+        amountCents: 0,
+        points,
+        description: 'Recompensa de convite',
+      });
+    }
+  }
+
+  /** A signed-in user's referral stats (as a referrer). */
+  async referralSummary(rawToken: string | null): Promise<{
+    code: string;
+    friends: number;
+    rewarded: number;
+    pointsEarned: number;
+  }> {
+    const userId = await this.userIdForToken(rawToken);
+    const rows = await this.db
+      .select({ status: referral.status, points: referral.rewardPoints })
+      .from(referral)
+      .where(eq(referral.referrerUserId, userId));
+    return {
+      code: AuthService.codeForUser(userId),
+      friends: rows.length,
+      rewarded: rows.filter((r) => r.status === 'rewarded').length,
+      pointsEarned: rows.reduce((n, r) => n + (r.points ?? 0), 0),
+    };
   }
 }
 

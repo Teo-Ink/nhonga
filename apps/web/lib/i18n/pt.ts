@@ -326,17 +326,21 @@ export const pt = {
     wa_text: 'Estou a usar o Nhonga para comprar e vender em Moçambique. Junta-te por aqui:',
     how_title: 'Como funciona',
     step1: 'Partilhe o seu link com amigos.',
-    step2: 'Eles criam conta no Nhonga.',
-    step3: 'Ganham destaque para os vossos anúncios.',
+    step2: 'Eles criam conta no Nhonga pelo seu link.',
+    step3: 'Ganha 20 pontos por cada amigo que se junta (creditados se tiver loja).',
+    stat_friends: 'amigos juntaram-se',
+    stat_points: 'pontos ganhos',
+    reward_hint:
+      'Ganha 20 pontos por cada amigo que cria conta pelo seu link. Os pontos são creditados na carteira da sua loja — abra uma loja para os receber.',
     demo_note:
-      'Demonstração: os convites e recompensas ainda não são registados. O link é gerado a partir da sua conta.',
+      'Os convites são registados quando um amigo cria conta pelo seu link. Nenhum pagamento envolvido.',
     signin_prompt: 'Inicie sessão para obter o seu link de convite.',
     signin_cta: 'Entrar',
     landing_title: 'Foi convidado para o Nhonga',
     landing_body: 'Crie a sua conta gratuita e comece a comprar e vender em Moçambique.',
     landing_cta: 'Criar conta',
     landing_code: 'Código de convite',
-    landing_note: 'Demonstração: o convite não é registado nem atribuído a ninguém.',
+    landing_note: 'Ao criar conta por este link, o seu amigo recebe pontos de recompensa.',
   },
   // Saved searches (C).
   saved: {

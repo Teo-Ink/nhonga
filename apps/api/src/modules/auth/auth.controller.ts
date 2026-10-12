@@ -18,6 +18,7 @@ interface RequestBody {
 interface VerifyBody {
   challengeId?: unknown;
   code?: unknown;
+  referralCode?: unknown;
 }
 
 /** Phone-OTP authentication. The web BFF stores the session token in an httpOnly cookie. */
@@ -48,8 +49,9 @@ export class AuthController {
     if (typeof body.challengeId !== 'string' || typeof body.code !== 'string') {
       throw new BadRequestException({ message: 'challengeId and code are required' });
     }
+    const referralCode = typeof body.referralCode === 'string' ? body.referralCode : undefined;
     try {
-      return await this.auth.verifyOtp(body.challengeId, body.code);
+      return await this.auth.verifyOtp(body.challengeId, body.code, referralCode);
     } catch (e) {
       throw toHttp(e);
     }

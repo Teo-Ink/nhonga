@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 const SESSION_COOKIE = 'nhonga_session';
+const REFERRAL_COOKIE = 'nhonga_ref';
 
 // Verify an OTP. On success the API returns an opaque session token, which we
 // store in an httpOnly cookie so it is never exposed to page JavaScript.
 export async function POST(req: Request): Promise<Response> {
   const body = await req.json().catch(() => ({}));
+  // Carry a captured invite code into the signup so the referrer is credited.
+  const referralCode = (await cookies()).get(REFERRAL_COOKIE)?.value;
   const res = await fetch(`${API_URL}/auth/otp/verify`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(referralCode ? { ...body, referralCode } : body),
     cache: 'no-store',
   });
   const data = (await res.json().catch(() => ({}))) as {
@@ -33,5 +37,7 @@ export async function POST(req: Request): Promise<Response> {
     maxAge: 7 * 24 * 3600,
     secure: process.env.NODE_ENV === 'production',
   });
+  // The invite code has been consumed (or ignored) — clear it either way.
+  if (referralCode) out.cookies.set(REFERRAL_COOKIE, '', { path: '/', maxAge: 0 });
   return out;
 }
