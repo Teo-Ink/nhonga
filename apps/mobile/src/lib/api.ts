@@ -232,6 +232,44 @@ export async function removeListing(id: string): Promise<void> {
     headers,
   });
 }
+// ── AI Banner Studio ──────────────────────────────────────────────
+export interface BannerQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+  isPro: boolean;
+  pointCost: number;
+}
+export interface BannerVariant {
+  id: string;
+  preset: string;
+  ratio: string;
+  spec: { headline: string; subheadline: string; cta: string };
+}
+export interface GenerateBannerResult {
+  variants: BannerVariant[];
+  aiUsed: boolean;
+  quota: BannerQuota;
+}
+/** Public SVG url for a banner (native renders it via expo-image). */
+export function bannerSvgUrl(id: string): string {
+  return `${API_URL}/banners/${encodeURIComponent(id)}.svg`;
+}
+export function bannerQuota(): Promise<BannerQuota> {
+  return get('/banners/quota', true);
+}
+export function generateBanner(input: {
+  productId: string;
+  ratio: string;
+  preset: string;
+  prompt?: string;
+}): Promise<GenerateBannerResult> {
+  return post('/banners/generate', input, true);
+}
+export function applyBanner(bannerId: string): Promise<{ bannerId: string }> {
+  return post('/banners/apply', { bannerId }, true);
+}
+
 export function requestOtp(phone: string): Promise<{ challengeId: string; devCode?: string }> {
   return post('/auth/otp/request', { phone });
 }

@@ -299,6 +299,15 @@ export default function AccountScreen() {
                         <>
                           <Pressable
                             style={styles.act}
+                            onPress={() =>
+                              router.push({ pathname: '/banner/[slug]', params: { slug: it.slug } })
+                            }
+                          >
+                            <Ionicons name="sparkles-outline" size={16} color={brand.green} />
+                            <Text style={[styles.actText, { color: brand.green }]}>Banner</Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.act}
                             disabled={boostBusy === it.id}
                             onPress={() => openBoost(it.id)}
                           >

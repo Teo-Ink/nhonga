@@ -109,9 +109,12 @@ export class BannersController {
     }
   }
 
-  /** Public SVG — served with a long cache (banner content is immutable). */
+  /** Public SVG — served with a long cache (banner content is immutable).
+   *  CORP allows the mobile app (served from a different origin) to load it. */
   @Get(':id.svg')
   @Header('cache-control', 'public, max-age=31536000, immutable')
+  @Header('cross-origin-resource-policy', 'cross-origin')
+  @Header('access-control-allow-origin', '*')
   async svg(@Param('id') id: string): Promise<StreamableFile> {
     const svg = await this.banners.svg(id.replace(/\.svg$/i, ''));
     if (!svg) throw new NotFoundException({ message: 'No such banner' });
