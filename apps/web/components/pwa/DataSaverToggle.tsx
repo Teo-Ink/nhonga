@@ -27,13 +27,7 @@ export function DataSaverToggle({ label }: { label: string }) {
   }
 
   return (
-    <button
-      type="button"
-      className="datasaver"
-      role="switch"
-      aria-checked={on}
-      onClick={toggle}
-    >
+    <button type="button" className="datasaver" role="switch" aria-checked={on} onClick={toggle}>
       <span className="datasaver__track" aria-hidden="true">
         <span className="datasaver__thumb" />
       </span>

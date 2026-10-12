@@ -2,8 +2,8 @@ import type { Dictionary } from '../../lib/i18n/index';
 import type { HomeStats } from '../../lib/api';
 
 // Live social-proof strip under the hero: real marketplace totals (active
-// listings, sellers, verified shops). Numbers are grouped with a thin space so
-// "1 240" reads naturally in pt-MZ. Renders nothing if there is nothing to show.
+// listings, sellers, verified shops). Numbers use dot grouping to match the
+// app's money style ("8.950"). Renders nothing if there is nothing to show.
 export function StatStrip({ stats, t }: { stats: HomeStats; t: Dictionary['home'] }) {
   if (stats.listings <= 0) return null;
   const items = [
@@ -25,5 +25,6 @@ export function StatStrip({ stats, t }: { stats: HomeStats; t: Dictionary['home'
 }
 
 function fmt(n: number): string {
-  return n.toLocaleString('pt-PT').replace(/ /g, ' ');
+  // de-DE uses a dot as the thousands separator, matching formatMZN ("8.950").
+  return n.toLocaleString('de-DE');
 }

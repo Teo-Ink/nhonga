@@ -199,7 +199,12 @@ export function BannerStudio({ productId }: { productId: string }) {
           />
         </label>
 
-        <button type="button" className="btn btn--cta bstudio__gen" onClick={generate} disabled={busy}>
+        <button
+          type="button"
+          className="btn btn--cta bstudio__gen"
+          onClick={generate}
+          disabled={busy}
+        >
           {busy ? t.generating : variants.length ? t.regenerate : t.generate}
         </button>
       </div>
@@ -223,7 +228,6 @@ export function BannerStudio({ productId }: { productId: string }) {
                 aria-pressed={selected === v.id}
                 onClick={() => pick(v)}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className="bcard__img"
                   src={`/api/banners/${v.id}.svg${rev[v.id] ? `?v=${rev[v.id]}` : ''}`}

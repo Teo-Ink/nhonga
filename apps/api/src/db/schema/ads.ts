@@ -38,10 +38,7 @@ export const adCampaign = pgTable(
   },
   (table) => [
     index('ad_campaign_serve_idx').on(table.status, table.placement, table.categorySlug),
-    check(
-      'ad_campaign_placement_check',
-      sql`${table.placement} in ('leaderboard','mpu','inline')`,
-    ),
+    check('ad_campaign_placement_check', sql`${table.placement} in ('leaderboard','mpu','inline')`),
     check(
       'ad_campaign_status_check',
       sql`${table.status} in ('pending','active','paused','ended')`,

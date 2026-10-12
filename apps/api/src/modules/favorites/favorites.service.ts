@@ -90,9 +90,7 @@ export class FavoritesService {
       const watchers = await this.db
         .select({ userId: favorite.userId })
         .from(favorite)
-        .where(
-          and(eq(favorite.productId, productId), gt(favorite.savedPriceCents, newPriceCents)),
-        );
+        .where(and(eq(favorite.productId, productId), gt(favorite.savedPriceCents, newPriceCents)));
       if (watchers.length === 0) return;
 
       const p = (
@@ -117,9 +115,7 @@ export class FavoritesService {
       await this.db
         .update(favorite)
         .set({ savedPriceCents: newPriceCents })
-        .where(
-          and(eq(favorite.productId, productId), gt(favorite.savedPriceCents, newPriceCents)),
-        );
+        .where(and(eq(favorite.productId, productId), gt(favorite.savedPriceCents, newPriceCents)));
     } catch {
       /* best-effort */
     }

@@ -31,7 +31,7 @@ export function RecordRecentView({ item }: { item: RecentItem }) {
     } catch {
       /* private mode / storage blocked */
     }
-  }, [item.slug]); // eslint-disable-line
+  }, [item.slug]);
   return null;
 }
 
@@ -51,9 +51,7 @@ export function RecentlyViewed({ title }: { title: string }) {
             <span
               className="recentcard__media"
               style={
-                p.image
-                  ? { backgroundImage: `url("${p.image.replace(/["\\]/g, '')}")` }
-                  : undefined
+                p.image ? { backgroundImage: `url("${p.image.replace(/["\\]/g, '')}")` } : undefined
               }
               aria-hidden="true"
             />

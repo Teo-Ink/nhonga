@@ -94,10 +94,19 @@ export default function NewListingPage() {
   // Dictate the notes by voice (Web Speech API, Chrome/Edge). The transcript is
   // appended to the notes so the seller can then "write with AI" from speech.
   function startVoice() {
-    type SR = { lang: string; interimResults: boolean; continuous: boolean; start: () => void;
+    type SR = {
+      lang: string;
+      interimResults: boolean;
+      continuous: boolean;
+      start: () => void;
       onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-      onerror: (() => void) | null; onend: (() => void) | null };
-    const w = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
+      onerror: (() => void) | null;
+      onend: (() => void) | null;
+    };
+    const w = window as unknown as {
+      SpeechRecognition?: new () => SR;
+      webkitSpeechRecognition?: new () => SR;
+    };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Ctor) {
       setVoiceState('unsupported');
@@ -251,8 +260,7 @@ export default function NewListingPage() {
               </label>
             ) : (
               <p className="newlisting__as" role="note">
-                {t.publishing_as}{' '}
-                <strong>{shop ? shop.displayName : t.shop_community}</strong>
+                {t.publishing_as} <strong>{shop ? shop.displayName : t.shop_community}</strong>
                 {!user ? (
                   <>
                     {' · '}
@@ -416,7 +424,8 @@ export default function NewListingPage() {
                 cover: t.f_photos_cover,
                 makeCover: t.f_photos_makecover,
                 remove: t.f_photos_remove,
-                count: (n, m) => t.f_photos_count.replace('{n}', String(n)).replace('{max}', String(m)),
+                count: (n, m) =>
+                  t.f_photos_count.replace('{n}', String(n)).replace('{max}', String(m)),
               }}
             />
           </div>

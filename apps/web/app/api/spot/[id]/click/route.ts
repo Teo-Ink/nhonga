@@ -6,7 +6,10 @@ const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 // advertiser's URL. Only redirects to the campaign's stored http(s) URL (set by
 // admin/booking), never a caller-supplied one — so this is not an open redirect.
 // Path is /api/spot (not /api/ads) so ad blockers don't block the click.
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }): Promise<Response> {
+export async function GET(
+  _req: Request,
+  ctx: { params: Promise<{ id: string }> },
+): Promise<Response> {
   const { id } = await ctx.params;
   try {
     const res = await fetch(`${API_URL}/ads/${encodeURIComponent(id)}/click`, {

@@ -60,7 +60,10 @@ export function OwnerControls({ productId, slug }: { productId: string; slug: st
         <a className="btn btn--ghost btn--sm" href={`/vender/anuncio/${slug}/editar`}>
           {t.m_edit}
         </a>
-        <a className="btn btn--ghost btn--sm ownerbar__banner" href={`/vender/anuncio/${slug}/banner`}>
+        <a
+          className="btn btn--ghost btn--sm ownerbar__banner"
+          href={`/vender/anuncio/${slug}/banner`}
+        >
           ✨ {tb.open_cta}
         </a>
         <button type="button" className="btn btn--ghost btn--sm" onClick={markSold} disabled={busy}>

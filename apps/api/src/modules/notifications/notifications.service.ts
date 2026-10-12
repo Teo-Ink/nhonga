@@ -86,9 +86,7 @@ export class NotificationsService {
     }
   }
 
-  async list(
-    sessionToken: string | null,
-  ): Promise<{ items: NotificationDto[]; unread: number }> {
+  async list(sessionToken: string | null): Promise<{ items: NotificationDto[]; unread: number }> {
     if (!sessionToken) return { items: [], unread: 0 };
     let userId: string;
     try {

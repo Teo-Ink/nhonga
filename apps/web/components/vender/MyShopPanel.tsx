@@ -173,9 +173,7 @@ export function MyShopPanel() {
   const byCat = cat ? byStatus.filter((i) => i.categorySlug === cat) : byStatus;
   const q = search.trim().toLowerCase();
   const matched = q
-    ? byCat.filter(
-        (i) => i.title.toLowerCase().includes(q) || i.slug.toLowerCase().includes(q),
-      )
+    ? byCat.filter((i) => i.title.toLowerCase().includes(q) || i.slug.toLowerCase().includes(q))
     : byCat;
   const items =
     sort === 'recent'
@@ -409,7 +407,9 @@ export function MyShopPanel() {
                         <span className={`mstatus mstatus--${p.status}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
-                        {p.featured ? <span className="mstatus mstatus--featured">★ {dash.featured_badge}</span> : null}
+                        {p.featured ? (
+                          <span className="mstatus mstatus--featured">★ {dash.featured_badge}</span>
+                        ) : null}
                       </span>
                       <span className="mrow__counts">
                         {p.views} {t.m_row_views} · {p.contacts} {t.m_row_contacts}

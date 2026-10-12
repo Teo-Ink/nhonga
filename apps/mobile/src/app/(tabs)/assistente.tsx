@@ -48,16 +48,16 @@ export default function AssistantScreen() {
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}>
+      keyboardVerticalOffset={90}
+    >
       <ScrollView
         ref={scrollRef}
         style={styles.flex}
         contentContainerStyle={styles.list}
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
+        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+      >
         {messages.map((m, i) => (
-          <View
-            key={i}
-            style={[styles.bubble, m.role === 'user' ? styles.user : styles.assistant]}>
+          <View key={i} style={[styles.bubble, m.role === 'user' ? styles.user : styles.assistant]}>
             <Text style={m.role === 'user' ? styles.userText : styles.assistantText}>
               {m.content}
             </Text>
@@ -83,7 +83,8 @@ export default function AssistantScreen() {
         <Pressable
           style={[styles.send, (busy || input.trim() === '') && styles.sendDisabled]}
           onPress={send}
-          disabled={busy || input.trim() === ''}>
+          disabled={busy || input.trim() === ''}
+        >
           <Text style={styles.sendText}>Enviar</Text>
         </Pressable>
       </View>
@@ -97,7 +98,12 @@ export default function AssistantScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: brand.surfaceSunken },
   list: { padding: space.md, gap: space.sm },
-  bubble: { maxWidth: '84%', paddingHorizontal: space.md, paddingVertical: space.sm, borderRadius: radius.lg },
+  bubble: {
+    maxWidth: '84%',
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    borderRadius: radius.lg,
+  },
   assistant: {
     alignSelf: 'flex-start',
     backgroundColor: brand.white,

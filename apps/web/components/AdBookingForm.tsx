@@ -100,29 +100,55 @@ export function AdBookingForm({
 
       <label className="field">
         <span className="field__label">{t.f_advertiser} *</span>
-        <input className="field__input" value={advertiserName} onChange={(e) => setName(e.target.value)} />
+        <input
+          className="field__input"
+          value={advertiserName}
+          onChange={(e) => setName(e.target.value)}
+        />
       </label>
       <label className="field">
         <span className="field__label">{t.f_contact}</span>
-        <input className="field__input" value={advertiserContact} onChange={(e) => setContact(e.target.value)} />
+        <input
+          className="field__input"
+          value={advertiserContact}
+          onChange={(e) => setContact(e.target.value)}
+        />
       </label>
       <label className="field">
         <span className="field__label">{t.f_image} *</span>
-        <input className="field__input" placeholder="https://…" value={imageUrl} onChange={(e) => setImage(e.target.value)} />
+        <input
+          className="field__input"
+          placeholder="https://…"
+          value={imageUrl}
+          onChange={(e) => setImage(e.target.value)}
+        />
       </label>
       <label className="field">
         <span className="field__label">{t.f_click} *</span>
-        <input className="field__input" placeholder="https://…" value={clickUrl} onChange={(e) => setClick(e.target.value)} />
+        <input
+          className="field__input"
+          placeholder="https://…"
+          value={clickUrl}
+          onChange={(e) => setClick(e.target.value)}
+        />
       </label>
       <label className="field">
         <span className="field__label">{t.f_headline}</span>
-        <input className="field__input" value={headline} onChange={(e) => setHeadline(e.target.value)} />
+        <input
+          className="field__input"
+          value={headline}
+          onChange={(e) => setHeadline(e.target.value)}
+        />
       </label>
 
       <div className="field-row">
         <label className="field">
           <span className="field__label">{t.f_placement}</span>
-          <select className="field__input" value={placement} onChange={(e) => setPlacement(e.target.value as Placement)}>
+          <select
+            className="field__input"
+            value={placement}
+            onChange={(e) => setPlacement(e.target.value as Placement)}
+          >
             {placements.map((p) => (
               <option key={p.value} value={p.value}>
                 {p.label} — {formatMZN(cents(plans[p.value] ?? 0))}
@@ -133,7 +159,11 @@ export function AdBookingForm({
         </label>
         <label className="field">
           <span className="field__label">{t.f_category}</span>
-          <select className="field__input" value={categorySlug} onChange={(e) => setCategory(e.target.value)}>
+          <select
+            className="field__input"
+            value={categorySlug}
+            onChange={(e) => setCategory(e.target.value)}
+          >
             <option value="">{t.f_all_categories}</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
@@ -156,7 +186,11 @@ export function AdBookingForm({
         </label>
         <label className="field">
           <span className="field__label">{t.f_method}</span>
-          <select className="field__input" value={method} onChange={(e) => setMethod(e.target.value)}>
+          <select
+            className="field__input"
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+          >
             {METHODS.map((m) => (
               <option key={m.value} value={m.value}>
                 {m.label}

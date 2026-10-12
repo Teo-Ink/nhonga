@@ -119,7 +119,11 @@ export class ReviewsService {
     await this.refreshVendorRating(vendorId);
 
     const vs = (
-      await this.db.select({ slug: vendor.slug }).from(vendor).where(eq(vendor.id, vendorId)).limit(1)
+      await this.db
+        .select({ slug: vendor.slug })
+        .from(vendor)
+        .where(eq(vendor.id, vendorId))
+        .limit(1)
     )[0];
     await this.notifications.notifyVendorOwners(vendorId, {
       type: 'review',

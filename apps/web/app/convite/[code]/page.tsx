@@ -15,7 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function InviteLanding({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const { t } = await getDictionary();
-  const safeCode = code.replace(/[^A-Za-z0-9]/g, '').slice(0, 12).toUpperCase();
+  const safeCode = code
+    .replace(/[^A-Za-z0-9]/g, '')
+    .slice(0, 12)
+    .toUpperCase();
 
   return (
     <section className="section invite">

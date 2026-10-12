@@ -86,7 +86,12 @@ export class SubscriptionsService {
 
     const shop = (
       await this.db
-        .select({ id: vendor.id, slug: vendor.slug, name: vendor.displayName, proUntil: vendor.proUntil })
+        .select({
+          id: vendor.id,
+          slug: vendor.slug,
+          name: vendor.displayName,
+          proUntil: vendor.proUntil,
+        })
         .from(vendor)
         .where(eq(vendor.slug, input.vendorSlug))
         .limit(1)

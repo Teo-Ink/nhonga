@@ -165,7 +165,12 @@ function Stars({ value }: { value: number }) {
   return (
     <span className="stars" aria-label={`${value}/5`}>
       {[1, 2, 3, 4, 5].map((n) => (
-        <IconStar key={n} width={15} height={15} className={n <= value ? 'star--on' : 'star--off'} />
+        <IconStar
+          key={n}
+          width={15}
+          height={15}
+          className={n <= value ? 'star--on' : 'star--off'}
+        />
       ))}
     </span>
   );

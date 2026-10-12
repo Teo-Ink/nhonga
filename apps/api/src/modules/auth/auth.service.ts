@@ -115,11 +115,7 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(
-    challengeId: string,
-    code: string,
-    referralCode?: string,
-  ): Promise<VerifyResult> {
+  async verifyOtp(challengeId: string, code: string, referralCode?: string): Promise<VerifyResult> {
     const rows = await this.db
       .select()
       .from(otpChallenge)
@@ -303,7 +299,10 @@ export class AuthService {
   /** Attribute a new signup to the referrer the code resolves to, and reward
    *  the referrer with loyalty points if they have a seller wallet. */
   private async recordReferral(referredUserId: string, rawCode: string): Promise<void> {
-    const code = rawCode.replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toLowerCase();
+    const code = rawCode
+      .replace(/[^A-Za-z0-9]/g, '')
+      .slice(0, 8)
+      .toLowerCase();
     if (code.length !== 8) return;
     // The code is the first UUID segment — match a user whose id starts with it.
     const referrer = (
@@ -340,7 +339,10 @@ export class AuthService {
       .onConflictDoNothing({ target: referral.referredUserId });
 
     if (rewarded && sellerVendor) {
-      await this.db.insert(wallet).values({ vendorId: sellerVendor.vendorId }).onConflictDoNothing();
+      await this.db
+        .insert(wallet)
+        .values({ vendorId: sellerVendor.vendorId })
+        .onConflictDoNothing();
       await this.db
         .update(wallet)
         .set({ points: sql`${wallet.points} + ${points}`, updatedAt: sql`now()` })

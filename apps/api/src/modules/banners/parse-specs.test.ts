@@ -8,7 +8,14 @@ describe('parseSpecs (untrusted model JSON)', () => {
     const out = parseSpecs(
       JSON.stringify({
         variants: [
-          { headline: 'Oferta', subheadline: 'Hoje', cta: 'Ver', bg: '#aabbcc', accent: '#ddeeff', text: '#000000' },
+          {
+            headline: 'Oferta',
+            subheadline: 'Hoje',
+            cta: 'Ver',
+            bg: '#aabbcc',
+            accent: '#ddeeff',
+            text: '#000000',
+          },
         ],
       }),
       pal,

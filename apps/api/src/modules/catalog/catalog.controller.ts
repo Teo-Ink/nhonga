@@ -158,10 +158,7 @@ export class CatalogController {
 
   /** Remove (archive) one of the seller's own listings. */
   @Delete('products/:id')
-  remove(
-    @Param('id') id: string,
-    @Headers('authorization') authz?: string,
-  ): Promise<{ ok: true }> {
+  remove(@Param('id') id: string, @Headers('authorization') authz?: string): Promise<{ ok: true }> {
     return this.catalog.archiveListing(id, bearer(authz));
   }
 

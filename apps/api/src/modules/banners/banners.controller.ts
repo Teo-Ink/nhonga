@@ -12,7 +12,12 @@ import {
   Post,
   StreamableFile,
 } from '@nestjs/common';
-import { BannerError, BannersService, type BannerVariant, type QuotaView } from './banners.service.js';
+import {
+  BannerError,
+  BannersService,
+  type BannerVariant,
+  type QuotaView,
+} from './banners.service.js';
 import { PRESETS } from './banner-render.js';
 
 function bearer(authz: string | undefined): string | null {
@@ -48,8 +53,11 @@ export class BannersController {
     @Headers('authorization') authz?: string,
   ): Promise<{ variants: BannerVariant[]; aiUsed: boolean; quota: QuotaView }> {
     const productId = typeof body.productId === 'string' ? body.productId : '';
-    if (!productId) throw new HttpException({ message: 'productId is required' }, HttpStatus.BAD_REQUEST);
-    const arg: { productId: string; ratio?: string; preset?: string; prompt?: string } = { productId };
+    if (!productId)
+      throw new HttpException({ message: 'productId is required' }, HttpStatus.BAD_REQUEST);
+    const arg: { productId: string; ratio?: string; preset?: string; prompt?: string } = {
+      productId,
+    };
     if (typeof body.ratio === 'string') arg.ratio = body.ratio;
     if (typeof body.preset === 'string') arg.preset = body.preset;
     if (typeof body.prompt === 'string') arg.prompt = body.prompt;
@@ -64,11 +72,18 @@ export class BannersController {
   @HttpCode(200)
   async edit(
     @Body()
-    body: { bannerId?: unknown; headline?: unknown; subheadline?: unknown; cta?: unknown; preset?: unknown },
+    body: {
+      bannerId?: unknown;
+      headline?: unknown;
+      subheadline?: unknown;
+      cta?: unknown;
+      preset?: unknown;
+    },
     @Headers('authorization') authz?: string,
   ): Promise<BannerVariant> {
     const bannerId = typeof body.bannerId === 'string' ? body.bannerId : '';
-    if (!bannerId) throw new HttpException({ message: 'bannerId is required' }, HttpStatus.BAD_REQUEST);
+    if (!bannerId)
+      throw new HttpException({ message: 'bannerId is required' }, HttpStatus.BAD_REQUEST);
     const patch: { headline?: string; subheadline?: string; cta?: string; preset?: string } = {};
     if (typeof body.headline === 'string') patch.headline = body.headline;
     if (typeof body.subheadline === 'string') patch.subheadline = body.subheadline;

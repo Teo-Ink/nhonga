@@ -69,7 +69,12 @@ export default function BannerScreen() {
     if (!productId) return;
     setBusy(true);
     try {
-      const r = await generateBanner({ productId, ratio, preset, prompt: prompt.trim() || undefined });
+      const r = await generateBanner({
+        productId,
+        ratio,
+        preset,
+        prompt: prompt.trim() || undefined,
+      });
       setVariants(r.variants);
       setSelected(r.variants[0]?.id ?? null);
       setAiUsed(r.aiUsed);
@@ -114,20 +119,32 @@ export default function BannerScreen() {
         <Text style={styles.muted}>Inicia sessão como vendedor para criar banners.</Text>
       ) : (
         <>
-          <Text style={styles.lead}>Cria um banner profissional para este anúncio em segundos.</Text>
+          <Text style={styles.lead}>
+            Cria um banner profissional para este anúncio em segundos.
+          </Text>
           {quotaLabel ? <Text style={styles.quota}>{quotaLabel}</Text> : null}
 
           <Text style={styles.label}>Formato</Text>
           <View style={styles.chips}>
             {RATIOS.map((r) => (
-              <Chip key={r.key} on={ratio === r.key} label={r.label} onPress={() => setRatio(r.key)} />
+              <Chip
+                key={r.key}
+                on={ratio === r.key}
+                label={r.label}
+                onPress={() => setRatio(r.key)}
+              />
             ))}
           </View>
 
           <Text style={styles.label}>Estilo</Text>
           <View style={styles.chips}>
             {PRESETS.map((pr) => (
-              <Chip key={pr.key} on={preset === pr.key} label={pr.label} onPress={() => setPreset(pr.key)} />
+              <Chip
+                key={pr.key}
+                on={preset === pr.key}
+                label={pr.label}
+                onPress={() => setPreset(pr.key)}
+              />
             ))}
           </View>
 
@@ -151,7 +168,8 @@ export default function BannerScreen() {
             <>
               {aiUsed === false ? (
                 <Text style={styles.note}>
-                  Sugestão de IA indisponível de momento — o texto foi criado a partir do teu anúncio.
+                  Sugestão de IA indisponível de momento — o texto foi criado a partir do teu
+                  anúncio.
                 </Text>
               ) : null}
               <Text style={styles.label}>Escolhe o teu preferido</Text>
@@ -175,7 +193,11 @@ export default function BannerScreen() {
                 disabled={applying || !selected || applied === selected}
               >
                 <Text style={styles.primaryText}>
-                  {applied === selected ? 'Banner aplicado ✓' : applying ? 'A aplicar…' : 'Aplicar ao anúncio'}
+                  {applied === selected
+                    ? 'Banner aplicado ✓'
+                    : applying
+                      ? 'A aplicar…'
+                      : 'Aplicar ao anúncio'}
                 </Text>
               </Pressable>
               <Text style={styles.muted}>

@@ -219,7 +219,11 @@ export class BannersService {
     const v = await this.requireVendor(token);
     const b = (
       await this.db
-        .select({ id: listingBanner.id, productId: listingBanner.productId, vendorId: listingBanner.vendorId })
+        .select({
+          id: listingBanner.id,
+          productId: listingBanner.productId,
+          vendorId: listingBanner.vendorId,
+        })
         .from(listingBanner)
         .where(eq(listingBanner.id, asUuid(bannerId)))
         .limit(1)
@@ -413,7 +417,10 @@ export class BannersService {
 
   private async isPro(vendorId: string): Promise<boolean> {
     const v = (
-      await this.db.select({ proUntil: vendor.proUntil }).from(vendor).where(eq(vendor.id, vendorId))
+      await this.db
+        .select({ proUntil: vendor.proUntil })
+        .from(vendor)
+        .where(eq(vendor.id, vendorId))
     )[0];
     return v?.proUntil != null && v.proUntil.getTime() > Date.now();
   }

@@ -123,7 +123,13 @@ export function SearchFilters({
         ) : null}
 
         {attributes?.map((a) => (
-          <AttrFilter key={a.key} attr={a} params={params} setParam={setParam} setRange={setRange} />
+          <AttrFilter
+            key={a.key}
+            attr={a}
+            params={params}
+            setParam={setParam}
+            setRange={setRange}
+          />
         ))}
 
         <form className="filtergroup" onSubmit={applyPrice}>

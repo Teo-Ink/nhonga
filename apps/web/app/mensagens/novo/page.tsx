@@ -73,7 +73,12 @@ function Compose() {
           </a>
         </div>
       ) : (
-        <form className="card" onSubmit={onSubmit} noValidate style={{ marginTop: 'var(--space-3)' }}>
+        <form
+          className="card"
+          onSubmit={onSubmit}
+          noValidate
+          style={{ marginTop: 'var(--space-3)' }}
+        >
           {sellerName ? (
             <div className="field">
               <span className="field__label">{t.to}</span>

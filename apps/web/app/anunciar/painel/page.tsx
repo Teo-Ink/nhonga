@@ -20,7 +20,13 @@ export default async function CampaignsPanel() {
   const placementLabel = (p: string): string =>
     p === 'leaderboard' ? a.fmt_leaderboard : p === 'mpu' ? a.fmt_mpu : a.fmt_inline;
   const statusLabel = (s: string): string =>
-    s === 'active' ? a.st_active : s === 'pending' ? a.st_pending : s === 'paused' ? a.st_paused : a.st_ended;
+    s === 'active'
+      ? a.st_active
+      : s === 'pending'
+        ? a.st_pending
+        : s === 'paused'
+          ? a.st_paused
+          : a.st_ended;
   const catLabel = (slug: string | null): string =>
     slug === null ? a.all_cats : ((t.categories as Record<string, string>)[slug] ?? slug);
   const fmtDate = (iso: string): string =>

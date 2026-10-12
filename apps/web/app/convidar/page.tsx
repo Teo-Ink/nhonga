@@ -86,7 +86,12 @@ export default function InvitePage() {
             {copied ? t.copied : t.copy}
           </button>
         </div>
-        <a className="btn btn--primary refer__wa" href={waHref} target="_blank" rel="noopener noreferrer">
+        <a
+          className="btn btn--primary refer__wa"
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <IconWhatsApp width={18} height={18} /> {t.share_wa}
         </a>
       </div>

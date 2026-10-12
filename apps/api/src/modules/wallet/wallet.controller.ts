@@ -56,7 +56,8 @@ export class WalletController {
     @Body() body: { amountCents?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<WalletView> {
-    const amount = typeof body.amountCents === 'number' ? body.amountCents : Number(body.amountCents);
+    const amount =
+      typeof body.amountCents === 'number' ? body.amountCents : Number(body.amountCents);
     return this.wallet.topup(bearer(authz), amount);
   }
 

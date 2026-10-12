@@ -99,9 +99,7 @@ export class WalletService {
   }
 
   /** The signed-in user's shop (first vendor they own), or null. */
-  private async vendorOf(
-    token: string | null,
-  ): Promise<{ id: string; name: string } | null> {
+  private async vendorOf(token: string | null): Promise<{ id: string; name: string } | null> {
     if (!token) return null;
     let userId: string;
     try {
@@ -219,11 +217,7 @@ export class WalletService {
   }
 
   /** Spend balance to promote one of the seller's own listings. */
-  async boost(
-    token: string | null,
-    productId: string,
-    planCode: string,
-  ): Promise<BoostResult> {
+  async boost(token: string | null, productId: string, planCode: string): Promise<BoostResult> {
     const v = await this.requireVendor(token);
     if (!productId) throw new BadRequestException('Anúncio inválido.');
     // Ownership: the listing must belong to the caller's shop.
@@ -296,7 +290,8 @@ export class WalletService {
       await this.db.select({ proUntil: vendor.proUntil }).from(vendor).where(eq(vendor.id, v.id))
     )[0];
     const now = Date.now();
-    const base = row?.proUntil != null && row.proUntil.getTime() > now ? row.proUntil.getTime() : now;
+    const base =
+      row?.proUntil != null && row.proUntil.getTime() > now ? row.proUntil.getTime() : now;
     const newUntil = new Date(base + PRO_DAYS * 86_400_000);
     // Charge the wallet and extend the subscription.
     await this.db

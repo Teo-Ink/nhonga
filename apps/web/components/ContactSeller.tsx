@@ -56,9 +56,7 @@ export function ContactSeller({
   const messageTpl = waMessage ?? t.wa_message;
   const message = messageTpl.replace('{title}', title).replace('{price}', priceLabel);
   const waText = pageUrl ? `${message} ${pageUrl}` : message;
-  const waHref = whatsapp
-    ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waText)}`
-    : null;
+  const waHref = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waText)}` : null;
 
   async function share() {
     track('share');

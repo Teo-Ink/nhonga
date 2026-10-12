@@ -70,7 +70,10 @@ export default function MessagesPage() {
         <ul className="convlist">
           {items.map((c) => (
             <li key={c.id}>
-              <a className={`convrow ${c.unread > 0 ? 'is-unread' : ''}`} href={`/mensagens/${c.id}`}>
+              <a
+                className={`convrow ${c.unread > 0 ? 'is-unread' : ''}`}
+                href={`/mensagens/${c.id}`}
+              >
                 <span className="convrow__avatar" aria-hidden="true">
                   {c.counterpart.charAt(0)}
                 </span>
@@ -79,9 +82,7 @@ export default function MessagesPage() {
                     <strong className="convrow__name">{c.counterpart}</strong>
                     <span className="convrow__time">{ago(c.lastMessageAt)}</span>
                   </span>
-                  {c.productTitle ? (
-                    <span className="convrow__about">{c.productTitle}</span>
-                  ) : null}
+                  {c.productTitle ? <span className="convrow__about">{c.productTitle}</span> : null}
                   {c.lastMessage ? <span className="convrow__last">{c.lastMessage}</span> : null}
                 </span>
                 {c.unread > 0 ? <span className="convrow__badge">{c.unread}</span> : null}

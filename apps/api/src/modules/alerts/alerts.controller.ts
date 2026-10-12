@@ -45,9 +45,7 @@ export class AlertsController {
     const label = str(body.label).trim();
     const href = str(body.href).trim();
     const query =
-      body.query && typeof body.query === 'object'
-        ? (body.query as Record<string, unknown>)
-        : {};
+      body.query && typeof body.query === 'object' ? (body.query as Record<string, unknown>) : {};
     if (!phone || !label || !href) {
       throw new BadRequestException({ message: 'phone, label and href required' });
     }

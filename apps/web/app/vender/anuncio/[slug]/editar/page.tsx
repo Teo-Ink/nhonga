@@ -171,7 +171,8 @@ export default function EditListingPage({ params }: { params: Promise<{ slug: st
               cover: t.f_photos_cover,
               makeCover: t.f_photos_makecover,
               remove: t.f_photos_remove,
-              count: (n, m) => t.f_photos_count.replace('{n}', String(n)).replace('{max}', String(m)),
+              count: (n, m) =>
+                t.f_photos_count.replace('{n}', String(n)).replace('{max}', String(m)),
             }}
           />
         </div>

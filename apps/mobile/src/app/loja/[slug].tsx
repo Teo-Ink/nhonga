@@ -62,7 +62,9 @@ export default function ShopScreen() {
     if (!shop?.whatsapp) return;
     recordEvent(String(slug), 'contact');
     const msg = `Olá! Encontrei a sua loja «${name}» no Nhonga.`;
-    void Linking.openURL(`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`);
+    void Linking.openURL(
+      `https://wa.me/${shop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`,
+    );
   }
   function call() {
     if (!shop?.phone) return;

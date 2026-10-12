@@ -150,7 +150,10 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
             {dash.balance}: <strong>{balance}</strong>
           </span>
           <span className="wallet__label wallet__label--pts">
-            {dash.points}: <strong>{points} {dash.pts}</strong>
+            {dash.points}:{' '}
+            <strong>
+              {points} {dash.pts}
+            </strong>
           </span>
         </div>
         <div className="wallet__actions">
@@ -187,9 +190,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
         </div>
       ) : null}
 
-      {w && !w.hasShop ? (
-        <p className="wallet__hint">{dash.wallet_hint}</p>
-      ) : null}
+      {w && !w.hasShop ? <p className="wallet__hint">{dash.wallet_hint}</p> : null}
       {msg ? <p className="wallet__msg">{msg}</p> : null}
 
       {panel === 'topup' ? (

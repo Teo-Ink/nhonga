@@ -14,7 +14,8 @@ export default function RootLayout() {
           headerTintColor: '#ffffff',
           headerTitleStyle: { fontWeight: '700' },
           contentStyle: { backgroundColor: brand.bg },
-        }}>
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="produto/[slug]" options={{ title: 'Produto' }} />
       </Stack>

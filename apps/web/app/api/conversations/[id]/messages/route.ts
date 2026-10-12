@@ -13,7 +13,10 @@ export async function POST(
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const res = await fetch(`${API_URL}/conversations/${encodeURIComponent(id)}/messages`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) },
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
     body,
     cache: 'no-store',
   });

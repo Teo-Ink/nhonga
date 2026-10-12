@@ -159,7 +159,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       {product.bannerUrl ? (
         <div className="pdpbanner">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pdpbanner__img" src={product.bannerUrl} alt={product.title} />
         </div>
       ) : null}

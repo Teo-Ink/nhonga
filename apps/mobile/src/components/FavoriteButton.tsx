@@ -18,7 +18,8 @@ export function FavoriteButton({ productId, size = 34 }: { productId: string; si
         styles.btn,
         { width: size, height: size, borderRadius: size / 2 },
         pressed && { transform: [{ scale: 0.88 }] },
-      ]}>
+      ]}
+    >
       <Ionicons
         name={on ? 'heart' : 'heart-outline'}
         size={Math.round(size * 0.55)}

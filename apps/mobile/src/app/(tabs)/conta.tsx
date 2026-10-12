@@ -356,7 +356,10 @@ export default function AccountScreen() {
                           plans.map((pl) => (
                             <Pressable
                               key={pl.code}
-                              style={({ pressed }) => [styles.boostPlan, pressed && { opacity: 0.85 }]}
+                              style={({ pressed }) => [
+                                styles.boostPlan,
+                                pressed && { opacity: 0.85 },
+                              ]}
                               disabled={boostBusy === it.id}
                               onPress={() => void doBoost(it.id, pl.code)}
                             >

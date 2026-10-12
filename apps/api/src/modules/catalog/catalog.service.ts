@@ -381,10 +381,7 @@ export class CatalogService {
     if (!vendorIds.includes(prod.vendorId)) {
       throw new ForbiddenException({ message: 'Not your listing' });
     }
-    await this.db
-      .update(product)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(product.id, id));
+    await this.db.update(product).set({ status, updatedAt: new Date() }).where(eq(product.id, id));
     return { ok: true, status };
   }
 
@@ -531,9 +528,7 @@ export class CatalogService {
   /** The signed-in seller's existing shop (name + slug), or null if they have
    *  none yet — the new-listing form uses it to decide whether to ask for a
    *  shop name (first-time seller onboarding). */
-  async myShop(
-    sessionToken: string | null,
-  ): Promise<{ slug: string; displayName: string } | null> {
+  async myShop(sessionToken: string | null): Promise<{ slug: string; displayName: string } | null> {
     if (!sessionToken) return null;
     let user: AuthUser;
     try {
@@ -573,7 +568,9 @@ export class CatalogService {
 
     const dist = (await this.db.select({ id: district.id }).from(district).limit(1))[0];
     const name =
-      shopName?.trim().slice(0, 80) || user.displayName.trim() || `Loja ${user.phoneE164.slice(-4)}`;
+      shopName?.trim().slice(0, 80) ||
+      user.displayName.trim() ||
+      `Loja ${user.phoneE164.slice(-4)}`;
     const slug = await this.uniqueVendorSlug(name);
     const vendorId = randomUUID();
     const phone = user.phoneE164.replace(/^\+/, '');
@@ -987,7 +984,10 @@ export class CatalogService {
   /** Record an engagement event on a listing, bumping the matching counter.
    *  Fire-and-forget from the client; best-effort. */
   /** File a trust-&-safety report against a listing (anonymous). */
-  async createReport(idOrSlug: string, input: { reason: string; note?: string }): Promise<{ id: string }> {
+  async createReport(
+    idOrSlug: string,
+    input: { reason: string; note?: string },
+  ): Promise<{ id: string }> {
     if (!(REPORT_REASONS as readonly string[]).includes(input.reason)) {
       throw new BadRequestException({ message: 'Motivo de denúncia inválido.' });
     }
