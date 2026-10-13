@@ -6707,17 +6707,25 @@ a.seller:focus-visible {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Pop the market's colours a touch for a livelier jumbotron. */
+  filter: saturate(1.12) contrast(1.04);
 }
 .herofind__scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    120deg,
-    rgba(8, 59, 40, 0.86) 0%,
-    rgba(8, 59, 40, 0.62) 55%,
-    rgba(11, 81, 56, 0.5) 100%
-  );
+  /* Lighter, more vibrant wash so the colourful market video shows through
+     (life!), with a soft darken at the top-left where the title sits and a
+     gentle bottom fade for the search pill — both just enough for legibility. */
+  background:
+    radial-gradient(135% 120% at 14% 22%, rgba(4, 34, 23, 0.62), transparent 52%),
+    linear-gradient(0deg, rgba(4, 34, 23, 0.4) 0%, transparent 32%),
+    linear-gradient(
+      120deg,
+      rgba(8, 59, 40, 0.48) 0%,
+      rgba(11, 81, 56, 0.26) 55%,
+      rgba(22, 163, 74, 0.2) 100%
+    );
 }
 .herofind__playpause {
   position: absolute;
@@ -6754,11 +6762,13 @@ a.seller:focus-visible {
   color: #fff;
   font-size: clamp(1.6rem, 4.2vw, 2.7rem);
   line-height: 1.14;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
 }
 .herofind__sub {
   margin-top: var(--space-2);
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255, 255, 255, 0.92);
   font-size: var(--text-lg);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
 }
 .herofind__search {
   display: flex;
