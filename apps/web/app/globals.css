@@ -7928,25 +7928,9 @@ a.seller:focus-visible {
 .searchbox {
   position: relative;
 }
-/* Header search slot: keeps its space (so the bar never jumps), but on the home
-   page it fades out until the hero search scrolls away — avoiding two search
-   boxes on screen at once. */
-.wlhdr__searchslot {
-  flex: 1;
-  max-width: 620px;
-  min-width: 0;
-  display: flex;
-  transition: opacity 0.2s var(--ease-out);
-}
-.wlhdr__searchslot.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
 .searchbox--header {
   flex: 1;
   max-width: 620px;
-  min-width: 0;
 }
 .searchbox--header .wlsearch {
   max-width: none;

@@ -5,7 +5,7 @@ import { AccountMenu } from './auth/AccountMenu';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
 import { MessagesLink } from './messaging/MessagesLink';
-import { HeaderSearchSlot } from './search/HeaderSearchSlot';
+import { SearchBox } from './search/SearchBox';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
@@ -30,9 +30,10 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
           <Logo variant="auto" label={t.common.brand} />
         </a>
 
-        <HeaderSearchSlot
+        <SearchBox
           placeholder={t.common.search_placeholder}
           categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
+          variant="header"
           tools={{
             voice: t.common.search_voice,
             image: t.common.search_image,
