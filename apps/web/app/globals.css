@@ -4456,6 +4456,8 @@ a.seller:focus-visible {
   display: flex;
   align-items: center;
   gap: 4px;
+  /* The header search was removed, so keep the actions pinned to the right. */
+  margin-left: auto;
 }
 .wlhdr__sep {
   width: 1px;
