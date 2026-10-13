@@ -9,6 +9,7 @@ import { DictProvider } from '../components/i18n/DictProvider';
 import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
 import { getDictionary } from '../lib/i18n/index';
+import { getProvinces, getDistricts, type Province, type District } from '../lib/api';
 import './globals.css';
 
 // Type system: Inter for body/UI (legibility for prices, forms, dense lists)
@@ -52,6 +53,14 @@ const bootScript = `(function(){try{var d=document.documentElement;var t=localSt
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getDictionary();
+  let provinces: Province[] = [];
+  let districts: District[] = [];
+  try {
+    [provinces, districts] = await Promise.all([getProvinces(), getDistricts()]);
+  } catch {
+    provinces = [];
+    districts = [];
+  }
   return (
     // The no-flash script sets data-theme on <html> before hydration, so the
     // server markup intentionally differs from the client here.
@@ -69,7 +78,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <DictProvider locale={locale}>
           <SessionProvider>
             <PromoBar t={t} />
-            <Header t={t} locale={locale} />
+            <Header t={t} locale={locale} provinces={provinces} districts={districts} />
             <main id="main" className="container">
               {children}
             </main>

@@ -5,7 +5,9 @@ import { AccountMenu } from './auth/AccountMenu';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
 import { MessagesLink } from './messaging/MessagesLink';
+import { HeaderLocation } from './HeaderLocation';
 import type { Dictionary, Locale } from '../lib/i18n/index';
+import type { Province, District } from '../lib/api';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
 // single "Compra e Vendas" (For Sale) section at /compra-e-vendas.
@@ -21,13 +23,38 @@ const PILLARS = [
 // a rounded pill search front and centre, compact action icons, a prominent
 // yellow "Vender" button, and a text category nav below. The mobile experience
 // is carried by the bottom tab bar, so this collapses gracefully on phones.
-export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
+export function Header({
+  t,
+  locale,
+  provinces = [],
+  districts = [],
+}: {
+  t: Dictionary;
+  locale: Locale;
+  provinces?: Province[];
+  districts?: District[];
+}) {
   return (
     <header className="wlhdr">
       <div className="wlhdr__bar">
         <a href="/" className="wlhdr__brand">
           <Logo variant="auto" label={t.common.brand} />
         </a>
+
+        {provinces.length > 0 ? (
+          <HeaderLocation
+            provinces={provinces}
+            districts={districts}
+            labels={{
+              eyebrow: t.common.region_eyebrow,
+              all: t.common.region_all,
+              whole_region: t.search.whole_region,
+              choose_district: t.search.choose_district,
+              back: t.search.back,
+              change: t.common.region_change,
+            }}
+          />
+        ) : null}
 
         <div className="wlhdr__actions">
           <LocaleControls locale={locale} />

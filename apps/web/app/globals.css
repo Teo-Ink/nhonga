@@ -1627,7 +1627,6 @@ a.seller:focus-visible {
   border-bottom-color: var(--brand);
 }
 
-
 /* Store page category chips (filter a shop's listings by vertical). */
 .storecats {
   display: flex;
@@ -4456,8 +4455,70 @@ a.seller:focus-visible {
   display: flex;
   align-items: center;
   gap: 4px;
-  /* The header search was removed, so keep the actions pinned to the right. */
+  /* The location pill sits after the brand; keep the actions pinned to the right. */
   margin-left: auto;
+}
+
+/* ══ Header location pill (Amazon/OLX "deliver to") — fills the header centre ══ */
+.hdrloc {
+  position: relative;
+  flex: 0 0 auto;
+}
+.hdrloc__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.hdrloc__trigger:hover {
+  background: var(--surface-sunken);
+}
+.hdrloc__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.hdrloc__pin {
+  flex: 0 0 auto;
+  color: var(--brand);
+}
+.hdrloc__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+  text-align: left;
+}
+.hdrloc__eyebrow {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.hdrloc__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 200px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.hdrloc__caret {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  stroke-width: 2.5;
+}
+/* Open under the trigger, left-aligned (the shared pop defaults to right-aligned). */
+.hdrloc__pop {
+  left: 0;
+  right: auto;
 }
 .wlhdr__sep {
   width: 1px;
@@ -4674,6 +4735,11 @@ a.seller:focus-visible {
     display: none;
   }
   .wlact__label--hide-sm {
+    display: none;
+  }
+  /* The bottom tab bar carries navigation on phones; drop the location pill so
+     the compact header keeps just the brand and the action icons. */
+  .hdrloc {
     display: none;
   }
   .wlhdr__bar {
