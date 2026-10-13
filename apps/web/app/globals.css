@@ -3729,6 +3729,107 @@ a.seller:focus-visible {
   line-height: 1.5;
 }
 
+/* ── Message compose editor (toolbar + quick chips + emoji) ───── */
+.msgquick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.msgquick__chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.msgquick__chip:hover {
+  border-color: var(--brand);
+  background: var(--surface-sunken);
+}
+.msgeditor {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+.msgeditor:focus-within {
+  border-color: var(--brand);
+}
+.msgtool {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+.msgtool__btn {
+  min-width: 32px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-base);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.msgtool__btn:hover {
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+}
+.msgtool__btn.is-on {
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+}
+.msgcount {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding-right: 4px;
+}
+.msgemoji {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.msgemoji__btn {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.msgemoji__btn:hover {
+  background: var(--surface-sunken);
+}
+.msgeditor__area {
+  border: 0 !important;
+  border-radius: 0 !important;
+  width: 100%;
+  resize: vertical;
+  min-height: 110px;
+}
+.msgeditor__area:focus {
+  outline: 0;
+}
+.msgeditor__hint {
+  margin-top: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 /* OLX-style hierarchical location picker in the search bar (province → district
    drill-down). A right-side segment with a divider; the popover drops below. */
 .locpick {

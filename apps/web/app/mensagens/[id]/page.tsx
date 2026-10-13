@@ -2,6 +2,7 @@
 import { use, useEffect, useRef, useState } from 'react';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft } from '../../../components/icons';
+import { FormattedMessage } from '../../../components/FormattedMessage';
 
 interface Msg {
   id: string;
@@ -43,7 +44,6 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
       window.clearInterval(iv);
       window.removeEventListener('focus', onFocus);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
             ) : (
               thread.messages.map((m) => (
                 <div key={m.id} className={`bubble ${m.mine ? 'bubble--mine' : 'bubble--them'}`}>
-                  {m.body}
+                  <FormattedMessage text={m.body} />
                 </div>
               ))
             )}

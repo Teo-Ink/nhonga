@@ -175,7 +175,7 @@ export default function ProductScreen() {
       {phone ? (
         <Pressable style={(s) => [styles.contactBtn, styles.call, pressed(s)]} onPress={call}>
           <Ionicons name="call" size={18} color="#fff" />
-          <Text style={styles.contactText}>Ligar</Text>
+          <Text style={styles.contactText}>Ligar · {formatMsisdn(phone)}</Text>
         </Pressable>
       ) : null}
       <Pressable style={(s) => [styles.contactBtn, styles.shareBtn, pressed(s)]} onPress={share}>
@@ -347,3 +347,10 @@ const styles = StyleSheet.create({
   simTitle: { fontSize: 13, color: brand.text, lineHeight: 17 },
   simPrice: { fontSize: 14, fontWeight: '800', color: brand.green, marginTop: 2 },
 });
+
+// Display a Mozambican MSISDN (E.164 "258841234567") as "+258 84 123 4567".
+function formatMsisdn(e164: string): string {
+  const digits = e164.replace(/\D/g, '');
+  const m = /^258(\d{2})(\d{3})(\d{4})$/.exec(digits);
+  return m ? `+258 ${m[1]} ${m[2]} ${m[3]}` : `+${digits}`;
+}

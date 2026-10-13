@@ -104,8 +104,9 @@ export function ContactSeller({
           className="btn contactbtn contactbtn--call"
           href={`tel:+${phone}`}
           onClick={() => track('contact')}
+          aria-label={`${t.call} ${formatMsisdn(phone)}`}
         >
-          <IconPhone width={18} height={18} /> {t.call}
+          <IconPhone width={18} height={18} /> {formatMsisdn(phone)}
         </a>
       ) : null}
       {vendorSlug ? (
@@ -138,4 +139,12 @@ export function ContactSeller({
       <p className="contactbox__safe">{safetyNote ?? t.safety}</p>
     </div>
   );
+}
+
+// Display a Mozambican MSISDN (E.164 "258841234567") as "+258 84 123 4567".
+// Falls back to a plain "+<digits>" for anything unexpected.
+function formatMsisdn(e164: string): string {
+  const digits = e164.replace(/\D/g, '');
+  const m = /^258(\d{2})(\d{3})(\d{4})$/.exec(digits);
+  return m ? `+258 ${m[1]} ${m[2]} ${m[3]}` : `+${digits}`;
 }
