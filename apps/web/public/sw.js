@@ -6,7 +6,7 @@
  * Dev-safe by design: it never touches Next.js internals (/_next/, HMR) or
  * non-GET/cross-origin requests, so `next dev` and hot-reload keep working.
  */
-const VERSION = 'nhonga-v1';
+const VERSION = 'nhonga-v2';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png'];
 
@@ -36,12 +36,17 @@ function isBypassed(url, request) {
   // Next.js dev/runtime internals and API — always go to network.
   if (url.pathname.startsWith('/_next/')) return true;
   if (url.pathname.startsWith('/api/')) return true;
+  // Range requests (video/audio seeking) expect 206 partial responses, which
+  // the Cache API cannot store or replay. Let the browser handle them natively.
+  if (request.headers.has('range')) return true;
   return false;
 }
 
 // Cacheable same-origin static media we control (icons, hero, brand, uploads).
 function isStaticAsset(url) {
-  return /\.(png|jpg|jpeg|webp|avif|svg|gif|ico|woff2?|mp4)$/i.test(url.pathname);
+  // No video here: browsers fetch media with Range requests (bypassed above),
+  // and caching whole MP4s would eat the storage this worker exists to save.
+  return /\.(png|jpg|jpeg|webp|avif|svg|gif|ico|woff2?)$/i.test(url.pathname);
 }
 
 self.addEventListener('fetch', (event) => {
@@ -73,7 +78,9 @@ self.addEventListener('fetch', (event) => {
               if (res && res.status === 200) cache.put(request, res.clone());
               return res;
             })
-            .catch(() => hit);
+            // Offline with nothing cached: respondWith() must still receive a
+            // Response, never undefined, or the fetch throws a TypeError.
+            .catch(() => hit || Response.error());
           return hit || network;
         }),
       ),
