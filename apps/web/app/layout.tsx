@@ -10,6 +10,7 @@ import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
 import { getDictionary } from '../lib/i18n/index';
 import './globals.css';
+import './ux.css';
 
 // Type system: Inter for body/UI (legibility for prices, forms, dense lists)
 // and Ubuntu for headings/display (warmth + local character). next/font

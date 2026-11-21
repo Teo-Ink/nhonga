@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { cents, formatMZN } from '@nhonga/shared';
 import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatPrice } from '../lib/format';
 
 export interface CategoryCard {
   slug: string;
@@ -28,7 +28,7 @@ export function CategoryCards({ t, cards }: { t: Dictionary; cards: CategoryCard
               <div className="catcard__head">
                 <h3 className="catcard__title">{card.label}</h3>
                 <span className="catcard__from">
-                  {t.home.from_price} {formatMZN(cents(min))}
+                  {t.home.from_price} {formatPrice(min)}
                 </span>
               </div>
               <div className={`catcard__tiles catcard__tiles--${tiles.length}`}>
@@ -49,7 +49,7 @@ export function CategoryCards({ t, cards }: { t: Dictionary; cards: CategoryCard
                       ) : null}
                     </span>
                     <span className="catcard__tile-title">{p.title}</span>
-                    <span className="catcard__tile-price">{formatMZN(cents(p.priceCents))}</span>
+                    <span className="catcard__tile-price">{formatPrice(p.priceCents)}</span>
                   </a>
                 ))}
               </div>

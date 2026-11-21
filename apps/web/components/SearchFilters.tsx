@@ -3,18 +3,14 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { Dictionary } from '../lib/i18n/index';
 import type { CategoryAttribute, District, Province } from '../lib/api';
+import { FORSALE_KEYS, PILLAR_KEYS } from '../lib/nav';
 
-const CATEGORY_KEYS = [
-  'moda',
-  'electronica',
-  'telemoveis',
-  'casa',
-  'alimentacao',
-  'beleza',
-] as const;
+// Every top-level category: the classifieds pillars first (what most people
+// search for), then the "Compra e Vendas" goods categories.
+const CATEGORY_KEYS = [...PILLAR_KEYS, ...FORSALE_KEYS] as const;
 
-// eBay-structured filter rail (in Nhonga's own look): category list, price range,
-// and availability. Every control writes to the URL query so the server re-runs
+// Filter rail (OLX/eBay-structured, Nhonga's look): location, category list,
+// per-category attributes and price range. Every control writes to the URL query so the server re-runs
 // the filtered catalogue query — shareable and back-button friendly. On phones
 // it collapses behind a "Filtros" button. When `lockedCategory` is set (category
 // landing pages) the category list is hidden and stays fixed.
@@ -38,7 +34,6 @@ export function SearchFilters({
   const activeDistrict = params.get('district') ?? '';
   const minCents = params.get('minPrice');
   const maxCents = params.get('maxPrice');
-  const inStock = params.get('inStock') === 'true';
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -221,18 +216,6 @@ export function SearchFilters({
             {t.search.apply}
           </button>
         </form>
-
-        <div className="filtergroup">
-          <h2 className="filtergroup__title">{t.search.availability}</h2>
-          <label className="checkline">
-            <input
-              type="checkbox"
-              checked={inStock}
-              onChange={() => setParam('inStock', inStock ? null : 'true')}
-            />
-            <span>{t.search.in_stock_only}</span>
-          </label>
-        </div>
       </div>
     </aside>
   );

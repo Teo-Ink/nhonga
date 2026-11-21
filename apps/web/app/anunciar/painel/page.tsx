@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { cents, formatMZN } from '@nhonga/shared';
 import { getAdCampaigns } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/index';
+import { formatPrice } from '../../../lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +97,7 @@ export default async function CampaignsPanel() {
                   <td className="num">{c.impressions.toLocaleString('pt-PT')}</td>
                   <td className="num">{c.clicks.toLocaleString('pt-PT')}</td>
                   <td className="num">{ctr(c.impressions, c.clicks)}</td>
-                  <td className="num">{formatMZN(cents(c.priceCents))}</td>
+                  <td className="num">{formatPrice(c.priceCents)}</td>
                 </tr>
               ))}
             </tbody>

@@ -25,23 +25,14 @@ import { getDictionary } from '../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
 
-const CATEGORY_KEYS = [
-  'viaturas',
-  'imoveis',
-  'empregos',
-  'servicos',
-  'eventos',
-  'moda',
-  'electronica',
-  'telemoveis',
-  'casa',
-  'alimentacao',
-  'beleza',
-] as const;
+// Category rows on the home: the four verticals people come to a classifieds
+// site for. Every other category is one tap away in the slider and the nav —
+// eleven rows made the page ~7,400px tall on desktop.
+const CATEGORY_KEYS = ['viaturas', 'imoveis', 'telemoveis', 'empregos'] as const;
 
-// Classifieds home (Fiverr-structured hero + Nhonga's brand): a search-first
-// hero with popular quick links, a leaderboard promo, a popular-categories
-// slider, a "how it works" value section, then category rows and recent ads.
+// OLX-structured home in Nhonga's brand: search first, categories, the newest
+// listings (freshness is what brings people back), a few category rows, then
+// "how it works" and the sell prompt. One ad slot, below the listings.
 export default async function HomePage() {
   const { t } = await getDictionary();
 
@@ -96,17 +87,9 @@ export default async function HomePage() {
 
       {stats ? <StatStrip stats={stats} t={t.home} /> : null}
 
-      <section className="section">
-        <AdSlot t={t} placement="leaderboard" />
-      </section>
-
       <PopularCategories t={t} />
 
       <RecentlyViewed title={t.home.recent_viewed} />
-
-      <HowItWorks t={t} />
-
-      <PostAdBanner t={t} />
 
       {failed ? (
         <section className="section">
@@ -114,16 +97,6 @@ export default async function HomePage() {
         </section>
       ) : (
         <>
-          {rows.map((row) => (
-            <ProductRail
-              key={row.slug}
-              t={t}
-              title={row.label}
-              items={row.items}
-              seeAllHref={`/categoria/${row.slug}`}
-            />
-          ))}
-
           <section className="section" aria-labelledby="recent">
             <div className="section__head">
               <h2 className="section__title" id="recent">
@@ -139,8 +112,26 @@ export default async function HomePage() {
               ))}
             </div>
           </section>
+
+          {rows.map((row) => (
+            <ProductRail
+              key={row.slug}
+              t={t}
+              title={row.label}
+              items={row.items}
+              seeAllHref={`/categoria/${row.slug}`}
+            />
+          ))}
         </>
       )}
+
+      <PostAdBanner t={t} />
+
+      <HowItWorks t={t} />
+
+      <section className="section">
+        <AdSlot t={t} placement="leaderboard" />
+      </section>
 
       <AppPromo t={t} />
 

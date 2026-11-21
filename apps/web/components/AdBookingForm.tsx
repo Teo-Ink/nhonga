@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatPrice } from '../lib/format';
 
 type Placement = 'leaderboard' | 'mpu' | 'inline';
 const METHODS = [
@@ -151,7 +151,7 @@ export function AdBookingForm({
           >
             {placements.map((p) => (
               <option key={p.value} value={p.value}>
-                {p.label} — {formatMZN(cents(plans[p.value] ?? 0))}
+                {p.label} — {formatPrice(plans[p.value] ?? 0)}
                 {t.per_day}
               </option>
             ))}
@@ -202,11 +202,11 @@ export function AdBookingForm({
 
       <div className="spotbook__total">
         <span>{t.total}</span>
-        <strong>{formatMZN(cents(totalCents))}</strong>
+        <strong>{formatPrice(totalCents)}</strong>
       </div>
 
       <button type="submit" className="btn btn--primary" disabled={state === 'saving'}>
-        {state === 'saving' ? t.booking : `${t.book} · ${formatMZN(cents(totalCents))}`}
+        {state === 'saving' ? t.booking : `${t.book} · ${formatPrice(totalCents)}`}
       </button>
       {state === 'error' ? (
         <p className="reviewform__msg reviewform__msg--err" role="alert">

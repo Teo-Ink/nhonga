@@ -116,6 +116,21 @@ export interface ProductListResponse {
   readonly total: number;
   readonly items: readonly ProductListItem[];
   readonly page: { readonly cursor: string | null; readonly hasMore: boolean };
+  /**
+   * Set when the query had no matches as typed and was re-run with spelling
+   * corrections ("toyta" → "toyota"). The UI shows "A mostrar resultados para …".
+   */
+  readonly correctedQuery?: string | null;
+  /**
+   * Matches per category for the current query and location, ignoring the
+   * category filter itself, so the UI can offer "Viaturas (5) · Imóveis (2)"
+   * chips to narrow down. Only computed when a text query is present.
+   */
+  readonly categoryCounts?: ReadonlyArray<{
+    readonly slug: string;
+    readonly name: string;
+    readonly count: number;
+  }>;
 }
 
 export type Lang = 'pt' | 'en';

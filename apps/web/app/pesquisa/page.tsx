@@ -1,4 +1,5 @@
-import { SearchResults, type ActiveChip } from '../../components/SearchResults';
+import type { Metadata } from 'next';
+import { SearchResults, type ActiveChip, type CategoryChip } from '../../components/SearchResults';
 import {
   getDistricts,
   getProvinces,
@@ -7,20 +8,25 @@ import {
   type ProductListItem,
   type Province,
 } from '../../lib/api';
-import { getDictionary } from '../../lib/i18n/index';
+import { fill, getDictionary } from '../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined): string | undefined => (Array.isArray(v) ? v[0] : v);
-const CATEGORY_KEYS = [
-  'moda',
-  'electronica',
-  'telemoveis',
-  'casa',
-  'alimentacao',
-  'beleza',
-] as const;
+
+// Search pages get a descriptive title ("toyota em Moçambique — anúncios"),
+// useful in browser tabs and shared links.
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SP>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const q = (one(sp.q) ?? '').trim();
+  const { t } = await getDictionary();
+  return q ? { title: fill(t.search.page_title, { q }) } : {};
+}
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -44,6 +50,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
 
   let items: ProductListItem[] = [];
   let total = 0;
+  let correctedQuery: string | null = null;
+  let categoryCounts: { slug: string; name: string; count: number }[] = [];
   try {
     const r = await searchProducts({
       q,
@@ -57,6 +65,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     });
     items = r.items;
     total = r.total;
+    correctedQuery = r.correctedQuery ?? null;
+    categoryCounts = r.categoryCounts ?? [];
   } catch {
     /* render as empty */
   }
@@ -77,10 +87,33 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     return s ? `/pesquisa?${s}` : '/pesquisa';
   };
 
-  const catLabel = (slug: string): string =>
-    (CATEGORY_KEYS as readonly string[]).includes(slug)
-      ? t.categories[slug as (typeof CATEGORY_KEYS)[number]]
-      : slug;
+  const catLabel = (slug: string): string => (t.categories as Record<string, string>)[slug] ?? slug;
+
+  // OLX-style refinement: "Todas (8) · Viaturas (5) · Imóveis (1)…".
+  const withCategory = (slug: string | null): string => {
+    const p = new URLSearchParams(keep('category').split('?')[1] ?? '');
+    if (slug) p.set('category', slug);
+    const qs = p.toString();
+    return qs ? `/pesquisa?${qs}` : '/pesquisa';
+  };
+  const allCount = categoryCounts.reduce((n, c) => n + c.count, 0);
+  const categoryChips: CategoryChip[] =
+    categoryCounts.length > 1
+      ? [
+          {
+            label: t.search.all_short,
+            count: allCount,
+            href: withCategory(null),
+            active: !category,
+          },
+          ...categoryCounts.map((c) => ({
+            label: catLabel(c.slug),
+            count: c.count,
+            href: withCategory(c.slug),
+            active: category === c.slug,
+          })),
+        ]
+      : [];
   const mt = (cents: string): string => String(Math.round(Number(cents) / 100));
 
   // Removing the price chip clears both bounds at once.
@@ -122,6 +155,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       total={total}
       chips={chips}
       clearHref="/pesquisa"
+      correctedQuery={correctedQuery}
+      categoryChips={categoryChips}
       crumbs={[{ label: t.common.brand, href: '/' }, { label: t.search.crumb }]}
     />
   );

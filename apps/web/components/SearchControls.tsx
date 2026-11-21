@@ -28,10 +28,9 @@ export function SearchControls({ t }: { t: Dictionary }) {
         onChange={(e) => setParam('sort', e.target.value === 'relevance' ? null : e.target.value)}
       >
         <option value="relevance">{t.search.sort_relevance}</option>
+        <option value="newest">{t.search.sort_newest}</option>
         <option value="price_asc">{t.search.sort_price_asc}</option>
         <option value="price_desc">{t.search.sort_price_desc}</option>
-        <option value="rating">{t.search.sort_rating}</option>
-        <option value="newest">{t.search.sort_newest}</option>
       </select>
     </label>
   );

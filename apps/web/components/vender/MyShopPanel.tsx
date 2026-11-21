@@ -1,10 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
 import { useDict } from '../i18n/DictProvider';
 import { IconSearch } from '../icons';
 import { useSession } from '../auth/SessionProvider';
 import { WalletBar } from './WalletBar';
+import { formatPrice } from '../../lib/format';
 
 interface MineItem {
   id: string;
@@ -403,7 +403,7 @@ export function MyShopPanel() {
                         {p.title}
                       </a>
                       <span className="mrow__meta">
-                        <span className="mrow__price">{formatMZN(cents(p.priceCents))}</span>
+                        <span className="mrow__price">{formatPrice(p.priceCents)}</span>
                         <span className={`mstatus mstatus--${p.status}`}>
                           {statusLabel[p.status] ?? p.status}
                         </span>
@@ -488,7 +488,7 @@ export function MyShopPanel() {
                             >
                               {pl.kind === 'bump'
                                 ? `${pl.name} · ${pl.pointsCost} pts`
-                                : `${pl.name} · ${formatMZN(cents(pl.priceCents))} · ${pl.durationDays}d`}
+                                : `${pl.name} · ${formatPrice(pl.priceCents)} · ${pl.durationDays}d`}
                             </button>
                           ))
                         )}

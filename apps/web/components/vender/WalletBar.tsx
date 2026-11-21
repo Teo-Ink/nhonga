@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
 import { useDict } from '../i18n/DictProvider';
+import { formatPrice } from '../../lib/format';
 
 interface Pkg {
   id: string;
@@ -91,7 +91,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       setW(d);
       setAmount('');
       setPanel('none');
-      setMsg(`${dash.topped_up}: +${formatMZN(cents(mt * 100))}`);
+      setMsg(`${dash.topped_up}: +${formatPrice(mt * 100)}`);
     } finally {
       setBusy(false);
     }
@@ -136,7 +136,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     }
   }
 
-  const balance = w ? formatMZN(cents(w.balanceCents)) : '—';
+  const balance = w ? formatPrice(w.balanceCents) : '—';
   const points = w ? w.points : 0;
   const proUntilLabel = w?.proUntil
     ? new Date(w.proUntil).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })
@@ -239,7 +239,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
                 <div>
                   <strong>{p.name}</strong>
                   <span className="wallet__pkgmeta">
-                    {formatMZN(cents(p.balanceCents))} {dash.of_balance} · {p.points} {dash.pts}
+                    {formatPrice(p.balanceCents)} {dash.of_balance} · {p.points} {dash.pts}
                   </span>
                 </div>
                 <button
@@ -248,7 +248,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
                   onClick={() => void buy(p.id)}
                   disabled={busy || !w?.hasShop}
                 >
-                  {formatMZN(cents(p.priceCents))}
+                  {formatPrice(p.priceCents)}
                 </button>
               </div>
             ))

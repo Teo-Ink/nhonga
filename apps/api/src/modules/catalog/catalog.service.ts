@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import { listingReport } from '../../db/schema/reports.js';
 import {
@@ -23,6 +23,18 @@ import { AuthService, type AuthUser } from '../auth/auth.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { FavoritesService } from '../favorites/favorites.service.js';
 import type { Db } from '../../db/types.js';
+import {
+  SQL_ACCENTS_FROM,
+  SQL_ACCENTS_TO,
+  buildVocabulary,
+  correctTokens,
+  expandToken,
+  inflections,
+  normalise,
+  scoreListing,
+  termRegex,
+  tokenize,
+} from './search-text.js';
 import {
   buildOptions,
   headlineVariant,
@@ -680,16 +692,68 @@ export class CatalogService {
    * scale this moves to OpenSearch (D-09); the behaviour and shape are the same.
    */
   async listProducts(lang: Lang, filters: ProductFilters = {}): Promise<ProductListResponse> {
-    const limit = Math.min(Math.max(filters.limit ?? 24, 1), 48);
+    const tokens = tokenize(filters.q ?? '');
+    const first = await this.runListQuery(lang, filters, tokens);
+    if (first.total > 0 || tokens.length === 0) return first;
 
+    // Nothing matched as typed: try again with spelling corrections drawn from
+    // words that actually appear in listings ("toyta" → "toyota").
+    const corrected = correctTokens(tokens, await this.searchVocabulary());
+    if (!corrected) return first;
+    const second = await this.runListQuery(lang, filters, corrected);
+    return second.total > 0 ? { ...second, correctedQuery: corrected.join(' ') } : first;
+  }
+
+  /** Words used across active listings, categories and places (typo vocabulary). */
+  private async searchVocabulary(): Promise<Map<string, number>> {
+    const now = Date.now();
+    if (this.vocabCache && now - this.vocabCache.at < 5 * 60_000) return this.vocabCache.vocab;
+    const [titles, cats, places, provs] = await Promise.all([
+      this.db
+        .select({ pt: product.titlePt, en: product.titleEn, attrs: product.attributes })
+        .from(product)
+        .where(eq(product.status, 'active')),
+      this.db.select({ pt: category.namePt, en: category.nameEn }).from(category),
+      this.db.select({ n: district.name }).from(district),
+      this.db.select({ n: province.name }).from(province),
+    ]);
+    const texts: string[] = [];
+    for (const t of titles) {
+      texts.push(t.pt, t.en ?? '');
+      for (const v of Object.values((t.attrs ?? {}) as Record<string, unknown>)) {
+        if (typeof v === 'string') texts.push(v);
+      }
+    }
+    for (const c of cats) texts.push(c.pt, c.en ?? '');
+    for (const p of places) texts.push(p.n);
+    for (const p of provs) texts.push(p.n);
+    const vocab = buildVocabulary(texts);
+    this.vocabCache = { at: now, vocab };
+    return vocab;
+  }
+
+  private vocabCache: { at: number; vocab: Map<string, number> } | null = null;
+
+  private async runListQuery(
+    lang: Lang,
+    filters: ProductFilters,
+    tokens: readonly string[],
+  ): Promise<ProductListResponse> {
+    const limit = Math.min(Math.max(filters.limit ?? 24, 1), 48);
+    const hasQuery = tokens.length > 0;
+
+    // The category filter is applied after the query when there is free text,
+    // so the per-category counts can be computed from the same result set.
     const conds: SQL[] = [eq(product.status, 'active')];
-    if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
+    if (filters.categorySlug && !hasQuery) conds.push(eq(category.slug, filters.categorySlug));
     if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
     if (filters.province) conds.push(eq(district.provinceCode, filters.province));
     if (filters.district) conds.push(eq(vendor.districtId, asUuidOrNil(filters.district)));
-    if (filters.q && filters.q.trim() !== '') {
-      const needle = `%${filters.q.trim()}%`;
-      const m = or(ilike(product.titlePt, needle), ilike(product.titleEn, needle));
+    // Every token must match (AND); each token may match any field, in any
+    // inflection or synonym (OR), at the start of a word, accent-insensitively.
+    for (const token of tokens) {
+      const alts = expandToken(token);
+      const m = or(...alts.map((a) => sql`${SEARCH_HAYSTACK} ~ ${termRegex(a)}`));
       if (m) conds.push(m);
     }
 
@@ -718,19 +782,61 @@ export class CatalogService {
         vLocation: district.name,
         vRatingAvg: vendor.ratingAvg,
         vRatingCount: vendor.ratingCount,
+        descPt: product.descriptionPt,
+        descEn: product.descriptionEn,
+        provName: province.name,
       })
       .from(product)
       .innerJoin(vendor, eq(product.vendorId, vendor.id))
       .innerJoin(category, eq(product.categoryId, category.id))
       .leftJoin(district, eq(vendor.districtId, district.id))
+      .leftJoin(province, eq(district.provinceCode, province.code))
       .where(and(...conds));
 
-    const ids = rows.map((p) => p.id);
+    // Relevance score per listing (only meaningful with a text query).
+    const scores = new Map<string, number>();
+    if (hasQuery) {
+      for (const p of rows) {
+        scores.set(
+          p.id,
+          scoreListing(tokens, {
+            title: normalise(`${p.titlePt} ${p.titleEn ?? ''}`),
+            category: normalise(`${p.catSlug} ${p.catPt} ${p.catEn ?? ''}`),
+            attributes: normalise(Object.values(p.attributes ?? {}).join(' ')),
+            location: normalise(`${p.vLocation ?? ''} ${p.provName ?? ''}`),
+            vendor: normalise(p.vName),
+            description: normalise(`${p.descPt ?? ''} ${p.descEn ?? ''}`),
+          }),
+        );
+      }
+    }
+
+    // Per-category counts for the query (before the category filter narrows it).
+    let categoryCounts: ProductListResponse['categoryCounts'];
+    if (hasQuery) {
+      const byCat = new Map<string, { slug: string; name: string; count: number }>();
+      for (const p of rows) {
+        const cur = byCat.get(p.catSlug) ?? {
+          slug: p.catSlug,
+          name: pickText(p.catPt, p.catEn, lang),
+          count: 0,
+        };
+        cur.count += 1;
+        byCat.set(p.catSlug, cur);
+      }
+      categoryCounts = [...byCat.values()].sort((a, b) => b.count - a.count);
+    }
+    const scopedRows =
+      hasQuery && filters.categorySlug
+        ? rows.filter((p) => p.catSlug === filters.categorySlug)
+        : rows;
+
+    const ids = scopedRows.map((p) => p.id);
     const variantsByProduct = await this.variantsFor(ids);
     const imagesByProduct = await this.primaryImageFor(ids);
 
     // Preserve publishedAt alongside the mapped item for the "newest" sort.
-    let mapped = rows.map((p) => ({
+    let mapped = scopedRows.map((p) => ({
       item: toListItem(
         {
           id: p.id,
@@ -765,6 +871,7 @@ export class CatalogService {
       // A bump surfaces the listing in "newest"/"relevance" as if just posted.
       publishedAt: recency(p.publishedAt, p.bumpedAt),
       attributes: p.attributes,
+      score: scores.get(p.id) ?? 0,
     }));
 
     if (filters.inStockOnly) mapped = mapped.filter((m) => m.item.inStock);
@@ -801,7 +908,12 @@ export class CatalogService {
 
     const total = mapped.length;
     const page = mapped.slice(0, limit).map((m) => m.item);
-    return { total, items: page, page: { cursor: null, hasMore: total > limit } };
+    return {
+      total,
+      items: page,
+      page: { cursor: null, hasMore: total > limit },
+      ...(categoryCounts ? { categoryCounts } : {}),
+    };
   }
 
   /** All provinces (for the location search picker), ordered by name. */
@@ -850,18 +962,21 @@ export class CatalogService {
 
   /** Lightweight title suggestions for the search autocomplete. */
   async suggest(q: string, lang: Lang): Promise<{ slug: string; title: string }[]> {
-    const term = q.trim();
-    if (term.length < 2) return [];
-    const needle = `%${term.replace(/[%_]/g, '\\$&')}%`;
+    if (q.trim().length < 2) return [];
+    const tokens = tokenize(q);
+    if (tokens.length === 0) return [];
+    // Accent-insensitive, word-start matching on titles; every word must appear.
+    const titleHay = sql`regexp_replace(translate(lower(concat_ws(' ', ${product.titlePt}, ${product.titleEn})), ${SQL_ACCENTS_FROM}, ${SQL_ACCENTS_TO}), '[^a-z0-9]+', ' ', 'g')`;
+    const conds: SQL[] = [eq(product.status, 'active')];
+    for (const token of tokens) {
+      // Prefix match (not whole-word): suggestions run while the user is still typing.
+      const m = or(...inflections(token).map((a) => sql`${titleHay} ~ ${`\\m${a}`}`));
+      if (m) conds.push(m);
+    }
     const rows = await this.db
       .select({ slug: product.slug, titlePt: product.titlePt, titleEn: product.titleEn })
       .from(product)
-      .where(
-        and(
-          eq(product.status, 'active'),
-          or(ilike(product.titlePt, needle), ilike(product.titleEn, needle)),
-        ),
-      )
+      .where(and(...conds))
       .orderBy(desc(product.bumpedAt), desc(product.publishedAt))
       .limit(6);
     return rows.map((r) => ({ slug: r.slug, title: pickText(r.titlePt, r.titleEn, lang) }));
@@ -1121,7 +1236,7 @@ export class CatalogService {
   }
 }
 
-type Sortable = { item: ProductListItem; publishedAt: Date | null };
+type Sortable = { item: ProductListItem; publishedAt: Date | null; score: number };
 
 /** The more recent of publishedAt and bumpedAt — a bump counts as fresh. */
 function recency(publishedAt: Date | null, bumpedAt: Date | null): Date | null {
@@ -1130,7 +1245,10 @@ function recency(publishedAt: Date | null, bumpedAt: Date | null): Date | null {
   return bumpedAt.getTime() > publishedAt.getTime() ? bumpedAt : publishedAt;
 }
 
-/** Comparator per sort key. relevance keeps the SQL order (stable). */
+/**
+ * Comparator per sort key. Relevance ranks by text-match score (0 for every
+ * listing when there is no query) and then by recency, so fresh listings lead.
+ */
 function sorter(key: SortKey): (a: Sortable, b: Sortable) => number {
   switch (key) {
     case 'price_asc':
@@ -1142,9 +1260,22 @@ function sorter(key: SortKey): (a: Sortable, b: Sortable) => number {
     case 'newest':
       return (a, b) => (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0);
     default:
-      return () => 0;
+      return (a, b) =>
+        b.score - a.score || (b.publishedAt?.getTime() ?? 0) - (a.publishedAt?.getTime() ?? 0);
   }
 }
+
+/**
+ * Normalised haystack every search token is matched against: titles,
+ * descriptions, category, attributes, vendor and place names, lower-cased,
+ * accent-stripped and with punctuation collapsed to spaces (the same rules as
+ * normalise() in search-text.ts).
+ */
+const SEARCH_HAYSTACK = sql`regexp_replace(translate(lower(concat_ws(' ',
+  ${product.titlePt}, ${product.titleEn}, ${product.descriptionPt}, ${product.descriptionEn},
+  ${category.slug}, ${category.namePt}, ${category.nameEn}, ${product.attributes}::text,
+  ${vendor.displayName}, ${district.name}, ${province.name})),
+  ${SQL_ACCENTS_FROM}, ${SQL_ACCENTS_TO}), '[^a-z0-9]+', ' ', 'g')`;
 
 /** Products may be addressed by slug or UUID. When the value is not a UUID, this
  *  returns a sentinel that cannot match any id, so the slug branch decides. */

@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
+import { formatPrice } from '../lib/format';
 
 const KEY = 'nhonga_recent';
 const MAX = 12;
@@ -56,7 +56,7 @@ export function RecentlyViewed({ title }: { title: string }) {
               aria-hidden="true"
             />
             <span className="recentcard__title">{p.title}</span>
-            <span className="recentcard__price">{formatMZN(cents(p.priceCents))}</span>
+            <span className="recentcard__price">{formatPrice(p.priceCents)}</span>
           </a>
         ))}
       </div>

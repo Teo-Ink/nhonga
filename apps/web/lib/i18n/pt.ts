@@ -62,6 +62,8 @@ export const pt = {
     months_ago: 'há {n} meses',
     save: 'Guardar anúncio',
     featured: 'Destaque',
+    locale: 'pt' as 'pt' | 'en',
+    published: 'Publicado {date}',
   },
   footer: {
     tagline: 'O mercado online de Moçambique. Compre e venda com segurança.',
@@ -180,6 +182,7 @@ export const pt = {
     only_left: 'Restam apenas {n}',
     ratings: '{n} avaliações',
     specifications: 'Especificações',
+    description: 'Descrição',
     similar: 'Anúncios semelhantes',
     demo_notice: 'Ambiente de teste · catálogo de demonstração (fotos e produtos são exemplos).',
     not_found: 'Produto não encontrado.',
@@ -257,6 +260,18 @@ export const pt = {
   search: {
     results_for: 'Resultados para',
     n_results: '{n} resultados',
+    found_one: 'Encontrámos 1 anúncio',
+    found_many: 'Encontrámos {n} anúncios',
+    corrected: 'A mostrar resultados para',
+    in_categories: 'Filtrar por categoria',
+    all_short: 'Todas',
+    tips_title: 'Experimente:',
+    tip_spelling: 'Verificar a ortografia das palavras',
+    tip_general: 'Usar palavras mais gerais (ex.: “carro” em vez do modelo)',
+    tip_location: 'Pesquisar em todo o país',
+    browse_title: 'Ou explore por categoria',
+    alert_hint: 'Guarde a pesquisa e avisamos quando surgir um anúncio.',
+    page_title: '{q} em Moçambique — anúncios | Nhonga',
     no_results_title: 'Sem resultados',
     no_results_body:
       'Não encontrámos nada para esta pesquisa. Tente outras palavras ou remova filtros.',
@@ -733,6 +748,12 @@ export const pt = {
     wa_apply: 'Olá! Vi a vaga «{title}» no Nhonga e gostaria de me candidatar.',
     cta_quote: 'Pedir orçamento pelo WhatsApp',
     wa_quote: 'Olá! Vi o serviço «{title}» no Nhonga e gostaria de um orçamento.',
+    show_number: 'Ver número',
+    send_message: 'Enviar mensagem',
+    whatsapp_short: 'WhatsApp',
+    call_short: 'Ligar',
+    seller_all: 'Ver todos os anúncios',
+    share_label: 'Partilhar anúncio',
   },
 
   // Display-ad slots (house ads) + the "advertise with us" page. The revenue

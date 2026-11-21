@@ -3,8 +3,7 @@ import { headers } from 'next/headers';
 import { ProductGallery } from '../../../components/ProductGallery';
 import { RecordRecentView } from '../../../components/RecentlyViewed';
 import { notFound } from 'next/navigation';
-import { cents, formatMZN } from '@nhonga/shared';
-import { Price, Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
+import { Rating, VerifiedBadge, ProBadge } from '../../../components/ui';
 import {
   IconTruck,
   IconCheck,
@@ -24,6 +23,9 @@ import { ProductCard } from '../../../components/ProductCard';
 import { ContactSeller } from '../../../components/ContactSeller';
 import { ReportListing } from '../../../components/ReportListing';
 import { OwnerControls } from '../../../components/vender/OwnerControls';
+import { formatAttribute, formatListingPrice, formatPrice, keyFacts } from '../../../lib/format';
+import { postedLabel } from '../../../components/ProductCard';
+import { fill } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +39,7 @@ export async function generateMetadata({
   const { slug } = await params;
   try {
     const p = await getProduct(slug);
-    const price = formatMZN(cents(p.priceCents));
+    const price = formatListingPrice(p.priceCents, p.category?.slug);
     const where = p.location ? ` · ${p.location}` : '';
     const title = `${p.title} — ${price}${where}`;
     const description = p.description?.slice(0, 160) || `${p.title} no Nhonga${where}`;
@@ -91,11 +93,22 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const specs = Object.entries(product.attributes);
 
   // Other listings in the same category (classifieds "similar" rail).
+  // Closest in price first, so a 750.000 MT car suggests other cars around that
+  // price rather than a 65.000 MT motorbike.
   const similar = catSlug
     ? (await searchProducts({ category: catSlug })).items
         .filter((p) => p.id !== product.id)
+        .sort(
+          (a, b) =>
+            Math.abs(a.priceCents - product.priceCents) -
+            Math.abs(b.priceCents - product.priceCents),
+        )
         .slice(0, 6)
     : [];
+  const locale = t.listing.locale;
+  const facts = keyFacts(product.attributes, catSlug, locale, 4);
+  const posted = postedLabel(product.postedAt, t.listing);
+  const priceText = formatListingPrice(product.priceCents, catSlug, locale);
 
   // Trust tips adapt to the listing's vertical (a job isn't "delivered"; a
   // property is visited; a service is agreed up front). Falls back to the
@@ -163,27 +176,67 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       ) : null}
 
-      <div className="pdp__layout">
-        <div>
+      {/* OLX-style ad page: gallery + details on the left, a sticky summary
+          (title, price, key facts, contact, seller) on the right. On phones the
+          grid areas reorder to gallery → summary → details. */}
+      <div className="pdp__layout pdpx">
+        <div className="pdpx__gallery">
           <ProductGallery images={galleryImages} title={product.title} />
         </div>
 
-        <div className="pdp__body">
+        <aside className="pdpx__side">
           <OwnerControls productId={product.id} slug={slug} />
+          <p className="pdpx__meta">
+            {product.location ? (
+              <span className="pdpx__loc">
+                <IconMapPin width={14} height={14} aria-hidden /> {product.location}
+              </span>
+            ) : null}
+            {posted ? (
+              <span>{fill(t.listing.published, { date: posted.toLowerCase() })}</span>
+            ) : null}
+          </p>
           <h1 className="pdp__title">{product.title}</h1>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-            <Price now={product.priceCents} was={product.compareAtCents} large />
+          <div className="pdpx__price">
+            <span className="price__now price__now--lg">{priceText}</span>
+            {product.compareAtCents && product.compareAtCents > product.priceCents ? (
+              <span className="price__was">{formatPrice(product.compareAtCents)}</span>
+            ) : null}
             {product.discountPercent ? (
               <span className="badge badge--deal">-{product.discountPercent}%</span>
             ) : null}
           </div>
 
+          {facts.length > 0 ? (
+            <ul className="factchips" aria-label={t.pdp.specifications}>
+              {facts.map((f) => (
+                <li key={f} className="factchip">
+                  {f}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          <ContactSeller
+            slug={product.slug}
+            title={product.title}
+            priceLabel={priceText}
+            whatsapp={product.vendor.whatsapp ?? null}
+            phone={product.vendor.phone ?? null}
+            t={t.contact}
+            ctaLabel={ctaLabel}
+            waMessage={waMessage}
+            vendorSlug={product.vendor.slug}
+            vendorName={product.vendor.displayName}
+            safetyNote={t.contact.safety_tips[vertical]}
+          />
+
           <a className="seller" href={`/loja/${product.vendor.slug}`}>
             <span className="seller__avatar" aria-hidden>
               {product.vendor.displayName.charAt(0)}
             </span>
-            <span style={{ flex: 1 }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
               <span className="seller__name">
                 {product.vendor.displayName}
                 {product.vendor.isVerified ? <VerifiedBadge label={t.common.verified} /> : null}
@@ -194,23 +247,38 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </span>
             </span>
             <span className="seller__cta" aria-hidden="true">
-              {t.seller.visit_store} →
+              {t.contact.seller_all} →
             </span>
           </a>
+        </aside>
 
-          <ContactSeller
-            slug={product.slug}
-            title={product.title}
-            priceLabel={formatMZN(cents(product.priceCents))}
-            whatsapp={product.vendor.whatsapp ?? null}
-            phone={product.vendor.phone ?? null}
-            t={t.contact}
-            ctaLabel={ctaLabel}
-            waMessage={waMessage}
-            vendorSlug={product.vendor.slug}
-            vendorName={product.vendor.displayName}
-            safetyNote={t.contact.safety_tips[vertical]}
-          />
+        <div className="pdpx__details">
+          {product.description ? (
+            <section aria-labelledby="pdp-desc">
+              <h2 className="pdpx__h2" id="pdp-desc">
+                {t.pdp.description}
+              </h2>
+              <p className="desc">{product.description}</p>
+            </section>
+          ) : null}
+
+          {specs.length > 0 ? (
+            <section aria-labelledby="pdp-specs">
+              <h2 className="pdpx__h2" id="pdp-specs">
+                {t.pdp.specifications}
+              </h2>
+              <table className="specs">
+                <tbody>
+                  {specs.map(([k, v]) => (
+                    <tr key={k}>
+                      <th scope="row">{labelOf.get(k) ?? k}</th>
+                      <td>{formatAttribute(k, v, locale)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ) : null}
 
           <ul className="assurances">
             {tips.map((tip, i) => {
@@ -226,26 +294,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               );
             })}
           </ul>
-
-          {product.description ? <p className="desc">{product.description}</p> : null}
-
-          {specs.length > 0 ? (
-            <div>
-              <h2 className="optgroup__label" style={{ marginBottom: 'var(--space-2)' }}>
-                {t.pdp.specifications}
-              </h2>
-              <table className="specs">
-                <tbody>
-                  {specs.map(([k, v]) => (
-                    <tr key={k}>
-                      <th scope="row">{labelOf.get(k) ?? k}</th>
-                      <td>{v}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
 
           <p className="notice" role="note">
             {t.pdp.demo_notice}

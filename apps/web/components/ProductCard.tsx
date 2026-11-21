@@ -1,9 +1,9 @@
 import Image from 'next/image';
-import { cents, formatMZN } from '@nhonga/shared';
 import { IconMapPin, IconEye } from './icons';
 import { FavoriteButton } from './FavoriteButton';
 import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatListingPrice, formatPrice, keyFacts } from '../lib/format';
 
 // Relative "posted" label from an ISO date, using the dictionary's words.
 export function postedLabel(iso: string | null, l: Dictionary['listing']): string {
@@ -22,6 +22,7 @@ export function postedLabel(iso: string | null, l: Dictionary['listing']): strin
 // (never nested inside the anchor).
 export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
   const posted = postedLabel(p.postedAt, t.listing);
+  const facts = keyFacts(p.attributes, p.category?.slug, t.listing.locale, 3);
   return (
     <div className="lcard">
       <a className="lcard__link" href={`/produto/${p.slug}`}>
@@ -60,10 +61,13 @@ export function ProductCard({ p, t }: { p: ProductListItem; t: Dictionary }) {
         </div>
         <div className="lcard__body">
           <span className="lcard__title">{p.title}</span>
+          {facts.length > 0 ? <span className="lcard__facts">{facts.join(' · ')}</span> : null}
           <span className="lcard__pricerow">
-            <span className="lcard__price">{formatMZN(cents(p.priceCents))}</span>
+            <span className="lcard__price">
+              {formatListingPrice(p.priceCents, p.category?.slug, t.listing.locale)}
+            </span>
             {p.compareAtCents ? (
-              <span className="lcard__was">{formatMZN(cents(p.compareAtCents))}</span>
+              <span className="lcard__was">{formatPrice(p.compareAtCents)}</span>
             ) : null}
           </span>
           <div className="lcard__meta">

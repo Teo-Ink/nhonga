@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN, fromMeticais } from '@nhonga/shared';
+import { fromMeticais } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
 import {
   IconChevronLeft,
@@ -11,6 +11,7 @@ import {
 } from '../../../components/icons';
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
+import { formatPrice } from '../../../lib/format';
 
 // Create listing — fully wired. The form POSTs to /api/listings (real
 // createListing under the signed-in seller's shop); photos are picked and
@@ -231,7 +232,7 @@ export default function NewListingPage() {
     }
   }
 
-  const previewPrice = priceValid ? formatMZN(cents(fromMeticais(priceNum))) : null;
+  const previewPrice = priceValid ? formatPrice(fromMeticais(priceNum)) : null;
 
   return (
     <section className="newlisting">

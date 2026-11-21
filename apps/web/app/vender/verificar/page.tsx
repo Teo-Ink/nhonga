@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconCheck } from '../../../components/icons';
 import type { ProductListItem } from '../../../lib/api';
+import { formatPrice } from '../../../lib/format';
 
 interface Plan {
   code: string;
@@ -113,7 +113,7 @@ export default function VerifyShopPage() {
             </li>
             <li>
               <span>{t.f_amount}</span>
-              <strong>{formatMZN(cents(receipt.amountCents))}</strong>
+              <strong>{formatPrice(receipt.amountCents)}</strong>
             </li>
             <li>
               <span>{t.f_method_r}</span>
@@ -189,7 +189,7 @@ export default function VerifyShopPage() {
                 />
                 <span className="planpick__name">{p.name}</span>
                 <span className="planpick__desc">
-                  {formatMZN(cents(p.priceCents))} · {t.month}
+                  {formatPrice(p.priceCents)} · {t.month}
                 </span>
               </label>
             ))}

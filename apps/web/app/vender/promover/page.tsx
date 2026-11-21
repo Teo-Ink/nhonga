@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { cents, formatMZN } from '@nhonga/shared';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconCheck } from '../../../components/icons';
 import type { ProductListItem } from '../../../lib/api';
+import { formatPrice } from '../../../lib/format';
 
 interface Plan {
   code: string;
@@ -104,7 +104,7 @@ export default function PromotePage() {
             </li>
             <li>
               <span>{t.f_amount}</span>
-              <strong>{formatMZN(cents(receipt.amountCents))}</strong>
+              <strong>{formatPrice(receipt.amountCents)}</strong>
             </li>
             <li>
               <span>{t.f_method}</span>
@@ -150,7 +150,7 @@ export default function PromotePage() {
             <option value="">{t.pick_listing}</option>
             {listings.map((l) => (
               <option key={l.id} value={l.slug}>
-                {l.title} — {formatMZN(cents(l.priceCents))}
+                {l.title} — {formatPrice(l.priceCents)}
               </option>
             ))}
           </select>
@@ -169,7 +169,7 @@ export default function PromotePage() {
                 />
                 <span className="planpick__name">{p.name}</span>
                 <span className="planpick__desc">
-                  {formatMZN(cents(p.priceCents))}
+                  {formatPrice(p.priceCents)}
                   {p.durationDays > 0 ? ` · ${p.durationDays} ${t.days}` : ''}
                 </span>
               </label>

@@ -1,10 +1,10 @@
 import Image from 'next/image';
-import { cents, formatMZN } from '@nhonga/shared';
 import { IconMapPin, IconEye } from './icons';
 import { FavoriteButton } from './FavoriteButton';
 import { postedLabel } from './ProductCard';
 import type { ProductListItem } from '../lib/api';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatListingPrice, formatPrice, keyFacts } from '../lib/format';
 
 // Gumtree-style list-view row (classifieds): thumbnail on the left, then the
 // title, an attribute-summary line (the typed values joined), location and
@@ -12,10 +12,8 @@ import type { Dictionary } from '../lib/i18n/index';
 // search/category results pages; the home rails keep the grid card.
 export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
   const posted = postedLabel(p.postedAt, t.listing);
-  const summary = Object.values(p.attributes ?? {})
-    .filter((v) => typeof v === 'string' && v.trim() !== '')
-    .slice(0, 5)
-    .join(' · ');
+  // OLX-style key facts for the category ("2016 · 120.000 km · Gasolina").
+  const summary = keyFacts(p.attributes, p.category?.slug, t.listing.locale).join(' · ');
 
   return (
     <article className="lrow">
@@ -64,9 +62,11 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
           </div>
         </div>
         <div className="lrow__aside">
-          <span className="lrow__price">{formatMZN(cents(p.priceCents))}</span>
+          <span className="lrow__price">
+            {formatListingPrice(p.priceCents, p.category?.slug, t.listing.locale)}
+          </span>
           {p.compareAtCents ? (
-            <span className="lrow__was">{formatMZN(cents(p.compareAtCents))}</span>
+            <span className="lrow__was">{formatPrice(p.compareAtCents)}</span>
           ) : null}
         </div>
       </a>

@@ -4,13 +4,17 @@ import type { HomeStats } from '../../lib/api';
 // Live social-proof strip under the hero: real marketplace totals (active
 // listings, sellers, verified shops). Numbers use dot grouping to match the
 // app's money style ("8.950"). Renders nothing if there is nothing to show.
+// Small totals ("3 vendedores") make a marketplace look empty, so each number
+// only shows once it clears a threshold; until then the strip stays hidden.
+const MIN_SHOWN = { listings: 500, verifiedVendors: 25, vendors: 50 } as const;
+
 export function StatStrip({ stats, t }: { stats: HomeStats; t: Dictionary['home'] }) {
-  if (stats.listings <= 0) return null;
   const items = [
-    { n: stats.listings, label: t.stat_listings },
-    { n: stats.verifiedVendors, label: t.stat_verified },
-    { n: stats.vendors, label: t.stat_vendors },
-  ].filter((i) => i.n > 0);
+    { n: stats.listings, min: MIN_SHOWN.listings, label: t.stat_listings },
+    { n: stats.verifiedVendors, min: MIN_SHOWN.verifiedVendors, label: t.stat_verified },
+    { n: stats.vendors, min: MIN_SHOWN.vendors, label: t.stat_vendors },
+  ].filter((i) => i.n >= i.min);
+  if (items.length === 0) return null;
 
   return (
     <section className="statstrip" aria-label={t.stat_listings}>

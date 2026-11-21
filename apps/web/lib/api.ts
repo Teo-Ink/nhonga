@@ -174,9 +174,16 @@ export async function getDistricts(): Promise<District[]> {
   return get<District[]>('/catalog/districts');
 }
 
-export async function searchProducts(
-  p: SearchParams,
-): Promise<{ items: ProductListItem[]; total: number }> {
+export interface SearchResult {
+  items: ProductListItem[];
+  total: number;
+  /** Set when the API corrected the spelling to find matches ("toyta" → "toyota"). */
+  correctedQuery?: string | null;
+  /** Matches per category for a text query (OLX-style "Viaturas (5)" chips). */
+  categoryCounts?: { slug: string; name: string; count: number }[];
+}
+
+export async function searchProducts(p: SearchParams): Promise<SearchResult> {
   const qs = new URLSearchParams();
   if (p.q) qs.set('q', p.q);
   if (p.category) qs.set('category', p.category);
@@ -189,10 +196,13 @@ export async function searchProducts(
   if (p.attributes && Object.keys(p.attributes).length > 0) {
     qs.set('attributes', JSON.stringify(p.attributes));
   }
-  const data = await get<{ items: ProductListItem[]; total: number }>(
-    `/catalog/products?${qs.toString()}`,
-  );
-  return { items: data.items, total: data.total };
+  const data = await get<SearchResult>(`/catalog/products?${qs.toString()}`);
+  return {
+    items: data.items,
+    total: data.total,
+    correctedQuery: data.correctedQuery ?? null,
+    categoryCounts: data.categoryCounts ?? [],
+  };
 }
 
 export interface VendorReview {

@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { cents, formatMZN } from '@nhonga/shared';
 import { IconMapPin, IconGrid, IconSparkle } from '../../components/icons';
 import { AdBookingForm } from '../../components/AdBookingForm';
 import { getAdPlans } from '../../lib/api';
 import { FORSALE_KEYS, PILLAR_KEYS } from '../../lib/nav';
 import { getDictionary } from '../../lib/i18n/index';
+import { formatPrice } from '../../lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,8 +89,7 @@ export default async function AdvertisePage() {
             <h3 className="spotfmt__title">{f.title}</h3>
             <p className="spotfmt__desc">{f.desc}</p>
             <p className="spotfmt__price">
-              <span className="spotfmt__from">{a.from_price}</span>{' '}
-              {formatMZN(cents(plans[f.key] ?? 0))}
+              <span className="spotfmt__from">{a.from_price}</span> {formatPrice(plans[f.key] ?? 0)}
               <span className="spotfmt__per">{a.per_day}</span>
             </p>
           </div>

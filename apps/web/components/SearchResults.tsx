@@ -1,7 +1,6 @@
 import { Fragment } from 'react';
 import { ListingRow } from './ListingRow';
 import { AdSlot } from './AdSlot';
-import { EmptyState } from './ui';
 import { SaveSearch } from './SaveSearch';
 import { SearchControls } from './SearchControls';
 import { SearchFilters } from './SearchFilters';
@@ -13,6 +12,25 @@ export interface ActiveChip {
   label: string;
   removeHref: string;
 }
+
+export interface CategoryChip {
+  label: string;
+  count: number;
+  href: string;
+  active: boolean;
+}
+
+/** Category shortcuts offered on an empty results page. */
+const BROWSE = [
+  'viaturas',
+  'imoveis',
+  'telemoveis',
+  'electronica',
+  'casa',
+  'empregos',
+  'servicos',
+  'moda',
+];
 
 export interface Crumb {
   label: string;
@@ -32,6 +50,8 @@ export function SearchResults({
   crumbs,
   lockedCategory,
   attributes,
+  correctedQuery,
+  categoryChips,
 }: {
   t: Dictionary;
   title: string;
@@ -42,7 +62,12 @@ export function SearchResults({
   crumbs?: Crumb[];
   lockedCategory?: string;
   attributes?: CategoryAttribute[];
+  /** Spelling-corrected query the results are for, when the API had to correct it. */
+  correctedQuery?: string | null;
+  /** OLX-style category refinement chips with counts (search page only). */
+  categoryChips?: CategoryChip[];
 }) {
+  const found = total === 1 ? t.search.found_one : fill(t.search.found_many, { n: total });
   return (
     <section className="section" aria-labelledby="results">
       {crumbs && crumbs.length > 0 ? (
@@ -60,14 +85,14 @@ export function SearchResults({
         </nav>
       ) : null}
 
-      <AdSlot t={t} placement="leaderboard" category={lockedCategory} />
-
       <div className="results__head">
         <h1 className="section__title" id="results">
           {title}
         </h1>
         <div className="results__meta">
-          <span className="results__count">{fill(t.search.n_results, { n: total })}</span>
+          <span className="results__count" role="status">
+            {found}
+          </span>
           <SaveSearch
             title={title}
             saveLabel={t.search.save_search}
@@ -93,6 +118,28 @@ export function SearchResults({
         <SearchFilters t={t} lockedCategory={lockedCategory} attributes={attributes} />
 
         <div className="searchlayout__main">
+          {correctedQuery ? (
+            <p className="results__corrected">
+              {t.search.corrected} <strong>“{correctedQuery}”</strong>
+            </p>
+          ) : null}
+
+          {categoryChips && categoryChips.length > 1 ? (
+            <nav className="catchips" aria-label={t.search.in_categories}>
+              {categoryChips.map((c) => (
+                <a
+                  key={c.href}
+                  className={`catchip ${c.active ? 'is-active' : ''}`}
+                  href={c.href}
+                  aria-current={c.active ? 'true' : undefined}
+                >
+                  {c.label}
+                  <span className="catchip__n">{c.count}</span>
+                </a>
+              ))}
+            </nav>
+          ) : null}
+
           {chips.length > 0 ? (
             <div className="filterchips" aria-label={t.search.filters}>
               {chips.map((c, i) => (
@@ -108,21 +155,41 @@ export function SearchResults({
           ) : null}
 
           {items.length === 0 ? (
-            <EmptyState icon={<IconSearch width={40} height={40} />}>
-              <strong
-                style={{ display: 'block', color: 'var(--text)', fontSize: 'var(--text-lg)' }}
+            // Not <EmptyState>: that wraps children in a <p>, and this block holds
+            // a list and links (invalid inside <p> → hydration error).
+            <div className="empty" role="status">
+              <IconSearch width={40} height={40} />
+              <p
+                style={{
+                  margin: 0,
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontSize: 'var(--text-lg)',
+                }}
               >
                 {t.search.no_results_title}
-              </strong>
-              {t.search.no_results_body}
-              <a
-                className="btn btn--ghost"
-                href={clearHref}
-                style={{ maxWidth: 240, marginTop: 8 }}
-              >
-                {t.search.clear_filters}
-              </a>
-            </EmptyState>
+              </p>
+              <p className="noresults__tips-title">{t.search.tips_title}</p>
+              <ul className="noresults__tips">
+                <li>{t.search.tip_spelling}</li>
+                <li>{t.search.tip_general}</li>
+                <li>{t.search.tip_location}</li>
+              </ul>
+              {chips.length > 0 ? (
+                <a className="btn btn--ghost noresults__clear" href={clearHref}>
+                  {t.search.clear_filters}
+                </a>
+              ) : null}
+              <p className="noresults__tips-title">{t.search.browse_title}</p>
+              <div className="noresults__cats">
+                {BROWSE.map((slug) => (
+                  <a key={slug} className="catchip" href={`/categoria/${slug}`}>
+                    {(t.categories as Record<string, string>)[slug] ?? slug}
+                  </a>
+                ))}
+              </div>
+              <p className="noresults__alert">{t.search.alert_hint}</p>
+            </div>
           ) : (
             <div className="lrows">
               {items.map((p, i) => (
@@ -140,7 +207,6 @@ export function SearchResults({
         {/* Right ad rail — desktop only (hidden on tablet/phone by CSS). */}
         <aside className="searchlayout__side" aria-label={t.ads.label}>
           <AdSlot t={t} placement="mpu" category={lockedCategory} variant="advertise" />
-          <AdSlot t={t} placement="mpu" variant="promote" houseOnly />
         </aside>
       </div>
     </section>
