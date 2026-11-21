@@ -3,7 +3,7 @@
 export const pt = {
   common: {
     brand: 'Nhonga',
-    search_placeholder: 'Pesquisar produtos, marcas e lojas…',
+    search_placeholder: 'Pesquisar carros, casas, empregos…',
     search_voice: 'Pesquisar por voz',
     search_image: 'Pesquisar por imagem',
     search_listening: 'A ouvir… diga o que procura.',

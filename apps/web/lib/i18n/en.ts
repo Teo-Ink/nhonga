@@ -4,7 +4,7 @@ import type { Dictionary } from './pt';
 export const en: Dictionary = {
   common: {
     brand: 'Nhonga',
-    search_placeholder: 'Search products, brands and shops…',
+    search_placeholder: 'Search cars, homes, jobs…',
     search_voice: 'Search by voice',
     search_image: 'Search by image',
     search_listening: 'Listening… say what you are looking for.',

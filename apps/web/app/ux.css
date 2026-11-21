@@ -641,3 +641,30 @@
   color: var(--danger);
   margin: 0 0 var(--space-4);
 }
+
+/* ── Header search: fills the bar between logo and actions ─────── */
+.wlhdr__search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--space-4);
+}
+.wlhdr__search .searchbox--header {
+  width: 100%;
+  max-width: 560px;
+}
+.wlhdr__search .wlsearch {
+  min-height: 44px;
+  background: var(--surface-sunken);
+  border-color: var(--border-input);
+}
+.wlhdr__search .wlsearch:hover {
+  border-color: var(--brand-500);
+}
+@media (max-width: 899px) {
+  /* Phones/small tablets: the bottom tab bar carries search. */
+  .wlhdr__search {
+    display: none;
+  }
+}

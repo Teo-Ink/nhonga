@@ -5,6 +5,7 @@ import { AccountMenu } from './auth/AccountMenu';
 import { SellButton } from './auth/SellButton';
 import { NotificationBell } from './notifications/NotificationBell';
 import { MessagesLink } from './messaging/MessagesLink';
+import { HeaderSearch } from './search/HeaderSearch';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
 // Gumtree-style pillars: the verticals stand alone, everyday goods live under a
@@ -28,6 +29,20 @@ export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
         <a href="/" className="wlhdr__brand">
           <Logo variant="auto" label={t.common.brand} />
         </a>
+
+        <HeaderSearch
+          placeholder={t.common.search_placeholder}
+          categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
+          tools={{
+            voice: t.common.search_voice,
+            image: t.common.search_image,
+            listening: t.common.search_listening,
+            thinking: t.common.search_thinking,
+            unsupported: t.common.search_voice_unsupported,
+            error: t.common.search_ai_error,
+            unconfigured: t.common.search_ai_unconfigured,
+          }}
+        />
 
         <div className="wlhdr__actions">
           <LocaleControls locale={locale} />
