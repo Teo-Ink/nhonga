@@ -88,8 +88,8 @@ button {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--brand);
-  color: #fff;
+  background: var(--header-bg);
+  color: var(--header-text);
   box-shadow: var(--shadow-sm);
 }
 .hdr__top {
@@ -108,7 +108,7 @@ button {
   white-space: nowrap;
 }
 .hdr__brand b {
-  color: var(--color-accent-300);
+  color: var(--yellow-300);
 }
 .hdr__search {
   flex: 1;
@@ -387,17 +387,17 @@ button {
   color: var(--cta-text);
 }
 .badge--verified {
-  background: var(--color-primary-50);
-  color: var(--color-primary-700);
+  background: var(--brand-subtle);
+  color: var(--brand);
 }
 .badge--pro {
-  background: #fdf3cf;
-  color: #7a5a00;
-  border: 1px solid #f5c518;
+  background: var(--yellow-50);
+  color: var(--yellow-800);
+  border: 1px solid var(--yellow-400);
 }
 :root[data-theme='dark'] .badge--pro {
   background: rgba(245, 197, 24, 0.16);
-  color: #f5c518;
+  color: var(--yellow-400);
   border-color: rgba(245, 197, 24, 0.5);
 }
 .badge--soldout {
@@ -453,8 +453,8 @@ button {
   box-shadow: var(--shadow-md);
 }
 .btn--primary {
-  background: var(--brand);
-  color: var(--text-on-primary);
+  background: var(--brand-solid);
+  color: var(--on-brand);
   box-shadow: var(--shadow-sm);
 }
 .btn--primary:hover {
@@ -480,9 +480,9 @@ button {
 .notice {
   display: flex;
   gap: var(--space-2);
-  background: var(--color-warning-50);
-  border: 1px solid var(--color-warning-500);
-  color: var(--color-warning-700);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  color: var(--warning);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   font-size: var(--text-xs);
@@ -614,8 +614,8 @@ button {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-pill);
-  background: var(--color-primary-100);
-  color: var(--color-primary-700);
+  background: var(--brand-subtle-strong);
+  color: var(--brand);
   display: grid;
   place-items: center;
   font-weight: var(--weight-bold);
@@ -776,7 +776,7 @@ button {
   font-size: var(--text-sm);
   min-height: var(--tap-min);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
@@ -836,9 +836,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  background: var(--color-primary-50);
-  color: var(--color-primary-700);
-  border: 1px solid var(--color-primary-100);
+  background: var(--brand-subtle);
+  color: var(--brand);
+  border: 1px solid var(--brand-subtle-strong);
   border-radius: var(--radius-pill);
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-sm);
@@ -857,7 +857,7 @@ button {
   align-items: center;
   gap: var(--space-3);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-lg);
   padding: var(--space-3);
   box-shadow: var(--shadow-sm);
@@ -954,7 +954,7 @@ button {
 .cartline__remove {
   border: 0;
   background: transparent;
-  color: var(--color-error-500);
+  color: var(--danger);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   padding: var(--space-1);
@@ -1066,7 +1066,7 @@ fieldset.card {
   font-size: var(--text-base);
   color: var(--text);
   background: var(--bg);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-md);
   appearance: none;
 }
@@ -1079,8 +1079,8 @@ select.field__input {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 .field__input[aria-invalid='true'] {
-  border-color: var(--color-error-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error-500) 25%, transparent);
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
 }
 .field__hint {
   display: block;
@@ -1094,7 +1094,7 @@ select.field__input {
 .field__error {
   display: block;
   font-size: var(--text-xs);
-  color: var(--color-error-500);
+  color: var(--danger);
   margin-top: 4px;
   font-weight: var(--weight-medium);
 }
@@ -1343,8 +1343,8 @@ a.seller:focus-visible {
   height: 64px;
   flex: 0 0 auto;
   border-radius: var(--radius-pill);
-  background: var(--color-primary-500);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   font-size: var(--text-2xl, 24px);
@@ -1517,8 +1517,8 @@ a.seller:focus-visible {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--brand);
-  color: var(--text-on-primary);
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: var(--weight-bold);
 }
 .acctmenu__who {
@@ -1585,13 +1585,13 @@ a.seller:focus-visible {
   border-top: 1px solid var(--border);
   margin-top: var(--space-1);
   background: transparent;
-  color: var(--color-error-700);
+  color: var(--danger);
   font-weight: var(--weight-semibold);
   padding: var(--space-3);
   border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 .acctmenu__signout:hover {
-  background: var(--color-error-50);
+  background: var(--danger-bg);
 }
 
 /* ── Account dashboard (/conta): sidebar + buyer/seller main ───── */
@@ -1627,7 +1627,6 @@ a.seller:focus-visible {
   border-bottom-color: var(--brand);
 }
 
-
 /* Store page category chips (filter a shop's listings by vertical). */
 .storecats {
   display: flex;
@@ -1652,9 +1651,9 @@ a.seller:focus-visible {
   border-color: var(--brand);
 }
 .storecat.is-on {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  border-color: var(--brand-solid);
+  color: var(--on-brand);
 }
 
 /* PDP "Anúncios semelhantes" rail. */
@@ -1992,8 +1991,8 @@ a.seller:focus-visible {
   position: absolute;
   left: 6px;
   bottom: 6px;
-  background: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-size: 11px;
   font-weight: 700;
   padding: 2px 7px;
@@ -2020,7 +2019,7 @@ a.seller:focus-visible {
   place-items: center;
 }
 .photoup__act--del:hover {
-  background: #c0392b;
+  background: var(--danger-solid);
 }
 .preview-card__cover {
   width: 100%;
@@ -2208,8 +2207,8 @@ a.seller:focus-visible {
   color: #fff;
 }
 .timeline__step.is-done .timeline__dot {
-  background: var(--color-primary-500);
-  border-color: var(--color-primary-500);
+  background: var(--brand-500);
+  border-color: var(--brand-500);
 }
 .timeline__step.is-done .timeline__label {
   font-weight: var(--weight-semibold);
@@ -2241,8 +2240,8 @@ a.seller:focus-visible {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-pill);
-  background: var(--color-primary-500);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   font-weight: var(--weight-bold);
@@ -2524,7 +2523,7 @@ a.seller:focus-visible {
 .ctrls__sort select {
   min-height: 40px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
@@ -2666,10 +2665,10 @@ a.seller:focus-visible {
   border-radius: var(--radius-lg);
   background: linear-gradient(
     135deg,
-    var(--brand) 0%,
-    color-mix(in srgb, var(--brand) 70%, var(--cta)) 100%
+    var(--brand-solid) 0%,
+    color-mix(in srgb, var(--brand-solid) 70%, var(--cta)) 100%
   );
-  color: #fff;
+  color: var(--on-brand);
   padding: var(--space-6) var(--space-5);
   position: relative;
   overflow: hidden;
@@ -2928,7 +2927,7 @@ a.seller:focus-visible {
   margin: 0 auto;
   padding: 4px var(--space-4) var(--space-2);
   scrollbar-width: none;
-  background: color-mix(in srgb, #000 12%, var(--brand));
+  background: color-mix(in srgb, #000 12%, var(--header-bg));
 }
 .hdr__nav::-webkit-scrollbar {
   display: none;
@@ -2952,7 +2951,7 @@ a.seller:focus-visible {
   font-weight: var(--weight-bold);
 }
 .hdr__nav-link--accent {
-  color: var(--color-accent-200);
+  color: var(--yellow-200);
   font-weight: var(--weight-semibold);
 }
 
@@ -2975,8 +2974,12 @@ a.seller:focus-visible {
   margin: var(--space-4) 0 0;
   border-radius: var(--radius-lg);
   background: radial-gradient(120% 140% at 85% -10%, rgba(255, 255, 255, 0.14), transparent 55%),
-    linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 62%, var(--cta)) 100%);
-  color: #fff;
+    linear-gradient(
+      135deg,
+      var(--brand-solid) 0%,
+      color-mix(in srgb, var(--brand-solid) 62%, var(--cta)) 100%
+    );
+  color: var(--on-brand);
   padding: var(--space-6) var(--space-5) calc(var(--space-6) + 40px);
   position: relative;
   overflow: hidden;
@@ -3161,7 +3164,7 @@ a.seller:focus-visible {
   font-weight: var(--weight-bold);
 }
 .ftr__brand b {
-  color: var(--color-accent-300);
+  color: var(--yellow-300);
 }
 .ftr__tagline {
   font-size: var(--text-xs);
@@ -3222,15 +3225,11 @@ a.seller:focus-visible {
 }
 .hcar__slide--1 {
   background: radial-gradient(120% 140% at 15% -10%, rgba(242, 183, 5, 0.22), transparent 55%),
-    linear-gradient(135deg, #141414 0%, var(--color-primary-800) 100%);
+    linear-gradient(135deg, #141414 0%, var(--green-800) 100%);
 }
 .hcar__slide--2 {
   background: radial-gradient(120% 140% at 85% 110%, rgba(255, 255, 255, 0.16), transparent 55%),
-    linear-gradient(
-      135deg,
-      var(--color-primary-700) 0%,
-      color-mix(in srgb, var(--brand) 70%, #000) 100%
-    );
+    linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 70%, #000) 100%);
 }
 .hcar__content {
   position: relative;
@@ -3412,7 +3411,7 @@ a.seller:focus-visible {
   flex-wrap: wrap;
 }
 .promobar__cta {
-  color: var(--color-accent-200);
+  color: var(--yellow-200);
   font-weight: var(--weight-semibold);
   white-space: nowrap;
 }
@@ -3856,7 +3855,7 @@ a.seller:focus-visible {
    themes (brand is too dark in light / too pale in dark). The location control
    is green in every state (pin, label and caret). */
 .locpick__trigger > svg:first-child {
-  color: var(--logo-green, #007a5e);
+  color: var(--brand-solid);
 }
 .locpick__label {
   max-width: 150px;
@@ -3865,7 +3864,7 @@ a.seller:focus-visible {
   white-space: nowrap;
   /* Always on the white search pill → fixed mid-green, readable in both themes,
      in every state (including the default "Todo o país"). */
-  color: var(--logo-green, #007a5e);
+  color: var(--brand-solid);
   font-weight: var(--weight-medium);
 }
 .locpick__clear {
@@ -4120,9 +4119,9 @@ a.seller:focus-visible {
   border-color: var(--brand);
 }
 .bchip--on {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  border-color: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: var(--weight-medium);
 }
 .bstudio__gen {
@@ -4293,8 +4292,12 @@ a.seller:focus-visible {
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-lg);
   background: radial-gradient(120% 160% at 90% -20%, rgba(255, 255, 255, 0.12), transparent 55%),
-    linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 62%, var(--cta)) 100%);
-  color: #fff;
+    linear-gradient(
+      135deg,
+      var(--brand-solid) 0%,
+      color-mix(in srgb, var(--brand-solid) 62%, var(--cta)) 100%
+    );
+  color: var(--on-brand);
 }
 .sellbar__title {
   font-size: var(--text-xl);
@@ -4506,15 +4509,15 @@ a.seller:focus-visible {
   min-height: 44px;
   margin-left: var(--space-2);
   border-radius: var(--radius-pill);
-  background: var(--logo-green);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: var(--weight-bold);
   font-size: var(--text-sm);
   white-space: nowrap;
   text-decoration: none;
 }
 .wlsell:hover {
-  background: var(--logo-green-hover);
+  background: var(--brand-solid-hover);
 }
 
 /* Category nav */
@@ -4662,8 +4665,8 @@ a.seller:focus-visible {
     margin-top: -18px;
     margin-bottom: 2px;
     border-radius: 50%;
-    background: var(--logo-green);
-    color: #ffffff;
+    background: var(--brand-solid);
+    color: var(--on-brand);
     border: 3px solid var(--surface);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
   }
@@ -4693,7 +4696,7 @@ a.seller:focus-visible {
   margin-top: var(--space-8);
   /* Light theme: brand green. Dark theme: a dark green-black so the footer
      matches the dark UI (overrides below mirror the token light/dark strategy). */
-  background: linear-gradient(160deg, #0b5138 0%, #083b28 100%);
+  background: linear-gradient(160deg, var(--green-700) 0%, var(--green-800) 100%);
   color: #e7e7e7;
 }
 @media (prefers-color-scheme: dark) {
@@ -4705,7 +4708,7 @@ a.seller:focus-visible {
   background: linear-gradient(160deg, #10231a 0%, #0a1712 100%);
 }
 :root[data-theme='light'] .wlftr {
-  background: linear-gradient(160deg, #0b5138 0%, #083b28 100%);
+  background: linear-gradient(160deg, var(--green-700) 0%, var(--green-800) 100%);
 }
 .wlftr__inner {
   display: grid;
@@ -4984,8 +4987,8 @@ a.seller:focus-visible {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: var(--weight-bold);
 }
 
@@ -5145,9 +5148,9 @@ a.seller:focus-visible {
   color: var(--brand);
 }
 .mlrail__step.is-done .mlrail__no {
-  border-color: var(--brand);
-  background: var(--brand);
-  color: #ffffff;
+  border-color: var(--brand-solid);
+  background: var(--brand-solid);
+  color: var(--on-brand);
 }
 .mlrail__label {
   white-space: nowrap;
@@ -5240,7 +5243,7 @@ a.seller:focus-visible {
   padding: var(--space-6) var(--space-5);
   border-radius: var(--radius-lg);
   background: radial-gradient(120% 140% at 90% -10%, rgba(242, 183, 5, 0.18), transparent 55%),
-    linear-gradient(135deg, #0b5138 0%, #007a5e 100%);
+    linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
   color: #ffffff;
   overflow: hidden;
 }
@@ -5367,7 +5370,7 @@ a.seller:focus-visible {
   justify-content: center;
   gap: 12px;
   padding: var(--space-4);
-  background: radial-gradient(120% 80% at 50% 0%, #12855c 0%, #0b5138 65%, #063826 100%);
+  background: radial-gradient(120% 80% at 50% 0%, #12855c 0%, var(--green-700) 65%, #063826 100%);
 }
 .phone__logo {
   width: 120px;
@@ -5395,8 +5398,8 @@ a.seller:focus-visible {
   height: 56px;
   border-radius: 50%;
   border: none;
-  background: var(--logo-green);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
@@ -5408,7 +5411,7 @@ a.seller:focus-visible {
     background 150ms ease;
 }
 .chatfab:hover {
-  background: var(--logo-green-hover);
+  background: var(--brand-solid-hover);
   transform: translateY(-2px);
 }
 .chatpanel {
@@ -5433,7 +5436,7 @@ a.seller:focus-visible {
   align-items: center;
   gap: 10px;
   padding: var(--space-3) var(--space-4);
-  background: linear-gradient(135deg, #0b5138 0%, #007a5e 100%);
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-600) 100%);
   color: #ffffff;
 }
 .chatpanel__avatar {
@@ -5493,8 +5496,8 @@ a.seller:focus-visible {
 }
 .chatmsg--user {
   align-self: flex-end;
-  background: var(--logo-green);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   border-bottom-right-radius: 4px;
 }
 .chatmsg--typing {
@@ -5531,14 +5534,14 @@ a.seller:focus-visible {
   display: flex;
   gap: 8px;
   padding: var(--space-3);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-input);
   background: var(--surface);
 }
 .chatpanel__input input {
   flex: 1;
   min-width: 0;
   padding: 10px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-pill);
   background: var(--surface-sunken);
   color: var(--text);
@@ -5553,8 +5556,8 @@ a.seller:focus-visible {
   padding: 0 var(--space-4);
   border: none;
   border-radius: var(--radius-pill);
-  background: var(--logo-green);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: var(--weight-semibold);
   cursor: pointer;
 }
@@ -5615,12 +5618,12 @@ a.seller:focus-visible {
   background: #1eb457;
 }
 .contactbtn--call {
-  background: var(--logo-green, #007a5e);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   border: none;
 }
 .contactbtn--call:hover {
-  background: var(--logo-green-hover, #00654e);
+  background: var(--brand-solid-hover);
 }
 .contactbtn--share {
   background: transparent;
@@ -5668,8 +5671,8 @@ a.seller:focus-visible {
   top: var(--space-2);
   left: var(--space-2);
   z-index: 1;
-  background: var(--logo-green, #007a5e);
-  color: #ffffff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   padding: 2px 9px;
@@ -5978,7 +5981,7 @@ a.seller:focus-visible {
   color: var(--brand-500);
 }
 .reviewform__msg--err {
-  color: var(--color-danger-600, #c0392b);
+  color: var(--color-danger-600, var(--danger));
 }
 .reviewform__note {
   margin-top: 6px;
@@ -6265,7 +6268,7 @@ a.seller:focus-visible {
   height: 96px;
   border-radius: var(--radius-lg);
   margin-bottom: -40px;
-  background: linear-gradient(120deg, var(--brand) 0%, #0b5138 60%, #083b28 100%);
+  background: linear-gradient(120deg, var(--brand) 0%, var(--green-700) 60%, var(--green-800) 100%);
 }
 .storestats {
   list-style: none;
@@ -6428,7 +6431,7 @@ a.seller:focus-visible {
   color: var(--text-muted);
 }
 .aihelper__note--err {
-  color: var(--color-danger-600, #c0392b);
+  color: var(--color-danger-600, var(--danger));
 }
 
 /* ── "Compra e Vendas" section hub tiles ────────────────────────── */
@@ -6478,7 +6481,7 @@ a.seller:focus-visible {
     transform var(--dur-base) var(--ease-spring);
 }
 .hubtile:hover .hubtile__icon {
-  background: var(--color-primary-50);
+  background: var(--brand-subtle);
   color: var(--brand);
   transform: scale(1.08);
 }
@@ -6665,7 +6668,7 @@ a.seller:focus-visible {
 .reportbox__err {
   display: block;
   margin-top: var(--space-2);
-  color: var(--color-danger-600, #c0392b);
+  color: var(--color-danger-600, var(--danger));
   font-size: var(--text-sm);
 }
 .reportbox__done {
@@ -6690,8 +6693,8 @@ a.seller:focus-visible {
   padding: 72px var(--space-4) 60px;
   /* Fallback shown before the video loads / if it fails, and on phones. */
   background: radial-gradient(120% 140% at 82% -10%, rgba(245, 197, 24, 0.16), transparent 55%),
-    linear-gradient(135deg, var(--brand) 0%, #0b5138 60%, #083b28 100%);
-  color: #fff;
+    linear-gradient(135deg, var(--brand-solid) 0%, var(--green-700) 60%, var(--green-800) 100%);
+  color: var(--on-brand);
   text-align: center;
 }
 .herofind__photo {
@@ -6900,8 +6903,8 @@ a.seller:focus-visible {
 .popcard__head {
   padding: var(--space-3);
   font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, var(--brand) 0%, #0b5138 100%);
+  color: var(--on-brand);
+  background: linear-gradient(135deg, var(--brand-solid) 0%, var(--green-700) 100%);
 }
 .popcard__img {
   display: block;
@@ -6942,8 +6945,8 @@ a.seller:focus-visible {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   display: grid;
   place-items: center;
   font-size: var(--text-sm);
@@ -7066,8 +7069,8 @@ a.seller:focus-visible {
   border: 0;
   cursor: pointer;
   font-weight: 700;
-  background: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   padding: 9px 14px;
   border-radius: 999px;
 }
@@ -7114,7 +7117,7 @@ a.seller:focus-visible {
   transition: transform 0.15s;
 }
 .datasaver[aria-checked='true'] .datasaver__track {
-  background: #f5c518;
+  background: var(--yellow-400);
 }
 .datasaver[aria-checked='true'] .datasaver__thumb {
   transform: translateX(16px);
@@ -7274,11 +7277,11 @@ a.seller:focus-visible {
 .mrow__del {
   background: var(--surface);
   border-color: var(--border);
-  color: #c0392b;
+  color: var(--danger);
 }
 .mrow__del:hover {
   color: #a93226;
-  border-color: #c0392b;
+  border-color: var(--danger);
   background: var(--surface);
 }
 @media (max-width: 560px) {
@@ -7305,20 +7308,20 @@ a.seller:focus-visible {
   border-radius: 999px;
 }
 .mstatus--active {
-  background: var(--color-primary-50);
-  color: var(--color-primary-700);
+  background: var(--brand-subtle);
+  color: var(--brand);
 }
 .mstatus--sold {
-  background: #fdf3cf;
-  color: #7a5a00;
+  background: var(--yellow-50);
+  color: var(--yellow-800);
 }
 .mstatus--archived {
   background: var(--surface-sunken);
   color: var(--text-muted);
 }
 .mstatus--featured {
-  background: var(--brand-500, #007a5e);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
 }
 .mrow__boost {
   flex-basis: 100%;
@@ -7385,9 +7388,9 @@ a.seller:focus-visible {
   cursor: pointer;
 }
 .mfilter.is-on {
-  background: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
+  background: var(--brand-solid);
+  color: var(--on-brand);
+  border-color: var(--brand-solid);
 }
 .mfilter__n {
   opacity: 0.7;
@@ -7468,9 +7471,9 @@ a.seller:focus-visible {
   padding: var(--space-3);
   margin-bottom: var(--space-3);
   border-radius: var(--radius-md);
-  background: var(--color-primary-50);
+  background: var(--brand-subtle);
   border: 1px solid var(--color-primary-100, var(--border));
-  color: var(--color-primary-700);
+  color: var(--brand);
   font-size: var(--text-sm);
   line-height: 1.5;
 }
@@ -7520,7 +7523,7 @@ a.seller:focus-visible {
   color: var(--text);
 }
 .wallet__label--pts strong {
-  color: var(--color-primary-700);
+  color: var(--brand);
 }
 .wallet__actions {
   display: flex;
@@ -7540,7 +7543,7 @@ a.seller:focus-visible {
   color: var(--text-muted);
 }
 .wallet__pro.is-on .wallet__prolabel {
-  color: var(--color-primary-700);
+  color: var(--brand);
 }
 .wallet__hint,
 .wallet__msg {
@@ -7549,7 +7552,7 @@ a.seller:focus-visible {
   margin: 0;
 }
 .wallet__msg {
-  color: var(--color-primary-700);
+  color: var(--brand);
 }
 .wallet__panel {
   display: flex;
@@ -7569,7 +7572,7 @@ a.seller:focus-visible {
 .wallet__field input {
   min-height: var(--tap-min);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
@@ -7618,10 +7621,10 @@ a.seller:focus-visible {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--brand);
   border-radius: var(--radius-md);
-  background: var(--color-primary-50);
+  background: var(--brand-subtle);
 }
 .ownerbar__title {
-  color: var(--color-primary-700);
+  color: var(--brand);
   font-size: var(--text-sm);
 }
 .ownerbar__actions {
@@ -7656,7 +7659,7 @@ a.seller:focus-visible {
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #c0392b;
+  background: var(--danger-solid);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -7678,7 +7681,7 @@ a.seller:focus-visible {
 }
 .notif.is-unread {
   border-color: var(--brand);
-  background: var(--color-primary-50);
+  background: var(--brand-subtle);
 }
 .notif__link {
   display: flex;
@@ -7699,8 +7702,8 @@ a.seller:focus-visible {
   color: var(--brand);
 }
 .notif__icon--review {
-  color: #7a5a00;
-  background: #fdf3cf;
+  color: var(--yellow-800);
+  background: var(--yellow-50);
 }
 .notif__text {
   display: flex;
@@ -7756,7 +7759,7 @@ a.seller:focus-visible {
   background: rgba(255, 255, 255, 0.22);
 }
 .notifprefs__row[aria-checked='true'] .datasaver__track {
-  background: #f5c518;
+  background: var(--yellow-400);
 }
 .notifprefs__row[aria-checked='true'] .datasaver__thumb {
   transform: translateX(16px);
@@ -7779,7 +7782,7 @@ a.seller:focus-visible {
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: #c0392b;
+  background: var(--danger-solid);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -7815,7 +7818,7 @@ a.seller:focus-visible {
 }
 .convrow.is-unread {
   border-color: var(--brand);
-  background: var(--color-primary-50);
+  background: var(--brand-subtle);
 }
 .convrow__avatar {
   flex: none;
@@ -7824,8 +7827,8 @@ a.seller:focus-visible {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   font-weight: 700;
 }
 .convrow__main {
@@ -7862,7 +7865,7 @@ a.seller:focus-visible {
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #c0392b;
+  background: var(--danger-solid);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -7903,8 +7906,8 @@ a.seller:focus-visible {
 }
 .bubble--mine {
   align-self: flex-end;
-  background: var(--brand);
-  color: #fff;
+  background: var(--brand-solid);
+  color: var(--on-brand);
   border-bottom-right-radius: 4px;
 }
 .msgthread__form {
@@ -7962,7 +7965,7 @@ a.seller:focus-visible {
 /* Hero search: the mic/camera match the location pin's fixed green on the
    always-white pill, so all three accents are the same clear green. */
 .searchbox--hero .searchbox__tool {
-  color: var(--logo-green, #007a5e);
+  color: var(--brand-solid);
 }
 .searchbox__tool:hover {
   background: color-mix(in srgb, currentColor 16%, transparent);
@@ -7993,8 +7996,8 @@ a.seller:focus-visible {
   box-shadow: var(--shadow-md);
 }
 .searchbox__aistatus.is-err {
-  color: var(--color-error-700);
-  border-color: var(--color-error-500);
+  color: var(--danger);
+  border-color: var(--danger);
 }
 .searchbox__drop {
   position: absolute;
@@ -8048,8 +8051,8 @@ a.seller:focus-visible {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--color-primary-700);
-  background: var(--color-primary-50);
+  color: var(--brand);
+  background: var(--brand-subtle);
   padding: 2px 7px;
   border-radius: 999px;
 }

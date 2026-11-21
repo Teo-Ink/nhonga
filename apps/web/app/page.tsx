@@ -32,7 +32,8 @@ const CATEGORY_KEYS = ['viaturas', 'imoveis', 'telemoveis', 'empregos'] as const
 
 // OLX-structured home in Nhonga's brand: search first, categories, the newest
 // listings (freshness is what brings people back), a few category rows, then
-// "how it works" and the sell prompt. One ad slot, below the listings.
+// "how it works" and the sell prompt. One leaderboard ad slot, above the
+// categories (the highest-visibility position on the page).
 export default async function HomePage() {
   const { t } = await getDictionary();
 
@@ -87,6 +88,13 @@ export default async function HomePage() {
 
       {stats ? <StatStrip stats={stats} t={t.home} /> : null}
 
+      {/* Premium leaderboard: the first thing under the search, before the
+          categories — the home's main display-ad inventory. Serves the booked
+          campaign; with none live it shows the "advertise here" promo. */}
+      <section className="section section--ad">
+        <AdSlot t={t} placement="leaderboard" />
+      </section>
+
       <PopularCategories t={t} />
 
       <RecentlyViewed title={t.home.recent_viewed} />
@@ -128,10 +136,6 @@ export default async function HomePage() {
       <PostAdBanner t={t} />
 
       <HowItWorks t={t} />
-
-      <section className="section">
-        <AdSlot t={t} placement="leaderboard" />
-      </section>
 
       <AppPromo t={t} />
 

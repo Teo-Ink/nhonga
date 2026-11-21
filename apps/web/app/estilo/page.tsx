@@ -1,6 +1,7 @@
 import { Price, Rating, DealBadge, VerifiedBadge, Skeleton, EmptyState } from '../../components/ui';
 import { IconBox, IconShield } from '../../components/icons';
 import { getDictionary } from '../../lib/i18n/index';
+import { RAMPS, SEMANTIC, type Swatch } from '../../lib/palette';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,56 +9,7 @@ export const dynamic = 'force-dynamic';
 // with the real CSS variables (never a copied hex), so this page can never
 // drift from tokens.css. Fixed colour scales list their hex; semantic roles do
 // not, because they intentionally change between light and dark.
-type Swatch = { token: string; hex?: string };
-
-const PRIMARY: Swatch[] = [
-  { token: '--color-primary-50', hex: '#e8f2ec' },
-  { token: '--color-primary-100', hex: '#cbe3d5' },
-  { token: '--color-primary-200', hex: '#9fcbb0' },
-  { token: '--color-primary-300', hex: '#66ac86' },
-  { token: '--color-primary-400', hex: '#2f9a68' },
-  { token: '--color-primary-500', hex: '#12855c' },
-  { token: '--color-primary-600', hex: '#0e6b4a' },
-  { token: '--color-primary-700', hex: '#0b5138' },
-  { token: '--color-primary-800', hex: '#083c2a' },
-  { token: '--color-primary-900', hex: '#05281c' },
-];
-const ACCENT: Swatch[] = [
-  { token: '--color-accent-50', hex: '#fbede7' },
-  { token: '--color-accent-100', hex: '#f6d6c8' },
-  { token: '--color-accent-200', hex: '#edb49c' },
-  { token: '--color-accent-300', hex: '#e18f6d' },
-  { token: '--color-accent-400', hex: '#d5734a' },
-  { token: '--color-accent-500', hex: '#c0562e' },
-  { token: '--color-accent-600', hex: '#b0491f' },
-  { token: '--color-accent-700', hex: '#8f3a18' },
-];
-const AMBER: Swatch[] = [
-  { token: '--color-amber-400', hex: '#f0b429' },
-  { token: '--color-amber-500', hex: '#e8a317' },
-  { token: '--color-amber-700', hex: '#8a6d00' },
-];
-const NEUTRAL: Swatch[] = [
-  { token: '--color-neutral-0', hex: '#ffffff' },
-  { token: '--color-neutral-25', hex: '#faf7f2' },
-  { token: '--color-neutral-100', hex: '#ede7dd' },
-  { token: '--color-neutral-200', hex: '#ded6c8' },
-  { token: '--color-neutral-400', hex: '#a99e8c' },
-  { token: '--color-neutral-600', hex: '#6e6456' },
-  { token: '--color-neutral-800', hex: '#3a352c' },
-  { token: '--color-neutral-900', hex: '#2b2620' },
-];
-const SEMANTIC: Swatch[] = [
-  { token: '--bg' },
-  { token: '--surface' },
-  { token: '--surface-sunken' },
-  { token: '--border' },
-  { token: '--brand' },
-  { token: '--cta' },
-  { token: '--rating' },
-  { token: '--focus-ring' },
-];
-
+// Ramps and semantic roles come from lib/palette.ts (generated with tokens.css).
 const TYPE_SCALE = [
   { token: '--text-3xl', label: '32 / 3xl' },
   { token: '--text-2xl', label: '24 / 2xl' },
@@ -99,14 +51,12 @@ export default async function StyleGuidePage() {
       {/* Colours */}
       <h2 className="ds__h2">{s.colors}</h2>
       <div className="ds__block">
-        <h3 className="ds__h3">{s.primary}</h3>
-        <SwatchRow items={PRIMARY} showHex />
-        <h3 className="ds__h3">{s.accent}</h3>
-        <SwatchRow items={ACCENT} showHex />
-        <h3 className="ds__h3">{s.amber}</h3>
-        <SwatchRow items={AMBER} showHex />
-        <h3 className="ds__h3">{s.neutral}</h3>
-        <SwatchRow items={NEUTRAL} showHex />
+        {RAMPS.map((r) => (
+          <div key={r.name}>
+            <h3 className="ds__h3">{r.name}</h3>
+            <SwatchRow items={r.swatches} showHex />
+          </div>
+        ))}
         <h3 className="ds__h3">{s.semantic}</h3>
         <SwatchRow items={SEMANTIC} />
       </div>

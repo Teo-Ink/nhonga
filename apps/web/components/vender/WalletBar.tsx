@@ -10,6 +10,14 @@ interface Pkg {
   balanceCents: number;
   points: number;
 }
+type PayMethod = 'mpesa' | 'emola' | 'mkesh' | 'card';
+const METHOD_LABEL: Record<PayMethod, string> = {
+  mpesa: 'M-Pesa',
+  emola: 'e-Mola',
+  mkesh: 'mKesh',
+  card: 'Cartão',
+};
+
 interface WalletView {
   hasShop: boolean;
   shopName: string | null;
@@ -22,7 +30,9 @@ interface WalletView {
 
 // Seller wallet strip for "Os teus anúncios": balance (MZN) + loyalty points,
 // with inline top-up and prepaid-package panels. Mirrors the marketplace
-// "Saldo em conta / Comprar pacote" header. Top-ups are demo credits.
+// "Saldo em conta / Comprar pacote" header. Top-ups go through the hosted
+// checkout (M-Pesa / e-Mola / mKesh / card): we create a payment, send the
+// seller to the gateway's page, and /pagamento/[id] shows the outcome.
 export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const dash = useDict().dash;
   const [w, setW] = useState<WalletView | null>(null);
@@ -31,6 +41,8 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const [pkgs, setPkgs] = useState<Pkg[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [method, setMethod] = useState<PayMethod>('mpesa');
+  const [methods, setMethods] = useState<PayMethod[]>(['mpesa', 'emola']);
 
   function loadWallet() {
     return fetch('/api/wallet', { cache: 'no-store' })
@@ -54,9 +66,24 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     // eslint-disable-next-line
   }, [reloadSignal]);
 
+  // "Tentar de novo" from /pagamento links here with ?carregar=1.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('carregar') === '1') openTopup();
+    // eslint-disable-next-line
+  }, []);
+
   function openTopup() {
     setMsg(null);
     setPanel(panel === 'topup' ? 'none' : 'topup');
+    void fetch('/api/checkout/methods', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d: { methods?: PayMethod[] }) => {
+        if (Array.isArray(d.methods) && d.methods.length > 0) {
+          setMethods(d.methods);
+          if (!d.methods.includes(method)) setMethod(d.methods[0] as PayMethod);
+        }
+      })
+      .catch(() => undefined);
   }
   function openPackages() {
     setMsg(null);
@@ -71,28 +98,29 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
 
   async function submitTopup() {
     const mt = Number(amount.replace(/[^\d]/g, ''));
-    if (!mt || mt <= 0) {
+    if (!mt || mt < 10) {
       setMsg(dash.invalid_amount);
       return;
     }
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/wallet/topup', {
+      const res = await fetch('/api/checkout/topup', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ amountCents: mt * 100 }),
+        body: JSON.stringify({ amountCents: mt * 100, method }),
       });
-      const d = await res.json();
-      if (!res.ok) {
+      const d = (await res.json()) as { checkoutUrl?: string; detail?: string; message?: string };
+      if (!res.ok || !d.checkoutUrl) {
         setMsg(d.detail ?? d.message ?? dash.topup_fail);
+        setBusy(false);
         return;
       }
-      setW(d);
-      setAmount('');
-      setPanel('none');
-      setMsg(`${dash.topped_up}: +${formatPrice(mt * 100)}`);
-    } finally {
+      // Hand over to the gateway's hosted page; it sends the seller back to
+      // /pagamento/[id] when they finish. Keep the button busy meanwhile.
+      window.location.assign(d.checkoutUrl);
+    } catch {
+      setMsg(dash.topup_fail);
       setBusy(false);
     }
   }
@@ -218,14 +246,31 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
               </button>
             ))}
           </div>
+          <fieldset className="paymethods">
+            <legend>{dash.pay_with}</legend>
+            {methods.map((m) => (
+              <label key={m} className={`paymethod paymethod--${m} ${method === m ? 'is-on' : ''}`}>
+                <input
+                  type="radio"
+                  name="paymethod"
+                  value={m}
+                  checked={method === m}
+                  onChange={() => setMethod(m)}
+                />
+                <span className="paymethod__dot" aria-hidden="true" />
+                <span className="paymethod__name">{METHOD_LABEL[m]}</span>
+              </label>
+            ))}
+          </fieldset>
           <button
             type="button"
             className="btn btn--cta btn--sm"
             onClick={() => void submitTopup()}
             disabled={busy || !w?.hasShop}
           >
-            {busy ? dash.loading : dash.topup_submit}
+            {busy ? dash.redirecting : dash.topup_submit}
           </button>
+          <p className="wallet__secure">{dash.pay_secure}</p>
         </div>
       ) : null}
 

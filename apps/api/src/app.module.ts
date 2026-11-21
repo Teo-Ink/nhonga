@@ -18,6 +18,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module.js';
 import { AdsModule } from './modules/ads/ads.module.js';
 import { WalletModule } from './modules/wallet/wallet.module.js';
 import { BannersModule } from './modules/banners/banners.module.js';
+import { CheckoutModule } from './modules/checkout/checkout.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -45,6 +46,7 @@ import { HealthController } from './health/health.controller.js';
     AdsModule,
     WalletModule,
     BannersModule,
+    CheckoutModule,
   ],
   controllers: [HealthController],
 })

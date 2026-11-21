@@ -44,7 +44,11 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#0A6B50',
+  // Browser/status bar = the header colour (tokens.css --header-bg).
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#015e48' },
+    { media: '(prefers-color-scheme: dark)', color: '#042e22' },
+  ],
 };
 
 // Before first paint, restore the theme and the "poupar dados" preference so

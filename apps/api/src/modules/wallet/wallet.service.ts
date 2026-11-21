@@ -57,7 +57,7 @@ const PACKAGES: readonly WalletPackage[] = [
   { id: 'pro', name: 'Pacote Pro', priceCents: 100000, balanceCents: 115000, points: 150 },
 ];
 
-const MAX_TOPUP_CENTS = 10_000_000; // 100 000 MT per top-up
+export const MAX_TOPUP_CENTS = 10_000_000; // 100 000 MT per top-up
 
 // Points cost of a bump plan: 1 point ≈ 1 MT of the plan's price.
 const pointsCostOf = (priceCents: number): number => Math.max(1, Math.round(priceCents / 100));
@@ -310,6 +310,11 @@ export class WalletService {
       description: 'Loja Pro (30 dias)',
     });
     return this.snapshot(v.id, v.name);
+  }
+
+  /** The caller's shop, or a 400 when they have none (used by checkout). */
+  requireShop(token: string | null): Promise<{ id: string; name: string }> {
+    return this.requireVendor(token);
   }
 
   private async requireVendor(token: string | null): Promise<{ id: string; name: string }> {
