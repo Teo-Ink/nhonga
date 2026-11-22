@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateEnv } from './config.schema.js';
+import { anthropicKey, validateEnv } from './config.schema.js';
 
 const SAFE_PROD = {
   NODE_ENV: 'production',
@@ -67,5 +67,16 @@ describe('production safety', () => {
     expect(validateEnv({ NODE_ENV: 'staging', DATABASE_URL: 'postgresql://x' }).paymentsMode).toBe(
       'mock',
     );
+  });
+});
+
+describe('assistant key (AI-01)', () => {
+  it('accepts an Anthropic key', () => {
+    expect(anthropicKey('  sk-ant-abc123 ')).toBe('sk-ant-abc123');
+  });
+  it('treats empty, missing and the Terraform placeholder as off', () => {
+    expect(anthropicKey(undefined)).toBeNull();
+    expect(anthropicKey('')).toBeNull();
+    expect(anthropicKey('definir-chave')).toBeNull();
   });
 });

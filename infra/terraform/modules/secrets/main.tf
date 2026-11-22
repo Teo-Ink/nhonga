@@ -46,6 +46,12 @@ locals {
   database_url = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:${var.db_port}/${var.db_name}?sslmode=require"
 }
 
+variable "optional" {
+  description = "Secrets the app can run without (e.g. ANTHROPIC_API_KEY): a placeholder is written once so the task starts; the owner replaces it."
+  type        = set(string)
+  default     = []
+}
+
 # ── Generated values ─────────────────────────────────────────────────────────
 resource "aws_secretsmanager_secret" "database_url" {
   name        = "${local.name}/DATABASE_URL"
@@ -133,6 +139,28 @@ resource "aws_secretsmanager_secret" "external" {
   recovery_window_in_days = 7
 }
 
+# ── Optional values (assistant key) ─────────────────────────────────────────
+# The placeholder is written only when the container is created, so the
+# owner's value is never overwritten by a later apply.
+resource "aws_secretsmanager_secret" "optional" {
+  for_each                = var.optional
+  name                    = "${local.name}/${each.key}"
+  description             = "${each.key} for the ${var.environment} API (optional, set by the owner)"
+  recovery_window_in_days = 7
+}
+
+resource "terraform_data" "put_optional_placeholder" {
+  for_each         = var.optional
+  triggers_replace = [aws_secretsmanager_secret.optional[each.key].arn]
+  provisioner "local-exec" {
+    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string definir-chave >/dev/null"
+    environment = {
+      REGION = var.region
+      ID     = aws_secretsmanager_secret.optional[each.key].arn
+    }
+  }
+}
+
 output "database_url_arn" { value = aws_secretsmanager_secret.database_url.arn }
 output "admin_api_token_arn" { value = aws_secretsmanager_secret.admin_api_token.arn }
 output "otp_dev_allowlist_arn" {
@@ -140,4 +168,7 @@ output "otp_dev_allowlist_arn" {
 }
 output "external_arns" {
   value = { for k, s in aws_secretsmanager_secret.external : k => s.arn }
+}
+output "optional_arns" {
+  value = { for k, s in aws_secretsmanager_secret.optional : k => s.arn }
 }

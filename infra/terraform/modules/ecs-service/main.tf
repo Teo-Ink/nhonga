@@ -179,6 +179,13 @@ resource "aws_service_discovery_service" "this" {
   # ECS reports task health to Cloud Map, so unhealthy tasks leave DNS.
   health_check_custom_config {}
   tags = { Name = local.name }
+
+  lifecycle {
+    # The AWS API returns no custom health-check block for services created
+    # this way, so the provider wants to replace the service on every apply,
+    # and Cloud Map refuses to delete a service with running tasks (INF-03).
+    ignore_changes = [health_check_custom_config]
+  }
 }
 
 resource "aws_ecs_service" "this" {

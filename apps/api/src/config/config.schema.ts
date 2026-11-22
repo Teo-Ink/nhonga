@@ -142,10 +142,10 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
       (paymentsMode === 'live' ? randomBytes(32).toString('hex') : 'dev-only-not-a-real-secret'),
     paymentApprovalTimeoutSeconds: requireInt(raw, 'PAYMENT_APPROVAL_TIMEOUT_SECONDS', 180),
     paymentLateSweepHours: requireInt(raw, 'PAYMENT_LATE_SWEEP_HOURS', 72),
-    assistantApiKey: raw['ANTHROPIC_API_KEY']?.trim() ? raw['ANTHROPIC_API_KEY']!.trim() : null,
+    assistantApiKey: anthropicKey(raw['ANTHROPIC_API_KEY']),
     assistantModel: raw['ANTHROPIC_MODEL']?.trim()
       ? raw['ANTHROPIC_MODEL']!.trim()
-      : 'claude-sonnet-5',
+      : 'claude-sonnet-5-5',
     assistantRatePerMin: requireInt(raw, 'ASSISTANT_RATE_PER_MIN', 15),
     assistantMonthlyTokenCap: requireInt(raw, 'ASSISTANT_MONTHLY_TOKEN_CAP', 0),
     bannerFreeQuota: requireInt(raw, 'BANNER_FREE_QUOTA', 5),
@@ -203,4 +203,14 @@ export function assertProductionSafe(
   if (problems.length > 0) {
     throw new ConfigError(`Unsafe production configuration: ${problems.join('; ')}`);
   }
+}
+
+/**
+ * Anthropic keys start with "sk-ant-". Anything else (empty, or the
+ * placeholder Terraform writes so the task can start) means "assistant off",
+ * so a deploy before the owner puts the key keeps the site up (AI-01).
+ */
+export function anthropicKey(value: string | undefined): string | null {
+  const v = value?.trim() ?? '';
+  return v.startsWith('sk-ant-') ? v : null;
 }
