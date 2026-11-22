@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Nhonga storefront \u2014 Next.js App Router. Phase 3d read-only catalogue slice.",
+  "description": "Nhonga storefront — Next.js App Router. Phase 3d read-only catalogue slice.",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",

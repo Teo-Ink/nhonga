@@ -63,13 +63,11 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
 
   useEffect(() => {
     void loadWallet();
-    // eslint-disable-next-line
   }, [reloadSignal]);
 
   // "Tentar de novo" from /pagamento links here with ?carregar=1.
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('carregar') === '1') openTopup();
-    // eslint-disable-next-line
   }, []);
 
   function loadMethods() {

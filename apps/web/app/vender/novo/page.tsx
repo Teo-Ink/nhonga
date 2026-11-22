@@ -484,7 +484,6 @@ export default function NewListingPage() {
                   <span className="preview-card__badge">{t.badge_destaque}</span>
                 ) : null}
                 {photos[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={photos[0]} alt="" className="preview-card__cover" />
                 ) : (
                   <span className="preview-card__ph" aria-hidden="true">

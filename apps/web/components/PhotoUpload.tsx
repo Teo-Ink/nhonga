@@ -89,7 +89,6 @@ export function PhotoUpload({
       <div className="photoup__grid">
         {photos.map((src, i) => (
           <div className="photoup__item" key={src.slice(0, 32) + i}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt="" className="photoup__img" />
             {i === 0 ? <span className="photoup__cover">{labels.cover}</span> : null}
             <div className="photoup__actions">
