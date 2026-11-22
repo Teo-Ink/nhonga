@@ -280,4 +280,32 @@ resource "aws_cloudwatch_metric_alarm" "payment_review" {
   alarm_actions       = local.actions
 }
 
+# A refund the gateway refused (P2-02): the seller's credit was restored, but
+# the payer is still waiting for their money.
+resource "aws_cloudwatch_log_metric_filter" "refund_failed" {
+  name           = "${local.name}-refund-failed"
+  log_group_name = var.api_log_group
+  pattern        = "\"ALERT refund_failed\""
+  metric_transformation {
+    name          = "RefundsFailed"
+    namespace     = "Nhonga/${var.environment}"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "refund_failed" {
+  alarm_name          = "${local.name}-refund-failed"
+  alarm_description   = "A refund was refused by the payment gateway (P2-02)."
+  namespace           = "Nhonga/${var.environment}"
+  metric_name         = aws_cloudwatch_log_metric_filter.refund_failed.metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.actions
+}
+
 output "topic_arn" { value = aws_sns_topic.alarms.arn }

@@ -96,6 +96,7 @@ export const NotificationPrefs = z.object({
 export const CheckoutTopup = z.object({ amountCents: int.positive(), method: paymentMethod });
 export const CheckoutPackage = z.object({ packageId: id, method: paymentMethod });
 export const CheckoutMockDecide = z.object({ outcome: z.enum(['paid', 'failed']).optional() });
+export const CheckoutRefund = z.object({ reason: required(500) });
 export const WalletBoost = z.object({ productId: id, planCode: required(32) });
 export const WalletTopup = z.object({ amountCents: int.positive() });
 export const WalletPurchase = z.object({ packageId: id });
@@ -182,6 +183,7 @@ export const API_BODIES = {
   CheckoutTopup,
   CheckoutPackage,
   CheckoutMockDecide,
+  CheckoutRefund,
   WalletBoost,
   WalletTopup,
   WalletPurchase,

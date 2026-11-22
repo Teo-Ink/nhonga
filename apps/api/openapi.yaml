@@ -1119,6 +1119,76 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /checkout/admin/{id}:
+    get:
+      tags:
+        - checkout
+      operationId: Checkout_adminView
+      summary: GET /checkout/admin/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/admin/{id}/refund:
+    post:
+      tags:
+        - checkout
+      operationId: Checkout_refund
+      summary: POST /checkout/admin/{id}/refund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutRefund"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /checkout/methods:
     get:
       tags:
@@ -2589,6 +2659,15 @@ components:
           enum:
             - paid
             - failed
+    CheckoutRefund:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+        - reason
     WalletBoost:
       type: object
       properties:

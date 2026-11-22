@@ -15,6 +15,8 @@ import type {
   PayMethod,
   WebhookInput,
   WebhookResult,
+  RefundInput,
+  RefundResult,
 } from '../checkout.types.js';
 
 export class MockGateway implements CheckoutGateway {
@@ -57,5 +59,10 @@ export class MockGateway implements CheckoutGateway {
   parseWebhook(input: WebhookInput): WebhookResult {
     void input;
     return { valid: false, reason: 'malformed' };
+  }
+
+  /** The simulator returns the money at once. */
+  async refund(_input: RefundInput): Promise<RefundResult> {
+    return { status: 'completed', reason: null };
   }
 }

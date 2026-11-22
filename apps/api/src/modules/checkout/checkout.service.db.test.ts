@@ -16,6 +16,8 @@ import {
   type GatewayId,
   type GatewayStatus,
   type PayMethod,
+  type RefundInput,
+  type RefundResult,
 } from './checkout.types.js';
 
 // TEST-02: the money path of the hosted checkout against a real Postgres:
@@ -44,6 +46,12 @@ class FakeGateway implements CheckoutGateway {
   }
   pay(ref: string, amountCents: number) {
     this.answers.set(ref, { status: 'paid', amountCents, failureReason: null });
+  }
+  refundAnswer: RefundResult = { status: 'completed', reason: null };
+  refunds: RefundInput[] = [];
+  async refund(input: RefundInput): Promise<RefundResult> {
+    this.refunds.push(input);
+    return this.refundAnswer;
   }
 }
 
@@ -172,5 +180,64 @@ describe.skipIf(!hasTestDb)('CheckoutService (Postgres)', () => {
     expect(w?.balanceCents).toBe(55_000); // 500 MT paid -> 550 MT credited
     expect(w?.points).toBe(60);
     expect(await txCount()).toBe(1);
+  });
+
+  // P2-02: refunds.
+  const paidTopup = async (cents: number) => {
+    const v = await svc.startTopup('token', cents, 'mpesa');
+    primary.pay(`pawapay-${v.id}`, cents);
+    await webhook(primary, `pawapay-${v.id}`);
+    return v.id;
+  };
+
+  it('refunds a top-up once: takes the credit back and returns the money', async () => {
+    const id = await paidTopup(30_000);
+    const [a, b] = await Promise.all([
+      svc.refund(id, 'pedido do cliente'),
+      svc.refund(id, 'duplo'),
+    ]);
+    expect([a.refundStatus, b.refundStatus]).toContain('refunded');
+    expect(primary.refunds).toEqual([
+      { refundId: id, gatewayRef: `pawapay-${id}`, amountCents: 30_000 },
+    ]);
+    expect((await walletRow())?.balanceCents).toBe(0);
+    const kinds = (
+      await db.select().from(walletTransaction).where(eq(walletTransaction.vendorId, vendorId))
+    ).map((t) => t.kind);
+    expect(kinds.sort()).toEqual(['refund', 'topup']);
+  });
+
+  it('refuses when the credit was already spent', async () => {
+    const id = await paidTopup(30_000);
+    await db.update(wallet).set({ balanceCents: 1_000 }).where(eq(wallet.vendorId, vendorId));
+    await expect(svc.refund(id, 'x')).rejects.toMatchObject({ status: 409 });
+    expect(primary.refunds).toHaveLength(0);
+    const [intent] = await db.select().from(checkoutIntent).where(eq(checkoutIntent.id, id));
+    expect(intent?.refundStatus).toBeNull();
+  });
+
+  it('puts the credit back when the gateway refuses', async () => {
+    const id = await paidTopup(30_000);
+    primary.refundAnswer = { status: 'rejected', reason: 'saldo da conta insuficiente' };
+    await expect(svc.refund(id, 'x')).rejects.toMatchObject({ status: 409 });
+    expect((await walletRow())?.balanceCents).toBe(30_000);
+    const [intent] = await db.select().from(checkoutIntent).where(eq(checkoutIntent.id, id));
+    expect(intent?.refundStatus).toBe('failed');
+  });
+
+  it('refunds a payment in review without touching the wallet', async () => {
+    const v = await svc.startTopup('token', 50_000, 'emola');
+    primary.pay(`pawapay-${v.id}`, 5_000);
+    await webhook(primary, `pawapay-${v.id}`);
+    primary.refundAnswer = { status: 'accepted', reason: null };
+    const r = await svc.refund(v.id, 'valor errado');
+    expect(r.refundStatus).toBe('pending');
+    expect(await walletRow()).toBeUndefined();
+  });
+
+  it('only refunds received payments', async () => {
+    const v = await svc.startTopup('token', 10_000, 'mpesa');
+    await expect(svc.refund(v.id, 'x')).rejects.toMatchObject({ status: 409 });
+    await expect(svc.refund(randomUUID(), 'x')).rejects.toMatchObject({ status: 404 });
   });
 });
