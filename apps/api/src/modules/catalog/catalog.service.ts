@@ -110,6 +110,18 @@ export class CatalogService {
     },
     sessionToken?: string | null,
   ): Promise<{ id: string; slug: string }> {
+    // Publishing needs a verified account (P0-02): every listing belongs to a
+    // person who confirmed their number, which is what makes a scam traceable
+    // and a ban stick. The seller's shop is created on their first listing.
+    let user: AuthUser;
+    try {
+      user = await this.auth.me(sessionToken ?? null);
+    } catch {
+      throw new UnauthorizedException({
+        message: 'Inicie sessão para publicar o anúncio.',
+        code: 'login_required',
+      });
+    }
     const title = input.title.trim();
     if (title.length < 3) throw new BadRequestException({ message: 'title too short' });
     if (!Number.isFinite(input.priceCents) || input.priceCents < 0) {
@@ -125,18 +137,6 @@ export class CatalogService {
     )[0];
     if (!cat) throw new BadRequestException({ message: 'unknown category' });
 
-    // Publishing needs a verified account (P0-02): every listing belongs to a
-    // person who confirmed their number, which is what makes a scam traceable
-    // and a ban stick. The seller's shop is created on their first listing.
-    let user: AuthUser;
-    try {
-      user = await this.auth.me(sessionToken ?? null);
-    } catch {
-      throw new UnauthorizedException({
-        message: 'Inicie sessão para publicar o anúncio.',
-        code: 'login_required',
-      });
-    }
     const vendorId = await this.ensureUserVendor(user, input.shopName);
     const today = await this.listingsCreatedToday(vendorId);
     if (today >= listingsPerDay()) {

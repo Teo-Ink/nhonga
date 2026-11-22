@@ -252,4 +252,32 @@ resource "aws_cloudwatch_metric_alarm" "api_errors" {
   alarm_actions       = local.actions
 }
 
+# A payment that arrived with an amount different from what was asked goes to
+# "review" instead of the wallet (P1-09). Someone must look at it the same day.
+resource "aws_cloudwatch_log_metric_filter" "payment_review" {
+  name           = "${local.name}-payment-review"
+  log_group_name = var.api_log_group
+  pattern        = "\"ALERT payment_review\""
+  metric_transformation {
+    name          = "PaymentsInReview"
+    namespace     = "Nhonga/${var.environment}"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "payment_review" {
+  alarm_name          = "${local.name}-payment-review"
+  alarm_description   = "A payment needs manual review (amount mismatch or late payment) (P1-09)."
+  namespace           = "Nhonga/${var.environment}"
+  metric_name         = aws_cloudwatch_log_metric_filter.payment_review.metric_transformation[0].name
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = local.actions
+}
+
 output "topic_arn" { value = aws_sns_topic.alarms.arn }

@@ -44,6 +44,13 @@ variable "image_tag" {
   default     = "latest"
   description = "The api image tag to deploy. The deploy pipeline overrides this per release."
 }
+# Error tracking (P0-13). Empty = off. The DSN only allows sending events, so it
+# is configuration, not a secret.
+variable "sentry_dsn" {
+  type    = string
+  default = ""
+}
+
 variable "alarm_email" {
   type        = string
   default     = ""
@@ -157,6 +164,8 @@ module "api" {
   environment_vars = {
     PAYMENTS_MODE = "mock" # [TBC] flips to "live" once OQ-7/OQ-8 merchant agreements land
     LOG_LEVEL     = "info"
+    APP_VERSION   = var.image_tag
+    SENTRY_DSN    = var.sentry_dsn
     # Listings untouched for 90 days leave search (P2-10).
     LISTING_TTL_DAYS = "90"
     # Monthly ceiling on generative-AI tokens (SEC-08); review with real usage.

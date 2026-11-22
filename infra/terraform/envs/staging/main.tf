@@ -49,6 +49,13 @@ variable "web_image_tag" {
   default     = "latest"
   description = "The web image tag to deploy. The deploy pipeline advances it per release."
 }
+# Error tracking (P0-13). Empty = off. The DSN only allows sending events, so it
+# is configuration, not a secret.
+variable "sentry_dsn" {
+  type    = string
+  default = ""
+}
+
 variable "alarm_email" {
   type        = string
   default     = ""
@@ -194,6 +201,8 @@ module "api" {
     CHECKOUT_MODE  = "mock"
     SMS_MODE       = "mock"
     LOG_LEVEL      = "debug"
+    APP_VERSION    = var.image_tag
+    SENTRY_DSN     = var.sentry_dsn
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
