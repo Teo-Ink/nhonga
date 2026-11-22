@@ -16,6 +16,7 @@
     "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f scripts/seed.sql"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1175.0",
     "@nestjs/common": "^12.6.0",
     "@nestjs/config": "^12.1.1",
     "@nestjs/core": "^12.6.0",

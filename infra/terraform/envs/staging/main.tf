@@ -203,6 +203,8 @@ module "api" {
     LOG_LEVEL      = "debug"
     APP_VERSION    = var.image_tag
     SENTRY_DSN     = var.sentry_dsn
+    MEDIA_BUCKET   = module.media.bucket
+    MEDIA_CDN_URL  = "https://${module.media.cdn_domain}"
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
@@ -244,6 +246,9 @@ module "web" {
 
     # The stand-in payment page for CHECKOUT_MODE=mock on the api.
     CHECKOUT_SIMULATOR = "1"
+
+    # Photos come from the media CDN (P1-03); the CSP must allow it.
+    IMAGE_HOSTS = module.media.cdn_domain
   }
 }
 
@@ -267,3 +272,11 @@ output "api_url" { value = "http://${module.alb.dns_name}:${local.api_http_port}
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
 output "web_ecr_repository_url" { value = aws_ecr_repository.web.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
+
+# Listing photos in S3 behind CloudFront (P1-03, P1-04).
+module "media" {
+  source         = "../../modules/media"
+  project        = local.project
+  environment    = local.env
+  task_role_name = module.api.task_role_name
+}
