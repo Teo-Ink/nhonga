@@ -116,7 +116,7 @@ export default function BannerScreen() {
       {!loaded ? (
         <ActivityIndicator color={brand.green} style={{ marginTop: space.xl }} />
       ) : !productId ? (
-        <Text style={styles.muted}>Inicia sessão como vendedor para criar banners.</Text>
+        <Text style={styles.muted}>Inicie sessão como vendedor para criar banners.</Text>
       ) : (
         <>
           <Text style={styles.lead}>
@@ -168,11 +168,11 @@ export default function BannerScreen() {
             <>
               {aiUsed === false ? (
                 <Text style={styles.note}>
-                  Sugestão de IA indisponível de momento — o texto foi criado a partir do teu
+                  Sugestão de IA indisponível de momento — o texto foi criado a partir do seu
                   anúncio.
                 </Text>
               ) : null}
-              <Text style={styles.label}>Escolhe o teu preferido</Text>
+              <Text style={styles.label}>Escolha o seu preferido</Text>
               {variants.map((v) => (
                 <Pressable
                   key={v.id}

@@ -86,7 +86,7 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
       const d = await purchasePackage(id);
       setW(d);
       setPanel('none');
-      setMsg('Pacote adicionado à tua conta.');
+      setMsg('Pacote adicionado à sua conta.');
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Não foi possível comprar.');
     } finally {

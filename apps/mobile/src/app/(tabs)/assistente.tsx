@@ -75,7 +75,7 @@ export default function AssistantScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Escreve a tua pergunta…"
+          placeholder="Escreva a sua pergunta…"
           placeholderTextColor={brand.muted}
           multiline
           maxLength={2000}

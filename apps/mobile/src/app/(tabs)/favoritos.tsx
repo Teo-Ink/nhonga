@@ -57,7 +57,7 @@ export default function FavoritesScreen() {
       <View style={styles.center}>
         <Ionicons name="heart-outline" size={40} color={brand.muted} />
         <Text style={styles.emptyTitle}>Ainda não guardaste favoritos</Text>
-        <Text style={styles.muted}>Toca no coração de um anúncio para o guardares aqui.</Text>
+        <Text style={styles.muted}>Toque no coração de um anúncio para o guardar aqui.</Text>
       </View>
     );
   }
