@@ -94,3 +94,57 @@ execuções seguidas (o site já chama `/v1` e passa pela validação Zod).
 
 Para 9 continuam a faltar: as tarefas do dono e do advogado, a app (Expo SDK
 58, testes, build para as lojas) e os reembolsos.
+
+## 4.ª ronda — engenharia restante (22/11/2026)
+
+Seis ramos, empilhados depois de `audit/API-04-openapi`:
+
+| Ramo                             | O que resolve                                                                                                                                      | Backlog             |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `audit/MOB-02-app-lojas`         | Expo SDK 58 / RN 0.88 (0 vulnerabilidades altas), testes da app, `Idempotency-Key` na app, perfis EAS para as lojas, URL da API exigido em HTTPS   | P0-19, MOB          |
+| `audit/ARQ-06-retirar-legado`    | Fluxo de encomendas legado removido (controladores, webhooks, workers); promoções pagas pela carteira                                              | P2-13               |
+| `audit/PAY-02-reembolsos`        | Reembolso de carregamentos e pacotes pelo PawaPay (`/v2/refunds`), débito da carteira na mesma transacção, compensação se falhar, alarme e runbook | P2-02               |
+| `audit/API-05-respostas-tipadas` | Respostas tipadas (Zod) no OpenAPI para as rotas principais; teste de contrato em tempo de compilação e de execução                                | P2-11               |
+| `audit/INF-02-infra-producao`    | Produção com o serviço web, regra por host, NAT por AZ, endpoint S3, segredos escritos fora do plano (o plano já não lê segredos)                  | P0-08, P0-14, P2-12 |
+| `audit/SEC-10-csp-nonce`         | CSP com nonce por pedido e `'strict-dynamic'` (sem `'unsafe-inline'` nos scripts), teste E2E que falha com violações                               | P2-07               |
+
+Verificação local no último ramo: API 191 testes (1 ignorado), web 19,
+shared 145, app 3; typecheck, lint, dependency-cruiser, Redocly e Prettier
+verdes; `npm audit` da app sem altas/críticas; **E2E 17/17 em duas execuções
+seguidas**. Lighthouse móvel (simulação 4G lenta) em
+[evidências](evidencias/lighthouse-4a-ronda.md). **Terraform não foi
+validado localmente**; o `validate` e o plano correm no CI do PR.
+
+| Domínio        | 3.ª ronda | Agora (código) | Com o dono | O que falta                                                                         |
+| -------------- | --------- | -------------- | ---------- | ----------------------------------------------------------------------------------- |
+| Segurança      | 8         | **8,5**        | 9,5        | HTTPS/domínio, chaves root, WAF em "block", assinatura do webhook PawaPay (PAG-007) |
+| Pagamentos     | 8,5       | **9**          | 9          | Transferência bancária (decisão)                                                    |
+| Arquitectura   | 8,5       | **9**          | 9          | —                                                                                   |
+| API            | 8,5       | **9**          | 9          | —                                                                                   |
+| Dados          | 8         | **8**          | 9          | RPO/RTO e ensaio de restauro (P0-11)                                                |
+| Performance    | 8         | **8**          | 9          | CDN para `/_next/static` (precisa do domínio e do workflow de deploy)               |
+| Escalabilidade | 8         | **8,5**        | 9          | Aplicar o Terraform de produção                                                     |
+| DevOps         | 7         | **8**          | 9          | Mover as propostas de CI/deploy, protecção do `main`                                |
+| DevSecOps      | 7         | **7,5**        | 9          | Protecção do `main`, chaves root, propostas de CI                                   |
+| Testes         | 8         | **8,5**        | 9          | Ligar o job E2E e o job mobile no CI (propostas prontas)                            |
+| UX             | 8         | **8**          | 8,5        | Teste com 5 utilizadores reais em telemóvel                                         |
+| Design e cores | 9         | **9**          | 9          | —                                                                                   |
+| Acessibilidade | 8         | **8**          | 8,5        | TalkBack num Android real                                                           |
+| Mobile         | 6         | **8**          | 8,5        | Build EAS e teste num Android real; submissão às lojas                              |
+| Conformidade   | 7         | **7**          | 9          | Termos e privacidade revistos pelo advogado, parecer sobre apostas                  |
+| **Global**     | 7,8       | **8,3**        | **≈ 9**    |                                                                                     |
+
+**A engenharia que dependia só de código está feita.** O que separa 8,3 de 9
+são as tarefas do dono e do advogado:
+
+1. registar o domínio e seguir `runbooks/https.md`;
+2. apagar as chaves root (IAM com MFA);
+3. ligar a protecção do `main`;
+4. mover `docs/audit/ci/*.proposta` para `.github/workflows/`;
+5. pôr os segredos de produção como diz `runbooks/segredos.md`;
+6. `OTP_DEV_ALLOWLIST` no staging, DSN do Sentry, subscrição dos alarmes;
+7. decisões em `DECISOES.md`;
+8. textos jurídicos e parecer.
+
+Ficam para depois do lançamento: métricas de funil (P2-15), PWA offline
+(P2-08), backoffice (P2-04) e `verify-full` no RDS (P2-06).

@@ -61,23 +61,23 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 | ID    | Tarefa                                                           | Origem          | Área       | Esforço | Critério                                                      | Dep.       |
 | ----- | ---------------------------------------------------------------- | --------------- | ---------- | ------- | ------------------------------------------------------------- | ---------- |
 | P0-07 | Domínio, ACM, HTTPS, regras por host                             | OPS-01, SEC-012 | infra      | M       | `curl -I https://…` com HSTS; cookie `Secure`; sem porta 8080 | 👤 domínio |
-| P0-08 | Serviço web em produção                                          | ESC-005         | infra      | S       | `envs/production` com módulo `web` e regra por host           | P0-07      |
+| P0-08 | ✅ Serviço web em produção (INF-02)                              | ESC-005         | infra      | S       | `envs/production` com módulo `web` e regra por host           | P0-07      |
 | P0-09 | Protecção do branch `main`                                       | DSO-002         | devops     | S       | merge bloqueado com check vermelho                            | —          |
 | P0-10 | Apagar as chaves root; IAM com MFA                               | DSO-001         | conta 👤   | S       | `sts get-caller-identity` não devolve `:root`                 | —          |
 | P0-11 | Ensaio de restauro e RPO/RTO aprovados                           | DAT-004         | infra      | S       | registo do ensaio com tempos                                  | decisão    |
 | P0-12 | Merge de OPS-02 e subscrição do email                            | DEV-001         | infra      | S       | alarme de teste chega ao email                                | —          |
 | P0-13 | ✅ Error tracking (Sentry) API, web e app (OPS-04 (falta o DSN)) | DEV-002         | full-stack | M       | erro forçado aparece com o SHA do release                     | —          |
-| P0-14 | Plano de staging sem leitura de segredos a falhar                | DEV-005         | infra      | S       | "Plan (staging)" verde nos PRs                                | —          |
+| P0-14 | ✅ Plano sem leitura de segredos (INF-02)                        | DEV-005         | infra      | S       | "Plan (staging)" verde nos PRs                                | —          |
 
 ### Épico C — Conteúdo, legal e lojas
 
-| ID    | Tarefa                                                                                         | Origem           | Área          | Esforço | Critério                                               | Dep.    |
-| ----- | ---------------------------------------------------------------------------------------------- | ---------------- | ------------- | ------- | ------------------------------------------------------ | ------- |
-| P0-15 | Decidir classificados vs marketplace                                                           | CMP-001          | negócio 👤    | —       | decisão registada em `DECISIONS.md`                    | —       |
-| P0-16 | Termos, privacidade, cookies e regras de publicação                                            | CMP-003          | legal 👤      | M       | textos sem marcadores, revistos pelo advogado          | jurista |
-| P0-17 | ✅ Publicidade de apostas: regras e filtro 18+ (CMP-01 (recusadas; falta parecer))             | CMP-002          | legal+backend | M       | parecer + flag que esconde a categoria                 | jurista |
-| P0-18 | ✅ Denunciar e bloquear na app e na web (CMP-01)                                               | MOB-005, SEC-015 | full-stack    | M       | denúncia na app; bloqueio esconde mensagens e anúncios | —       |
-| P0-19 | ✅ Identificadores da app e API em HTTPS no EAS (CMP-01 (ids + HTTPS; URL depende do domínio)) | MOB-002/003      | mobile        | S       | build `preview` liga à API em HTTPS                    | P0-07   |
+| ID    | Tarefa                                                                                       | Origem           | Área          | Esforço | Critério                                               | Dep.    |
+| ----- | -------------------------------------------------------------------------------------------- | ---------------- | ------------- | ------- | ------------------------------------------------------ | ------- |
+| P0-15 | Decidir classificados vs marketplace                                                         | CMP-001          | negócio 👤    | —       | decisão registada em `DECISIONS.md`                    | —       |
+| P0-16 | Termos, privacidade, cookies e regras de publicação                                          | CMP-003          | legal 👤      | M       | textos sem marcadores, revistos pelo advogado          | jurista |
+| P0-17 | ✅ Publicidade de apostas: regras e filtro 18+ (CMP-01 (recusadas; falta parecer))           | CMP-002          | legal+backend | M       | parecer + flag que esconde a categoria                 | jurista |
+| P0-18 | ✅ Denunciar e bloquear na app e na web (CMP-01)                                             | MOB-005, SEC-015 | full-stack    | M       | denúncia na app; bloqueio esconde mensagens e anúncios | —       |
+| P0-19 | ✅ Identificadores da app e API em HTTPS no EAS (CMP-01, MOB-02 (falta o URL com o domínio)) | MOB-002/003      | mobile        | S       | build `preview` liga à API em HTTPS                    | P0-07   |
 
 **Esforço P0 (sem decisões/jurídico):** cerca de 14–20 dias-pessoa.
 
@@ -109,18 +109,18 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 | ID    | Tarefa                                                                         | Origem      | Esforço |
 | ----- | ------------------------------------------------------------------------------ | ----------- | ------- |
 | P2-01 | ✅ Validação Zod centralizada (API-01)                                         | ARQ-001     | L       |
-| P2-02 | Reembolsos e estornos                                                          | PAG-003     | M       |
+| P2-02 | ✅ Reembolsos (PAY-02)                                                         | PAG-003     | M       |
 | P2-03 | Transferência bancária (decisão)                                               | PAG-005     | M       |
 | P2-04 | Backoffice mínimo (moderação, revisão, publicidade)                            | ARQ-003     | L       |
 | P2-05 | ✅ WAF gerido, GuardDuty, CloudTrail, Config (DSO-06)                          | DSO-006     | M       |
 | P2-06 | RDS `verify-full`                                                              | SEC-016     | S       |
-| P2-07 | CSP com nonces                                                                 | SEC-013     | M       |
+| P2-07 | ✅ CSP com nonces (SEC-10)                                                     | SEC-013     | M       |
 | P2-08 | Service worker e PWA offline                                                   | PERF-004    | M       |
 | P2-09 | ✅ Auditoria de acessibilidade com axe e TalkBack (TEST-01 (axe; TalkBack 🔶)) | ACC-003/005 | M       |
 | P2-10 | ✅ Expiração de anúncios e limpeza de dados (DAT-01)                           | DAT-005     | S       |
 | P2-11 | ✅ Versionar a API (`/v1`) e Idempotency-Key (API-02/03/04)                    | API-003/004 | M       |
-| P2-12 | NAT por AZ ou VPC endpoints                                                    | ESC-002     | S       |
-| P2-13 | Remover ou isolar o fluxo de encomendas legado                                 | PAG-006     | M       |
+| P2-12 | ✅ NAT por AZ e endpoint S3 (INF-02)                                           | ESC-002     | S       |
+| P2-13 | ✅ Fluxo de encomendas legado removido (ARQ-06)                                | PAG-006     | M       |
 | P2-14 | ✅ README e documentação de arquitectura (ARQ-02)                              | ARQ-002     | S       |
 | P2-15 | Métricas de produto e funil                                                    | CMP-005     | M       |
 
