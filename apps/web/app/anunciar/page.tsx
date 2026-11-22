@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../../lib/demo';
 import type { Metadata } from 'next';
 import { IconMapPin, IconGrid, IconSparkle } from '../../components/icons';
 import { AdBookingForm } from '../../components/AdBookingForm';
@@ -60,9 +61,11 @@ export default async function AdvertisePage() {
           {a.panel_link} →
         </a>
       </p>
-      <p className="notice" role="note">
-        {a.demo_note}
-      </p>
+      {IS_DEMO ? (
+        <p className="notice" role="note">
+          {a.demo_note}
+        </p>
+      ) : null}
 
       <h2 className="spotpage__h2">{a.why_title}</h2>
       <ul className="spotpage__why">

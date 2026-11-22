@@ -16,7 +16,10 @@ import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { checkoutIntent } from '../../db/schema/checkout.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
-import { MAX_TOPUP_CENTS, WalletService } from '../wallet/wallet.service.js';
+import { MAX_TOPUP_CENTS, WalletService, packageById } from '../wallet/wallet.service.js';
+import { creditFor } from './checkout.credit.js';
+
+export { creditFor };
 import { buildCheckoutSetup, type CheckoutSetup } from './checkout.config.js';
 import {
   GatewayUnavailableError,
@@ -104,6 +107,37 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     if (!Number.isFinite(amount) || amount < MIN_TOPUP_CENTS || amount > MAX_TOPUP_CENTS) {
       throw new BadRequestException('Montante inválido (mínimo 10 MT, máximo 100 000 MT).');
     }
+    return this.start(shop.id, 'wallet_topup', amount, method, {}, 'Carregamento Nhonga');
+  }
+
+  /** Buy a wallet package (balance + bonus + points), credited once paid. */
+  async startPackage(
+    token: string | null,
+    packageId: string,
+    method: string,
+  ): Promise<CheckoutView> {
+    if (!token) throw new UnauthorizedException('Inicia sessão para comprar um pacote.');
+    const shop = await this.wallets.requireShop(token);
+    const pkg = packageById(packageId);
+    if (!pkg) throw new BadRequestException('Pacote inválido.');
+    return this.start(
+      shop.id,
+      'wallet_package',
+      pkg.priceCents,
+      method,
+      { packageId: pkg.id },
+      pkg.name,
+    );
+  }
+
+  private async start(
+    vendorId: string,
+    purpose: 'wallet_topup' | 'wallet_package',
+    amount: number,
+    method: string,
+    payload: Record<string, unknown>,
+    description: string,
+  ): Promise<CheckoutView> {
     if (!PAY_METHODS.includes(method as PayMethod)) {
       throw new BadRequestException('Método de pagamento inválido.');
     }
@@ -118,7 +152,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
       .from(checkoutIntent)
       .where(
         and(
-          eq(checkoutIntent.vendorId, shop.id),
+          eq(checkoutIntent.vendorId, vendorId),
           eq(checkoutIntent.status, 'pending'),
           sql`${checkoutIntent.createdAt} > now() - interval '30 minutes'`,
         ),
@@ -133,8 +167,9 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     const first = candidates[0] as CheckoutGateway;
     await this.db.insert(checkoutIntent).values({
       id,
-      purpose: 'wallet_topup',
-      vendorId: shop.id,
+      purpose,
+      vendorId,
+      payload,
       amountCents: amount,
       method: payMethod,
       gateway: first.id,
@@ -147,7 +182,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
           intentId: id,
           amountCents: amount,
           method: payMethod,
-          description: 'Carregamento Nhonga',
+          description,
           returnUrl: `${this.setup.publicWebUrl}/pagamento/${id}`,
           webhookUrl: `${this.setup.publicApiUrl}/checkout/webhooks/${gw.id}`,
         });
@@ -319,34 +354,44 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     allowExpired: boolean,
   ): Promise<Intent> {
     const amountOk = paidCents === null || paidCents === Number(intent.amountCents);
+    // A paid intent we cannot map to a credit (unknown package) is never
+    // silently swallowed: it goes to review like an amount mismatch.
+    const credit = creditFor(intent);
+    const ok = amountOk && credit !== null;
+    const reason = !amountOk
+      ? `Montante recebido ${paidCents} ≠ ${intent.amountCents}`
+      : credit === null
+        ? 'Pagamento recebido sem crédito associado'
+        : null;
     const from = allowExpired ? ['pending', 'expired'] : ['pending'];
     const row = await this.db.transaction(async (tx) => {
       const [updated] = await tx
         .update(checkoutIntent)
         .set({
-          status: amountOk ? 'paid' : 'review',
+          status: ok ? 'paid' : 'review',
           paidAt: sql`now()`,
-          failureReason: amountOk ? null : `Montante recebido ${paidCents} ≠ ${intent.amountCents}`,
+          failureReason: reason,
           updatedAt: sql`now()`,
         })
         .where(and(eq(checkoutIntent.id, intent.id), inArray(checkoutIntent.status, from)))
         .returning();
       if (!updated) return null; // someone else settled it first
-      if (amountOk && updated.purpose === 'wallet_topup' && updated.vendorId) {
+      if (ok && credit && updated.vendorId) {
         await tx.insert(wallet).values({ vendorId: updated.vendorId }).onConflictDoNothing();
         await tx
           .update(wallet)
           .set({
-            balanceCents: sql`${wallet.balanceCents} + ${updated.amountCents}`,
+            balanceCents: sql`${wallet.balanceCents} + ${credit.balanceCents}`,
+            points: sql`${wallet.points} + ${credit.points}`,
             updatedAt: sql`now()`,
           })
           .where(eq(wallet.vendorId, updated.vendorId));
         await tx.insert(walletTransaction).values({
           vendorId: updated.vendorId,
-          kind: 'topup',
-          amountCents: updated.amountCents,
-          points: 0,
-          description: `Carregamento ${methodLabel(updated.method)}`,
+          kind: credit.kind,
+          amountCents: credit.balanceCents,
+          points: credit.points,
+          description: credit.description,
         });
       }
       return updated;
@@ -359,10 +404,6 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     }
     return (await this.find(intent.id)) as Intent;
   }
-}
-
-function methodLabel(m: string): string {
-  return { mpesa: 'M-Pesa', emola: 'e-Mola', mkesh: 'mKesh', card: 'cartão' }[m] ?? m;
 }
 
 function errText(e: unknown): string {

@@ -1,10 +1,13 @@
 'use client';
+import { IS_DEMO } from '../lib/demo';
+
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || undefined;
 import { useState } from 'react';
 import type { Dictionary } from '../lib/i18n/index';
 
-// Open-a-dispute form. Support is not wired: submitting persists nothing and
-// sends nothing. On a valid submit it shows an honest "not sent in this demo"
-// confirmation. Takes the help sub-dictionary as a prop so it stays locale-aware
+// Open-a-complaint form. In demo mode it sends nothing and says so. Otherwise
+// it opens the user's email app with the complaint addressed to support
+// (NEXT_PUBLIC_SUPPORT_EMAIL), so every case reaches a real inbox. Takes the help sub-dictionary as a prop so it stays locale-aware
 // alongside the server-rendered FAQ.
 export function DisputeForm({ t }: { t: Dictionary['help'] }) {
   const [order, setOrder] = useState('');
@@ -22,7 +25,37 @@ export function DisputeForm({ t }: { t: Dictionary['help'] }) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
       return;
     }
+    if (!IS_DEMO && SUPPORT_EMAIL) {
+      const reasonLabel =
+        {
+          not_received: t.d_r_not_received,
+          different: t.d_r_different,
+          damaged: t.d_r_damaged,
+          other: t.d_r_other,
+        }[reason] ?? reason;
+      const body = [
+        `${t.d_reason}: ${reasonLabel}`,
+        order ? `${t.d_order}: ${order}` : '',
+        '',
+        description,
+      ]
+        .filter((l, i) => l !== '' || i === 2)
+        .join('\n');
+      window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+        `${t.dispute_title}: ${reasonLabel}`,
+      )}&body=${encodeURIComponent(body)}`;
+    }
     setSent(true);
+  }
+
+  if (!IS_DEMO && !SUPPORT_EMAIL) {
+    // Misconfigured production: never show a form that sends nowhere.
+    return (
+      <div className="card">
+        <h2 className="card__title">{t.dispute_title}</h2>
+        <p className="account__muted">{t.d_unavailable}</p>
+      </div>
+    );
   }
 
   return (
@@ -85,7 +118,9 @@ export function DisputeForm({ t }: { t: Dictionary['help'] }) {
       ) : null}
       {sent ? (
         <p className="auth__notice" role="status">
-          {t.d_sent} {t.d_not_wired}
+          {IS_DEMO
+            ? `${t.d_sent} ${t.d_not_wired}`
+            : t.d_sent_email.replace('{email}', SUPPORT_EMAIL ?? '')}
         </p>
       ) : null}
     </form>

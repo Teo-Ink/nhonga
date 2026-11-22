@@ -44,7 +44,7 @@ export function BottomNav({ t }: { t: Dictionary }) {
   }, [user, path]);
   // Selling needs an account: authenticated → onboarding, otherwise sign in /
   // create account first, then continue to selling.
-  const sellHref = user ? '/vender/comecar' : '/entrar?next=/vender/comecar';
+  const sellHref = user ? '/vender/novo' : '/entrar?next=/vender/novo';
 
   const tab = (href: string, label: string, Icon: typeof IconHome) => (
     <a

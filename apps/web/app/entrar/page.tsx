@@ -1,4 +1,5 @@
 'use client';
+import { IS_DEMO } from '../../lib/demo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isValidMzMsisdn } from '@nhonga/shared';
@@ -131,6 +132,10 @@ export default function AuthPage() {
               <button type="submit" className="btn btn--cta auth__submit" disabled={busy}>
                 {busy ? t.sending : t.send_code}
               </button>
+              <p className="auth__legal">
+                {t.legal_before} <a href="/termos">{t.legal_terms}</a> {t.legal_and}{' '}
+                <a href="/privacidade">{t.legal_privacy}</a>.
+              </p>
             </form>
 
             <div className="auth__divider" role="separator">
@@ -218,9 +223,11 @@ export default function AuthPage() {
           </>
         )}
 
-        <p className="demo-banner" role="note">
-          {t.demo_note}
-        </p>
+        {IS_DEMO ? (
+          <p className="demo-banner" role="note">
+            {t.demo_note}
+          </p>
+        ) : null}
       </div>
     </section>
   );

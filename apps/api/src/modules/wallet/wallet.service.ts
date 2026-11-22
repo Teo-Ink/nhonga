@@ -1,23 +1,17 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { product } from '../../db/schema/catalog.js';
+import type { AppConfig } from '../../config/config.schema.js';
 import { AuthService } from '../auth/auth.service.js';
 import { PromotionsService } from '../promotions/promotions.service.js';
+import { PACKAGES, packageById, type WalletPackage } from './packages.js';
 
-export interface WalletPackage {
-  id: string;
-  name: string;
-  /** What the buyer pays (demo — no live gateway), in cents of MT. */
-  priceCents: number;
-  /** Balance credited to the wallet, in cents (may exceed price = bonus). */
-  balanceCents: number;
-  /** Loyalty points credited. */
-  points: number;
-}
+export { packageById, type WalletPackage };
 
 export interface WalletTx {
   id: string;
@@ -51,11 +45,6 @@ export interface BoostResult {
 
 // Prepaid seller packages. Buying one credits balance (+ a bonus) and loyalty
 // points. Demo payment: the balance is real and persisted, but no money moves.
-const PACKAGES: readonly WalletPackage[] = [
-  { id: 'basico', name: 'Pacote Básico', priceCents: 10000, balanceCents: 10000, points: 10 },
-  { id: 'popular', name: 'Pacote Popular', priceCents: 50000, balanceCents: 55000, points: 60 },
-  { id: 'pro', name: 'Pacote Pro', priceCents: 100000, balanceCents: 115000, points: 150 },
-];
 
 export const MAX_TOPUP_CENTS = 10_000_000; // 100 000 MT per top-up
 
@@ -79,7 +68,42 @@ export class WalletService {
     @Inject(DB) private readonly db: Db,
     private readonly auth: AuthService,
     private readonly promotions: PromotionsService,
+    private readonly config: ConfigService<AppConfig, true>,
   ) {}
+
+  /**
+   * The instant top-up and package endpoints credit money without a payment.
+   * They exist only for the mock/dev flow; with real payments, money enters
+   * through the hosted checkout (modules/checkout) instead.
+   */
+  private assertMockPayments(): void {
+    if (this.config.get('paymentsMode', { infer: true }) !== 'mock') {
+      throw new ForbiddenException('Paga com M-Pesa, e-Mola, mKesh ou cartão.');
+    }
+  }
+
+  /**
+   * Take `cents` of balance and/or `points` in one conditional UPDATE, so two
+   * concurrent purchases can never push the wallet below zero.
+   */
+  private async debit(vendorId: string, cents: number, points: number): Promise<boolean> {
+    const rows = await this.db
+      .update(wallet)
+      .set({
+        balanceCents: sql`${wallet.balanceCents} - ${cents}`,
+        points: sql`${wallet.points} - ${points}`,
+        updatedAt: sql`now()`,
+      })
+      .where(
+        and(
+          eq(wallet.vendorId, vendorId),
+          sql`${wallet.balanceCents} >= ${cents}`,
+          sql`${wallet.points} >= ${points}`,
+        ),
+      )
+      .returning({ vendorId: wallet.vendorId });
+    return rows.length > 0;
+  }
 
   packages(): readonly WalletPackage[] {
     return PACKAGES;
@@ -173,6 +197,7 @@ export class WalletService {
   }
 
   async topup(token: string | null, amountCents: number): Promise<WalletView> {
+    this.assertMockPayments();
     const v = await this.requireVendor(token);
     const amount = Math.round(amountCents);
     if (!Number.isFinite(amount) || amount <= 0 || amount > MAX_TOPUP_CENTS) {
@@ -194,6 +219,7 @@ export class WalletService {
   }
 
   async purchase(token: string | null, packageId: string): Promise<WalletView> {
+    this.assertMockPayments();
     const v = await this.requireVendor(token);
     const pkg = PACKAGES.find((p) => p.id === packageId);
     if (!pkg) throw new BadRequestException('Pacote inválido.');
@@ -232,17 +258,12 @@ export class WalletService {
     const plan = await this.promotions.planFor(planCode);
     if (!plan) throw new BadRequestException('Plano de destaque inválido.');
     await this.ensureWallet(v.id);
-    const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, v.id)))[0];
     if (plan.kind === 'bump') {
       // "Subir ao topo" is paid with loyalty points (1 point ≈ 1 MT of price).
       const pts = pointsCostOf(plan.priceCents);
-      if ((w?.points ?? 0) < pts) {
+      if (!(await this.debit(v.id, 0, pts))) {
         throw new BadRequestException('Pontos insuficientes. Compra um pacote para ganhar pontos.');
       }
-      await this.db
-        .update(wallet)
-        .set({ points: sql`${wallet.points} - ${pts}`, updatedAt: sql`now()` })
-        .where(eq(wallet.vendorId, v.id));
       await this.db.insert(walletTransaction).values({
         vendorId: v.id,
         kind: 'spend',
@@ -252,16 +273,9 @@ export class WalletService {
       });
     } else {
       // "Destaque"/"Turbo" are paid with balance.
-      if (Number(w?.balanceCents ?? 0) < plan.priceCents) {
+      if (!(await this.debit(v.id, plan.priceCents, 0))) {
         throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
       }
-      await this.db
-        .update(wallet)
-        .set({
-          balanceCents: sql`${wallet.balanceCents} - ${plan.priceCents}`,
-          updatedAt: sql`now()`,
-        })
-        .where(eq(wallet.vendorId, v.id));
       await this.db.insert(walletTransaction).values({
         vendorId: v.id,
         kind: 'spend',
@@ -282,8 +296,8 @@ export class WalletService {
   async subscribePro(token: string | null): Promise<WalletView> {
     const v = await this.requireVendor(token);
     await this.ensureWallet(v.id);
-    const w = (await this.db.select().from(wallet).where(eq(wallet.vendorId, v.id)))[0];
-    if (Number(w?.balanceCents ?? 0) < PRO_PRICE_CENTS) {
+    // Charge first (atomically); only then extend the subscription.
+    if (!(await this.debit(v.id, PRO_PRICE_CENTS, 0))) {
       throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
     }
     const row = (
@@ -293,14 +307,6 @@ export class WalletService {
     const base =
       row?.proUntil != null && row.proUntil.getTime() > now ? row.proUntil.getTime() : now;
     const newUntil = new Date(base + PRO_DAYS * 86_400_000);
-    // Charge the wallet and extend the subscription.
-    await this.db
-      .update(wallet)
-      .set({
-        balanceCents: sql`${wallet.balanceCents} - ${PRO_PRICE_CENTS}`,
-        updatedAt: sql`now()`,
-      })
-      .where(eq(wallet.vendorId, v.id));
     await this.db.update(vendor).set({ proUntil: newUntil }).where(eq(vendor.id, v.id));
     await this.db.insert(walletTransaction).values({
       vendorId: v.id,

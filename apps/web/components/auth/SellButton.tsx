@@ -9,7 +9,7 @@ import { useSession } from './SessionProvider';
 // point at /entrar, which itself bounces already-authenticated users onward.
 export function SellButton({ label }: { label: string }) {
   const { user } = useSession();
-  const href = user ? '/vender/comecar' : '/entrar?next=/vender/comecar';
+  const href = user ? '/vender/novo' : '/entrar?next=/vender/novo';
   return (
     <a className="wlsell" href={href}>
       <IconPlus width={18} height={18} />

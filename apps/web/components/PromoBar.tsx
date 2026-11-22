@@ -7,7 +7,7 @@ export function PromoBar({ t }: { t: Dictionary }) {
     <div className="promobar">
       <div className="promobar__inner">
         <span>{t.home.promo_text}</span>
-        <a className="promobar__cta" href="/vender/comecar">
+        <a className="promobar__cta" href="/vender/novo">
           {t.home.promo_cta} →
         </a>
       </div>

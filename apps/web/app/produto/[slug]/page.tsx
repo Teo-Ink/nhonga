@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../../../lib/demo';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { ProductGallery } from '../../../components/ProductGallery';
@@ -295,9 +296,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             })}
           </ul>
 
-          <p className="notice" role="note">
-            {t.pdp.demo_notice}
-          </p>
+          {IS_DEMO ? (
+            <p className="notice" role="note">
+              {t.pdp.demo_notice}
+            </p>
+          ) : null}
 
           <ReportListing slug={product.slug} t={t.report} />
         </div>

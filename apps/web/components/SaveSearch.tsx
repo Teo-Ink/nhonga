@@ -1,4 +1,5 @@
 'use client';
+import { IS_DEMO } from '../lib/demo';
 import { useEffect, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { IconBell } from './icons';
@@ -182,7 +183,7 @@ export function SaveSearch({
                   {alerts.error}
                 </span>
               ) : null}
-              <span className="savealert__demo">{alerts.demo}</span>
+              {IS_DEMO ? <span className="savealert__demo">{alerts.demo}</span> : null}
             </form>
           )}
         </div>

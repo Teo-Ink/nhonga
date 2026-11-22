@@ -25,7 +25,7 @@ export function HeroSideCard({ t }: { t: Dictionary }) {
             <a className="btn btn--cta herocard__btn" href="/conta">
               {h.side_orders}
             </a>
-            <a className="btn btn--ghost herocard__btn" href="/vender/comecar">
+            <a className="btn btn--ghost herocard__btn" href="/vender/novo">
               {h.side_sell}
             </a>
           </>

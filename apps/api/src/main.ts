@@ -5,6 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { rateLimitMiddleware } from './common/rate-limit.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
 
@@ -23,6 +24,11 @@ async function bootstrap(): Promise<void> {
   const corsOrigins = config.get('corsOrigins', { infer: true });
 
   app.use(helmet());
+
+  // Behind the ALB, req.ip must be the client (from X-Forwarded-For), not the
+  // load balancer; one trusted hop.
+  if (nodeEnv !== 'development') app.set('trust proxy', 1);
+  app.use(rateLimitMiddleware());
 
   // CORS for browser clients only. The web app reaches the API server-side via
   // its BFF and native mobile fetches are not subject to CORS, so this exists

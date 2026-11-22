@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../lib/demo';
 import { ProductCard } from '../components/ProductCard';
 import { ProductRail } from '../components/ProductRail';
 import { AdSlot } from '../components/AdSlot';
@@ -141,9 +142,11 @@ export default async function HomePage() {
 
       <TrustStrip t={t} />
 
-      <p className="notice" role="note">
-        {t.home.demo_notice}
-      </p>
+      {IS_DEMO ? (
+        <p className="notice" role="note">
+          {t.home.demo_notice}
+        </p>
+      ) : null}
     </>
   );
 }

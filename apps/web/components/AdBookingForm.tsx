@@ -1,4 +1,8 @@
 'use client';
+import { IS_DEMO } from '../lib/demo';
+
+const ADS_EMAIL =
+  process.env.NEXT_PUBLIC_ADS_EMAIL || process.env.NEXT_PUBLIC_SUPPORT_EMAIL || undefined;
 import { useState } from 'react';
 import type { Dictionary } from '../lib/i18n/index';
 import { formatPrice } from '../lib/format';
@@ -32,6 +36,7 @@ export function AdBookingForm({
   const [method, setMethod] = useState('mpesa');
   const [state, setState] = useState<'idle' | 'saving' | 'error'>('idle');
   const [done, setDone] = useState<{ endsAt: string } | null>(null);
+  const [requested, setRequested] = useState(false);
 
   const placements: { value: Placement; label: string }[] = [
     { value: 'leaderboard', label: t.fmt_leaderboard },
@@ -45,6 +50,31 @@ export function AdBookingForm({
     e.preventDefault();
     if (advertiserName.trim() === '' || imageUrl.trim() === '' || clickUrl.trim() === '') {
       setState('error');
+      return;
+    }
+    if (!IS_DEMO) {
+      // Real campaigns are agreed with sales (price, dates, invoice), so the
+      // form becomes a proposal request sent from the advertiser's own email.
+      if (!ADS_EMAIL) {
+        setState('error');
+        return;
+      }
+      const lines = [
+        `${t.f_advertiser}: ${advertiserName}`,
+        `${t.f_contact}: ${advertiserContact}`,
+        `${t.f_placement}: ${placements.find((p) => p.value === placement)?.label ?? placement}`,
+        `${t.f_category}: ${categories.find((c) => c.slug === categorySlug)?.label ?? t.f_all_categories}`,
+        `${t.f_days}: ${dayNum}`,
+        `${t.total}: ${formatPrice(totalCents)}`,
+        `${t.f_image}: ${imageUrl}`,
+        `${t.f_click}: ${clickUrl}`,
+        headline ? `${t.f_headline}: ${headline}` : '',
+      ].filter(Boolean);
+      window.location.href = `mailto:${ADS_EMAIL}?subject=${encodeURIComponent(
+        `${t.request_subject} — ${advertiserName}`,
+      )}&body=${encodeURIComponent(lines.join('\n'))}`;
+      setRequested(true);
+      setState('idle');
       return;
     }
     setState('saving');
@@ -75,6 +105,15 @@ export function AdBookingForm({
     }
   }
 
+  if (requested) {
+    return (
+      <div className="card spotbooked" role="status">
+        <strong className="spotbooked__title">{t.request_title}</strong>
+        <p>{t.request_body.replace('{email}', ADS_EMAIL ?? '')}</p>
+      </div>
+    );
+  }
+
   if (done) {
     const date = new Date(done.endsAt).toLocaleDateString('pt-PT', {
       day: '2-digit',
@@ -94,9 +133,11 @@ export function AdBookingForm({
       <h2 className="spotpage__h2" style={{ marginTop: 0 }}>
         {t.book_title}
       </h2>
-      <p className="notice" role="note">
-        {t.demo_pay}
-      </p>
+      {IS_DEMO ? (
+        <p className="notice" role="note">
+          {t.demo_pay}
+        </p>
+      ) : null}
 
       <label className="field">
         <span className="field__label">{t.f_advertiser} *</span>
@@ -184,20 +225,22 @@ export function AdBookingForm({
             onChange={(e) => setDays(e.target.value.replace(/[^\d]/g, ''))}
           />
         </label>
-        <label className="field">
-          <span className="field__label">{t.f_method}</span>
-          <select
-            className="field__input"
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-          >
-            {METHODS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        {IS_DEMO ? (
+          <label className="field">
+            <span className="field__label">{t.f_method}</span>
+            <select
+              className="field__input"
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+            >
+              {METHODS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </div>
 
       <div className="spotbook__total">
@@ -206,7 +249,11 @@ export function AdBookingForm({
       </div>
 
       <button type="submit" className="btn btn--primary" disabled={state === 'saving'}>
-        {state === 'saving' ? t.booking : `${t.book} · ${formatPrice(totalCents)}`}
+        {state === 'saving'
+          ? t.booking
+          : IS_DEMO
+            ? `${t.book} · ${formatPrice(totalCents)}`
+            : t.request_submit}
       </button>
       {state === 'error' ? (
         <p className="reviewform__msg reviewform__msg--err" role="alert">

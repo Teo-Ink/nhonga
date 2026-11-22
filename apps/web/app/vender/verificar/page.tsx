@@ -1,4 +1,5 @@
 'use client';
+import { IS_DEMO } from '../../../lib/demo';
 import { useEffect, useState } from 'react';
 import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconCheck } from '../../../components/icons';
@@ -148,9 +149,11 @@ export default function VerifyShopPage() {
       </a>
       <h1 className="section__title">{t.title}</h1>
       <p className="account__muted">{t.subtitle}</p>
-      <p className="demo-banner" role="note">
-        {t.demo_note}
-      </p>
+      {IS_DEMO ? (
+        <p className="demo-banner" role="note">
+          {t.demo_note}
+        </p>
+      ) : null}
 
       <div className="card" style={{ marginBottom: 'var(--space-3)' }}>
         <strong className="card__title">{t.benefits_title}</strong>

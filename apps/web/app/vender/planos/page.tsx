@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../../../lib/demo';
 import { IconCheck, IconChevronLeft } from '../../../components/icons';
 import { getDictionary } from '../../../lib/i18n/index';
 
@@ -19,7 +20,7 @@ export default async function PlansPage() {
       benefits: [p.free_b1, p.free_b2, p.free_b3],
       popular: false,
       cta: p.start_free,
-      href: '/vender/comecar',
+      href: '/vender/novo',
     },
     {
       name: p.destaque_name,
@@ -76,9 +77,11 @@ export default async function PlansPage() {
       <header className="plans__head">
         <h1 className="section__title">{p.title}</h1>
         <p className="account__muted">{p.subtitle}</p>
-        <p className="demo-banner" role="note">
-          {p.demo_note}
-        </p>
+        {IS_DEMO ? (
+          <p className="demo-banner" role="note">
+            {p.demo_note}
+          </p>
+        ) : null}
       </header>
 
       {/* Per-ad boosts */}
@@ -140,7 +143,7 @@ export default async function PlansPage() {
             </ul>
             <a
               className={`btn ${tier.highlight ? 'btn--cta' : 'btn--ghost'} plancard__cta`}
-              href={'href' in tier && tier.href ? tier.href : '/vender/comecar'}
+              href={'href' in tier && tier.href ? tier.href : '/vender/novo'}
             >
               {tier.cta}
             </a>

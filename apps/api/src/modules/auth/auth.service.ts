@@ -66,7 +66,10 @@ const MAX_ATTEMPTS = 5;
 const MAX_REQUESTS_PER_WINDOW = 5;
 
 /** Whether SMS is mocked. In mock mode we log the code and return it for testing. */
-const SMS_MOCK = (process.env['SMS_MODE'] ?? 'mock') !== 'live';
+// Never mock in production, whatever SMS_MODE says (config validation also
+// refuses to boot production with SMS_MODE=mock; this is a second lock).
+const SMS_MOCK =
+  process.env['NODE_ENV'] !== 'production' && (process.env['SMS_MODE'] ?? 'mock') !== 'live';
 
 @Injectable()
 export class AuthService {

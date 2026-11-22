@@ -10,6 +10,8 @@
  * explicit validation rather than a new dependency introduced unilaterally.
  */
 
+import { randomBytes } from 'node:crypto';
+
 export type NodeEnv = 'development' | 'staging' | 'production' | 'test';
 export type PaymentsMode = 'mock' | 'live';
 
@@ -133,12 +135,11 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
     logLevel: raw['LOG_LEVEL'] ?? 'info',
     databaseUrl: requireString(raw, 'DATABASE_URL'),
     paymentsMode,
-    // In mock mode a dev-only default is fine; in live mode the callback secret
-    // must be supplied explicitly - a shared default secret is not a secret.
+    // Only the mock wallet uses this. In live mode no mock callbacks exist, so
+    // an unguessable per-boot value is used if none is set.
     mockCallbackSecret:
-      paymentsMode === 'live'
-        ? requireString(raw, 'MOCK_CALLBACK_SECRET')
-        : (raw['MOCK_CALLBACK_SECRET'] ?? 'dev-only-not-a-real-secret'),
+      raw['MOCK_CALLBACK_SECRET'] ??
+      (paymentsMode === 'live' ? randomBytes(32).toString('hex') : 'dev-only-not-a-real-secret'),
     paymentApprovalTimeoutSeconds: requireInt(raw, 'PAYMENT_APPROVAL_TIMEOUT_SECONDS', 180),
     paymentLateSweepHours: requireInt(raw, 'PAYMENT_LATE_SWEEP_HOURS', 72),
     assistantApiKey: raw['ANTHROPIC_API_KEY']?.trim() ? raw['ANTHROPIC_API_KEY']!.trim() : null,
@@ -164,5 +165,31 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
     alertsSweepMinutes: requireInt(raw, 'ALERTS_SWEEP_MINUTES', 0),
   };
 
+  if (config.nodeEnv === 'production') assertProductionSafe(config, raw);
   return config;
+}
+
+/**
+ * Production must never run on simulated SMS or payments, even by accident
+ * (a forgotten variable). Mock SMS returns the login code in the API response,
+ * which would let anyone sign in as any phone number; mock payments grant
+ * paid features for free. Staging may still use mocks for testing.
+ */
+export function assertProductionSafe(
+  config: AppConfig,
+  raw: Record<string, string | undefined>,
+): void {
+  const problems: string[] = [];
+  if (config.smsMode !== 'live') problems.push('SMS_MODE must be "live"');
+  if (config.smsMode === 'live' && (!config.smsGatewayUrl || !config.smsGatewayToken)) {
+    problems.push('SMS_GATEWAY_URL and SMS_GATEWAY_TOKEN are required');
+  }
+  if (config.paymentsMode !== 'live') problems.push('PAYMENTS_MODE must be "live"');
+  if ((raw['CHECKOUT_MODE'] ?? 'live').toLowerCase() !== 'live') {
+    problems.push('CHECKOUT_MODE must be "live"');
+  }
+  if (config.corsOrigins.length === 0) problems.push('CORS_ORIGINS must list the site origin(s)');
+  if (problems.length > 0) {
+    throw new ConfigError(`Unsafe production configuration: ${problems.join('; ')}`);
+  }
 }

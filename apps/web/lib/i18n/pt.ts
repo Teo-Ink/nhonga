@@ -10,7 +10,7 @@ export const pt = {
     search_thinking: 'A interpretar com IA…',
     search_voice_unsupported: 'O seu navegador não suporta pesquisa por voz. Experimente o Chrome.',
     search_ai_error: 'Não foi possível pesquisar agora. Tente novamente.',
-    search_ai_unconfigured: 'A pesquisa por IA ainda não está ligada nesta demonstração.',
+    search_ai_unconfigured: 'A pesquisa por voz e imagem não está disponível de momento.',
     all_categories: 'Todas as categorias',
     account: 'Conta',
     cart: 'Carrinho',
@@ -84,8 +84,11 @@ export const pt = {
     link_account: 'A minha conta',
     link_signin: 'Entrar',
     link_design: 'Sistema de design',
+    link_terms: 'Termos de uso',
+    link_privacy: 'Privacidade',
     payments: 'Pagamentos: M-Pesa · e-Mola · mKesh · Dinheiro na entrega',
-    rights: '© 2026 Nhonga · Loja de demonstração',
+    rights: '© 2026 Nhonga',
+    demo_suffix: 'Loja de demonstração',
   },
   trust: {
     buyer_protection: 'Proteção ao comprador',
@@ -821,6 +824,11 @@ export const pt = {
     book_error: 'Não foi possível concluir. Verifique os dados e tente novamente.',
     demo_pay:
       'Demonstração: o pagamento é simulado — nada é cobrado. Use um URL de imagem público.',
+    request_submit: 'Pedir proposta',
+    request_subject: 'Pedido de proposta de publicidade',
+    request_title: 'O seu email está pronto a enviar',
+    request_body:
+      'Abrimos o seu email com os detalhes da campanha para {email}. Envie-o e a nossa equipa responde com a proposta e a fatura.',
     panel_link: 'Ver painel de campanhas',
     panel_title: 'Painel de campanhas',
     panel_subtitle: 'Todas as campanhas de publicidade e o seu desempenho.',
@@ -956,6 +964,10 @@ export const pt = {
     terms: 'Ao continuar, aceita os Termos e a Política de Privacidade.',
     demo_note:
       'Demonstração: o código é mostrado no ecrã em vez de ser enviado por SMS. O Google e o Facebook ainda não estão ligados.',
+    legal_before: 'Ao continuar, aceita os',
+    legal_terms: 'Termos de uso',
+    legal_and: 'e a',
+    legal_privacy: 'Política de privacidade',
     not_wired: 'O início de sessão ainda não está disponível nesta demonstração.',
     switch_to_register: 'Ainda não tem conta? Criar conta',
     switch_to_signin: 'Já tem conta? Entrar',
@@ -1016,6 +1028,10 @@ export const pt = {
     d_not_wired: 'A reclamação não é enviada nesta demonstração.',
     d_required: 'Indique o motivo e uma descrição.',
     d_sent: 'Recebemos a sua reclamação (demonstração).',
+    d_sent_email:
+      'Abrimos o seu email com a reclamação pronta. Envie-a para {email} — respondemos o mais depressa possível.',
+    d_unavailable:
+      'Para reportar um problema com um anúncio, use o botão «Denunciar» na página do anúncio.',
   },
   messages: {
     title: 'Mensagens',

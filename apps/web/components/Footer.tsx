@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../lib/demo';
 import { IconMapPin } from './icons';
 import { Logo } from './Logo';
 import { DataSaverToggle } from './pwa/DataSaverToggle';
@@ -20,7 +21,7 @@ export function Footer({ t }: { t: Dictionary }) {
     {
       title: f.col_sell,
       links: [
-        { label: f.link_start_selling, href: '/vender/comecar' },
+        { label: f.link_start_selling, href: '/vender/novo' },
         { label: f.link_dashboard, href: '/vender' },
         { label: f.link_new_listing, href: '/vender/novo' },
       ],
@@ -31,7 +32,9 @@ export function Footer({ t }: { t: Dictionary }) {
         { label: f.link_help, href: '/ajuda' },
         { label: f.link_safety, href: '/seguranca' },
         { label: f.link_messages, href: '/mensagens' },
-        { label: f.link_design, href: '/estilo' },
+        { label: f.link_terms, href: '/termos' },
+        { label: f.link_privacy, href: '/privacidade' },
+        ...(IS_DEMO ? [{ label: f.link_design, href: '/estilo' }] : []),
       ],
     },
     {
@@ -81,7 +84,10 @@ export function Footer({ t }: { t: Dictionary }) {
         <span className="wlftr__country">
           <IconMapPin width={14} height={14} aria-hidden /> Moçambique
         </span>
-        <span className="wlftr__rights">{f.rights}</span>
+        <span className="wlftr__rights">
+          {f.rights}
+          {IS_DEMO ? ` · ${f.demo_suffix}` : ''}
+        </span>
         <DataSaverToggle label={t.pwa.save_data} />
         <a className="wlftr__top" href="#top">
           {f.back_to_top} ↑

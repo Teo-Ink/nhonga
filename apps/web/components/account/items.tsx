@@ -39,7 +39,7 @@ export function accountGroups(t: Dictionary['account'], isSeller: boolean): Acco
       ]
     : [
         { href: '/mensagens', label: t.link_messages, icon: <IconChat {...sz} /> },
-        { href: '/vender/comecar', label: t.link_sell, icon: <IconUser {...sz} /> },
+        { href: '/vender/novo', label: t.link_sell, icon: <IconUser {...sz} /> },
       ];
   return [
     { title: t.menu_account, items: mine },

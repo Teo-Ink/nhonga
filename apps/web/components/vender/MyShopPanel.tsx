@@ -222,7 +222,7 @@ export function MyShopPanel() {
               </a>
             </>
           ) : (
-            <a className="btn btn--cta" href="/vender/comecar">
+            <a className="btn btn--cta" href="/vender/novo">
               {dash.create_shop}
             </a>
           )}
@@ -260,7 +260,7 @@ export function MyShopPanel() {
           ) : (
             <>
               <p>{dash.buyer_empty}</p>
-              <a className="btn btn--cta" href="/vender/comecar">
+              <a className="btn btn--cta" href="/vender/novo">
                 {dash.create_shop}
               </a>
             </>

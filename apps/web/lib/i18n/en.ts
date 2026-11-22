@@ -11,7 +11,7 @@ export const en: Dictionary = {
     search_thinking: 'Interpreting with AI…',
     search_voice_unsupported: 'Your browser does not support voice search. Try Chrome.',
     search_ai_error: 'Could not search right now. Please try again.',
-    search_ai_unconfigured: 'AI search is not connected in this demo yet.',
+    search_ai_unconfigured: 'Voice and photo search are not available right now.',
     all_categories: 'All categories',
     account: 'Account',
     cart: 'Cart',
@@ -85,8 +85,11 @@ export const en: Dictionary = {
     link_account: 'My account',
     link_signin: 'Sign in',
     link_design: 'Design system',
+    link_terms: 'Terms of use',
+    link_privacy: 'Privacy',
     payments: 'Payments: M-Pesa · e-Mola · mKesh · Cash on delivery',
-    rights: '© 2026 Nhonga · Demo store',
+    rights: '© 2026 Nhonga',
+    demo_suffix: 'Demo store',
   },
   trust: {
     buyer_protection: 'Buyer protection',
@@ -797,6 +800,11 @@ export const en: Dictionary = {
     done_body: 'Your campaign is live until {date}.',
     book_error: 'Could not complete. Check the details and try again.',
     demo_pay: 'Demo: payment is simulated — nothing is charged. Use a public image URL.',
+    request_submit: 'Request a proposal',
+    request_subject: 'Advertising proposal request',
+    request_title: 'Your email is ready to send',
+    request_body:
+      'We opened your email with the campaign details addressed to {email}. Send it and our team will reply with a proposal and invoice.',
     panel_link: 'View campaigns dashboard',
     panel_title: 'Campaigns dashboard',
     panel_subtitle: 'All advertising campaigns and their performance.',
@@ -929,6 +937,10 @@ export const en: Dictionary = {
     terms: 'By continuing, you accept the Terms and Privacy Policy.',
     demo_note:
       'Demo: the code is shown on screen instead of being sent by SMS. Google and Facebook are not wired yet.',
+    legal_before: 'By continuing, you accept the',
+    legal_terms: 'Terms of use',
+    legal_and: 'and the',
+    legal_privacy: 'Privacy policy',
     not_wired: 'Sign-in is not available yet in this demo.',
     switch_to_register: "Don't have an account? Create one",
     switch_to_signin: 'Already have an account? Sign in',
@@ -988,6 +1000,10 @@ export const en: Dictionary = {
     d_not_wired: 'The dispute is not sent in this demo.',
     d_required: 'Choose a reason and add a description.',
     d_sent: 'We received your dispute (demo).',
+    d_sent_email:
+      'We opened your email with the complaint ready. Send it to {email} — we reply as soon as we can.',
+    d_unavailable:
+      'To report a problem with a listing, use the “Report” button on the listing page.',
   },
   messages: {
     title: 'Messages',

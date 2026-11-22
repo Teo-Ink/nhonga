@@ -72,9 +72,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     // eslint-disable-next-line
   }, []);
 
-  function openTopup() {
-    setMsg(null);
-    setPanel(panel === 'topup' ? 'none' : 'topup');
+  function loadMethods() {
     void fetch('/api/checkout/methods', { cache: 'no-store' })
       .then((r) => r.json())
       .then((d: { methods?: PayMethod[] }) => {
@@ -85,9 +83,16 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
       })
       .catch(() => undefined);
   }
+
+  function openTopup() {
+    setMsg(null);
+    setPanel(panel === 'topup' ? 'none' : 'topup');
+    loadMethods();
+  }
   function openPackages() {
     setMsg(null);
     setPanel(panel === 'packages' ? 'none' : 'packages');
+    loadMethods();
     if (pkgs.length === 0) {
       void fetch('/api/wallet/packages', { cache: 'no-store' })
         .then((r) => r.json())
@@ -129,20 +134,21 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/wallet/purchase', {
+      const res = await fetch('/api/checkout/package', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ packageId: id }),
+        body: JSON.stringify({ packageId: id, method }),
       });
-      const d = await res.json();
-      if (!res.ok) {
+      const d = (await res.json()) as { checkoutUrl?: string; detail?: string; message?: string };
+      if (!res.ok || !d.checkoutUrl) {
         setMsg(d.detail ?? d.message ?? dash.buy_fail);
+        setBusy(false);
         return;
       }
-      setW(d);
-      setPanel('none');
-      setMsg(dash.package_added);
-    } finally {
+      // Paid on the gateway's page; the package is credited once confirmed.
+      window.location.assign(d.checkoutUrl);
+    } catch {
+      setMsg(dash.buy_fail);
       setBusy(false);
     }
   }
@@ -169,6 +175,25 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const proUntilLabel = w?.proUntil
     ? new Date(w.proUntil).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long' })
     : null;
+
+  const picker = (
+    <fieldset className="paymethods">
+      <legend>{dash.pay_with}</legend>
+      {methods.map((m) => (
+        <label key={m} className={`paymethod paymethod--${m} ${method === m ? 'is-on' : ''}`}>
+          <input
+            type="radio"
+            name="paymethod"
+            value={m}
+            checked={method === m}
+            onChange={() => setMethod(m)}
+          />
+          <span className="paymethod__dot" aria-hidden="true" />
+          <span className="paymethod__name">{METHOD_LABEL[m]}</span>
+        </label>
+      ))}
+    </fieldset>
+  );
 
   return (
     <div className="wallet">
@@ -246,22 +271,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
               </button>
             ))}
           </div>
-          <fieldset className="paymethods">
-            <legend>{dash.pay_with}</legend>
-            {methods.map((m) => (
-              <label key={m} className={`paymethod paymethod--${m} ${method === m ? 'is-on' : ''}`}>
-                <input
-                  type="radio"
-                  name="paymethod"
-                  value={m}
-                  checked={method === m}
-                  onChange={() => setMethod(m)}
-                />
-                <span className="paymethod__dot" aria-hidden="true" />
-                <span className="paymethod__name">{METHOD_LABEL[m]}</span>
-              </label>
-            ))}
-          </fieldset>
+          {picker}
           <button
             type="button"
             className="btn btn--cta btn--sm"
@@ -276,6 +286,7 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
 
       {panel === 'packages' ? (
         <div className="wallet__panel wallet__packages">
+          {picker}
           {pkgs.length === 0 ? (
             <p className="wallet__hint">A carregar pacotes…</p>
           ) : (

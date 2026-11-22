@@ -1,3 +1,4 @@
+import { IS_DEMO } from '../../lib/demo';
 import { DisputeForm } from '../../components/DisputeForm';
 import { getDictionary } from '../../lib/i18n/index';
 
@@ -22,9 +23,11 @@ export default async function HelpPage() {
     <section className="help">
       <h1 className="section__title">{h.title}</h1>
       <p className="account__muted">{h.subtitle}</p>
-      <p className="demo-banner" role="note" style={{ marginTop: 'var(--space-3)' }}>
-        {h.demo_note}
-      </p>
+      {IS_DEMO ? (
+        <p className="demo-banner" role="note" style={{ marginTop: 'var(--space-3)' }}>
+          {h.demo_note}
+        </p>
+      ) : null}
 
       <div className="help__grid">
         <div>

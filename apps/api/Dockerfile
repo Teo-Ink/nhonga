@@ -35,6 +35,10 @@ WORKDIR /app
 COPY --from=builder --chown=node:node /out/node_modules ./node_modules
 COPY --from=builder --chown=node:node /out/dist ./dist
 COPY --from=builder --chown=node:node /out/package.json ./package.json
+# Migrations run at start-up (scripts/migrate.mjs), so the SQL travels with
+# the image: drizzle's journaled files plus the hand-written 0016+ files.
+COPY --from=builder --chown=node:node /repo/apps/api/drizzle ./drizzle
+COPY --from=builder --chown=node:node /repo/apps/api/scripts/migrate.mjs /repo/apps/api/scripts/manual-migrations.mjs ./scripts/
 
 USER node
 EXPOSE 3000
@@ -44,4 +48,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["node", "dist/main.js"]
+# Migrate first (advisory-locked, so parallel tasks take turns), then serve.
+# A failed migration exits non-zero and the task never starts serving.
+CMD ["sh", "-c", "node scripts/migrate.mjs && exec node dist/main.js"]

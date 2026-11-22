@@ -104,53 +104,18 @@ export function buildProviderRegistry(
         deps.schedule,
       ),
     );
-  } else {
-    assertCredentials('M-Pesa', {
-      apiKey: config.mpesa.apiKey,
-      publicKey: config.mpesa.publicKey,
-      serviceProviderCode: config.mpesa.serviceProviderCode,
-      callbackSecret: config.mpesa.callbackSecret,
-    });
-    assertCredentials('e-Mola', {
-      clientId: config.emola.clientId,
-      clientSecret: config.emola.clientSecret,
-      merchantId: config.emola.merchantId,
-      callbackSecret: config.emola.callbackSecret,
-    });
-
-    // ── THE SWAP ────────────────────────────────────────────────────────────
-    // providers.set('mpesa', new MpesaProvider(config.mpesa));
-    // providers.set('emola', new EmolaProvider(config.emola));
-    //
-    // Blocked on OQ-7 and OQ-8. The adapter classes cannot be written correctly until the
-    // integration specifications arrive with the signed merchant agreements — endpoint paths,
-    // exact field names, and the signature algorithm are not public. Deliberately left
-    // unimplemented rather than guessed at, so `PAYMENTS_MODE=live` fails at startup instead
-    // of failing at a buyer's checkout.
-    throw new PaymentsConfigError(
-      'Live payment providers are not implemented yet. The M-Pesa and e-Mola adapters require ' +
-        'the integration specifications issued with the Vodacom and Movitel merchant agreements ' +
-        '(OQ-7, OQ-8). Set PAYMENTS_MODE=mock until those are in place.',
-    );
   }
+  // Live: no direct wallet adapters. Money now enters through the hosted
+  // checkout (PawaPay primary, PaySuite backup — modules/checkout) into the
+  // seller's wallet, and paid features are charged from the wallet. The old
+  // direct Vodacom/Movitel push adapters (OQ-7, OQ-8) are not needed for that,
+  // so live mode registers none: the direct-pay endpoints (promotions,
+  // subscriptions, ads) then refuse instead of granting anything for free.
 
   // COD has no external dependency and is therefore identical in every environment.
   providers.set('cod', new CodProvider());
 
   return providers;
-}
-
-function assertCredentials(label: string, values: Readonly<Record<string, string>>): void {
-  const missing = Object.entries(values)
-    .filter(([, value]) => value === undefined || value === null || value.trim() === '')
-    .map(([key]) => key);
-
-  if (missing.length > 0) {
-    throw new PaymentsConfigError(
-      `PAYMENTS_MODE is "live" but ${label} credentials are missing: ${missing.join(', ')}. ` +
-        'These come from AWS Secrets Manager and must never be hardcoded.',
-    );
-  }
 }
 
 /** Look up a provider, failing clearly rather than returning undefined into a payment path. */
