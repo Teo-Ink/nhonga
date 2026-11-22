@@ -16,9 +16,12 @@ variable "db_password" {
   sensitive = true
 }
 
+# RDS for PostgreSQL 15+ refuses unencrypted connections (rds.force_ssl=1), so
+# the URL asks for TLS. "require" encrypts without verifying the server
+# certificate; moving to verify-full needs the RDS CA bundle in the image.
 locals {
   name         = "${var.project}-${var.environment}"
-  database_url = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:${var.db_port}/${var.db_name}"
+  database_url = "postgresql://${var.db_username}:${var.db_password}@${var.db_host}:${var.db_port}/${var.db_name}?sslmode=require"
 }
 
 resource "aws_secretsmanager_secret" "database_url" {
