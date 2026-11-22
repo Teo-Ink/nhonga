@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { currentRequestId } from './request-context.js';
 
 /**
  * Every error leaves the API as application/problem+json (RFC 7807), which is
@@ -61,7 +62,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     } else {
       // Unexpected: log the real thing server-side, tell the client nothing.
       this.logger.error(
-        `Unhandled ${req.method} ${req.url}`,
+        `Unhandled ${req.method} ${req.path}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
     }
@@ -74,8 +75,10 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         title,
         status,
         ...(detail ? { detail } : {}),
-        instance: req.url,
+        instance: req.path,
         ...extra,
+        // Quoted by support to find the exact log lines of a failure.
+        ...(status >= 500 ? { requestId: currentRequestId() } : {}),
       });
   }
 }

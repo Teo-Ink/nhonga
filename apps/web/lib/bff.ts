@@ -45,13 +45,19 @@ export async function apiFetch(
   fetchImpl: typeof fetch = fetch,
 ): Promise<Response> {
   const { timeoutMs = timeoutFor(path), ...rest } = init;
+  // Every API call carries a request id (P1-08): the API logs it on each line
+  // it writes for this call, and a failure here logs the same id.
+  const headers = new Headers(rest.headers);
+  if (!headers.has('x-request-id')) headers.set('x-request-id', `web-${crypto.randomUUID()}`);
   try {
     return await fetchImpl(`${API_URL}${path}`, {
       ...rest,
+      headers,
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (e) {
     const name = e instanceof Error ? e.name : '';
+    logJson('WARN', 'bff', `api_unreachable ${path.split('?')[0]}`, headers.get('x-request-id'));
     throw new ApiUnavailableError(path, name === 'TimeoutError' ? 'timeout' : 'network');
   }
 }
@@ -93,10 +99,9 @@ export function withApi<A extends unknown[]>(
       return await handler(...args);
     } catch (e) {
       if (e instanceof ApiUnavailableError) {
-        console.warn(`[bff] ${e.message}`);
         return fallback ? fallback() : unavailable();
       }
-      console.error('[bff] unexpected error', e);
+      logJson('ERROR', 'bff', e instanceof Error ? (e.stack ?? e.message) : String(e), null);
       return problem(
         502,
         'Erro no servidor',
@@ -104,4 +109,23 @@ export function withApi<A extends unknown[]>(
       );
     }
   };
+}
+
+/** One JSON line per event, like the API (P1-08). Levels are upper case so the
+ *  CloudWatch "?ERROR" metric filter matches. */
+export function logJson(
+  level: 'ERROR' | 'WARN' | 'INFO',
+  context: string,
+  msg: string,
+  requestId: string | null,
+): void {
+  const line = JSON.stringify({
+    ts: new Date().toISOString(),
+    level,
+    context,
+    msg,
+    ...(requestId ? { requestId } : {}),
+  });
+  if (level === 'ERROR') console.error(line);
+  else console.warn(line);
 }

@@ -398,7 +398,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     });
     if (row) {
       if (row.status === 'review')
-        this.log.error(`intent ${row.id} needs review: ${row.failureReason}`);
+        this.log.error(`ALERT payment_review intent=${row.id} reason=${row.failureReason}`);
       else this.log.log(`intent ${row.id} paid via ${row.gateway}`);
       return row;
     }
