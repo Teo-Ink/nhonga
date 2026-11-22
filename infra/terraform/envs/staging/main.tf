@@ -119,6 +119,7 @@ module "secrets" {
   db_name     = module.database.db_name
   db_username = module.database.username
   db_password = module.database.password
+
   # Simulated SMS shows the login code on screen: limit sign-in to the team (P0-05).
   otp_dev_allowlist = true
 }
@@ -279,4 +280,12 @@ module "media" {
   project        = local.project
   environment    = local.env
   task_role_name = module.api.task_role_name
+}
+
+# Web application firewall on the load balancer (P2-05).
+module "waf" {
+  source      = "../../modules/waf"
+  project     = local.project
+  environment = local.env
+  alb_arn     = module.alb.arn
 }

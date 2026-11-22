@@ -168,8 +168,10 @@ module "api" {
     SENTRY_DSN    = var.sentry_dsn
     MEDIA_BUCKET  = module.media.bucket
     MEDIA_CDN_URL = "https://${module.media.cdn_domain}"
+
     # Listings untouched for 90 days leave search (P2-10).
     LISTING_TTL_DAYS = "90"
+
     # Monthly ceiling on generative-AI tokens (SEC-08); review with real usage.
     ASSISTANT_MONTHLY_TOKEN_CAP = "2000000"
   }
@@ -203,4 +205,19 @@ module "media" {
   project        = local.project
   environment    = local.env
   task_role_name = module.api.task_role_name
+}
+
+# Web application firewall on the load balancer (P2-05).
+module "waf" {
+  source      = "../../modules/waf"
+  project     = local.project
+  environment = local.env
+  alb_arn     = module.alb.arn
+}
+
+# Account-wide CloudTrail and GuardDuty (P2-05), applied from production only.
+module "account_security" {
+  source          = "../../modules/account-security"
+  project         = local.project
+  alarm_topic_arn = module.alarms.topic_arn
 }
