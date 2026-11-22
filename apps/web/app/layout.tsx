@@ -31,7 +31,7 @@ const ubuntu = Ubuntu({
 export const metadata = {
   title: 'Nhonga — Compre e venda em Moçambique',
   description:
-    'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, transferência bancária, Visa ou na entrega.',
+    'Classificados de Moçambique: compre e venda viaturas, imóveis, telemóveis e muito mais perto de si.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Nhonga',
   appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: 'Nhonga' },
