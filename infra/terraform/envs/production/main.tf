@@ -168,8 +168,10 @@ module "api" {
     SENTRY_DSN    = var.sentry_dsn
     MEDIA_BUCKET  = module.media.bucket
     MEDIA_CDN_URL = "https://${module.media.cdn_domain}"
+
     # Listings untouched for 90 days leave search (P2-10).
     LISTING_TTL_DAYS = "90"
+
     # Monthly ceiling on generative-AI tokens (SEC-08); review with real usage.
     ASSISTANT_MONTHLY_TOKEN_CAP = "2000000"
   }

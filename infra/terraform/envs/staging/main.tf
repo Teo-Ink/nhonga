@@ -119,6 +119,7 @@ module "secrets" {
   db_name     = module.database.db_name
   db_username = module.database.username
   db_password = module.database.password
+
   # Simulated SMS shows the login code on screen: limit sign-in to the team (P0-05).
   otp_dev_allowlist = true
 }

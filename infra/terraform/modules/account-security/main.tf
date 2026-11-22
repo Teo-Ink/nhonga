@@ -104,6 +104,7 @@ resource "aws_guardduty_detector_feature" "s3" {
 resource "aws_cloudwatch_event_rule" "guardduty_high" {
   name        = "${var.project}-guardduty-high"
   description = "GuardDuty findings of severity 7 or more"
+
   event_pattern = jsonencode({
     source        = ["aws.guardduty"]
     "detail-type" = ["GuardDuty Finding"]

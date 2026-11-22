@@ -150,6 +150,7 @@ data "aws_iam_policy_document" "bucket" {
     sid     = "TLSOnly"
     effect  = "Deny"
     actions = ["s3:*"]
+
     resources = [
       aws_s3_bucket.media.arn,
       "${aws_s3_bucket.media.arn}/*",
