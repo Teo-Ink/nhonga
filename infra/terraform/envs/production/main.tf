@@ -47,7 +47,14 @@ variable "image_tag" {
 variable "certificate_arn" {
   type        = string
   default     = ""
-  description = "ACM cert for HTTPS. Empty until the domain is registered (OQ-1); ALB serves HTTP:80 until then."
+  description = "ACM cert for HTTPS on the registered domain (OQ-1). Required: production never serves HTTP only."
+
+  # A check block only warns and lets apply go ahead; validation stops plan and
+  # apply when the certificate is missing (SEC-05).
+  validation {
+    condition     = can(regex("^arn:aws:acm:[a-z0-9-]+:[0-9]{12}:certificate/.+$", var.certificate_arn))
+    error_message = "production requires certificate_arn: the ARN of an ACM certificate for the registered domain (OQ-1). Refusing to plan an HTTP-only production load balancer."
+  }
 }
 
 data "aws_caller_identity" "current" {}
@@ -155,12 +162,3 @@ output "alb_dns_name" { value = module.alb.dns_name }
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
 
-# Production must terminate TLS. The ALB module falls back to HTTP when no
-# certificate is given, which is correct for staging but must never happen here.
-# This stops an apply that would expose production over plaintext.
-check "https_required_in_production" {
-  assert {
-    condition     = var.certificate_arn != ""
-    error_message = "production requires certificate_arn (an ACM cert for the registered domain, OQ-1). Refusing to apply an HTTP-only production load balancer."
-  }
-}
