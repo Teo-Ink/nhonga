@@ -41,6 +41,8 @@ COPY --from=builder --chown=node:node /repo/apps/api/drizzle ./drizzle
 COPY --from=builder --chown=node:node /repo/apps/api/scripts/migrate.mjs /repo/apps/api/scripts/manual-migrations.mjs ./scripts/
 # Demo data, loaded only when SEED_DEMO=1 on an empty non-production database.
 COPY --from=builder --chown=node:node /repo/apps/api/scripts/seed.sql /repo/apps/api/scripts/districts.sql ./scripts/
+# Fonts for the banner PNGs (BAN-01): the slim image has none.
+COPY --from=builder --chown=node:node /repo/apps/api/assets ./assets
 
 USER node
 EXPOSE 3000

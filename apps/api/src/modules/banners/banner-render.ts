@@ -7,7 +7,8 @@ import type { BannerSpec } from '../../db/schema/banners.js';
 // <img> tag it uses "secure static mode", which blocks external images and
 // fonts. So the product photo is embedded as a data URI by the caller, and we
 // only use web-safe fonts. That makes one asset that renders identically inline,
-// as an <img>, and when served directly.
+// as an <img>, and when served directly. The location pin is a vector path,
+// not an emoji: the PNG rasteriser has no emoji font (BAN-01).
 
 export type BannerRatio = 'square' | 'landscape' | 'portrait';
 export type BannerPreset = 'moderno' | 'minimal' | 'promocao' | 'luxo' | 'alegre' | 'mercado';
@@ -156,7 +157,14 @@ export function renderBanner(input: RenderInput): string {
     </g>
   </g>
 
-  ${location ? `<text x="${pad}" y="${h - pad / 2}" font-family="Arial, Helvetica, sans-serif" font-size="${Math.round(26 * unit)}" fill="${text}" fill-opacity="0.8">📍 ${esc(location)}</text>` : ''}
+  ${
+    location
+      ? `<g class="location" fill="${text}" fill-opacity="0.8">
+    <path transform="translate(${pad},${Math.round(h - pad / 2 - 24 * unit)}) scale(${unit})" d="M10 0C4.5 0 0 4.4 0 9.8 0 17 10 28 10 28S20 17 20 9.8C20 4.4 15.5 0 10 0Zm0 13.5a3.7 3.7 0 1 1 0-7.4 3.7 3.7 0 0 1 0 7.4Z"/>
+    <text x="${pad + Math.round(30 * unit)}" y="${h - pad / 2}" font-family="Arial, Helvetica, sans-serif" font-size="${Math.round(26 * unit)}">${esc(location)}</text>
+  </g>`
+      : ''
+  }
   ${watermark}
 </svg>`;
 }
