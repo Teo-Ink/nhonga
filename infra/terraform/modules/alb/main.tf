@@ -175,3 +175,7 @@ output "dns_name" { value = aws_lb.this.dns_name }
 output "target_group_arn" { value = aws_lb_target_group.app.arn }
 output "web_target_group_arn" { value = local.web_on ? aws_lb_target_group.web[0].arn : null }
 output "zone_id" { value = aws_lb.this.zone_id }
+# CloudWatch dimensions (alarms module).
+output "arn_suffix" { value = aws_lb.this.arn_suffix }
+output "target_group_arn_suffix" { value = aws_lb_target_group.app.arn_suffix }
+output "web_target_group_arn_suffix" { value = local.web_on ? aws_lb_target_group.web[0].arn_suffix : null }
