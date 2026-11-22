@@ -1,0 +1,10 @@
+# Inventário de ficheiros e tamanhos (14e952c Merge pull request #6 from Teo-Ink/feat/sem-mkesh)
+apps/api/src                       122 ficheiros    15123 linhas
+apps/web/app                        93 ficheiros    15333 linhas
+apps/web/components                 60 ficheiros     6465 linhas
+apps/web/lib                         9 ficheiros     3197 linhas
+apps/mobile                         64 ficheiros     4045 linhas
+packages/shared/src                 11 ficheiros     2389 linhas
+packages/design-tokens               2 ficheiros      193 linhas
+infra/terraform                     18 ficheiros     1806 linhas
+.github/workflows                    3 ficheiros      511 linhas

@@ -1,0 +1,172 @@
+name: Deploy API
+
+# Application deploys (a new image), separate from infrastructure changes
+# (terraform.yml). Staging deploys automatically once CI passes on main;
+# production is manual and gated on the production environment's reviewer.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options: [staging, production]
+
+concurrency:
+  group: deploy-api-${{ github.event.inputs.environment || 'staging' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: af-south-1
+  ECR_REPOSITORY: nhonga-api
+  WEB_ECR_REPOSITORY: nhonga-web
+
+jobs:
+  # Only deploy on a green CI run, or an explicit dispatch. A failed CI run must
+  # never trigger a deploy.
+  guard:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - run: echo "CI green or manual dispatch — proceeding"
+
+  build-and-push:
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The staging deploy role pushes images (ECR is shared across environments).
+    # Its trust policy only accepts tokens minted for the staging environment,
+    # and AWS_DEPLOY_ROLE_ARN is an environment variable, so the job must run in
+    # that environment. Staging has no reviewer, so this adds no approval step.
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image tag from commit
+        id: meta
+        run: echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      # Build/push uses the staging deploy role; ECR is shared across envs.
+      - name: Assume deploy role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-build-${{ github.run_id }}
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push api
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPOSITORY:$TAG"
+          # The repository is IMMUTABLE: skip when this SHA is already there
+          # (e.g. the automatic and a manual deploy of the same commit, DEV-004).
+          if aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids imageTag="$TAG" >/dev/null 2>&1; then
+            echo "Image $IMAGE already exists; skipping build and push"; exit 0
+          fi
+          docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          # DSO-003: fail on HIGH/CRITICAL vulnerabilities in the image.
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.69.1 \
+            image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$IMAGE"
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE"
+
+      # NEXT_PUBLIC_* values are baked into the browser bundle, so the web
+      # image is built per environment and tagged <sha>-<environment>. Only
+      # staging runs the web app on AWS today.
+      - name: Build and push web (staging)
+        if: github.event_name == 'workflow_run' || github.event.inputs.environment == 'staging'
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ steps.meta.outputs.tag }}-staging
+          SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
+          ADS_EMAIL: ${{ vars.NEXT_PUBLIC_ADS_EMAIL }}
+        run: |
+          IMAGE="$REGISTRY/$WEB_ECR_REPOSITORY:$TAG"
+          if aws ecr describe-images --repository-name "$WEB_ECR_REPOSITORY" --image-ids imageTag="$TAG" >/dev/null 2>&1; then
+            echo "Image $IMAGE already exists; skipping build and push"; exit 0
+          fi
+          docker build -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_DEMO_MODE=1 \
+            --build-arg NEXT_PUBLIC_SUPPORT_EMAIL="$SUPPORT_EMAIL" \
+            --build-arg NEXT_PUBLIC_ADS_EMAIL="$ADS_EMAIL" \
+            -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE"
+
+  deploy-staging:
+    needs: build-and-push
+    if: github.event_name == 'workflow_run' || github.event.inputs.environment == 'staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-deploy-staging-${{ github.run_id }}
+      - name: Deploy api to ECS (staging)
+        uses: ./.github/actions/ecs-deploy
+        with:
+          cluster: nhonga-staging
+          service: api
+          image_tag: ${{ needs.build-and-push.outputs.image_tag }}
+          region: ${{ env.AWS_REGION }}
+      # After the api, so a release never serves a web that expects api changes
+      # that are not live yet.
+      - name: Deploy web to ECS (staging)
+        uses: ./.github/actions/ecs-deploy
+        with:
+          cluster: nhonga-staging
+          service: web
+          image_tag: ${{ needs.build-and-push.outputs.image_tag }}-staging
+          region: ${{ env.AWS_REGION }}
+
+  deploy-production:
+    needs: build-and-push
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Reviewer on the production environment gates this and mints the OIDC token.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-deploy-prod-${{ github.run_id }}
+      - name: Deploy to ECS (production)
+        uses: ./.github/actions/ecs-deploy
+        with:
+          cluster: nhonga-production
+          service: api
+          image_tag: ${{ needs.build-and-push.outputs.image_tag }}
+          region: ${{ env.AWS_REGION }}

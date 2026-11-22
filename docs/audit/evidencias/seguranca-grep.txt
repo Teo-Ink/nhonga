@@ -1,0 +1,77 @@
+## Tokens na app mobile
+apps/mobile/src/lib/api.ts:1:import * as SecureStore from 'expo-secure-store';
+apps/mobile/src/lib/api.ts:96:// ── Session token (SecureStore) ───────────────────────────────────
+apps/mobile/src/lib/api.ts:97:// SecureStore has no web implementation, so on Expo web the setItem/getItem
+apps/mobile/src/lib/api.ts:105:    const stored = await SecureStore.getItemAsync(TOKEN_KEY);
+apps/mobile/src/lib/api.ts:115:    await SecureStore.setItemAsync(TOKEN_KEY, token);
+apps/mobile/src/lib/api.ts:123:    await SecureStore.deleteItemAsync(TOKEN_KEY);
+apps/mobile/src/lib/favorites.tsx:11:import * as SecureStore from 'expo-secure-store';
+apps/mobile/src/lib/favorites.tsx:16:// Mirrors the web's localStorage + /favorites sync pattern.
+
+## Eliminação de conta (API/web/mobile)
+(vazio = não existe)
+
+## Verificação de dono em mensagens/conversas
+57:  private async vendorIdsOf(userId: string): Promise<string[]> {
+59:      .select({ vendorId: vendorUser.vendorId })
+62:    return rows.map((r) => r.vendorId);
+90:          .where(and(eq(product.slug, input.productSlug), eq(product.vendorId, shop.id)))
+106:            eq(conversation.vendorId, shop.id),
+107:            eq(conversation.buyerUserId, user.id),
+118:        vendorId: shop.id,
+119:        buyerUserId: user.id,
+126:    await this.post(convId, user.id, body, { isBuyer: true, vendorId: shop.id });
+135:    const { conv, role } = await this.participant(id, user);
+136:    await this.post(id, user.id, body, { isBuyer: role === 'buyer', vendorId: conv.vendorId });
+144:    ctx: { isBuyer: boolean; vendorId: string },
+159:      await this.notifications.notifyVendorOwners(ctx.vendorId, {
+168:          .select({ buyerUserId: conversation.buyerUserId })
+174:        await this.notifications.notifyUser(conv.buyerUserId, {
+
+## Verificação de dono em anúncios (update/delete)
+4:  ForbiddenException,
+19:import { vendor, vendorUser } from '../../db/schema/vendors.js';
+195:      .select({ vendorId: vendorUser.vendorId })
+196:      .from(vendorUser)
+197:      .where(eq(vendorUser.userId, user.id));
+394:      throw new ForbiddenException({ message: 'Not your listing' });
+401:  async updateListing(
+423:      throw new ForbiddenException({ message: 'Not your listing' });
+531:      throw new ForbiddenException({ message: 'Not your listing' });
+553:        .select({ vendorId: vendorUser.vendorId })
+554:        .from(vendorUser)
+555:        .where(eq(vendorUser.userId, user.id))
+
+## Admin / debug endpoints
+apps/api/src/modules/promotions/promotions.controller.ts:38:  /** Ops/admin-lite: active promotions (E4). */
+apps/api/src/modules/ads/ads.controller.ts:56:  /** Ops/admin-lite: all campaigns with impressions/clicks. */
+
+## dangerouslySetInnerHTML
+apps/web/app/layout.tsx:66:        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+
+## SQL raw / unsafe
+
+## Telefone exposto nas respostas públicas
+apps/api/src/modules/catalog/catalog.mappers.ts:158:      whatsapp: null,
+apps/api/src/modules/catalog/catalog.mappers.ts:159:      phone: null,
+apps/api/src/modules/catalog/catalog.mappers.ts:166:  whatsapp: string | null;
+apps/api/src/modules/catalog/catalog.mappers.ts:170:}): { whatsapp: string | null; phone: string | null } {
+apps/api/src/modules/catalog/catalog.mappers.ts:172:    whatsapp: v.showWhatsapp ? v.whatsapp : null,
+apps/api/src/modules/catalog/catalog.mappers.ts:173:    phone: v.showPhone ? v.contactPhone : null,
+
+## Logs de PII
+apps/api/src/modules/auth/auth-crypto.ts:14:/** A six-digit numeric login code. */
+apps/api/src/modules/auth/auth.service.ts:108:      this.log.log(`[mock SMS] login code for ${phoneE164}: ${code}`);
+apps/api/src/modules/notifications/sms.sender.ts:21:    this.log.log(`[mock SMS] to ${toE164}: ${message}`);
+apps/api/src/config/config.schema.ts:174: * (a forgotten variable). Mock SMS returns the login code in the API response,
+apps/api/src/db/schema/identity.ts:78:      sql`${table.purpose} in ('login','verify_phone','payout_change')`,
+
+## TODO/FIXME
+0
+
+## Validação de input (zod/class-validator)
+apps/api/src/main.ts
+(vazio = sem validação por schema)
+
+## ValidationPipe global em main.ts
+62:  // rationale puts shared Zod schemas in packages/shared for client and server
