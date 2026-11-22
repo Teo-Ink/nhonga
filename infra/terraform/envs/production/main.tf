@@ -157,6 +157,10 @@ module "api" {
   environment_vars = {
     PAYMENTS_MODE = "mock" # [TBC] flips to "live" once OQ-7/OQ-8 merchant agreements land
     LOG_LEVEL     = "info"
+    # Listings untouched for 90 days leave search (P2-10).
+    LISTING_TTL_DAYS = "90"
+    # Monthly ceiling on generative-AI tokens (SEC-08); review with real usage.
+    ASSISTANT_MONTHLY_TOKEN_CAP = "2000000"
   }
   secret_arns = {
     DATABASE_URL    = module.secrets.database_url_arn

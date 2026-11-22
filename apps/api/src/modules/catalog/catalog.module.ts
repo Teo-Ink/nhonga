@@ -5,11 +5,12 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
 import { FavoritesModule } from '../favorites/favorites.module.js';
 import { CatalogController } from './catalog.controller.js';
 import { CatalogService } from './catalog.service.js';
+import { ListingExpiry } from './listing-expiry.js';
 
 @Module({
   imports: [MediaModule, AuthModule, NotificationsModule, FavoritesModule],
   controllers: [CatalogController],
-  providers: [CatalogService],
+  providers: [CatalogService, ListingExpiry],
   exports: [CatalogService],
 })
 export class CatalogModule {}
