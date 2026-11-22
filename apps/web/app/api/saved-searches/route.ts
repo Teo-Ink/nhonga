@@ -1,9 +1,9 @@
 // BFF: create a saved search (with SMS alert), forwarded to the API.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../lib/bff';
 
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
-  const res = await fetch(`${API_URL}/saved-searches`, {
+  const res = await apiFetch(`/saved-searches`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body,
@@ -15,3 +15,5 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const POST = withApi(handlePOST);

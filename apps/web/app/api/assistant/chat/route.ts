@@ -1,11 +1,11 @@
 // BFF: forwards the chat transcript to the private assistant API. Keeps API_URL
 // server-side; the browser never talks to the API directly.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../../lib/bff';
 
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
   try {
-    const res = await fetch(`${API_URL}/assistant/chat`, {
+    const res = await apiFetch(`/assistant/chat`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
       body,
@@ -23,3 +23,5 @@ export async function POST(req: Request): Promise<Response> {
     });
   }
 }
+
+export const POST = withApi(handlePOST);

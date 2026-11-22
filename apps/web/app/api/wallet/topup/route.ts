@@ -1,14 +1,12 @@
 // BFF: top up the signed-in seller's wallet balance (demo credit).
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return Response.json({ detail: 'Inicia sessão.' }, { status: 401 });
   const body = await req.text();
-  const res = await fetch(`${API_URL}/wallet/topup`, {
+  const res = await apiFetch(`/wallet/topup`, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${token}`,
@@ -24,3 +22,5 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const POST = withApi(handlePOST);

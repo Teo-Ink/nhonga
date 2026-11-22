@@ -1,12 +1,12 @@
 // BFF: serve an uploaded listing photo from the API's media store.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../../lib/bff';
 
-export async function GET(
+async function handleGET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const { id } = await params;
-  const res = await fetch(`${API_URL}/media/${encodeURIComponent(id)}`, { cache: 'no-store' });
+  const res = await apiFetch(`/media/${encodeURIComponent(id)}`, { cache: 'no-store' });
   if (!res.ok) return new Response('Not found', { status: res.status });
   const buf = await res.arrayBuffer();
   return new Response(buf, {
@@ -17,3 +17,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = withApi(handleGET);

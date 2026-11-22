@@ -1,13 +1,11 @@
 // BFF: the seller's monthly banner quota.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function GET(): Promise<Response> {
+async function handleGET(): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return Response.json({ message: 'Inicie sessão.' }, { status: 401 });
-  const res = await fetch(`${API_URL}/banners/quota`, {
+  const res = await apiFetch(`/banners/quota`, {
     headers: { authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
@@ -17,3 +15,5 @@ export async function GET(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);

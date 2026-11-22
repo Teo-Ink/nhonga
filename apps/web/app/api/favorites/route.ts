@@ -1,18 +1,16 @@
 // BFF: the signed-in user's server favourites (GET) / add a favourite (POST).
 import { cookies } from 'next/headers';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../lib/bff';
 
 async function auth(): Promise<Record<string, string>> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return token ? { authorization: `Bearer ${token}` } : {};
 }
 
-export async function GET(): Promise<Response> {
+async function handleGET(): Promise<Response> {
   const headers = await auth();
   if (!headers.authorization) return Response.json([]);
-  const res = await fetch(`${API_URL}/favorites`, { headers, cache: 'no-store' });
+  const res = await apiFetch(`/favorites`, { headers, cache: 'no-store' });
   const text = await res.text();
   return new Response(text, {
     status: res.status,
@@ -20,9 +18,9 @@ export async function GET(): Promise<Response> {
   });
 }
 
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
-  const res = await fetch(`${API_URL}/favorites`, {
+  const res = await apiFetch(`/favorites`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...(await auth()) },
     body,
@@ -33,3 +31,6 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);
+export const POST = withApi(handlePOST);

@@ -1,8 +1,8 @@
 // BFF: districts for the location drill-down (static, cacheable).
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../lib/bff';
 
-export async function GET(): Promise<Response> {
-  const res = await fetch(`${API_URL}/catalog/districts`, {
+async function handleGET(): Promise<Response> {
+  const res = await apiFetch(`/catalog/districts`, {
     headers: { 'accept-language': 'pt' },
     next: { revalidate: 3600 },
   });
@@ -12,3 +12,5 @@ export async function GET(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);

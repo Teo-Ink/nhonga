@@ -1,10 +1,8 @@
 // BFF: the signed-in seller's wallet (balance + points + history).
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function GET(): Promise<Response> {
+async function handleGET(): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) {
     return Response.json({
@@ -15,7 +13,7 @@ export async function GET(): Promise<Response> {
       transactions: [],
     });
   }
-  const res = await fetch(`${API_URL}/wallet`, {
+  const res = await apiFetch(`/wallet`, {
     headers: { authorization: `Bearer ${token}`, 'accept-language': 'pt' },
     cache: 'no-store',
   });
@@ -25,3 +23,5 @@ export async function GET(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);
