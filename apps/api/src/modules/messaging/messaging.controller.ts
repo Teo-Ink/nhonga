@@ -20,6 +20,8 @@ import {
 } from './messaging.service.js';
 import { ConversationStart, MessageSend } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { ConversationListOut, IdOut, OkOut, ThreadOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -41,6 +43,7 @@ function toHttp(e: unknown): HttpException {
 export class MessagingController {
   constructor(private readonly messaging: MessagingService) {}
 
+  @Returns(ConversationListOut)
   @Get()
   list(
     @Headers('authorization') authz?: string,
@@ -50,6 +53,7 @@ export class MessagingController {
     });
   }
 
+  @Returns(IdOut)
   @Post()
   @HttpCode(201)
   async start(
@@ -75,6 +79,7 @@ export class MessagingController {
     }
   }
 
+  @Returns(ThreadOut)
   @Get(':id')
   async thread(
     @Param('id') id: string,
@@ -88,6 +93,7 @@ export class MessagingController {
   }
 
   /** Block the other side of this conversation (P0-18). */
+  @Returns(OkOut)
   @Post(':id/block')
   @HttpCode(200)
   async block(
@@ -101,6 +107,7 @@ export class MessagingController {
     }
   }
 
+  @Returns(OkOut)
   @Delete(':id/block')
   @HttpCode(200)
   async unblock(
@@ -114,6 +121,7 @@ export class MessagingController {
     }
   }
 
+  @Returns(OkOut)
   @Post(':id/messages')
   @HttpCode(201)
   async send(

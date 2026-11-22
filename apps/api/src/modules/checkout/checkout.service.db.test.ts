@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { eq, sql } from 'drizzle-orm';
+import { CheckoutOut, RefundOut } from '@nhonga/shared';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { checkoutIntent } from '../../db/schema/checkout.js';
 import { vendor } from '../../db/schema/vendors.js';
@@ -106,6 +107,7 @@ describe.skipIf(!hasTestDb)('CheckoutService (Postgres)', () => {
 
   it('credits a top-up exactly once under 10 concurrent callbacks', async () => {
     const v = await svc.startTopup('token', 50_000, 'mpesa');
+    expect(() => CheckoutOut.parse(v)).not.toThrow(); // matches the OpenAPI response
     const ref = `pawapay-${v.id}`;
     primary.pay(ref, 50_000);
 
@@ -197,6 +199,7 @@ describe.skipIf(!hasTestDb)('CheckoutService (Postgres)', () => {
       svc.refund(id, 'duplo'),
     ]);
     expect([a.refundStatus, b.refundStatus]).toContain('refunded');
+    expect(() => RefundOut.parse(a)).not.toThrow(); // matches the OpenAPI response
     expect(primary.refunds).toEqual([
       { refundId: id, gatewayRef: `pawapay-${id}`, amountCents: 30_000 },
     ]);

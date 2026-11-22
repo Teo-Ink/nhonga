@@ -5,6 +5,8 @@ import { CheckoutService, type CheckoutView, type RefundView } from './checkout.
 import { CheckoutMockDecide, CheckoutRefund, CheckoutPackage, CheckoutTopup } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
 import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
+import { CheckoutOut, RefundOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -21,6 +23,7 @@ export class CheckoutController {
   }
 
   /** Start a wallet top-up; the client then redirects to `checkoutUrl`. */
+  @Returns(CheckoutOut)
   @Post('topup')
   @HttpCode(201)
   topup(
@@ -34,6 +37,7 @@ export class CheckoutController {
   }
 
   /** Buy a wallet package; the client then redirects to `checkoutUrl`. */
+  @Returns(CheckoutOut)
   @Post('package')
   @HttpCode(201)
   buyPackage(
@@ -63,6 +67,7 @@ export class CheckoutController {
   }
 
   /** Ops: refund a paid top-up or package (P2-02). */
+  @Returns(RefundOut)
   @Post('admin/:id/refund')
   @HttpCode(200)
   refund(
@@ -75,6 +80,7 @@ export class CheckoutController {
   }
 
   /** Ops: payment and refund state, refreshed from the gateway. */
+  @Returns(RefundOut)
   @Get('admin/:id')
   adminView(
     @Param('id') id: string,
@@ -99,6 +105,7 @@ export class CheckoutController {
     );
   }
 
+  @Returns(CheckoutOut)
   @Get(':id')
   get(@Param('id') id: string, @Headers('authorization') authz?: string): Promise<CheckoutView> {
     return this.checkout.get(bearer(authz), id);

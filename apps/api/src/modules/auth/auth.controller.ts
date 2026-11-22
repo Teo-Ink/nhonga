@@ -15,6 +15,8 @@ import { AccountService } from './account.service.js';
 import { AuthError, AuthService, type AuthUser } from './auth.service.js';
 import { OtpRequest, OtpVerify } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { AuthUserOut, OkOut, OtpRequestOut, SessionOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 interface RequestBody {
   phone?: unknown;
@@ -33,6 +35,7 @@ export class AuthController {
     private readonly account: AccountService,
   ) {}
 
+  @Returns(OtpRequestOut)
   @Post('otp/request')
   @HttpCode(200)
   async request(
@@ -48,6 +51,7 @@ export class AuthController {
     }
   }
 
+  @Returns(SessionOut)
   @Post('otp/verify')
   @HttpCode(200)
   async verify(
@@ -64,6 +68,7 @@ export class AuthController {
     }
   }
 
+  @Returns(AuthUserOut)
   @Get('me')
   async me(@Headers('authorization') authz?: string): Promise<AuthUser> {
     try {
@@ -74,6 +79,7 @@ export class AuthController {
   }
 
   /** Delete my account (P0-06): immediate, every session ends. */
+  @Returns(OkOut)
   @Delete('me')
   @HttpCode(200)
   async deleteMe(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
@@ -94,6 +100,7 @@ export class AuthController {
     }
   }
 
+  @Returns(OkOut)
   @Post('logout')
   @HttpCode(200)
   async logout(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
