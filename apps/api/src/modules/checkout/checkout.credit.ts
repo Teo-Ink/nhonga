@@ -37,5 +37,5 @@ export function creditFor(i: {
 }
 
 export function methodLabel(m: string): string {
-  return { mpesa: 'M-Pesa', emola: 'e-Mola', mkesh: 'mKesh', card: 'cartão' }[m] ?? m;
+  return { mpesa: 'M-Pesa', emola: 'e-Mola', card: 'cartão' }[m] ?? m;
 }

@@ -23,7 +23,6 @@ interface Receipt {
 const METHODS = [
   { id: 'mpesa', label: 'M-Pesa' },
   { id: 'emola', label: 'e-Mola' },
-  { id: 'mkesh', label: 'mKesh' },
 ];
 
 // Buy a promotion for a listing (paid visibility, E). Payment is a labelled

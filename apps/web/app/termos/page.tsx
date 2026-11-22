@@ -70,7 +70,7 @@ export default function TermsPage() {
       <h2>4. Serviços pagos e carteira</h2>
       <p>
         Publicar anúncios é gratuito. São pagos os serviços opcionais: destaques, «Loja Pro»,
-        pacotes e publicidade. Os pagamentos são feitos por M-Pesa, e-Mola, mKesh ou cartão, através
+        pacotes e publicidade. Os pagamentos são feitos por M-Pesa, e-Mola ou cartão Visa, através
         de prestadores de pagamento autorizados (PawaPay e PaySuite). O Nhonga não vê nem guarda o
         seu PIN.
       </p>

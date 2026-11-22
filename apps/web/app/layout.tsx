@@ -30,7 +30,8 @@ const ubuntu = Ubuntu({
 
 export const metadata = {
   title: 'Nhonga — Compre e venda em Moçambique',
-  description: 'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, mKesh ou na entrega.',
+  description:
+    'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, transferência bancária, Visa ou na entrega.',
   manifest: '/manifest.webmanifest',
   applicationName: 'Nhonga',
   appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: 'Nhonga' },

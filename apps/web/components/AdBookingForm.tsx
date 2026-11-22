@@ -11,7 +11,6 @@ type Placement = 'leaderboard' | 'mpu' | 'inline';
 const METHODS = [
   { value: 'mpesa', label: 'M-Pesa' },
   { value: 'emola', label: 'e-Mola' },
-  { value: 'mkesh', label: 'mKesh' },
 ];
 
 // Self-serve ad booking (house-ads monetisation). Books a campaign and pays via

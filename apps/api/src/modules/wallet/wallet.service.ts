@@ -78,7 +78,7 @@ export class WalletService {
    */
   private assertMockPayments(): void {
     if (this.config.get('paymentsMode', { infer: true }) !== 'mock') {
-      throw new ForbiddenException('Paga com M-Pesa, e-Mola, mKesh ou cartão.');
+      throw new ForbiddenException('Paga com M-Pesa, e-Mola ou cartão Visa.');
     }
   }
 

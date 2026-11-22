@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <strong>Mensagens</strong> trocadas com outros utilizadores no Nhonga.
         </li>
         <li>
-          <strong>Pagamentos:</strong> montante, método (M-Pesa, e-Mola, mKesh, cartão), estado e
+          <strong>Pagamentos:</strong> montante, método (M-Pesa, e-Mola, cartão Visa), estado e
           referência da transação. O PIN e os dados do cartão são tratados apenas pelos prestadores
           de pagamento; o Nhonga não os vê nem guarda.
         </li>

@@ -26,7 +26,6 @@ interface Shop {
 const METHODS = [
   { id: 'mpesa', label: 'M-Pesa' },
   { id: 'emola', label: 'e-Mola' },
-  { id: 'mkesh', label: 'mKesh' },
 ];
 
 // Subscribe a shop to Loja Pro (paid verified shop, mock payment). The shop

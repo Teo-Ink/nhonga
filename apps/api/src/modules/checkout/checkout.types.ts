@@ -12,8 +12,9 @@
  */
 
 export type GatewayId = 'pawapay' | 'paysuite' | 'mock';
-export type PayMethod = 'mpesa' | 'emola' | 'mkesh' | 'card';
-export const PAY_METHODS: readonly PayMethod[] = ['mpesa', 'emola', 'mkesh', 'card'];
+// mKesh is not offered: buyers pay by M-Pesa, e-Mola or card (Visa).
+export type PayMethod = 'mpesa' | 'emola' | 'card';
+export const PAY_METHODS: readonly PayMethod[] = ['mpesa', 'emola', 'card'];
 
 export interface CreateCheckoutInput {
   /** Our intent id (UUID). Used as the gateway's idempotency key where supported. */
