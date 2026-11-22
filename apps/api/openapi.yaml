@@ -1,1155 +1,2903 @@
+# GERADO a partir do código (src/openapi/build.ts). Não editar à mão:
+#   pnpm --filter @nhonga/api openapi:write
 openapi: 3.1.0
-
 info:
-  title: Nhonga Marketplace API
-  version: 1.0.0-phase2
-  description: |
-    Multi-vendor marketplace API for Mozambique.
+  title: Nhonga API
+  version: 1.0.0
+  description: |-
+    API dos classificados Nhonga (Moçambique). Gerado a partir do código
+    (`apps/api/src/openapi/build.ts`): rotas, parâmetros, autenticação e corpos
+    são os que a API aplica.
 
-    **Scope of this document.** This is the buyer-critical core: identity, catalogue, cart,
-    checkout, payments, and orders — the surfaces that define the architecture and carry the
-    money. The vendor console, admin console, disputes, and settlement endpoints follow the same
-    conventions and are specified in `openapi-vendor.yaml` and `openapi-admin.yaml` during Phase 3.
-
-    **Conventions**
-    - All money is an integer in **centavos** (`1250000` = 12.500,00 MT). Never a float, never a
-      formatted string. Formatting is the client's job via `formatMZN()` in `packages/shared`.
-    - All timestamps are RFC 3339 UTC.
-    - Pagination is cursor-based. Offset pagination is not offered: the catalogue changes under
-      the reader, and offsets silently skip or duplicate rows.
-    - `Accept-Language: pt-MZ | en` selects localised content. Default `pt-MZ`.
-    - Every mutating request that creates or moves money **must** carry `Idempotency-Key`.
-    - Errors follow RFC 9457 (problem+json).
+    - Endereço: `/v1/…` (o mesmo caminho sem prefixo continua a funcionar).
+    - Dinheiro em centavos inteiros (MZN).
+    - Erros em `application/problem+json` (RFC 9457) com `code` estável.
+    - Sessão: `Authorization: Bearer <token>` obtido em `/auth/otp/verify`.
+    - Pagamentos: enviar `Idempotency-Key` (uma por acção).
+    - Listas: `page.cursor` para a página seguinte.
   contact:
-    name: Nhonga Engineering
-
+    name: Nhonga
+  license:
+    name: Proprietário — todos os direitos reservados
+    identifier: LicenseRef-Proprietary
 servers:
   - url: https://api.nhonga.co.mz/v1
-    description: Production
-  - url: https://api.staging.nhonga.co.mz/v1
-    description: Staging
-  - url: http://localhost:3000/v1
-    description: Local (mock payment providers)
-
-tags:
-  - name: auth
-    description: Phone-first OTP authentication (D-04)
-  - name: catalog
-    description: Public, cacheable catalogue reads
-  - name: cart
-  - name: checkout
-    description: Order placement and payment initiation
-  - name: payments
-  - name: orders
-  - name: addresses
-  - name: reviews
-
-security:
-  - bearerAuth: []
-
+    description: Produção
 paths:
-  # ─────────────────────────────── AUTH ───────────────────────────────
-  /auth/otp/request:
-    post:
-      tags: [auth]
-      summary: Request an OTP code by SMS
-      description: |
-        Rate limited on three independent axes — per phone number, per IP, and per device — plus a
-        global send-rate circuit breaker and a hard daily SMS spend cap. Every SMS costs money, so
-        an unprotected endpoint here is both a security hole and a direct financial drain.
-
-        Always returns 202 for a valid number shape, whether or not an account exists. Revealing
-        which numbers are registered is an enumeration oracle we do not need to give away.
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [phone, purpose]
-              properties:
-                phone:
-                  type: string
-                  pattern: '^\+258(8[2-7])[0-9]{7}$'
-                  examples: ["+258841234567"]
-                purpose:
-                  type: string
-                  enum: [login, verify_phone, payout_change]
-      responses:
-        "202":
-          description: Code sent (or silently suppressed)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  challengeId: { type: string, format: uuid }
-                  expiresAt: { type: string, format: date-time }
-                  resendAfterSeconds: { type: integer, examples: [30] }
-                  operator:
-                    type: string
-                    enum: [vodacom, movitel, tmcel]
-                    description: Derived from the MSISDN prefix; pre-selects the wallet at checkout (D-05)
-        "429": { $ref: "#/components/responses/RateLimited" }
-        "400": { $ref: "#/components/responses/BadRequest" }
-
-  /auth/otp/verify:
-    post:
-      tags: [auth]
-      summary: Exchange an OTP code for a session
-      description: |
-        Five failed attempts invalidate the challenge entirely and require a new code. Timing is
-        constant regardless of whether the challenge exists, so failures cannot be distinguished.
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [challengeId, code]
-              properties:
-                challengeId: { type: string, format: uuid }
-                code: { type: string, pattern: "^[0-9]{6}$" }
-                deviceLabel: { type: string, maxLength: 64 }
-      responses:
-        "200":
-          description: Authenticated
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/AuthSession" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "429": { $ref: "#/components/responses/RateLimited" }
-
-  /auth/refresh:
-    post:
-      tags: [auth]
-      summary: Rotate the refresh token
-      description: |
-        Refresh tokens rotate on every use. Presenting an already-rotated token revokes the whole
-        token family — the only reason to present an old token is that it was stolen.
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refreshToken]
-              properties:
-                refreshToken: { type: string }
-      responses:
-        "200":
-          description: New token pair
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/AuthSession" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-
-  /auth/logout:
-    post:
-      tags: [auth]
-      summary: Revoke the current token family
-      responses:
-        "204": { description: Logged out }
-
-  # ────────────────────────────── CATALOG ──────────────────────────────
-  /catalog/categories:
+  /ads:
     get:
-      tags: [catalog]
-      summary: Full category tree
-      security: []
+      tags:
+        - ads
+      operationId: Ads_serve
+      summary: GET /ads
       parameters:
-        - $ref: "#/components/parameters/AcceptLanguage"
-      responses:
-        "200":
-          description: Category tree, three levels maximum
-          headers:
-            Cache-Control:
-              schema:
-                { type: string, examples: ["public, max-age=3600, stale-while-revalidate=86400"] }
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  categories:
-                    type: array
-                    items: { $ref: "#/components/schemas/Category" }
-
-  /catalog/products:
-    get:
-      tags: [catalog]
-      summary: Search and browse products
-      description: |
-        Returns the narrow `ProductListItem` shape, not full products. Description bodies and full
-        galleries are deliberately excluded — a grid of 20 products must not cost the user the
-        bandwidth of 20 product pages (D-09).
-      security: []
-      parameters:
-        - $ref: "#/components/parameters/AcceptLanguage"
-        - {
-            name: q,
-            in: query,
-            schema: { type: string },
-            description: Free-text search; diacritic-insensitive,
-          }
-        - { name: categoryId, in: query, schema: { type: string, format: uuid } }
-        - { name: vendorId, in: query, schema: { type: string, format: uuid } }
-        - {
-            name: districtId,
-            in: query,
-            schema: { type: string, format: uuid },
-            description: Filter to vendors who deliver here,
-          }
-        - {
-            name: minPrice,
-            in: query,
-            schema: { type: integer, format: int64 },
-            description: Centavos,
-          }
-        - { name: maxPrice, in: query, schema: { type: integer, format: int64 } }
-        - { name: minRating, in: query, schema: { type: number, minimum: 1, maximum: 5 } }
-        - { name: inStock, in: query, schema: { type: boolean } }
-        - name: sort
+        - name: category
           in: query
+          required: false
           schema:
             type: string
-            enum: [relevance, price_asc, price_desc, rating, newest]
-            default: relevance
-        - $ref: "#/components/parameters/Cursor"
-        - $ref: "#/components/parameters/Limit"
-      responses:
-        "200":
-          description: Paginated results with facets
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [items, page]
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: "#/components/schemas/ProductListItem" }
-                  facets: { $ref: "#/components/schemas/Facets" }
-                  page: { $ref: "#/components/schemas/PageInfo" }
-                  degraded:
-                    type: boolean
-                    description: |
-                      True when OpenSearch is unavailable and results came from the Postgres
-                      fallback. Clients show a "search is limited" notice rather than failing.
-
-  /catalog/products/{productId}:
-    get:
-      tags: [catalog]
-      summary: Full product detail
-      security: []
-      parameters:
-        - $ref: "#/components/parameters/AcceptLanguage"
-        - {
-            name: productId,
-            in: path,
-            required: true,
-            schema: { type: string },
-            description: UUID or slug-id,
-          }
-        - name: addressId
+        - name: placement
           in: query
-          schema: { type: string, format: uuid }
-          description: "When supplied, the response includes a delivery quote for that address (key screens §3)"
+          required: false
+          schema:
+            type: string
+      security: []
       responses:
         "200":
-          description: Product
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ProductDetail" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-  # ──────────────────────────────── CART ────────────────────────────────
-  /cart:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - ads
+      operationId: Ads_book
+      summary: POST /ads
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdBooking"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /ads/{id}/click:
+    post:
+      tags:
+        - ads
+      operationId: Ads_click
+      summary: POST /ads/{id}/click
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /ads/admin:
     get:
-      tags: [cart]
-      summary: Current cart, grouped by vendor
+      tags:
+        - ads
+      operationId: Ads_admin
+      summary: GET /ads/admin
+      parameters:
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
       responses:
         "200":
-          description: Cart
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Cart" }
-
-  /cart/items:
+              schema: {}
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /ads/plans:
+    get:
+      tags:
+        - ads
+      operationId: Ads_plans
+      summary: GET /ads/plans
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /assistant/chat:
     post:
-      tags: [cart]
-      summary: Add an item
-      parameters:
-        - $ref: "#/components/parameters/IdempotencyKey"
+      tags:
+        - assistant
+      operationId: Assistant_chat
+      summary: POST /assistant/chat
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [variantId, quantity]
-              properties:
-                variantId: { type: string, format: uuid }
-                quantity: { type: integer, minimum: 1, maximum: 99 }
+              $ref: "#/components/schemas/AssistantChat"
       responses:
         "200":
-          description: Updated cart
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Cart" }
-        "409":
-          description: Insufficient stock
-          content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-
-  /cart/items/{itemId}:
-    patch:
-      tags: [cart]
-      summary: Change quantity
-      parameters:
-        - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
-        - $ref: "#/components/parameters/IdempotencyKey"
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /assistant/listing:
+    post:
+      tags:
+        - assistant
+      operationId: Assistant_listing
+      summary: POST /assistant/listing
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [quantity]
-              properties:
-                quantity:
-                  { type: integer, minimum: 0, maximum: 99, description: 0 removes the item }
+              $ref: "#/components/schemas/AssistantListing"
       responses:
         "200":
-          description: Updated cart
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Cart" }
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /assistant/listing-photo:
+    post:
+      tags:
+        - assistant
+      operationId: Assistant_listingPhoto
+      summary: POST /assistant/listing-photo
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistantListingPhoto"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /assistant/search-query:
+    post:
+      tags:
+        - assistant
+      operationId: Assistant_searchQuery
+      summary: POST /assistant/search-query
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistantSearchQuery"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /assistant/status:
+    get:
+      tags:
+        - assistant
+      operationId: Assistant_status
+      summary: GET /assistant/status
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      operationId: Auth_logout
+      summary: POST /auth/logout
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/me:
     delete:
-      tags: [cart]
-      summary: Remove an item
-      parameters:
-        - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+      tags:
+        - auth
+      operationId: Auth_deleteMe
+      summary: DELETE /auth/me
+      security:
+        - bearerAuth: []
+        - {}
       responses:
         "200":
-          description: Updated cart
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Cart" }
-
-  # ────────────────────────────── CHECKOUT ──────────────────────────────
-  /checkout/quote:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    get:
+      tags:
+        - auth
+      operationId: Auth_me
+      summary: GET /auth/me
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/me/export:
+    get:
+      tags:
+        - auth
+      operationId: Auth_exportMe
+      summary: GET /auth/me/export
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/orders:
+    get:
+      tags:
+        - auth
+      operationId: Auth_orders
+      summary: GET /auth/orders
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/otp/request:
     post:
-      tags: [checkout]
-      summary: Price the cart for a delivery address
-      description: |
-        Returns per-vendor shipping fees, delivery windows, and the grand total. Called on the
-        delivery step so the buyer sees the real total before committing — shipping revealed at the
-        last moment is the leading cause of abandonment, and fees are large relative to order value
-        in this market.
+      tags:
+        - auth
+      operationId: Auth_request
+      summary: POST /auth/otp/request
+      security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [addressId]
-              properties:
-                addressId: { type: string, format: uuid }
-                deliveryMethod:
-                  { type: string, enum: [marketplace, vendor, pickup], default: marketplace }
-                paymentProvider:
-                  type: string
-                  enum: [mpesa, emola, mkesh, cod]
-                  description: Affects payment fee, if the platform charges one (OQ-5)
+              $ref: "#/components/schemas/OtpRequest"
       responses:
         "200":
-          description: Quote
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/CheckoutQuote" }
-        "409":
-          description: Cart is no longer purchasable (stock or price changed)
-          content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-
-  /checkout:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /auth/otp/verify:
     post:
-      tags: [checkout]
-      summary: Place the order and initiate payment
-      description: |
-        The single most important endpoint in the system.
-
-        In one database transaction it validates stock and prices, reserves stock, creates the
-        order with one `sub_order` per vendor, creates the payment in `initiated`, and writes the
-        outbox event. **The provider call happens after that transaction commits** — holding row
-        locks across a network call to Vodacom is how you take down the database.
-
-        `Idempotency-Key` is mandatory. A replay returns the original response verbatim; it never
-        creates a second order and never initiates a second payment. This is what makes the pay
-        button safe to double-tap on a bad connection.
-
-        Returns **202**, not 201: the order exists but the payment has not resolved. Mobile-money
-        push takes 10–120 seconds and the client must poll or wait for the push notification.
+      tags:
+        - auth
+      operationId: Auth_verify
+      summary: POST /auth/otp/verify
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerify"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/{id}.png:
+    get:
+      tags:
+        - banners
+      operationId: Banners_png
+      summary: GET /banners/{id}.png
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/{id}.svg:
+    get:
+      tags:
+        - banners
+      operationId: Banners_svg
+      summary: GET /banners/{id}.svg
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/apply:
+    post:
+      tags:
+        - banners
+      operationId: Banners_apply
+      summary: POST /banners/apply
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerApply"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/edit:
+    post:
+      tags:
+        - banners
+      operationId: Banners_edit
+      summary: POST /banners/edit
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerEdit"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/generate:
+    post:
+      tags:
+        - banners
+      operationId: Banners_generate
+      summary: POST /banners/generate
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerGenerate"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/presets:
+    get:
+      tags:
+        - banners
+      operationId: Banners_presets
+      summary: GET /banners/presets
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/quota:
+    get:
+      tags:
+        - banners
+      operationId: Banners_quota
+      summary: GET /banners/quota
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /banners/unapply:
+    post:
+      tags:
+        - banners
+      operationId: Banners_unapply
+      summary: POST /banners/unapply
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerUnapply"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/categories/{slug}/attributes:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_categoryAttributes
+      summary: GET /catalog/categories/{slug}/attributes
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/districts:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_districts
+      summary: GET /catalog/districts
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/mine/products:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_mineProducts
+      summary: GET /catalog/mine/products
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/mine/shop:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_myShop
+      summary: GET /catalog/mine/shop
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/products:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_list
+      summary: GET /catalog/products
+      parameters:
+        - name: attributes
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: district
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: inStock
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: maxPrice
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: province
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: vendor
+          in: query
+          required: false
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - catalog
+      operationId: Catalog_create
+      summary: POST /catalog/products
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingInput"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/products/{id}:
+    delete:
+      tags:
+        - catalog
+      operationId: Catalog_remove
+      summary: DELETE /catalog/products/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_detail
+      summary: GET /catalog/products/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    patch:
+      tags:
+        - catalog
+      operationId: Catalog_update
+      summary: PATCH /catalog/products/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingInput"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/products/{id}/status:
+    patch:
+      tags:
+        - catalog
+      operationId: Catalog_setStatus
+      summary: PATCH /catalog/products/{id}/status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingStatus"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/products/{idOrSlug}/events:
+    post:
+      tags:
+        - catalog
+      operationId: Catalog_event
+      summary: POST /catalog/products/{idOrSlug}/events
+      parameters:
+        - name: idOrSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingEvent"
+      responses:
+        "204":
+          description: Sem conteúdo
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/products/{idOrSlug}/reports:
+    post:
+      tags:
+        - catalog
+      operationId: Catalog_report
+      summary: POST /catalog/products/{idOrSlug}/reports
+      parameters:
+        - name: idOrSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingReport"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/provinces:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_provinces
+      summary: GET /catalog/provinces
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/shops/{slug}:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_shop
+      summary: GET /catalog/shops/{slug}
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/stats:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_stats
+      summary: GET /catalog/stats
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /catalog/suggest:
+    get:
+      tags:
+        - catalog
+      operationId: Catalog_suggest
+      summary: GET /catalog/suggest
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/{id}:
+    get:
+      tags:
+        - checkout
+      operationId: Checkout_get
+      summary: GET /checkout/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/methods:
+    get:
+      tags:
+        - checkout
+      operationId: Checkout_methods
+      summary: GET /checkout/methods
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/mock/{id}:
+    post:
+      tags:
+        - checkout
+      operationId: Checkout_mock
+      summary: POST /checkout/mock/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutMockDecide"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/package:
+    post:
+      tags:
+        - checkout
+      operationId: Checkout_buyPackage
+      summary: POST /checkout/package
       parameters:
         - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [addressId, paymentProvider, expectedTotalCents]
-              properties:
-                addressId: { type: string, format: uuid }
-                deliveryMethod:
-                  { type: string, enum: [marketplace, vendor, pickup], default: marketplace }
-                paymentProvider: { type: string, enum: [mpesa, emola, mkesh, cod] }
-                paymentMsisdn:
-                  type: string
-                  pattern: '^\+258(8[2-7])[0-9]{7}$'
-                  description: Defaults to the account phone. Buyers often pay from another wallet.
-                expectedTotalCents:
-                  type: integer
-                  format: int64
-                  description: |
-                    The total the buyer was shown. If it no longer matches, the request is rejected
-                    with 409 rather than silently charging a different amount.
+              $ref: "#/components/schemas/CheckoutPackage"
       responses:
-        "202":
-          description: Order placed, payment initiated
+        "201":
+          description: Sucesso
           content:
             application/json:
-              schema:
-                type: object
-                required: [orderId, orderNumber, payment]
-                properties:
-                  orderId: { type: string, format: uuid }
-                  orderNumber: { type: string, examples: ["4821"] }
-                  payment: { $ref: "#/components/schemas/Payment" }
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
         "409":
-          description: Price changed, out of stock, or vendor suspended
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/topup:
+    post:
+      tags:
+        - checkout
+      operationId: Checkout_topup
+      summary: POST /checkout/topup
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutTopup"
+      responses:
+        "201":
+          description: Sucesso
           content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-        "422": { $ref: "#/components/responses/BadRequest" }
-        "429": { $ref: "#/components/responses/RateLimited" }
-
-  # ────────────────────────────── PAYMENTS ──────────────────────────────
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /checkout/webhooks/{gateway}:
+    post:
+      tags:
+        - checkout
+      operationId: Checkout_webhook
+      summary: POST /checkout/webhooks/{gateway}
+      parameters:
+        - name: gateway
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /conversations:
+    get:
+      tags:
+        - conversations
+      operationId: Messaging_list
+      summary: GET /conversations
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - conversations
+      operationId: Messaging_start
+      summary: POST /conversations
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationStart"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /conversations/{id}:
+    get:
+      tags:
+        - conversations
+      operationId: Messaging_thread
+      summary: GET /conversations/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /conversations/{id}/block:
+    delete:
+      tags:
+        - conversations
+      operationId: Messaging_unblock
+      summary: DELETE /conversations/{id}/block
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - conversations
+      operationId: Messaging_block
+      summary: POST /conversations/{id}/block
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /conversations/{id}/messages:
+    post:
+      tags:
+        - conversations
+      operationId: Messaging_send
+      summary: POST /conversations/{id}/messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageSend"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /favorites:
+    get:
+      tags:
+        - favorites
+      operationId: Favorites_list
+      summary: GET /favorites
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - favorites
+      operationId: Favorites_add
+      summary: POST /favorites
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteAdd"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /favorites/{productId}:
+    delete:
+      tags:
+        - favorites
+      operationId: Favorites_remove
+      summary: DELETE /favorites/{productId}
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /health/live:
+    get:
+      tags:
+        - health
+      operationId: Health_live
+      summary: GET /health/live
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /health/ready:
+    get:
+      tags:
+        - health
+      operationId: Health_ready
+      summary: GET /health/ready
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /media/{id}:
+    get:
+      tags:
+        - media
+      operationId: Media_get
+      summary: GET /media/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /notifications:
+    get:
+      tags:
+        - notifications
+      operationId: Notifications_list
+      summary: GET /notifications
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /notifications/prefs:
+    get:
+      tags:
+        - notifications
+      operationId: Notifications_getPrefs
+      summary: GET /notifications/prefs
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    put:
+      tags:
+        - notifications
+      operationId: Notifications_setPrefs
+      summary: PUT /notifications/prefs
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPrefs"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /notifications/push-token:
+    post:
+      tags:
+        - notifications
+      operationId: Notifications_registerPush
+      summary: POST /notifications/push-token
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenAdd"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /notifications/push-token/remove:
+    post:
+      tags:
+        - notifications
+      operationId: Notifications_removePush
+      summary: POST /notifications/push-token/remove
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenRemove"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /notifications/read:
+    post:
+      tags:
+        - notifications
+      operationId: Notifications_markRead
+      summary: POST /notifications/read
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /payments/{paymentId}:
     get:
-      tags: [payments]
-      summary: Poll payment status
-      description: |
-        The client's safety net when the webhook is slow. Recommended backoff: 2s, 4s, 8s, then
-        every 10s to a 3-minute ceiling.
-
-        **The client never decides payment state** — it renders what this endpoint returns. A
-        client that concludes "paid" on its own produces the one failure this product cannot
-        afford.
+      tags:
+        - payments
+      operationId: Payments_getById
+      summary: GET /payments/{paymentId}
       parameters:
-        - { name: paymentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
       responses:
         "200":
-          description: Current state
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Payment" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-  /payments/{paymentId}/retry:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /promotions:
     post:
-      tags: [payments]
-      summary: Retry a failed or expired payment
-      description: |
-        Creates a **new** payment attempt against the same order, with a new idempotency key, so a
-        retry is never collapsed into the prior attempt. May switch provider — a failed M-Pesa
-        attempt should be able to become an e-Mola or COD attempt rather than leaving the funnel.
-
-        Refused if the original payment later reached `paid`, which can happen when a user approves
-        on the handset after our expiry window closed.
+      tags:
+        - promotions
+      operationId: Promotions_buy
+      summary: POST /promotions
       parameters:
-        - { name: paymentId, in: path, required: true, schema: { type: string, format: uuid } }
         - $ref: "#/components/parameters/IdempotencyKey"
+      security: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                paymentProvider: { type: string, enum: [mpesa, emola, mkesh, cod] }
-                paymentMsisdn: { type: string, pattern: '^\+258(8[2-7])[0-9]{7}$' }
+              $ref: "#/components/schemas/PromotionPurchase"
       responses:
-        "202":
-          description: New attempt initiated
+        "201":
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Payment" }
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
         "409":
-          description: Original payment already resolved as paid
-          content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-
-  # ─────────────────────────────── ORDERS ───────────────────────────────
-  /orders:
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /promotions/{id}:
     get:
-      tags: [orders]
-      summary: Buyer order history
+      tags:
+        - promotions
+      operationId: Promotions_receipt
+      summary: GET /promotions/{id}
       parameters:
-        - {
-            name: status,
-            in: query,
-            schema: { type: string, enum: [active, completed, cancelled] },
-          }
-        - $ref: "#/components/parameters/Cursor"
-        - $ref: "#/components/parameters/Limit"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
       responses:
         "200":
-          description: Orders
+          description: Sucesso
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: "#/components/schemas/OrderListItem" }
-                  page: { $ref: "#/components/schemas/PageInfo" }
-
-  /orders/{orderId}:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /promotions/admin/active:
     get:
-      tags: [orders]
-      summary: Order detail with a timeline per vendor
+      tags:
+        - promotions
+      operationId: Promotions_active
+      summary: GET /promotions/admin/active
       parameters:
-        - { name: orderId, in: path, required: true, schema: { type: string, format: uuid } }
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
       responses:
         "200":
-          description: Order
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/OrderDetail" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-  /orders/{orderId}/sub-orders/{subOrderId}/confirm-receipt:
-    post:
-      tags: [orders]
-      summary: Buyer confirms delivery
-      description: |
-        Moves the sub-order to `completed` and makes its settlement eligible. Auto-fires 7 days
-        after delivery if the buyer never confirms — otherwise vendor payouts would be stranded
-        indefinitely by ordinary buyer inattention.
-      parameters:
-        - { name: orderId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { name: subOrderId, in: path, required: true, schema: { type: string, format: uuid } }
-        - $ref: "#/components/parameters/IdempotencyKey"
-      responses:
-        "200":
-          description: Confirmed
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/SubOrder" }
-        "409": { $ref: "#/components/responses/Conflict" }
-
-  # ────────────────────────────── ADDRESSES ─────────────────────────────
-  /addresses:
+              schema: {}
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /promotions/plans:
     get:
-      tags: [addresses]
-      summary: Address book
+      tags:
+        - promotions
+      operationId: Promotions_plans
+      summary: GET /promotions/plans
+      security: []
       responses:
         "200":
-          description: Addresses
+          description: Sucesso
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items: { $ref: "#/components/schemas/Address" }
-    post:
-      tags: [addresses]
-      summary: Add an address
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/AddressInput" }
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /referrals/summary:
+    get:
+      tags:
+        - referrals
+      operationId: Referrals_summary
+      summary: GET /referrals/summary
+      security:
+        - bearerAuth: []
+        - {}
       responses:
-        "201":
-          description: Created
+        "200":
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Address" }
-
-  # ─────────────────────────────── REVIEWS ──────────────────────────────
-  /reviews:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /saved-searches:
+    get:
+      tags:
+        - saved-searches
+      operationId: Alerts_list
+      summary: GET /saved-searches
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
     post:
-      tags: [reviews]
-      summary: Review a delivered item
-      description: |
-        Only permitted against an `order_item` from a delivered sub-order belonging to the caller.
-        This is the primary defence against review fraud, which would destroy the trust the whole
-        marketplace depends on.
-      parameters:
-        - $ref: "#/components/parameters/IdempotencyKey"
+      tags:
+        - saved-searches
+      operationId: Alerts_create
+      summary: POST /saved-searches
+      security:
+        - bearerAuth: []
+        - {}
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [orderItemId, rating]
-              properties:
-                orderItemId: { type: string, format: uuid }
-                rating: { type: integer, minimum: 1, maximum: 5 }
-                comment: { type: string, maxLength: 2000 }
-                imageIds:
-                  type: array
-                  maxItems: 3
-                  items: { type: string, format: uuid }
+              $ref: "#/components/schemas/SavedSearchCreate"
       responses:
         "201":
-          description: Submitted; may be held for moderation
+          description: Sucesso
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Review" }
-        "403":
-          description: Caller did not buy and receive this item
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /saved-searches/{id}:
+    delete:
+      tags:
+        - saved-searches
+      operationId: Alerts_remove
+      summary: DELETE /saved-searches/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "204":
+          description: Sem conteúdo
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /saved-searches/run:
+    post:
+      tags:
+        - saved-searches
+      operationId: Alerts_run
+      summary: POST /saved-searches/run
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
           content:
-            application/problem+json:
-              schema: { $ref: "#/components/schemas/Problem" }
-
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /subscriptions:
+    post:
+      tags:
+        - subscriptions
+      operationId: Subscriptions_subscribe
+      summary: POST /subscriptions
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionCreate"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /subscriptions/{id}:
+    get:
+      tags:
+        - subscriptions
+      operationId: Subscriptions_receipt
+      summary: GET /subscriptions/{id}
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /subscriptions/plans:
+    get:
+      tags:
+        - subscriptions
+      operationId: Subscriptions_plans
+      summary: GET /subscriptions/plans
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /vendors/{vendorId}/reviews:
+    get:
+      tags:
+        - vendors
+      operationId: Reviews_list
+      summary: GET /vendors/{vendorId}/reviews
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      tags:
+        - vendors
+      operationId: Reviews_create
+      summary: POST /vendors/{vendorId}/reviews
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCreate"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet:
+    get:
+      tags:
+        - wallet
+      operationId: Wallet_get
+      summary: GET /wallet
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/boost:
+    post:
+      tags:
+        - wallet
+      operationId: Wallet_boost
+      summary: POST /wallet/boost
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletBoost"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/packages:
+    get:
+      tags:
+        - wallet
+      operationId: Wallet_packages
+      summary: GET /wallet/packages
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/plans:
+    get:
+      tags:
+        - wallet
+      operationId: Wallet_plans
+      summary: GET /wallet/plans
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/pro:
+    post:
+      tags:
+        - wallet
+      operationId: Wallet_subscribePro
+      summary: POST /wallet/pro
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/purchase:
+    post:
+      tags:
+        - wallet
+      operationId: Wallet_purchase
+      summary: POST /wallet/purchase
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletPurchase"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /wallet/topup:
+    post:
+      tags:
+        - wallet
+      operationId: Wallet_topup
+      summary: POST /wallet/topup
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WalletTopup"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "409":
+          $ref: "#/components/responses/Problem"
+        "422":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /webhooks/payments/{provider}:
+    post:
+      tags:
+        - webhooks
+      operationId: Webhooks_receive
+      summary: POST /webhooks/payments/{provider}
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
-      description: Access token, 15-minute lifetime. Refresh via `/auth/refresh`.
-
+      description: Token de sessão (7 dias).
   parameters:
-    AcceptLanguage:
-      name: Accept-Language
-      in: header
-      schema: { type: string, enum: ["pt-MZ", "en"], default: "pt-MZ" }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
-      required: true
-      schema: { type: string, format: uuid }
-      description: |
-        Client-generated UUID. The server stores the response against this key for 24 hours and
-        replays it verbatim on a repeat. Mandatory on everything that creates or moves money.
-    Cursor:
-      name: cursor
-      in: query
-      schema: { type: string }
-      description: Opaque cursor from `page.nextCursor`
-    Limit:
-      name: limit
-      in: query
-      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
-
+      required: false
+      description: Uma por acção de pagamento; a repetição devolve a primeira resposta.
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9_-]{8,128}$
   responses:
-    BadRequest:
-      description: Validation failed
+    Problem:
+      description: Erro (problem+json)
       content:
         application/problem+json:
-          schema: { $ref: "#/components/schemas/Problem" }
-    Unauthorized:
-      description: Missing, expired, or invalid credentials
-      content:
-        application/problem+json:
-          schema: { $ref: "#/components/schemas/Problem" }
-    NotFound:
-      description: Not found
-      content:
-        application/problem+json:
-          schema: { $ref: "#/components/schemas/Problem" }
-    Conflict:
-      description: Conflicts with current state
-      content:
-        application/problem+json:
-          schema: { $ref: "#/components/schemas/Problem" }
-    RateLimited:
-      description: Too many requests
-      headers:
-        Retry-After:
-          schema: { type: integer }
-      content:
-        application/problem+json:
-          schema: { $ref: "#/components/schemas/Problem" }
-
+          schema:
+            $ref: "#/components/schemas/Problem"
   schemas:
     Problem:
       type: object
-      description: RFC 9457. `detail` is already localised per `Accept-Language` and is safe to show to the user.
-      required: [type, title, status]
+      description: RFC 9457 problem details. 5xx answers carry requestId for support.
+      required:
+        - type
+        - title
+        - status
       properties:
-        type: { type: string, examples: ["https://nhonga.co.mz/problems/insufficient-stock"] }
-        title: { type: string, examples: ["Stock insuficiente"] }
-        status: { type: integer, examples: [409] }
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
         detail:
-          { type: string, examples: ['Restam apenas 2 unidades de "Auscultadores Bluetooth".'] }
-        instance: { type: string }
-        traceId:
-          {
-            type: string,
-            description: "Show beneath the message for support, never as the message",
-          }
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+          description: Stable machine code, e.g. invalid_body, rate_limited
         errors:
           type: array
-          description: Field-level validation failures
           items:
             type: object
             properties:
-              field: { type: string }
-              code: { type: string }
-              message: { type: string }
-
-    PageInfo:
+              field:
+                type: string
+              message:
+                type: string
+        requestId:
+          type: string
+    OtpRequest:
       type: object
       properties:
-        nextCursor: { type: [string, "null"] }
-        hasMore: { type: boolean }
-
-    AuthSession:
-      type: object
-      required: [accessToken, refreshToken, expiresIn, user]
-      properties:
-        accessToken: { type: string }
-        refreshToken: { type: string }
-        expiresIn: { type: integer, examples: [900] }
-        isNewUser: { type: boolean }
-        user: { $ref: "#/components/schemas/User" }
-
-    User:
+        phone:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - phone
+    OtpVerify:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        displayName: { type: string }
-        phone: { type: string, description: "Masked, e.g. +258 84 *** 4567" }
-        email: { type: [string, "null"], format: email }
-        locale: { type: string, enum: ["pt-MZ", "en"] }
-        roles:
-          type: array
-          items: { type: string, enum: [buyer, vendor_owner, vendor_staff, admin, support] }
-
-    Money:
-      type: integer
-      format: int64
-      description: Centavos. 1250000 = 12.500,00 MT.
-
-    Category:
+        challengeId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        code:
+          type: string
+          pattern: ^\d{6}$
+        referralCode:
+          type: string
+          maxLength: 32
+      required:
+        - challengeId
+        - code
+    ListingInput:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        slug: { type: string }
-        name: { type: string, description: Already localised }
-        level: { type: integer, minimum: 1, maximum: 3 }
-        iconKey: { type: string }
-        children:
-          type: array
-          items: { $ref: "#/components/schemas/Category" }
-
-    ProductListItem:
-      type: object
-      description: Deliberately narrow — the grid shape. No description body, one image.
-      required: [id, slug, title, priceCents, vendor]
-      properties:
-        id: { type: string, format: uuid }
-        slug: { type: string }
-        title: { type: string }
-        priceCents: { $ref: "#/components/schemas/Money" }
-        compareAtCents: { $ref: "#/components/schemas/Money" }
-        discountPercent: { type: [integer, "null"] }
-        image: { $ref: "#/components/schemas/Image" }
-        ratingAvg: { type: [number, "null"] }
-        ratingCount: { type: integer }
-        inStock: { type: boolean }
-        freeDelivery: { type: boolean }
-        vendor: { $ref: "#/components/schemas/VendorSummary" }
-
-    ProductDetail:
-      allOf:
-        - $ref: "#/components/schemas/ProductListItem"
-        - type: object
-          properties:
-            description: { type: string }
-            attributes:
-              type: object
-              additionalProperties: { type: string }
-            images:
-              type: array
-              items: { $ref: "#/components/schemas/Image" }
-            variants:
-              type: array
-              items: { $ref: "#/components/schemas/ProductVariant" }
-            options:
-              type: array
-              description: |
-                Option groups for the selector. Unavailable values are present with
-                `available: false` — hidden variants make the catalogue look thinner than it is.
-              items:
-                type: object
-                properties:
-                  name: { type: string, examples: ["Cor"] }
-                  values:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        value: { type: string }
-                        available: { type: boolean }
-            deliveryQuote: { $ref: "#/components/schemas/DeliveryQuote" }
-            buyerProtection:
-              type: object
-              properties:
-                returnDays: { type: integer, examples: [7] }
-                disputeWindowDays: { type: integer, examples: [7] }
-
-    ProductVariant:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        sku: { type: string }
-        options:
-          type: object
-          additionalProperties: { type: string }
-        priceCents: { $ref: "#/components/schemas/Money" }
-        compareAtCents: { $ref: "#/components/schemas/Money" }
-        stockQuantity:
-          { type: integer, description: "Exact below the low-stock threshold, otherwise capped" }
-        inStock: { type: boolean }
-
-    Image:
-      type: object
-      properties:
-        url: { type: string, format: uri, description: "CloudFront, content-hashed" }
-        width: { type: integer }
-        height: { type: integer }
-        lqip: { type: string, description: "Inline base64 placeholder, under 400 bytes (D-09)" }
-        alt: { type: string }
-
-    VendorSummary:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        slug: { type: string }
-        displayName: { type: string }
-        isVerified: { type: boolean }
-        ratingAvg: { type: [number, "null"] }
-        ratingCount: { type: integer }
-        districtName: { type: string }
-        responseTimeHours: { type: [integer, "null"] }
-
-    Facets:
-      type: object
-      properties:
-        categories:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 140
+        category:
+          type: string
+          minLength: 1
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 4000
+        priceCents:
+          type: integer
+          minimum: 0
+          maximum: 100000000000
+        stock:
+          type: integer
+          minimum: 0
+          maximum: 100000
+        photos:
+          maxItems: 6
           type: array
           items:
-            type: object
-            properties:
-              id: { type: string }
-              name: { type: string }
-              count: { type: integer }
-        priceRange:
-          type: object
-          properties:
-            minCents: { $ref: "#/components/schemas/Money" }
-            maxCents: { $ref: "#/components/schemas/Money" }
-        districts:
-          type: array
-          items:
-            type: object
-            properties:
-              id: { type: string }
-              name: { type: string }
-              count: { type: integer }
-
-    Cart:
-      type: object
-      description: Always grouped by vendor — the multi-vendor reality is made legible as early as possible (D-11).
-      properties:
-        id: { type: string, format: uuid }
-        groups:
-          type: array
-          items:
-            type: object
-            properties:
-              vendor: { $ref: "#/components/schemas/VendorSummary" }
-              items:
-                type: array
-                items: { $ref: "#/components/schemas/CartItem" }
-              subtotalCents: { $ref: "#/components/schemas/Money" }
-        itemCount: { type: integer }
-        vendorCount:
-          { type: integer, description: 'Rendered as "N entregas" — parcels, not line items' }
-        subtotalCents: { $ref: "#/components/schemas/Money" }
-        issues:
-          type: array
-          description: Non-blocking warnings, e.g. a price change since the item was added
-          items:
-            type: object
-            properties:
-              itemId: { type: string, format: uuid }
-              code:
-                { type: string, enum: [price_changed, low_stock, out_of_stock, vendor_unavailable] }
-              message: { type: string }
-
-    CartItem:
+            anyOf:
+              - type: string
+                maxLength: 12000000
+                pattern: ^data:image\/(jpeg|png|webp);base64,
+              - type: string
+                maxLength: 2000
+                pattern: ^(\/api\/media\/|https:\/\/)
+        shopName:
+          type: string
+          maxLength: 80
+      required:
+        - title
+        - category
+        - priceCents
+    ListingStatus:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        variantId: { type: string, format: uuid }
-        productId: { type: string, format: uuid }
-        title: { type: string }
-        optionsLabel: { type: string, examples: ["Preto · M"] }
-        image: { $ref: "#/components/schemas/Image" }
-        unitPriceCents: { $ref: "#/components/schemas/Money" }
-        quantity: { type: integer }
-        lineTotalCents: { $ref: "#/components/schemas/Money" }
-        selected:
-          { type: boolean, description: Per-item checkbox — buyers part-order without deleting }
-
-    DeliveryQuote:
-      type: object
-      properties:
-        feeCents: { $ref: "#/components/schemas/Money" }
-        minDays: { type: integer }
-        maxDays: { type: integer }
-        method: { type: string, enum: [marketplace, vendor, pickup] }
-        districtName: { type: string }
-
-    CheckoutQuote:
-      type: object
-      properties:
-        groups:
-          type: array
-          items:
-            type: object
-            properties:
-              vendor: { $ref: "#/components/schemas/VendorSummary" }
-              itemsTotalCents: { $ref: "#/components/schemas/Money" }
-              delivery: { $ref: "#/components/schemas/DeliveryQuote" }
-        itemsTotalCents: { $ref: "#/components/schemas/Money" }
-        shippingTotalCents: { $ref: "#/components/schemas/Money" }
-        paymentFeeCents: { $ref: "#/components/schemas/Money" }
-        grandTotalCents: { $ref: "#/components/schemas/Money" }
-        availableProviders:
-          type: array
-          description: Excludes providers currently circuit-broken, so checkout never offers a dead rail
-          items:
-            type: object
-            properties:
-              provider: { type: string, enum: [mpesa, emola, mkesh, cod] }
-              label: { type: string }
-              feeCents: { $ref: "#/components/schemas/Money" }
-              recommended:
-                {
-                  type: boolean,
-                  description: True for the wallet matching the buyer's MSISDN prefix (D-05),
-                }
-
-    Payment:
-      type: object
-      required: [id, status, provider, amountCents]
-      properties:
-        id: { type: string, format: uuid }
-        orderId: { type: string, format: uuid }
-        provider: { type: string, enum: [mpesa, emola, mkesh, cod] }
         status:
           type: string
           enum:
-            [
-              initiated,
-              awaiting_user,
-              paid,
-              failed,
-              expired,
-              refund_pending,
-              refunded,
-              refund_failed,
-            ]
-        amountCents: { $ref: "#/components/schemas/Money" }
-        maskedMsisdn: { type: string, examples: ["84 *** 4567"] }
-        providerRef:
-          {
-            type: [string, "null"],
-            description: Shown to the buyer; they reconcile it against the operator SMS,
-          }
-        expiresAt: { type: string, format: date-time }
-        failure:
-          type: [object, "null"]
-          properties:
-            code:
-              type: string
-              enum:
-                [
-                  insufficient_balance,
-                  wrong_pin,
-                  user_cancelled,
-                  timeout,
-                  provider_unavailable,
-                  unknown,
-                ]
-            message:
-              type: string
-              description: |
-                Localised and safe to display. For `unknown` this explicitly does NOT claim failure —
-                the buyer may have been debited, and telling them otherwise is the worst outcome.
-            retryable: { type: boolean }
-
-    OrderListItem:
+            - active
+            - sold
+            - archived
+      required:
+        - status
+    ListingEvent:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        orderNumber: { type: string }
-        placedAt: { type: string, format: date-time }
-        grandTotalCents: { $ref: "#/components/schemas/Money" }
-        rollupStatus:
-          type: string
-          description: Derived for display only. Real state lives on each sub-order.
-          enum:
-            [
-              awaiting_payment,
-              confirmed,
-              partially_shipped,
-              shipped,
-              partially_delivered,
-              delivered,
-              completed,
-              cancelled,
-              disputed,
-            ]
-        vendorCount: { type: integer }
-        thumbnails:
-          type: array
-          items: { $ref: "#/components/schemas/Image" }
-
-    OrderDetail:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        orderNumber: { type: string }
-        placedAt: { type: string, format: date-time }
-        address: { $ref: "#/components/schemas/Address" }
-        subOrders:
-          type: array
-          items: { $ref: "#/components/schemas/SubOrder" }
-        payment: { $ref: "#/components/schemas/Payment" }
-        itemsTotalCents: { $ref: "#/components/schemas/Money" }
-        shippingTotalCents: { $ref: "#/components/schemas/Money" }
-        paymentFeeCents: { $ref: "#/components/schemas/Money" }
-        grandTotalCents: { $ref: "#/components/schemas/Money" }
-
-    SubOrder:
-      type: object
-      properties:
-        id: { type: string, format: uuid }
-        subOrderNumber: { type: string, examples: ["4821-A"] }
-        vendor: { $ref: "#/components/schemas/VendorSummary" }
-        status:
+        type:
           type: string
           enum:
-            [
-              awaiting_payment,
-              confirmed,
-              preparing,
-              shipped,
-              in_transit,
-              delivered,
-              completed,
-              cancelled,
-              disputed,
-              refunded,
-            ]
-        items:
-          type: array
-          items:
-            type: object
-            properties:
-              id: { type: string, format: uuid }
-              title: { type: string }
-              optionsLabel: { type: string }
-              image: { $ref: "#/components/schemas/Image" }
-              unitPriceCents: { $ref: "#/components/schemas/Money" }
-              quantity: { type: integer }
-              canReview: { type: boolean }
-              reviewId: { type: [string, "null"], format: uuid }
-        timeline:
-          type: array
-          items:
-            type: object
-            properties:
-              status: { type: string }
-              label: { type: string, description: Localised }
-              occurredAt: { type: [string, "null"], format: date-time }
-              detail: { type: [string, "null"] }
-              isCurrent: { type: boolean }
-        nextStep:
-          type: [object, "null"]
-          description: |
-            What happens next and by when, present even when nothing has changed. Silence is what
-            buyers interpret as theft, so this is populated aggressively.
-          properties:
-            message: { type: string }
-            expectedBy: { type: [string, "null"], format: date-time }
-        trackingCode: { type: [string, "null"] }
-        shippingCents: { $ref: "#/components/schemas/Money" }
-        autoCompleteAt: { type: [string, "null"], format: date-time }
-        canConfirmReceipt: { type: boolean }
-        canDispute: { type: boolean }
-
-    Address:
-      allOf:
-        - { type: object, properties: { id: { type: string, format: uuid } } }
-        - $ref: "#/components/schemas/AddressInput"
-
-    AddressInput:
+            - view
+            - contact
+            - share
+      required:
+        - type
+    ListingReport:
       type: object
-      description: Hybrid structured + informal (D-10). Fees key off `districtId`; free text never enters a calculation.
-      required: [recipientName, phone, provinceCode, districtId, bairro, landmark]
       properties:
-        label: { type: string, examples: ["Casa"] }
-        recipientName: { type: string, maxLength: 120 }
-        phone: { type: string, pattern: '^\+258(8[2-7])[0-9]{7}$' }
-        provinceCode: { type: string, examples: ["MPM"] }
-        districtId: { type: string, format: uuid }
-        bairro: { type: string, maxLength: 120, examples: ["Polana Caniço A"] }
-        quarteirao: { type: string, maxLength: 60 }
-        houseNumber: { type: string, maxLength: 30 }
-        landmark:
+        reason:
           type: string
-          maxLength: 240
-          description: Required — in much of the country this is the field that finds the house.
-          examples: ["Casa azul junto à bomba Petromoc"]
-        notes: { type: string, maxLength: 240 }
-        latitude: { type: [number, "null"], description: "Opt-in only, with explicit consent" }
-        longitude: { type: [number, "null"] }
-        isDefault: { type: boolean }
-
-    Review:
+          enum:
+            - fraud
+            - prohibited
+            - spam
+            - wrong_category
+            - offensive
+            - other
+        note:
+          type: string
+          maxLength: 1000
+      required:
+        - reason
+    ConversationStart:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        rating: { type: integer, minimum: 1, maximum: 5 }
-        comment: { type: [string, "null"] }
-        images:
-          type: array
-          items: { $ref: "#/components/schemas/Image" }
-        status: { type: string, enum: [published, pending_moderation, rejected] }
-        createdAt: { type: string, format: date-time }
-        author:
+        vendorSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        productSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - vendorSlug
+        - body
+    MessageSend:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - body
+    FavoriteAdd:
+      type: object
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+        - productId
+    ReviewCreate:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+        productSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+      required:
+        - rating
+    SavedSearchCreate:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 120
+        href:
+          type: string
+          minLength: 1
+          maxLength: 500
+          format: starts_with
+          pattern: ^\/.*
+        query:
           type: object
-          properties:
-            displayName: { type: string, description: First name plus initial }
-            isVerifiedPurchase:
-              { type: boolean, description: Always true — reviews require a delivered order item }
+          propertyNames:
+            type: string
+          additionalProperties: {}
+      required:
+        - label
+        - href
+    PushTokenAdd:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+        platform:
+          type: string
+          enum:
+            - android
+            - ios
+            - web
+            - unknown
+      required:
+        - token
+    PushTokenRemove:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+      required:
+        - token
+    NotificationPrefs:
+      type: object
+      properties:
+        contact:
+          type: boolean
+        review:
+          type: boolean
+    CheckoutTopup:
+      type: object
+      properties:
+        amountCents:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+        method:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - amountCents
+        - method
+    CheckoutPackage:
+      type: object
+      properties:
+        packageId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        method:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - packageId
+        - method
+    CheckoutMockDecide:
+      type: object
+      properties:
+        outcome:
+          type: string
+          enum:
+            - paid
+            - failed
+    WalletBoost:
+      type: object
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        planCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - productId
+        - planCode
+    WalletTopup:
+      type: object
+      properties:
+        amountCents:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+      required:
+        - amountCents
+    WalletPurchase:
+      type: object
+      properties:
+        packageId:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+        - packageId
+    PromotionPurchase:
+      type: object
+      properties:
+        productSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        planCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        paymentMethod:
+          type: string
+          minLength: 1
+          maxLength: 32
+        payPhone:
+          type: string
+          maxLength: 32
+      required:
+        - productSlug
+        - planCode
+        - paymentMethod
+    SubscriptionCreate:
+      type: object
+      properties:
+        vendorSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        planCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+        paymentMethod:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - vendorSlug
+        - planCode
+        - paymentMethod
+    AdBooking:
+      type: object
+      properties:
+        advertiserName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        advertiserContact:
+          type: string
+          maxLength: 120
+        imageUrl:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        clickUrl:
+          type: string
+          maxLength: 2000
+          format: uri
+        headline:
+          type: string
+          maxLength: 120
+        placement:
+          type: string
+          minLength: 1
+          maxLength: 32
+        categorySlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        days:
+          type: integer
+          minimum: 1
+          maximum: 90
+        paymentMethod:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+        - advertiserName
+        - imageUrl
+        - clickUrl
+        - placement
+        - days
+        - paymentMethod
+    BannerGenerate:
+      type: object
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        ratio:
+          type: string
+          maxLength: 16
+        preset:
+          type: string
+          maxLength: 32
+        prompt:
+          type: string
+          maxLength: 500
+        background:
+          type: string
+          maxLength: 16
+      required:
+        - productId
+    BannerEdit:
+      type: object
+      properties:
+        bannerId:
+          type: string
+          minLength: 1
+          maxLength: 64
+        headline:
+          type: string
+          maxLength: 80
+        subheadline:
+          type: string
+          maxLength: 120
+        cta:
+          type: string
+          maxLength: 40
+        preset:
+          type: string
+          maxLength: 32
+      required:
+        - bannerId
+    BannerApply:
+      type: object
+      properties:
+        bannerId:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+        - bannerId
+    BannerUnapply:
+      type: object
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+        - productId
+    AssistantChat:
+      type: object
+      properties:
+        messages:
+          minItems: 1
+          maxItems: 20
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum:
+                  - user
+                  - assistant
+              content:
+                type: string
+                minLength: 1
+                maxLength: 4000
+            required:
+              - role
+              - content
+      required:
+        - messages
+    AssistantListing:
+      type: object
+      properties:
+        category:
+          type: string
+          maxLength: 64
+        details:
+          type: string
+          maxLength: 2000
+    AssistantListingPhoto:
+      type: object
+      properties:
+        image:
+          type: string
+          minLength: 1
+          maxLength: 12000000
+        mediaType:
+          type: string
+          maxLength: 32
+        notes:
+          type: string
+          maxLength: 1000
+      required:
+        - image
+    AssistantSearchQuery:
+      type: object
+      properties:
+        text:
+          type: string
+          maxLength: 500
+        image:
+          type: string
+          maxLength: 12000000
+        mediaType:
+          type: string
+          maxLength: 32
