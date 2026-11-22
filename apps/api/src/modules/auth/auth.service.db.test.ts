@@ -137,3 +137,26 @@ describe.skipIf(!hasTestDb)('AuthService.requestOtp limits (Postgres)', () => {
     }
   });
 });
+
+// P0-05: with an allowlist, a test environment only signs in the team's numbers.
+describe.skipIf(!hasTestDb)('AuthService staging allowlist (Postgres)', () => {
+  let db: Db;
+  let close: () => Promise<void>;
+
+  beforeAll(() => {
+    migrateTestDb();
+    ({ db, close } = openTestDb());
+  });
+  afterAll(async () => {
+    delete process.env['OTP_DEV_ALLOWLIST'];
+    await close();
+  });
+
+  it('refuses numbers outside the list and serves the ones on it', async () => {
+    process.env['OTP_DEV_ALLOWLIST'] = '841234567, +258 85 765 4321';
+    const auth = new AuthService(db);
+    await expect(auth.requestOtp('846666666')).rejects.toMatchObject({ code: 'not_allowed' });
+    const ok = await auth.requestOtp('857654321');
+    expect(ok.devCode).toMatch(/^\d{6}$/);
+  });
+});

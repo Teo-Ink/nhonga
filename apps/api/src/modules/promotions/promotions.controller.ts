@@ -17,6 +17,7 @@ import {
   type PlanDto,
   type ReceiptDto,
 } from './promotions.service.js';
+import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
 
 interface PurchaseBody {
   productSlug?: unknown;
@@ -37,7 +38,8 @@ export class PromotionsController {
 
   /** Ops/admin-lite: active promotions (E4). */
   @Get('admin/active')
-  active(): Promise<ReceiptDto[]> {
+  active(@Headers(ADMIN_HEADER) adminToken?: string): Promise<ReceiptDto[]> {
+    assertAdmin(adminToken);
     return this.promotions.listActive();
   }
 

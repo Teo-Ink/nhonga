@@ -620,6 +620,7 @@ const enBase: Dictionary = {
     publish_free: 'Publish for free',
     publish_paid: 'Publish as featured',
     publishing: 'Publishing…',
+    publish_limit: 'You have reached today’s listing limit. Please try again tomorrow.',
     publish_error: 'Could not publish. Please try again.',
     shop_label: 'Your shop name',
     shop_name_ph: 'e.g. João’s Shop',

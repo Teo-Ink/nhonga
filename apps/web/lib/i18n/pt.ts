@@ -642,6 +642,7 @@ const ptBase = {
     publish_free: 'Publicar grátis',
     publish_paid: 'Publicar com destaque',
     publishing: 'A publicar…',
+    publish_limit: 'Chegou ao limite de anúncios por hoje. Tente amanhã.',
     publish_error: 'Não foi possível publicar. Tente novamente.',
     shop_label: 'Nome da sua loja',
     shop_name_ph: 'Ex.: Loja do João',

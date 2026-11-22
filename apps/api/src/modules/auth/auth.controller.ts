@@ -94,6 +94,10 @@ function toHttp(e: unknown): HttpException {
     const payload = { error: 'Auth', message: e.userMessage, code: e.code };
     if (e.code === 'unauthenticated') return new UnauthorizedException(payload);
     if (e.code === 'rate_limited') return new HttpException(payload, HttpStatus.TOO_MANY_REQUESTS);
+    if (e.code === 'not_allowed') return new HttpException(payload, HttpStatus.FORBIDDEN);
+    if (e.code === 'sms_unavailable') {
+      return new HttpException(payload, HttpStatus.SERVICE_UNAVAILABLE);
+    }
     return new BadRequestException(payload);
   }
   return e instanceof HttpException

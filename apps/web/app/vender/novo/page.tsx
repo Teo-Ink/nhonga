@@ -12,6 +12,7 @@ import {
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
 import { formatPrice } from '../../../lib/format';
+import { clearDraft, loadDraft, saveDraft } from '../../../lib/listing-draft';
 
 // Create listing — fully wired. The form POSTs to /api/listings (real
 // createListing under the signed-in seller's shop); photos are picked and
@@ -48,13 +49,38 @@ export default function NewListingPage() {
   const [shopName, setShopName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [pubError, setPubError] = useState(false);
+  const [pubError, setPubError] = useState<null | 'generic' | 'limit'>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>('idle');
   const [photoAiState, setPhotoAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>(
     'idle',
   );
   const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'unsupported'>('idle');
+
+  // Restore the local draft once, then keep it up to date as the seller types.
+  useEffect(() => {
+    const d = loadDraft();
+    if (d) {
+      setTitle(d.title);
+      setCategory(d.category);
+      setDescription(d.description);
+      setPrice(d.price);
+      setStock(d.stock);
+      setPlan(d.plan);
+      setShopName(d.shopName);
+      setPhotos(d.photos);
+    }
+    setDraftRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!draftRestored) return;
+    const id = window.setTimeout(
+      () => saveDraft({ title, category, description, price, stock, plan, shopName, photos }),
+      400,
+    );
+    return () => window.clearTimeout(id);
+  }, [draftRestored, title, category, description, price, stock, plan, shopName, photos]);
 
   // Draft title + description + category from the first uploaded photo (vision).
   async function analyzePhoto() {
@@ -191,9 +217,16 @@ export default function NewListingPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    setPubError(false);
+    setPubError(null);
     if (!valid) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+      return;
+    }
+    // Publishing needs an account. The draft is already saved on this device,
+    // so sign-in brings the seller straight back to a filled-in form.
+    if (!user) {
+      saveDraft({ title, category, description, price, stock, plan, shopName, photos });
+      window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
       return;
     }
     setPublishing(true);
@@ -212,10 +245,19 @@ export default function NewListingPage() {
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { slug?: string };
-      if (!res.ok || !data.slug) {
-        setPubError(true);
+      if (res.status === 401) {
+        window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
         return;
       }
+      if (res.status === 429) {
+        setPubError('limit');
+        return;
+      }
+      if (!res.ok || !data.slug) {
+        setPubError('generic');
+        return;
+      }
+      clearDraft();
       // A paid plan boosts the fresh listing (mock payment), like /vender/promover.
       if (plan !== 'free') {
         await fetch('/api/promotions', {
@@ -226,7 +268,7 @@ export default function NewListingPage() {
       }
       window.location.href = `/produto/${data.slug}`;
     } catch {
-      setPubError(true);
+      setPubError('generic');
     } finally {
       setPublishing(false);
     }
@@ -467,7 +509,7 @@ export default function NewListingPage() {
           ) : null}
           {pubError ? (
             <p className="field__error" role="alert">
-              {t.publish_error}
+              {pubError === 'limit' ? t.publish_limit : t.publish_error}
             </p>
           ) : null}
         </form>
