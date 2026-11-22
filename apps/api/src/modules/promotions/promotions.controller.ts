@@ -18,6 +18,8 @@ import {
   type ReceiptDto,
 } from './promotions.service.js';
 import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
+import { PromotionPurchase } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface PurchaseBody {
   productSlug?: unknown;
@@ -46,7 +48,7 @@ export class PromotionsController {
   @Post()
   @HttpCode(201)
   async buy(
-    @Body() body: PurchaseBody,
+    @Body(new ZodBody(PromotionPurchase)) body: PurchaseBody,
   ): Promise<{ id: string; status: string; receipt: ReceiptDto }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
     const productSlug = str(body.productSlug);

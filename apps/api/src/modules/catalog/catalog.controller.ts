@@ -21,6 +21,8 @@ import type {
   ProductListResponse,
   SortKey,
 } from './catalog.types.js';
+import { ListingEvent, ListingInput, ListingReport, ListingStatus } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 const SORTS: readonly SortKey[] = ['relevance', 'price_asc', 'price_desc', 'rating', 'newest'];
 
@@ -97,7 +99,7 @@ export class CatalogController {
   @Post('products')
   @HttpCode(201)
   create(
-    @Body() body: CreateListingBody,
+    @Body(new ZodBody(ListingInput)) body: CreateListingBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ id: string; slug: string }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v : '');
@@ -143,7 +145,7 @@ export class CatalogController {
   @Patch('products/:id')
   update(
     @Param('id') id: string,
-    @Body() body: CreateListingBody,
+    @Body(new ZodBody(ListingInput)) body: CreateListingBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ slug: string }> {
     const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
@@ -182,7 +184,7 @@ export class CatalogController {
   @Patch('products/:id/status')
   setStatus(
     @Param('id') id: string,
-    @Body() body: { status?: unknown },
+    @Body(new ZodBody(ListingStatus)) body: { status?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: true; status: string }> {
     const status = body.status;
@@ -229,7 +231,7 @@ export class CatalogController {
   @HttpCode(204)
   async event(
     @Param('idOrSlug') idOrSlug: string,
-    @Body() body: { type?: unknown },
+    @Body(new ZodBody(ListingEvent)) body: { type?: unknown },
   ): Promise<void> {
     const type = body.type;
     if (type !== 'contact' && type !== 'share' && type !== 'view') {
@@ -243,7 +245,7 @@ export class CatalogController {
   @HttpCode(201)
   async report(
     @Param('idOrSlug') idOrSlug: string,
-    @Body() body: { reason?: unknown; note?: unknown },
+    @Body(new ZodBody(ListingReport)) body: { reason?: unknown; note?: unknown },
   ): Promise<{ id: string }> {
     const reason = typeof body.reason === 'string' ? body.reason : '';
     const note = typeof body.note === 'string' ? body.note : undefined;

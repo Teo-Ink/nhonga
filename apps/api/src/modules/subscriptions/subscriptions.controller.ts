@@ -17,6 +17,8 @@ import {
   type SubPlanDto,
   type SubReceiptDto,
 } from './subscriptions.service.js';
+import { SubscriptionCreate } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface SubscribeBody {
   vendorSlug?: unknown;
@@ -37,7 +39,7 @@ export class SubscriptionsController {
   @Post()
   @HttpCode(201)
   async subscribe(
-    @Body() body: SubscribeBody,
+    @Body(new ZodBody(SubscriptionCreate)) body: SubscribeBody,
   ): Promise<{ id: string; status: string; receipt: SubReceiptDto }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
     const vendorSlug = str(body.vendorSlug);

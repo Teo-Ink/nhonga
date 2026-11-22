@@ -19,6 +19,8 @@ import {
   type QuotaView,
 } from './banners.service.js';
 import { PRESETS } from './banner-render.js';
+import { BannerApply, BannerEdit, BannerGenerate, BannerUnapply } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -49,7 +51,7 @@ export class BannersController {
   @Post('generate')
   @HttpCode(200)
   async generate(
-    @Body()
+    @Body(new ZodBody(BannerGenerate))
     body: {
       productId?: unknown;
       ratio?: unknown;
@@ -90,7 +92,7 @@ export class BannersController {
   @Post('edit')
   @HttpCode(200)
   async edit(
-    @Body()
+    @Body(new ZodBody(BannerEdit))
     body: {
       bannerId?: unknown;
       headline?: unknown;
@@ -118,7 +120,7 @@ export class BannersController {
   @Post('apply')
   @HttpCode(200)
   async apply(
-    @Body() body: { bannerId?: unknown },
+    @Body(new ZodBody(BannerApply)) body: { bannerId?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ bannerId: string }> {
     const bannerId = typeof body.bannerId === 'string' ? body.bannerId : '';
@@ -132,7 +134,7 @@ export class BannersController {
   @Post('unapply')
   @HttpCode(200)
   async unapply(
-    @Body() body: { productId?: unknown },
+    @Body(new ZodBody(BannerUnapply)) body: { productId?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: true }> {
     const productId = typeof body.productId === 'string' ? body.productId : '';

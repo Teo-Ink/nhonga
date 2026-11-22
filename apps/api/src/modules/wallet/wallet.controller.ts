@@ -6,6 +6,8 @@ import {
   type WalletPackage,
   type WalletView,
 } from './wallet.service.js';
+import { WalletBoost, WalletPurchase, WalletTopup } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -32,7 +34,7 @@ export class WalletController {
   @Post('boost')
   @HttpCode(200)
   boost(
-    @Body() body: { productId?: unknown; planCode?: unknown },
+    @Body(new ZodBody(WalletBoost)) body: { productId?: unknown; planCode?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<BoostResult> {
     const productId = typeof body.productId === 'string' ? body.productId : '';
@@ -53,7 +55,7 @@ export class WalletController {
   @Post('topup')
   @HttpCode(200)
   topup(
-    @Body() body: { amountCents?: unknown },
+    @Body(new ZodBody(WalletTopup)) body: { amountCents?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<WalletView> {
     const amount =
@@ -64,7 +66,7 @@ export class WalletController {
   @Post('purchase')
   @HttpCode(200)
   purchase(
-    @Body() body: { packageId?: unknown },
+    @Body(new ZodBody(WalletPurchase)) body: { packageId?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<WalletView> {
     const id = typeof body.packageId === 'string' ? body.packageId : '';

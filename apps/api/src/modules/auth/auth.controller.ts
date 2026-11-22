@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { AccountService } from './account.service.js';
 import { AuthError, AuthService, type AuthUser } from './auth.service.js';
+import { OtpRequest, OtpVerify } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface RequestBody {
   phone?: unknown;
@@ -34,7 +36,7 @@ export class AuthController {
   @Post('otp/request')
   @HttpCode(200)
   async request(
-    @Body() body: RequestBody,
+    @Body(new ZodBody(OtpRequest)) body: RequestBody,
   ): Promise<{ challengeId: string; expiresInSeconds: number; devCode?: string }> {
     if (typeof body.phone !== 'string' || body.phone.trim() === '') {
       throw new BadRequestException({ message: 'phone is required' });
@@ -49,7 +51,7 @@ export class AuthController {
   @Post('otp/verify')
   @HttpCode(200)
   async verify(
-    @Body() body: VerifyBody,
+    @Body(new ZodBody(OtpVerify)) body: VerifyBody,
   ): Promise<{ sessionToken: string; expiresAt: string; user: AuthUser }> {
     if (typeof body.challengeId !== 'string' || typeof body.code !== 'string') {
       throw new BadRequestException({ message: 'challengeId and code are required' });
