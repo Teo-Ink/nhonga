@@ -7,7 +7,8 @@
  * total computed on the phone matches the one computed at settlement is gone.
  */
 const CONFIG_FILES = '.config.(ts|js|cjs|mjs)$';
-const TEST_FILES = '.test.ts$';
+// Tests, and the end-to-end package (apps/e2e), which never ships.
+const TEST_FILES = '(\\.test\\.ts$|\\.spec\\.ts$|^apps/e2e/)';
 
 module.exports = {
   forbidden: [
