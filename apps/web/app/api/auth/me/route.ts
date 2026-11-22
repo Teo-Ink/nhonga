@@ -17,3 +17,25 @@ async function handleGET(): Promise<Response> {
 }
 
 export const GET = withApi(handleGET, () => Response.json({ user: null }));
+
+// Delete the signed-in account (P0-06), then clear the session cookie.
+async function handleDELETE(): Promise<Response> {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  if (!token) return NextResponse.json({ message: 'Inicie sessão.' }, { status: 401 });
+  const res = await apiFetch(`/auth/me`, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    return new Response(await res.text(), {
+      status: res.status,
+      headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
+    });
+  }
+  const out = NextResponse.json({ ok: true });
+  out.cookies.set(SESSION_COOKIE, '', { httpOnly: true, path: '/', maxAge: 0 });
+  return out;
+}
+
+export const DELETE = withApi(handleDELETE);

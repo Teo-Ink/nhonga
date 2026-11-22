@@ -90,7 +90,7 @@ export const SHARED_RULES: readonly SharedRule[] = [
   {
     name: 'block',
     method: 'POST',
-    pattern: /^\/users\/[^/]+\/block\/?$/,
+    pattern: /^\/conversations\/[^/]+\/block\/?$/,
     limit: 30,
     windowSeconds: 3600,
     by: 'client',

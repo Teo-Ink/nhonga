@@ -59,12 +59,17 @@ export default function TermsPage() {
           documentos de identificação, cartões SIM registados em nome de outra pessoa ou contas;
         </li>
         <li>conteúdo sexual, ofensivo, discriminatório ou que incite à violência;</li>
-        <li>esquemas de pirâmide, empréstimos ilegais ou ofertas de emprego enganosas.</li>
+        <li>esquemas de pirâmide, empréstimos ilegais ou ofertas de emprego enganosas;</li>
+        <li>apostas, jogos de fortuna e azar e lotarias.</li>
       </ul>
+      <p>
+        Para publicar é preciso uma conta confirmada por SMS. Cada loja pode publicar até 10
+        anúncios por dia; para mais, contacte-nos.
+      </p>
       <p>
         Podemos rever, recusar, editar a categoria ou remover anúncios que violem estes Termos, e
         suspender contas em caso de abuso, fraude ou violações repetidas. Pode denunciar um anúncio
-        com o botão «Denunciar» na página do anúncio.
+        com o botão «Denunciar» na página do anúncio, e bloquear quem lhe envia mensagens.
       </p>
 
       <h2>4. Serviços pagos e carteira</h2>
@@ -109,9 +114,10 @@ export default function TermsPage() {
 
       <h2>8. Encerrar a conta</h2>
       <p>
-        Pode pedir o encerramento da sua conta a qualquer momento através do suporte. Podemos
-        suspender ou encerrar contas que violem estes Termos. O saldo não utilizado de contas
-        encerradas por violação dos Termos <strong>[definir tratamento com o advogado]</strong>.
+        Pode eliminar a sua conta a qualquer momento, no site (Conta → Privacidade e conta) ou na
+        app (Conta → Eliminar a minha conta). A eliminação é imediata. Podemos suspender ou encerrar
+        contas que violem estes Termos. O saldo não utilizado de contas encerradas por violação dos
+        Termos <strong>[definir tratamento com o advogado]</strong>.
       </p>
 
       <h2>9. Alterações</h2>

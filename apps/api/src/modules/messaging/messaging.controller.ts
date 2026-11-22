@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Headers,
@@ -25,6 +26,9 @@ function toHttp(e: unknown): HttpException {
   if (e instanceof MessagingError) {
     if (e.code === 'not_found') return new NotFoundException({ message: e.message });
     if (e.code === 'forbidden') return new ForbiddenException({ message: e.message });
+    if (e.code === 'blocked') {
+      return new ForbiddenException({ message: e.message, code: 'blocked' });
+    }
     return new BadRequestException({ message: e.message });
   }
   throw e;
@@ -75,6 +79,33 @@ export class MessagingController {
   ): Promise<{ counterpart: string; productTitle: string | null; messages: MessageDto[] }> {
     try {
       return await this.messaging.thread(id, bearer(authz));
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  /** Block the other side of this conversation (P0-18). */
+  @Post(':id/block')
+  @HttpCode(200)
+  async block(
+    @Param('id') id: string,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ ok: true }> {
+    try {
+      return await this.messaging.block(id, bearer(authz));
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  @Delete(':id/block')
+  @HttpCode(200)
+  async unblock(
+    @Param('id') id: string,
+    @Headers('authorization') authz?: string,
+  ): Promise<{ ok: true }> {
+    try {
+      return await this.messaging.unblock(id, bearer(authz));
     } catch (e) {
       throw toHttp(e);
     }

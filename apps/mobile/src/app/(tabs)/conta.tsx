@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import {
   boostListing,
   clearToken,
+  deleteAccount,
   formatMZN,
   getWalletPlans,
   me,
@@ -174,6 +175,31 @@ export default function AccountScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Account deletion from inside the app (P0-06; required by both stores).
+  function onDeleteAccount() {
+    Alert.alert(
+      'Eliminar a conta',
+      'A eliminação é imediata e não pode ser desfeita. Os seus anúncios saem do Nhonga e sai de todos os dispositivos. Guardamos só pagamentos e encomendas, por obrigação contabilística.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            deleteAccount()
+              .then(async () => {
+                await onSignOut();
+                Alert.alert('Conta eliminada', 'A sua conta foi eliminada.');
+              })
+              .catch((e: unknown) =>
+                Alert.alert('Eliminar a conta', e instanceof Error ? e.message : 'Tente de novo.'),
+              );
+          },
+        },
+      ],
+    );
   }
 
   async function onSignOut() {
@@ -400,6 +426,14 @@ export default function AccountScreen() {
         <Pressable style={styles.secondary} onPress={onSignOut}>
           <Text style={styles.secondaryText}>Terminar sessão</Text>
         </Pressable>
+        <Pressable
+          style={styles.secondary}
+          onPress={onDeleteAccount}
+          accessibilityRole="button"
+          accessibilityHint="Elimina a conta de forma permanente"
+        >
+          <Text style={[styles.secondaryText, { color: '#b42318' }]}>Eliminar a minha conta</Text>
+        </Pressable>
       </ScrollView>
     );
   }
@@ -407,7 +441,7 @@ export default function AccountScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Entrar ou criar conta</Text>
-      <Text style={styles.muted}>Usamos o teu telemóvel e um código para confirmar.</Text>
+      <Text style={styles.muted}>Usamos o seu telemóvel e um código para confirmar.</Text>
 
       {step === 'phone' ? (
         <>

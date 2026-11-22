@@ -5,6 +5,13 @@ import * as SecureStore from 'expo-secure-store';
 // EXPO_PUBLIC_API_URL="http://192.168.1.10:3000".
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
+// Release builds talk to the API over HTTPS only (P0-19): a session token or a
+// phone number must never cross a mobile network in clear text. Development
+// builds may use a LAN address over HTTP.
+if (typeof __DEV__ !== 'undefined' && !__DEV__ && !API_URL.startsWith('https://')) {
+  throw new Error(`EXPO_PUBLIC_API_URL must be https:// in release builds (got ${API_URL})`);
+}
+
 const TOKEN_KEY = 'nhonga_session';
 
 // ── Types (mirror the catalogue API) ──────────────────────────────
@@ -281,6 +288,29 @@ export function verifyOtp(
 }
 export function me(): Promise<{ user: AuthUser | null }> {
   return get('/auth/me', true);
+}
+
+/** Delete the signed-in account (P0-06). Immediate; every session ends. */
+export async function deleteAccount(): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}/auth/me`, {
+    method: 'DELETE',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error('Não foi possível eliminar a conta. Tente de novo.');
+}
+
+export type ReportReason =
+  | 'fraud'
+  | 'prohibited'
+  | 'spam'
+  | 'wrong_category'
+  | 'offensive'
+  | 'other';
+
+/** Report a listing to the Nhonga team (P0-18). Works without an account. */
+export function reportListing(slug: string, reason: ReportReason): Promise<{ ok: true }> {
+  return post(`/catalog/products/${encodeURIComponent(slug)}/reports`, { reason }, true);
 }
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; configured: boolean }> {
   return post('/assistant/chat', { messages });

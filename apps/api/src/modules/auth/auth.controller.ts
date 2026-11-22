@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -10,6 +11,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { AccountService } from './account.service.js';
 import { AuthError, AuthService, type AuthUser } from './auth.service.js';
 
 interface RequestBody {
@@ -24,7 +26,10 @@ interface VerifyBody {
 /** Phone-OTP authentication. The web BFF stores the session token in an httpOnly cookie. */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly account: AccountService,
+  ) {}
 
   @Post('otp/request')
   @HttpCode(200)
@@ -70,6 +75,27 @@ export class AuthController {
   async orders(@Headers('authorization') authz?: string): Promise<unknown> {
     try {
       return { orders: await this.auth.listOrders(bearer(authz)) };
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  /** Delete my account (P0-06): immediate, every session ends. */
+  @Delete('me')
+  @HttpCode(200)
+  async deleteMe(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
+    try {
+      return await this.account.deleteAccount(bearer(authz));
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  /** Download my data as JSON (P0-06). */
+  @Get('me/export')
+  async exportMe(@Headers('authorization') authz?: string): Promise<Record<string, unknown>> {
+    try {
+      return await this.account.exportData(bearer(authz));
     } catch (e) {
       throw toHttp(e);
     }

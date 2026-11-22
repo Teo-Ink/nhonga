@@ -144,6 +144,15 @@ export class AdsService {
     if (!isPlacement(input.placement)) {
       throw new AdError('Espaço inválido.', 'invalid_input');
     }
+    if (
+      isGamblingAd(name, input.headline ?? '', clickUrl) &&
+      process.env['ADS_ALLOW_GAMBLING'] !== '1'
+    ) {
+      throw new AdError(
+        'A Nhonga não aceita, por agora, publicidade de apostas ou jogos de fortuna.',
+        'invalid_input',
+      );
+    }
     const days = Math.trunc(Number(input.days));
     if (!Number.isFinite(days) || days < 1 || days > 90) {
       throw new AdError('A duração deve ser de 1 a 90 dias.', 'invalid_input');
@@ -240,4 +249,17 @@ function asUuidOrNil(value: string): string {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
     ? value
     : NIL_UUID;
+}
+
+/**
+ * Gambling advertising (P0-17). Until a legal opinion sets the rules (age
+ * gate, licence check, placement limits), betting and casino ads are refused.
+ * ADS_ALLOW_GAMBLING=1 lifts this once those rules exist. A keyword check is
+ * crude on purpose: it errs towards refusing, and a person reviews the rest.
+ */
+const GAMBLING =
+  /(?<![\p{L}\p{N}])(apostas?|[\p{L}\p{N}]*bet(?:s|ting)?|casinos?|cassino|slots?|roleta|jackpot|lotaria|bookmakers?|placard)(?![\p{L}\p{N}])/iu;
+
+export function isGamblingAd(...texts: string[]): boolean {
+  return texts.some((t) => GAMBLING.test(t.replace(/[._/-]+/g, ' ')));
 }

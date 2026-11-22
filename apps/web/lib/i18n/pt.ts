@@ -1029,6 +1029,11 @@ const ptBase = {
       'Para reportar um problema com um anúncio, use o botão «Denunciar» na página do anúncio.',
   },
   messages: {
+    block: 'Bloquear',
+    unblock: 'Desbloquear',
+    block_confirm:
+      'Bloquear esta pessoa? Deixam de poder trocar mensagens e a conversa sai da sua caixa.',
+    blocked_note: 'Bloqueou esta conversa. Ninguém pode enviar mensagens.',
     title: 'Mensagens',
     demo_note: 'Demonstração: as mensagens ainda não estão ligadas. Nada é enviado nem guardado.',
     empty_title: 'Ainda não tem conversas',
@@ -1065,7 +1070,28 @@ const ptBase = {
     send_error: 'Não foi possível enviar. Tente novamente.',
     thread_empty: 'Sem mensagens ainda.',
   },
+  privacyAccount: {
+    title: 'Privacidade e conta',
+    export_title: 'Os seus dados',
+    export_body:
+      'Descarregue uma cópia de tudo o que a Nhonga guarda sobre si: conta, anúncios, mensagens enviadas, favoritos, alertas e encomendas.',
+    export_cta: 'Descarregar os meus dados',
+    delete_title: 'Eliminar a conta',
+    delete_body: 'A eliminação é imediata e não pode ser desfeita.',
+    delete_item_listings: 'Os seus anúncios saem do site e a sua loja fecha.',
+    delete_item_sessions:
+      'Sai de todos os dispositivos. O seu número fica livre para uma conta nova.',
+    delete_item_kept:
+      'Guardamos só o que a lei ou outras pessoas precisam: pagamentos e encomendas (contabilidade) e as mensagens e avaliações já enviadas, agora como “Conta eliminada”.',
+    confirm_word: 'ELIMINAR',
+    confirm_label: 'Para confirmar, escreva {word}',
+    delete_cta: 'Eliminar a minha conta',
+    deleting: 'A eliminar…',
+    delete_error: 'Não foi possível eliminar a conta. Tente de novo.',
+    link: 'Privacidade e conta',
+  },
   account: {
+    privacy_link: 'Privacidade e conta',
     title: 'A minha conta',
     demo_note:
       'Demonstração: as contas ainda não estão ligadas. As encomendas ficam guardadas apenas neste dispositivo e navegador.',
