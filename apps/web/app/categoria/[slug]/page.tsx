@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { SearchResults, type ActiveChip } from '../../../components/SearchResults';
 import {
   getCategoryAttributes,
@@ -9,6 +10,27 @@ import {
 import { getDictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
+
+// Title, description and share card for a category page (WEB-02).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const { t } = await getDictionary();
+  const label = (t.categories as Record<string, string>)[slug] ?? slug;
+  const title = `${label} em Moçambique — Nhonga`;
+  const description = `Anúncios de ${label.toLowerCase()} em Moçambique: compre e venda perto de si no Nhonga.`;
+  const url = `/categoria/${encodeURIComponent(slug)}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'website' },
+    twitter: { card: 'summary', title, description },
+  };
+}
 
 export default async function CategoryPage({
   params,
