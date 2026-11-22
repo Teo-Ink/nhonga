@@ -20,6 +20,8 @@ import {
   type ReviewDto,
   type ReviewListDto,
 } from './reviews.service.js';
+import { ReviewCreate } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface CreateBody {
   rating?: unknown;
@@ -45,7 +47,7 @@ export class ReviewsController {
   async create(
     @Param('vendorId') vendorId: string,
     @Headers('authorization') authz: string | undefined,
-    @Body() body: CreateBody,
+    @Body(new ZodBody(ReviewCreate)) body: CreateBody,
   ): Promise<ReviewDto> {
     const user = await this.authUser(authz);
     const input: CreateReviewInput = { rating: Number(body.rating) };

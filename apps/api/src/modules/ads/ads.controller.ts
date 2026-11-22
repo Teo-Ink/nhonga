@@ -22,6 +22,8 @@ import {
 } from './ads.service.js';
 import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
 import { AuthService } from '../auth/auth.service.js';
+import { AdBooking } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface BookBody {
   advertiserName?: unknown;
@@ -71,7 +73,7 @@ export class AdsController {
   @Post()
   @HttpCode(201)
   async book(
-    @Body() body: BookBody,
+    @Body(new ZodBody(AdBooking)) body: BookBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ id: string; priceCents: number; status: string; endsAt: string }> {
     // Booking needs an account, so every creative is traceable to a person.

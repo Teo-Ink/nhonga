@@ -101,3 +101,7 @@ export {
   type VendorGroupTotals,
   type VendorShipping,
 } from './pricing/cart.js';
+
+// Request bodies of the public API (P2-01).
+export * from './api/schemas.js';
+export { z } from 'zod';

@@ -11,6 +11,13 @@ import {
 } from '@nestjs/common';
 import { AssistantError, AssistantService } from './assistant.service.js';
 import type { ChatMessage, ChatReply, ListingDraft, SearchQueryResult } from './assistant.types.js';
+import {
+  AssistantChat,
+  AssistantListing,
+  AssistantListingPhoto,
+  AssistantSearchQuery,
+} from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface ChatBody {
   messages?: unknown;
@@ -63,7 +70,10 @@ export class AssistantController {
 
   @Post('chat')
   @HttpCode(200)
-  async chat(@Body() body: ChatBody, @Ip() ip: string): Promise<ChatReply> {
+  async chat(
+    @Body(new ZodBody(AssistantChat)) body: ChatBody,
+    @Ip() ip: string,
+  ): Promise<ChatReply> {
     const messages = parseMessages(body.messages);
     try {
       return await this.assistant.chat(messages, ip || 'anon');
@@ -75,7 +85,10 @@ export class AssistantController {
   /** AI-assisted posting (D): draft a title + description from rough notes. */
   @Post('listing')
   @HttpCode(200)
-  async listing(@Body() body: ListingBody, @Ip() ip: string): Promise<ListingDraft> {
+  async listing(
+    @Body(new ZodBody(AssistantListing)) body: ListingBody,
+    @Ip() ip: string,
+  ): Promise<ListingDraft> {
     const details = typeof body.details === 'string' ? body.details : '';
     const arg: { category?: string; details: string } = { details };
     if (typeof body.category === 'string') arg.category = body.category;
@@ -89,7 +102,10 @@ export class AssistantController {
   /** AI-assisted posting from a PHOTO (vision): draft a listing from the image. */
   @Post('listing-photo')
   @HttpCode(200)
-  async listingPhoto(@Body() body: ListingPhotoBody, @Ip() ip: string): Promise<ListingDraft> {
+  async listingPhoto(
+    @Body(new ZodBody(AssistantListingPhoto)) body: ListingPhotoBody,
+    @Ip() ip: string,
+  ): Promise<ListingDraft> {
     const image = parseImage(body.image, body.mediaType);
     const arg: { image: { mediaType: string; dataBase64: string }; notes?: string } = { image };
     if (typeof body.notes === 'string') arg.notes = body.notes;
@@ -104,7 +120,8 @@ export class AssistantController {
   @Post('search-query')
   @HttpCode(200)
   async searchQuery(
-    @Body() body: { text?: unknown; image?: unknown; mediaType?: unknown },
+    @Body(new ZodBody(AssistantSearchQuery))
+    body: { text?: unknown; image?: unknown; mediaType?: unknown },
     @Ip() ip: string,
   ): Promise<SearchQueryResult> {
     const arg: { text?: string; image?: { mediaType: string; dataBase64: string } } = {};

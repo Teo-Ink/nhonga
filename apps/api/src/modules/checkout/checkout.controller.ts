@@ -2,6 +2,8 @@ import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req } from '@nes
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import { CheckoutService, type CheckoutView } from './checkout.service.js';
+import { CheckoutMockDecide, CheckoutPackage, CheckoutTopup } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -21,7 +23,7 @@ export class CheckoutController {
   @Post('topup')
   @HttpCode(201)
   topup(
-    @Body() body: { amountCents?: unknown; method?: unknown },
+    @Body(new ZodBody(CheckoutTopup)) body: { amountCents?: unknown; method?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     const amount =
@@ -34,7 +36,7 @@ export class CheckoutController {
   @Post('package')
   @HttpCode(201)
   buyPackage(
-    @Body() body: { packageId?: unknown; method?: unknown },
+    @Body(new ZodBody(CheckoutPackage)) body: { packageId?: unknown; method?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     return this.checkout.startPackage(
@@ -64,7 +66,7 @@ export class CheckoutController {
   @HttpCode(200)
   mock(
     @Param('id') id: string,
-    @Body() body: { outcome?: unknown },
+    @Body(new ZodBody(CheckoutMockDecide)) body: { outcome?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     return this.checkout.mockDecide(

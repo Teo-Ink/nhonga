@@ -2,6 +2,8 @@ import { Body, Controller, Get, Headers, HttpCode, Post, Put } from '@nestjs/com
 import { AuthService } from '../auth/auth.service.js';
 import { DeliveryService } from './delivery.service.js';
 import { NotificationsService, type NotificationDto } from './notifications.service.js';
+import { NotificationPrefs, PushTokenAdd, PushTokenRemove } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -20,7 +22,7 @@ export class NotificationsController {
   @Post('push-token')
   @HttpCode(200)
   async registerPush(
-    @Body() body: { token?: unknown; platform?: unknown },
+    @Body(new ZodBody(PushTokenAdd)) body: { token?: unknown; platform?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: boolean }> {
     const session = bearer(authz);
@@ -40,7 +42,9 @@ export class NotificationsController {
   /** Unregister a device token (e.g. on sign-out). */
   @Post('push-token/remove')
   @HttpCode(200)
-  async removePush(@Body() body: { token?: unknown }): Promise<{ ok: true }> {
+  async removePush(
+    @Body(new ZodBody(PushTokenRemove)) body: { token?: unknown },
+  ): Promise<{ ok: true }> {
     if (typeof body.token === 'string' && body.token) await this.delivery.removeToken(body.token);
     return { ok: true };
   }
@@ -67,7 +71,7 @@ export class NotificationsController {
 
   @Put('prefs')
   setPrefs(
-    @Body() body: { contact?: unknown; review?: unknown },
+    @Body(new ZodBody(NotificationPrefs)) body: { contact?: unknown; review?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ contact: boolean; review: boolean }> {
     return this.notifications.setPrefs(bearer(authz), {

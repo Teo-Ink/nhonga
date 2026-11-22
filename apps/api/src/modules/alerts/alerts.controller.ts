@@ -22,6 +22,8 @@ import {
 } from './alerts.service.js';
 import { ADMIN_HEADER, isAdminToken } from '../../common/admin.js';
 import { AuthService, type AuthUser } from '../auth/auth.service.js';
+import { SavedSearchCreate } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface CreateBody {
   phone?: unknown;
@@ -54,7 +56,7 @@ export class AlertsController {
   @Post()
   @HttpCode(201)
   async create(
-    @Body() body: CreateBody,
+    @Body(new ZodBody(SavedSearchCreate)) body: CreateBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ id: string }> {
     const user = await this.user(authz);

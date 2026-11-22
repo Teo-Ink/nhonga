@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
 import { FavoritesService, type FavoriteDto } from './favorites.service.js';
+import { FavoriteAdd } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -18,7 +20,7 @@ export class FavoritesController {
   @Post()
   @HttpCode(200)
   add(
-    @Body() body: { productId?: unknown },
+    @Body(new ZodBody(FavoriteAdd)) body: { productId?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: true }> {
     const id = typeof body.productId === 'string' ? body.productId : '';

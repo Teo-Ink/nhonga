@@ -18,6 +18,8 @@ import {
   type ConversationDto,
   type MessageDto,
 } from './messaging.service.js';
+import { ConversationStart, MessageSend } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -51,7 +53,8 @@ export class MessagingController {
   @Post()
   @HttpCode(201)
   async start(
-    @Body() body: { vendorSlug?: unknown; productSlug?: unknown; body?: unknown },
+    @Body(new ZodBody(ConversationStart))
+    body: { vendorSlug?: unknown; productSlug?: unknown; body?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ id: string }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v : '');
@@ -115,7 +118,7 @@ export class MessagingController {
   @HttpCode(201)
   async send(
     @Param('id') id: string,
-    @Body() body: { body?: unknown },
+    @Body(new ZodBody(MessageSend)) body: { body?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: true }> {
     const text = typeof body.body === 'string' ? body.body : '';
