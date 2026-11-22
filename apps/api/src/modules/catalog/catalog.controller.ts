@@ -55,6 +55,7 @@ export class CatalogController {
     @Query('sort') sort?: string,
     @Query('limit') limit?: string,
     @Query('attributes') attributes?: string,
+    @Query('cursor') cursor?: string,
   ): Promise<ProductListResponse> {
     const min = intOrUndef(minPrice);
     const max = intOrUndef(maxPrice);
@@ -73,6 +74,7 @@ export class CatalogController {
       ...(attrs ? { attributes: attrs } : {}),
       ...(s2 !== undefined ? { sort: s2 } : {}),
       ...(lim !== undefined ? { limit: lim } : {}),
+      ...(cursor ? { cursor } : {}),
     };
     return this.catalog.listProducts(langOf(acceptLanguage), filters);
   }

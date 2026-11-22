@@ -127,3 +127,25 @@ describe.skipIf(!hasTestDb)('Catalogue browse and search in Postgres', () => {
     expect(r.total).toBe(4);
   });
 });
+
+describe.skipIf(!hasTestDb)('Catalogue pages (Postgres)', () => {
+  it('walks every result exactly once with the cursor', async () => {
+    const { db, close } = openTestDb();
+    try {
+      const catalog = new CatalogService(db, {} as never, {} as never, {} as never, {} as never);
+      const all = await catalog.listProducts('pt', { limit: 48 });
+      const seen: string[] = [];
+      let cursor: string | undefined;
+      for (let i = 0; i < 20; i++) {
+        const page = await catalog.listProducts('pt', { limit: 5, ...(cursor ? { cursor } : {}) });
+        seen.push(...page.items.map((p) => p.id));
+        if (!page.page.cursor) break;
+        cursor = page.page.cursor;
+      }
+      expect(new Set(seen).size).toBe(seen.length);
+      expect(seen.slice(0, all.items.length)).toEqual(all.items.map((p) => p.id));
+    } finally {
+      await close();
+    }
+  });
+});

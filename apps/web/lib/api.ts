@@ -92,7 +92,7 @@ async function get<T>(path: string): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt++) {
     let res: Response;
     try {
-      res = await fetch(`${API_URL}${path}`, {
+      res = await fetch(`${API_URL}/v1${path}`, {
         headers: { 'accept-language': 'pt' },
         // Always fresh in the local test env; production would cache per D-09.
         cache: 'no-store',

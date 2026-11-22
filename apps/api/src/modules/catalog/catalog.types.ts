@@ -110,6 +110,8 @@ export interface ProductFilters {
   readonly attributes?: Record<string, AttributeFilter>;
   readonly sort?: SortKey;
   readonly limit?: number;
+  /** Opaque cursor from a previous page's page.cursor. */
+  readonly cursor?: string;
 }
 
 export interface ProductListResponse {

@@ -4,6 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 // running on a physical device (localhost points at the phone itself), e.g.
 // EXPO_PUBLIC_API_URL="http://192.168.1.10:3000".
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+/** Versioned API base (P2-11): every call goes to /v1. */
+const API = `${API_URL}/v1`;
 
 // Release builds talk to the API over HTTPS only (P0-19): a session token or a
 // phone number must never cross a mobile network in clear text. Development
@@ -76,7 +78,7 @@ async function get<T>(path: string, auth = false): Promise<T> {
     const token = await getToken();
     if (token) headers['authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${API_URL}${path}`, { headers });
+  const res = await fetch(`${API}${path}`, { headers });
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return (await res.json()) as T;
 }
@@ -90,7 +92,7 @@ async function post<T>(path: string, body: unknown, auth = false): Promise<T> {
     const token = await getToken();
     if (token) headers['authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
@@ -224,7 +226,7 @@ export async function setListingStatus(
   const token = await getToken();
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}/status`, {
+  await fetch(`${API}/catalog/products/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     headers,
     body: JSON.stringify({ status }),
@@ -234,7 +236,7 @@ export async function removeListing(id: string): Promise<void> {
   const token = await getToken();
   const headers: Record<string, string> = {};
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}`, {
+  await fetch(`${API}/catalog/products/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers,
   });
@@ -260,7 +262,7 @@ export interface GenerateBannerResult {
 }
 /** Public SVG url for a banner (native renders it via expo-image). */
 export function bannerSvgUrl(id: string): string {
-  return `${API_URL}/banners/${encodeURIComponent(id)}.svg`;
+  return `${API}/banners/${encodeURIComponent(id)}.svg`;
 }
 export function bannerQuota(): Promise<BannerQuota> {
   return get('/banners/quota', true);
@@ -293,7 +295,7 @@ export function me(): Promise<{ user: AuthUser | null }> {
 /** Delete the signed-in account (P0-06). Immediate; every session ends. */
 export async function deleteAccount(): Promise<void> {
   const token = await getToken();
-  const res = await fetch(`${API_URL}/auth/me`, {
+  const res = await fetch(`${API}/auth/me`, {
     method: 'DELETE',
     headers: token ? { authorization: `Bearer ${token}` } : {},
   });
@@ -418,7 +420,7 @@ export function createSavedSearch(input: {
 }
 export async function removeSavedSearch(id: string): Promise<void> {
   const token = await getToken();
-  await fetch(`${API_URL}/saved-searches/${encodeURIComponent(id)}`, {
+  await fetch(`${API}/saved-searches/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers: token ? { authorization: `Bearer ${token}` } : {},
   }).catch(() => undefined);
@@ -430,14 +432,14 @@ export async function removeFavorite(productId: string): Promise<void> {
   const token = await getToken();
   const headers: Record<string, string> = {};
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/favorites/${encodeURIComponent(productId)}`, {
+  await fetch(`${API}/favorites/${encodeURIComponent(productId)}`, {
     method: 'DELETE',
     headers,
   }).catch(() => undefined);
 }
 /** Record an engagement event on a listing (contact / share). Best-effort. */
 export function recordEvent(slug: string, type: 'contact' | 'share' | 'view'): void {
-  void fetch(`${API_URL}/catalog/products/${encodeURIComponent(slug)}/events`, {
+  void fetch(`${API}/catalog/products/${encodeURIComponent(slug)}/events`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ type }),

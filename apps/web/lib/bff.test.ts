@@ -6,7 +6,7 @@ describe('apiFetch', () => {
     const f = vi.fn(async () => new Response('ok'));
     await apiFetch('/catalog/x', { method: 'POST' }, f as unknown as typeof fetch);
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toMatch(/\/catalog\/x$/);
+    expect(url).toMatch(/\/v1\/catalog\/x$/);
     expect(init.method).toBe('POST');
     expect(init.signal).toBeInstanceOf(AbortSignal);
   });
