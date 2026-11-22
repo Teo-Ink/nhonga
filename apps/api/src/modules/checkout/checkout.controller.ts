@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { CheckoutService, type CheckoutView } from './checkout.service.js';
-import { CheckoutMockDecide, CheckoutPackage, CheckoutTopup } from '@nhonga/shared';
+import { CheckoutService, type CheckoutView, type RefundView } from './checkout.service.js';
+import { CheckoutMockDecide, CheckoutRefund, CheckoutPackage, CheckoutTopup } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -59,6 +60,28 @@ export class CheckoutController {
     }
     await this.checkout.handleWebhook(gateway, headers, req.rawBody?.toString('utf8') ?? '');
     return { ok: true };
+  }
+
+  /** Ops: refund a paid top-up or package (P2-02). */
+  @Post('admin/:id/refund')
+  @HttpCode(200)
+  refund(
+    @Param('id') id: string,
+    @Body(new ZodBody(CheckoutRefund)) body: { reason: string },
+    @Headers(ADMIN_HEADER) adminToken?: string,
+  ): Promise<RefundView> {
+    assertAdmin(adminToken);
+    return this.checkout.refund(id, body.reason);
+  }
+
+  /** Ops: payment and refund state, refreshed from the gateway. */
+  @Get('admin/:id')
+  adminView(
+    @Param('id') id: string,
+    @Headers(ADMIN_HEADER) adminToken?: string,
+  ): Promise<RefundView> {
+    assertAdmin(adminToken);
+    return this.checkout.refreshRefund(id);
   }
 
   /** Dev simulator only (CHECKOUT_MODE=mock). */
