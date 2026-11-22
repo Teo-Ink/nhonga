@@ -2,6 +2,13 @@
 
 ## Veredicto: **Não pronto** para produção pública. Pronto para demos controladas.
 
+> **Actualização (2.ª ronda, 22/11/2026):** com os 9 ramos novos o código
+> chega a **7,7**; com as tarefas do dono e do advogado, a **≈ 8,5**; a nota 9
+> precisa ainda de ≈ 2 semanas de engenharia (API, app, reembolsos). Os
+> bloqueadores que restam são quase todos do dono: domínio/HTTPS, chaves
+> root, protecção do `main`, revisão jurídica. Detalhe em
+> [`16-reavaliacao-rumo-a-9.md`](16-reavaliacao-rumo-a-9.md).
+
 A base técnica é boa e a parte do dinheiro foi bem feita. O que impede o
 lançamento não é o código principal, mas condições de exploração:
 
@@ -19,36 +26,50 @@ trabalho (ver plano), a Nhonga pode lançar.
 
 ## Pontuação (0–10)
 
-| Domínio        | Nota    |     | Domínio        | Nota            |
-| -------------- | ------- | --- | -------------- | --------------- |
-| Segurança      | 5 → 7\* |     | DevSecOps      | 6               |
-| Pagamentos     | 7       |     | Testes         | 4 → 6\*         |
-| Arquitectura   | 6       |     | UX             | 6               |
-| API            | 6       |     | Design e cores | 8               |
-| Dados          | 6       |     | Acessibilidade | 6               |
-| Performance    | 4 → 6\* |     | Mobile         | 4               |
-| Escalabilidade | 6       |     | Conformidade   | 4               |
-| DevOps         | 6       |     | **Global**     | **5,5 → 6,3\*** |
+| Domínio        | 1.ª ronda | 2.ª ronda (código) | Com o dono |
+| -------------- | --------- | ------------------ | ---------- |
+| Segurança      | 5 → 7     | 8                  | 9          |
+| Pagamentos     | 7         | 8                  | 8,5        |
+| Arquitectura   | 6         | 8                  | 8          |
+| API            | 6         | 7                  | 7          |
+| Dados          | 6         | 8                  | 9          |
+| Performance    | 4 → 6     | 8                  | 8,5        |
+| Escalabilidade | 6         | 8                  | 8,5        |
+| DevOps         | 6         | 7                  | 8,5        |
+| DevSecOps      | 6         | 7                  | 9          |
+| Testes         | 4 → 6     | 8                  | 9          |
+| UX             | 6         | 8                  | 8,5        |
+| Design e cores | 8         | 9                  | 9          |
+| Acessibilidade | 6         | 8                  | 8,5        |
+| Mobile         | 4         | 6                  | 7          |
+| Conformidade   | 4         | 7                  | 9          |
+| **Global**     | 5,5 → 6,3 | **7,7**            | **≈ 8,5**  |
 
-\* com os branches `audit/*` juntos ao `main`.
+"Código" = todos os ramos `audit/*` juntos ao `main`.
 
-## Top 10 riscos
+## Top 10 riscos (1.ª ronda; estado na 2.ª entre parênteses)
 
-1. **Sem HTTPS**: sessões e dados em claro (precisa do domínio).
-2. **Chaves root da AWS em uso**: quem as obtiver controla a conta.
+1. **Sem HTTPS**: sessões e dados em claro (precisa do domínio). _(Aberto — dono.)_
+2. **Chaves root da AWS em uso**: quem as obtiver controla a conta. _(Aberto — dono.)_
 3. **Login de qualquer número no staging e API pública**: abuso e conteúdo
-   indevido com o nome Nhonga.
-4. **Publicação de anúncios sem conta**: spam e burlas sem rasto.
+   indevido com o nome Nhonga. _(Corrigido em SEC-09: falta pôr os números no
+   segredo `OTP_DEV_ALLOWLIST`.)_
+4. **Publicação de anúncios sem conta**: spam e burlas sem rasto. _(Corrigido
+   em SEC-09.)_
 5. **Endpoints de administração públicos**: dados comerciais expostos.
+   _(Corrigido em SEC-09.)_
 6. **Não se pode eliminar a conta nem bloquear utilizadores**: impede a entrada
-   nas lojas de apps e cria risco de protecção de dados.
+   nas lojas de apps e cria risco de protecção de dados. _(Corrigido em
+   CMP-01.)_
 7. **Promessas de reembolso e entrega que a plataforma não cumpre**: risco
-   legal (já escondidas por defeito no branch CONT-01).
+   legal (já escondidas por defeito no branch CONT-01). _(Corrigido.)_
 8. **Publicidade de apostas sem regras de idade nem parecer jurídico.**
+   _(Recusada por defeito em CMP-01; falta o parecer.)_
 9. **A pesquisa carrega todos os anúncios para memória**: fica lenta com o
-   crescimento.
+   crescimento. _(Corrigido em DAT-01: p95 ≤ 143 ms com 50 000 anúncios.)_
 10. **Sem protecção do `main` e sem error tracking**: erros podem chegar à
-    produção sem aviso.
+    produção sem aviso. _(Error tracking feito em OPS-04; protecção do `main`
+    — dono.)_
 
 ## Já corrigido (13 branches, à espera de merge)
 

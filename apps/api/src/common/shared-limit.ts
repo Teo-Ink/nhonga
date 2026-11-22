@@ -131,15 +131,23 @@ export function postgresCounter(db: Db): HitCounter {
   };
 }
 
+/** SHARED_LIMIT_SCALE multiplies every limit (default 1). Only the end-to-end
+ *  test stack raises it, because it signs in many times from one address. */
+export function limitScale(raw = process.env['SHARED_LIMIT_SCALE']): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 1 ? n : 1;
+}
+
 export function sharedLimitMiddleware(count: HitCounter, rules = SHARED_RULES) {
   const log = new Logger('SharedLimit');
+  const scale = limitScale();
   return (req: Request, res: Response, next: NextFunction): void => {
     const rule = matchRule(req.method, req.path ?? req.url ?? '', rules);
     if (rule === null) return next();
     const key = `${rule.name}:${clientKey(req, rule.by)}`;
     count(key, rule.windowSeconds)
       .then((hits) => {
-        if (hits <= rule.limit) return next();
+        if (hits <= rule.limit * scale) return next();
         log.warn(`shared_limit rule=${rule.name}`);
         res.setHeader('Retry-After', String(rule.windowSeconds));
         res.status(429).type('application/problem+json').json({

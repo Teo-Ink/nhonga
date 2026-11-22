@@ -1,5 +1,9 @@
 # Backlog da auditoria de pré-produção (22/11/2026)
 
+> **2.ª ronda:** as tarefas marcadas ✅ com o nome do ramo entre parênteses
+> estão feitas nos ramos `audit/*` novos (ver
+> [`16-reavaliacao-rumo-a-9.md`](16-reavaliacao-rumo-a-9.md)).
+
 Base: `14e952c`. Estados:
 
 - ✅ **feito em branch** (`audit/*`, à espera de revisão e merge);
@@ -43,37 +47,37 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 
 ### Épico A — Hardening de autenticação e abuso
 
-| ID    | Tarefa                                                  | Origem           | Área          | Esforço | Critério de aceitação                                                                 | Dep.        |
-| ----- | ------------------------------------------------------- | ---------------- | ------------- | ------- | ------------------------------------------------------------------------------------- | ----------- |
-| P0-01 | Merge de SEC-01 e SEC-02                                | SEC-001/002      | backend       | S       | CI verde com Postgres; os testes de concorrência passam                               | CI-Postgres |
-| P0-02 | Exigir sessão para publicar; limite de anúncios por dia | SEC-010          | backend+web   | S       | `POST /catalog/products` sem token → 401; o formulário pede login no fim              | —           |
-| P0-03 | Fechar `/ads/admin` e `/promotions/admin/active`        | SEC-009          | backend       | S       | 401/404 sem sessão admin; teste                                                       | —           |
-| P0-04 | Rate limit partilhado (decisão SEC-04)                  | SEC-004          | infra+backend | M       | o limite mantém-se com 2 instâncias; teste de integração                              | decisão     |
-| P0-05 | Restringir o staging (decisão SEC-06)                   | SEC-006          | infra+backend | S       | um anónimo não obtém `devCode` fora da allowlist                                      | decisão     |
-| P0-06 | Eliminação de conta (API, web, app)                     | SEC-017, MOB-004 | full-stack    | M       | `DELETE /auth/me` anonimiza, desactiva anúncios e revoga sessões; ecrã nos 3 clientes | —           |
+| ID    | Tarefa                                                                   | Origem           | Área          | Esforço | Critério de aceitação                                                                 | Dep.        |
+| ----- | ------------------------------------------------------------------------ | ---------------- | ------------- | ------- | ------------------------------------------------------------------------------------- | ----------- |
+| P0-01 | Merge de SEC-01 e SEC-02                                                 | SEC-001/002      | backend       | S       | CI verde com Postgres; os testes de concorrência passam                               | CI-Postgres |
+| P0-02 | ✅ Exigir sessão para publicar; limite de anúncios por dia (SEC-09)      | SEC-010          | backend+web   | S       | `POST /catalog/products` sem token → 401; o formulário pede login no fim              | —           |
+| P0-03 | ✅ Fechar `/ads/admin` e `/promotions/admin/active` (SEC-09)             | SEC-009          | backend       | S       | 401/404 sem sessão admin; teste                                                       | —           |
+| P0-04 | ✅ Rate limit partilhado (decisão SEC-04) (SEC-09 (Postgres))            | SEC-004          | infra+backend | M       | o limite mantém-se com 2 instâncias; teste de integração                              | decisão     |
+| P0-05 | ✅ Restringir o staging (decisão SEC-06) (SEC-09 (falta pôr os números)) | SEC-006          | infra+backend | S       | um anónimo não obtém `devCode` fora da allowlist                                      | decisão     |
+| P0-06 | ✅ Eliminação de conta (API, web, app) (CMP-01)                          | SEC-017, MOB-004 | full-stack    | M       | `DELETE /auth/me` anonimiza, desactiva anúncios e revoga sessões; ecrã nos 3 clientes | —           |
 
 ### Épico B — Plataforma e operação
 
-| ID    | Tarefa                                            | Origem          | Área       | Esforço | Critério                                                      | Dep.       |
-| ----- | ------------------------------------------------- | --------------- | ---------- | ------- | ------------------------------------------------------------- | ---------- |
-| P0-07 | Domínio, ACM, HTTPS, regras por host              | OPS-01, SEC-012 | infra      | M       | `curl -I https://…` com HSTS; cookie `Secure`; sem porta 8080 | 👤 domínio |
-| P0-08 | Serviço web em produção                           | ESC-005         | infra      | S       | `envs/production` com módulo `web` e regra por host           | P0-07      |
-| P0-09 | Protecção do branch `main`                        | DSO-002         | devops     | S       | merge bloqueado com check vermelho                            | —          |
-| P0-10 | Apagar as chaves root; IAM com MFA                | DSO-001         | conta 👤   | S       | `sts get-caller-identity` não devolve `:root`                 | —          |
-| P0-11 | Ensaio de restauro e RPO/RTO aprovados            | DAT-004         | infra      | S       | registo do ensaio com tempos                                  | decisão    |
-| P0-12 | Merge de OPS-02 e subscrição do email             | DEV-001         | infra      | S       | alarme de teste chega ao email                                | —          |
-| P0-13 | Error tracking (Sentry) API, web e app            | DEV-002         | full-stack | M       | erro forçado aparece com o SHA do release                     | —          |
-| P0-14 | Plano de staging sem leitura de segredos a falhar | DEV-005         | infra      | S       | "Plan (staging)" verde nos PRs                                | —          |
+| ID    | Tarefa                                                           | Origem          | Área       | Esforço | Critério                                                      | Dep.       |
+| ----- | ---------------------------------------------------------------- | --------------- | ---------- | ------- | ------------------------------------------------------------- | ---------- |
+| P0-07 | Domínio, ACM, HTTPS, regras por host                             | OPS-01, SEC-012 | infra      | M       | `curl -I https://…` com HSTS; cookie `Secure`; sem porta 8080 | 👤 domínio |
+| P0-08 | Serviço web em produção                                          | ESC-005         | infra      | S       | `envs/production` com módulo `web` e regra por host           | P0-07      |
+| P0-09 | Protecção do branch `main`                                       | DSO-002         | devops     | S       | merge bloqueado com check vermelho                            | —          |
+| P0-10 | Apagar as chaves root; IAM com MFA                               | DSO-001         | conta 👤   | S       | `sts get-caller-identity` não devolve `:root`                 | —          |
+| P0-11 | Ensaio de restauro e RPO/RTO aprovados                           | DAT-004         | infra      | S       | registo do ensaio com tempos                                  | decisão    |
+| P0-12 | Merge de OPS-02 e subscrição do email                            | DEV-001         | infra      | S       | alarme de teste chega ao email                                | —          |
+| P0-13 | ✅ Error tracking (Sentry) API, web e app (OPS-04 (falta o DSN)) | DEV-002         | full-stack | M       | erro forçado aparece com o SHA do release                     | —          |
+| P0-14 | Plano de staging sem leitura de segredos a falhar                | DEV-005         | infra      | S       | "Plan (staging)" verde nos PRs                                | —          |
 
 ### Épico C — Conteúdo, legal e lojas
 
-| ID    | Tarefa                                              | Origem           | Área          | Esforço | Critério                                               | Dep.    |
-| ----- | --------------------------------------------------- | ---------------- | ------------- | ------- | ------------------------------------------------------ | ------- |
-| P0-15 | Decidir classificados vs marketplace                | CMP-001          | negócio 👤    | —       | decisão registada em `DECISIONS.md`                    | —       |
-| P0-16 | Termos, privacidade, cookies e regras de publicação | CMP-003          | legal 👤      | M       | textos sem marcadores, revistos pelo advogado          | jurista |
-| P0-17 | Publicidade de apostas: regras e filtro 18+         | CMP-002          | legal+backend | M       | parecer + flag que esconde a categoria                 | jurista |
-| P0-18 | Denunciar e bloquear na app e na web                | MOB-005, SEC-015 | full-stack    | M       | denúncia na app; bloqueio esconde mensagens e anúncios | —       |
-| P0-19 | Identificadores da app e API em HTTPS no EAS        | MOB-002/003      | mobile        | S       | build `preview` liga à API em HTTPS                    | P0-07   |
+| ID    | Tarefa                                                                                         | Origem           | Área          | Esforço | Critério                                               | Dep.    |
+| ----- | ---------------------------------------------------------------------------------------------- | ---------------- | ------------- | ------- | ------------------------------------------------------ | ------- |
+| P0-15 | Decidir classificados vs marketplace                                                           | CMP-001          | negócio 👤    | —       | decisão registada em `DECISIONS.md`                    | —       |
+| P0-16 | Termos, privacidade, cookies e regras de publicação                                            | CMP-003          | legal 👤      | M       | textos sem marcadores, revistos pelo advogado          | jurista |
+| P0-17 | ✅ Publicidade de apostas: regras e filtro 18+ (CMP-01 (recusadas; falta parecer))             | CMP-002          | legal+backend | M       | parecer + flag que esconde a categoria                 | jurista |
+| P0-18 | ✅ Denunciar e bloquear na app e na web (CMP-01)                                               | MOB-005, SEC-015 | full-stack    | M       | denúncia na app; bloqueio esconde mensagens e anúncios | —       |
+| P0-19 | ✅ Identificadores da app e API em HTTPS no EAS (CMP-01 (ids + HTTPS; URL depende do domínio)) | MOB-002/003      | mobile        | S       | build `preview` liga à API em HTTPS                    | P0-07   |
 
 **Esforço P0 (sem decisões/jurídico):** cerca de 14–20 dias-pessoa.
 
@@ -81,44 +85,44 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 
 ### Épico D — Pesquisa e dados
 
-| ID    | Tarefa                                                 | Origem   | Esforço | Critério                                                               |
-| ----- | ------------------------------------------------------ | -------- | ------- | ---------------------------------------------------------------------- |
-| P1-01 | Pesquisa na BD: `tsvector` pt + `unaccent` + `pg_trgm` | DAT-001  | M       | p95 < 300 ms com 50 000 anúncios; teste de relevância com 20 consultas |
-| P1-02 | Localização própria do anúncio                         | DAT-003  | M       | campo na publicação; filtro por distrito usa o anúncio                 |
-| P1-03 | Fotos para S3 + CloudFront                             | ARQ-005  | M       | `media_asset` passa a guardar a chave; migração dos existentes         |
-| P1-04 | CDN para estáticos e media                             | PERF-002 | M       | `_next/static` servido com HIT                                         |
+| ID    | Tarefa                                                             | Origem   | Esforço | Critério                                                               |
+| ----- | ------------------------------------------------------------------ | -------- | ------- | ---------------------------------------------------------------------- |
+| P1-01 | ✅ Pesquisa na BD: `tsvector` pt + `unaccent` + `pg_trgm` (DAT-01) | DAT-001  | M       | p95 < 300 ms com 50 000 anúncios; teste de relevância com 20 consultas |
+| P1-02 | Localização própria do anúncio                                     | DAT-003  | M       | campo na publicação; filtro por distrito usa o anúncio                 |
+| P1-03 | ✅ Fotos para S3 + CloudFront (ARQ-05)                             | ARQ-005  | M       | `media_asset` passa a guardar a chave; migração dos existentes         |
+| P1-04 | ✅ CDN para estáticos e media (ARQ-05 (fotos; estáticos 🔶))       | PERF-002 | M       | `_next/static` servido com HIT                                         |
 
 ### Épico E — Qualidade
 
-| ID    | Tarefa                              | Origem                    | Esforço | Critério                                          |
-| ----- | ----------------------------------- | ------------------------- | ------- | ------------------------------------------------- |
-| P1-05 | Playwright E2E (7 fluxos, 360 px)   | TST-003                   | L       | job E2E verde contra `docker compose`             |
-| P1-06 | Mover as propostas de CI e deploy   | TST-004, DEV-004, DSO-003 | S       | job `mobile` e Postgres no CI; deploy idempotente |
-| P1-07 | Dependabot e revisão dos 39 alertas | DSO-004                   | S       | `dependabot.yml`; alertas triados                 |
-| P1-08 | Logs JSON com request-id            | DEV-003                   | S       | `x-request-id` presente na API e na BFF           |
-| P1-09 | Alarme para pagamentos em "review"  | PAG-002                   | S       | filtro de métrica + alarme                        |
-| P1-10 | Registo de tratamento "você"        | UX-002                    | S       | nenhuma ocorrência de "Inicia sessão/Paga/Tens"   |
-| P1-11 | Rascunho offline do anúncio         | UX-004                    | M       | recarregar a página mantém texto e fotos          |
+| ID    | Tarefa                                          | Origem                    | Esforço | Critério                                          |
+| ----- | ----------------------------------------------- | ------------------------- | ------- | ------------------------------------------------- |
+| P1-05 | ✅ Playwright E2E (7 fluxos, 360 px) (TEST-01)  | TST-003                   | L       | job E2E verde contra `docker compose`             |
+| P1-06 | Mover as propostas de CI e deploy               | TST-004, DEV-004, DSO-003 | S       | job `mobile` e Postgres no CI; deploy idempotente |
+| P1-07 | ✅ Dependabot e revisão dos 39 alertas (OPS-04) | DSO-004                   | S       | `dependabot.yml`; alertas triados                 |
+| P1-08 | ✅ Logs JSON com request-id (OPS-04)            | DEV-003                   | S       | `x-request-id` presente na API e na BFF           |
+| P1-09 | ✅ Alarme para pagamentos em "review" (OPS-04)  | PAG-002                   | S       | filtro de métrica + alarme                        |
+| P1-10 | ✅ Registo de tratamento "você" (UX-02)         | UX-002                    | S       | nenhuma ocorrência de "Inicia sessão/Paga/Tens"   |
+| P1-11 | ✅ Rascunho offline do anúncio (SEC-09)         | UX-004                    | M       | recarregar a página mantém texto e fotos          |
 
 ## P2 — Primeiro trimestre
 
-| ID    | Tarefa                                              | Origem      | Esforço |
-| ----- | --------------------------------------------------- | ----------- | ------- |
-| P2-01 | Validação Zod centralizada                          | ARQ-001     | L       |
-| P2-02 | Reembolsos e estornos                               | PAG-003     | M       |
-| P2-03 | Transferência bancária (decisão)                    | PAG-005     | M       |
-| P2-04 | Backoffice mínimo (moderação, revisão, publicidade) | ARQ-003     | L       |
-| P2-05 | WAF gerido, GuardDuty, CloudTrail, Config           | DSO-006     | M       |
-| P2-06 | RDS `verify-full`                                   | SEC-016     | S       |
-| P2-07 | CSP com nonces                                      | SEC-013     | M       |
-| P2-08 | Service worker e PWA offline                        | PERF-004    | M       |
-| P2-09 | Auditoria de acessibilidade com axe e TalkBack      | ACC-003/005 | M       |
-| P2-10 | Expiração de anúncios e limpeza de dados            | DAT-005     | S       |
-| P2-11 | Versionar a API (`/v1`) e Idempotency-Key           | API-003/004 | M       |
-| P2-12 | NAT por AZ ou VPC endpoints                         | ESC-002     | S       |
-| P2-13 | Remover ou isolar o fluxo de encomendas legado      | PAG-006     | M       |
-| P2-14 | README e documentação de arquitectura               | ARQ-002     | S       |
-| P2-15 | Métricas de produto e funil                         | CMP-005     | M       |
+| ID    | Tarefa                                                                         | Origem      | Esforço |
+| ----- | ------------------------------------------------------------------------------ | ----------- | ------- |
+| P2-01 | Validação Zod centralizada                                                     | ARQ-001     | L       |
+| P2-02 | Reembolsos e estornos                                                          | PAG-003     | M       |
+| P2-03 | Transferência bancária (decisão)                                               | PAG-005     | M       |
+| P2-04 | Backoffice mínimo (moderação, revisão, publicidade)                            | ARQ-003     | L       |
+| P2-05 | ✅ WAF gerido, GuardDuty, CloudTrail, Config (DSO-06)                          | DSO-006     | M       |
+| P2-06 | RDS `verify-full`                                                              | SEC-016     | S       |
+| P2-07 | CSP com nonces                                                                 | SEC-013     | M       |
+| P2-08 | Service worker e PWA offline                                                   | PERF-004    | M       |
+| P2-09 | ✅ Auditoria de acessibilidade com axe e TalkBack (TEST-01 (axe; TalkBack 🔶)) | ACC-003/005 | M       |
+| P2-10 | ✅ Expiração de anúncios e limpeza de dados (DAT-01)                           | DAT-005     | S       |
+| P2-11 | Versionar a API (`/v1`) e Idempotency-Key                                      | API-003/004 | M       |
+| P2-12 | NAT por AZ ou VPC endpoints                                                    | ESC-002     | S       |
+| P2-13 | Remover ou isolar o fluxo de encomendas legado                                 | PAG-006     | M       |
+| P2-14 | ✅ README e documentação de arquitectura (ARQ-02)                              | ARQ-002     | S       |
+| P2-15 | Métricas de produto e funil                                                    | CMP-005     | M       |
 
 ## P3 — Melhorias contínuas
 

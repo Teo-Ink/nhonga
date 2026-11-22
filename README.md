@@ -1,5 +1,7 @@
 # Nhonga — Multi-Vendor Marketplace for Mozambique
 
+> **Comece aqui:** [arquitectura actual](docs/ARQUITECTURA.md) · [rotas da API](docs/api/rotas.md) · [desenvolvimento local](docs/local-dev.md) · [auditoria de pré-produção](docs/audit/RELATORIO-EXECUTIVO.md)
+
 > **Name:** "Nhonga" — chosen 2026-09-16, replacing the earlier codename "Banca". Not yet
 > trademark-cleared — see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) OQ-1. Still cheap to change:
 > it lives in one tokens file and the i18n string bundles.

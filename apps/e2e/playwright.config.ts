@@ -50,6 +50,9 @@ export default defineConfig({
         CHECKOUT_MODE: 'mock',
         OTP_RESEND_COOLDOWN_SECONDS: '1',
         OTP_MAX_GLOBAL_HOUR: '100000',
+        // Many sign-ins from one address in a few minutes.
+        SHARED_LIMIT_SCALE: '100',
+        OTP_MAX_PER_NUMBER_DAY: '1000',
         LOG_LEVEL: 'warn',
       },
     },

@@ -1,0 +1,95 @@
+# Rotas da API
+
+Gerado a partir dos controladores (`apps/api/src/**/*.controller.ts`).
+"sessão" = o controlador lê o token `Authorization: Bearer`; a regra exacta (obrigatória ou opcional) está no serviço.
+
+| Módulo        | Método | Caminho                                 | Autenticação                                        |
+| ------------- | ------ | --------------------------------------- | --------------------------------------------------- |
+| health        | GET    | `/health/live`                          | —                                                   |
+| health        | GET    | `/health/ready`                         | —                                                   |
+| ads           | GET    | `/ads`                                  | —                                                   |
+| ads           | GET    | `/ads/plans`                            | —                                                   |
+| ads           | GET    | `/ads/admin`                            | admin (x-admin-token)                               |
+| ads           | POST   | `/ads`                                  | sessão                                              |
+| ads           | POST   | `/ads/{id}/click`                       | —                                                   |
+| alerts        | GET    | `/saved-searches`                       | sessão                                              |
+| alerts        | POST   | `/saved-searches`                       | sessão                                              |
+| alerts        | POST   | `/saved-searches/run`                   | admin (x-admin-token), ou sessão do dono com `?id=` |
+| alerts        | DELETE | `/saved-searches/{id}`                  | sessão                                              |
+| assistant     | GET    | `/assistant/status`                     | —                                                   |
+| assistant     | POST   | `/assistant/chat`                       | —                                                   |
+| assistant     | POST   | `/assistant/listing`                    | —                                                   |
+| assistant     | POST   | `/assistant/listing-photo`              | —                                                   |
+| assistant     | POST   | `/assistant/search-query`               | —                                                   |
+| auth          | POST   | `/auth/otp/request`                     | —                                                   |
+| auth          | POST   | `/auth/otp/verify`                      | —                                                   |
+| auth          | GET    | `/auth/me`                              | sessão                                              |
+| auth          | GET    | `/auth/orders`                          | sessão                                              |
+| auth          | DELETE | `/auth/me`                              | sessão                                              |
+| auth          | GET    | `/auth/me/export`                       | sessão                                              |
+| auth          | POST   | `/auth/logout`                          | sessão                                              |
+| auth          | GET    | `/referrals/summary`                    | sessão                                              |
+| banners       | GET    | `/banners/presets`                      | —                                                   |
+| banners       | GET    | `/banners/quota`                        | sessão                                              |
+| banners       | POST   | `/banners/generate`                     | sessão                                              |
+| banners       | POST   | `/banners/edit`                         | sessão                                              |
+| banners       | POST   | `/banners/apply`                        | sessão                                              |
+| banners       | POST   | `/banners/unapply`                      | sessão                                              |
+| banners       | GET    | `/banners/{id}.svg`                     | —                                                   |
+| banners       | GET    | `/banners/{id}.png`                     | —                                                   |
+| catalog       | GET    | `/catalog/products`                     | —                                                   |
+| catalog       | GET    | `/catalog/stats`                        | —                                                   |
+| catalog       | GET    | `/catalog/provinces`                    | —                                                   |
+| catalog       | GET    | `/catalog/districts`                    | —                                                   |
+| catalog       | POST   | `/catalog/products`                     | sessão                                              |
+| catalog       | GET    | `/catalog/mine/shop`                    | sessão                                              |
+| catalog       | GET    | `/catalog/mine/products`                | sessão                                              |
+| catalog       | PATCH  | `/catalog/products/{id}`                | sessão                                              |
+| catalog       | DELETE | `/catalog/products/{id}`                | sessão                                              |
+| catalog       | PATCH  | `/catalog/products/{id}/status`         | sessão                                              |
+| catalog       | GET    | `/catalog/shops/{slug}`                 | —                                                   |
+| catalog       | GET    | `/catalog/suggest`                      | —                                                   |
+| catalog       | GET    | `/catalog/categories/{slug}/attributes` | —                                                   |
+| catalog       | GET    | `/catalog/products/{idOrSlug}`          | —                                                   |
+| catalog       | POST   | `/catalog/products/{idOrSlug}/events`   | —                                                   |
+| catalog       | POST   | `/catalog/products/{idOrSlug}/reports`  | —                                                   |
+| checkout      | GET    | `/checkout/methods`                     | —                                                   |
+| checkout      | POST   | `/checkout/topup`                       | sessão                                              |
+| checkout      | POST   | `/checkout/package`                     | sessão                                              |
+| checkout      | POST   | `/checkout/webhooks/{gateway}`          | —                                                   |
+| checkout      | POST   | `/checkout/mock/{id}`                   | sessão                                              |
+| checkout      | GET    | `/checkout/{id}`                        | sessão                                              |
+| favorites     | GET    | `/favorites`                            | sessão                                              |
+| favorites     | POST   | `/favorites`                            | sessão                                              |
+| favorites     | DELETE | `/favorites/{productId}`                | sessão                                              |
+| media         | GET    | `/media/{id}`                           | —                                                   |
+| messaging     | GET    | `/conversations`                        | sessão                                              |
+| messaging     | POST   | `/conversations`                        | sessão                                              |
+| messaging     | GET    | `/conversations/{id}`                   | sessão                                              |
+| messaging     | POST   | `/conversations/{id}/block`             | sessão                                              |
+| messaging     | DELETE | `/conversations/{id}/block`             | sessão                                              |
+| messaging     | POST   | `/conversations/{id}/messages`          | sessão                                              |
+| notifications | POST   | `/notifications/push-token`             | sessão                                              |
+| notifications | POST   | `/notifications/push-token/remove`      | —                                                   |
+| notifications | GET    | `/notifications`                        | sessão                                              |
+| notifications | POST   | `/notifications/read`                   | sessão                                              |
+| notifications | GET    | `/notifications/prefs`                  | sessão                                              |
+| notifications | PUT    | `/notifications/prefs`                  | sessão                                              |
+| payments      | GET    | `/payments/{paymentId}`                 | —                                                   |
+| payments      | POST   | `/webhooks/payments/{provider}`         | —                                                   |
+| promotions    | GET    | `/promotions/plans`                     | —                                                   |
+| promotions    | GET    | `/promotions/admin/active`              | admin (x-admin-token)                               |
+| promotions    | POST   | `/promotions`                           | —                                                   |
+| promotions    | GET    | `/promotions/{id}`                      | —                                                   |
+| reviews       | GET    | `/vendors/{vendorId}/reviews`           | —                                                   |
+| reviews       | POST   | `/vendors/{vendorId}/reviews`           | sessão                                              |
+| subscriptions | GET    | `/subscriptions/plans`                  | —                                                   |
+| subscriptions | POST   | `/subscriptions`                        | —                                                   |
+| subscriptions | GET    | `/subscriptions/{id}`                   | —                                                   |
+| wallet        | GET    | `/wallet/plans`                         | —                                                   |
+| wallet        | POST   | `/wallet/pro`                           | sessão                                              |
+| wallet        | POST   | `/wallet/boost`                         | sessão                                              |
+| wallet        | GET    | `/wallet`                               | sessão                                              |
+| wallet        | GET    | `/wallet/packages`                      | —                                                   |
+| wallet        | POST   | `/wallet/topup`                         | sessão                                              |
+| wallet        | POST   | `/wallet/purchase`                      | sessão                                              |

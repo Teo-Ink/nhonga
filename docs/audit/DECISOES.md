@@ -61,3 +61,35 @@ Retirar do texto até existir.
 Apostas (1xBet), termos, privacidade, cookies e eliminação de conta: ver
 `15-conformidade-negocio.md`. É precisa uma reunião com o advogado antes da
 produção.
+
+## Decisões novas da 2.ª ronda (22/11/2026)
+
+### Identificador da app nas lojas
+
+Proposto e já no `app.json`: **`mz.co.nhonga.app`** (iOS e Android). Depois da
+primeira submissão às lojas não pode mudar. Alternativas: `com.nhonga.app`,
+`mz.nhonga.app`. Confirme antes do primeiro build de produção no EAS.
+
+### WAF: quando passar a "block"
+
+As regras geridas da AWS começam em **count** (registam, não bloqueiam). O
+limite por IP (3000 pedidos / 5 min) já bloqueia. Recomendação: depois de 2
+semanas sem falsos positivos nos registos do WAF, `managed_rules_mode =
+"block"` no módulo `waf`.
+
+### Expo SDK 58
+
+Restam 3 vulnerabilidades altas no `expo-router` 57 que só se resolvem com o
+SDK 58 (actualização maior: rever as notas de migração e testar num
+Android real). Recomendação: fazer antes do primeiro build para as lojas.
+
+### Expiração dos anúncios
+
+Produção arquiva anúncios sem publicação, subida ou edição há **90 dias**
+(`LISTING_TTL_DAYS`). Alternativas: 60 dias (mais fresco, mais trabalho para
+o vendedor) ou desligado.
+
+### Tecto mensal da IA
+
+Produção começa com **2 000 000 tokens/mês** (`ASSISTANT_MONTHLY_TOKEN_CAP`).
+Rever com o consumo real e o preço do fornecedor.
