@@ -8,6 +8,7 @@ import { AppModule } from './app.module.js';
 import { jsonBodyLimits } from './common/body-limits.js';
 import { rateLimitMiddleware } from './common/rate-limit.js';
 import { postgresCounter, sharedLimitMiddleware } from './common/shared-limit.js';
+import { idempotencyMiddleware, postgresIdemStore } from './common/idempotency.js';
 import { DB } from './db/database.module.js';
 import type { Db } from './db/types.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
@@ -44,6 +45,8 @@ async function bootstrap(): Promise<void> {
   app.use(rateLimitMiddleware());
   // Abuse-prone writes are counted in Postgres so the limit holds across tasks (P0-04).
   app.use(sharedLimitMiddleware(postgresCounter(app.get<Db>(DB))));
+  // Retried payment requests replay the first answer instead of charging twice (P2-11).
+  app.use(idempotencyMiddleware(postgresIdemStore(app.get<Db>(DB))));
 
   // CORS for browser clients only. The web app reaches the API server-side via
   // its BFF and native mobile fetches are not subject to CORS, so this exists

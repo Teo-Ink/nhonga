@@ -5,6 +5,7 @@ import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconCheck } from '../../../components/icons';
 import type { ProductListItem } from '../../../lib/api';
 import { formatPrice } from '../../../lib/format';
+import { useActionKey } from '../../../lib/action-key';
 
 interface Plan {
   code: string;
@@ -28,6 +29,7 @@ const METHODS = [
 // Buy a promotion for a listing (paid visibility, E). Payment is a labelled
 // mock — no real charge — consistent with the rest of the demo.
 export default function PromotePage() {
+  const payKey = useActionKey();
   const t = pt.promote;
   const [listings, setListings] = useState<ProductListItem[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -63,7 +65,10 @@ export default function PromotePage() {
     try {
       const res = await fetch('/api/promotions', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...payKey.headers(JSON.stringify({ productSlug: slug, planCode, paymentMethod: method })),
+        },
         body: JSON.stringify({ productSlug: slug, planCode, paymentMethod: method }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -74,6 +79,7 @@ export default function PromotePage() {
         setError(data.message ?? t.error);
         return;
       }
+      payKey.done();
       setReceipt(data.receipt);
     } catch {
       setError(t.error);

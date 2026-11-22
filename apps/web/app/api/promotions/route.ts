@@ -1,11 +1,15 @@
 // BFF: buy a promotion for a listing, forwarded to the API.
-import { apiFetch, withApi } from '../../../lib/bff';
+import { apiFetch, idempotency, withApi } from '../../../lib/bff';
 
 async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
   const res = await apiFetch(`/promotions`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
+    headers: {
+      ...idempotency(req),
+      'content-type': 'application/json',
+      'accept-language': 'pt',
+    },
     body,
     cache: 'no-store',
   });
