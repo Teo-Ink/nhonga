@@ -5,6 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { jsonBodyLimits } from './common/body-limits.js';
 import { rateLimitMiddleware } from './common/rate-limit.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
@@ -15,9 +16,10 @@ async function bootstrap(): Promise<void> {
     // run against them (payments webhook receiver).
     rawBody: true,
   });
-  // Allow base64 image uploads (AI photo listing + listing photos). Nest still
-  // captures rawBody for the payments webhook — `verify` is reserved for that.
-  app.useBodyParser('json', { limit: '12mb' });
+  // 100 KB JSON everywhere, 12 MB only on the photo upload routes (SEC-07).
+  // Registered first so Nest's default parser skips already-parsed bodies; it
+  // keeps rawBody for the payment webhook signatures.
+  app.use(jsonBodyLimits());
   const log = new Logger('Bootstrap');
   const config = app.get(ConfigService<AppConfig, true>);
   const nodeEnv = config.get('nodeEnv', { infer: true });
