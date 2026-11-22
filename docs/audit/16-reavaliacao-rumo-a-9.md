@@ -69,3 +69,28 @@ A nota 9 **não se atinge só com código**. Faltam três blocos:
    estáticos, NAT por AZ, WAF em modo "block".
 
 Com 1 e 2 feitos, a nota global fica em **≈ 8,5**; com 3, chega a **9**.
+
+## 3.ª ronda — API (22/11/2026)
+
+Quatro ramos, empilhados depois de `audit/ARQ-02-documentacao`:
+
+| Ramo                            | O que resolve                                                                                                                     | Backlog |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `audit/API-01-validacao-zod`    | 31 schemas Zod partilhados; os 32 endpoints com corpo validam antes do serviço (400 com `code` e lista de campos)                 | P2-01   |
+| `audit/API-02-idempotencia`     | `Idempotency-Key` nos 9 endpoints de dinheiro: repetição → mesma resposta, em curso → 409, outro corpo → 422; o web envia a chave | P2-11   |
+| `audit/API-03-versao-paginacao` | `/v1/…` (com alias sem prefixo para webhooks e apps instaladas); web e app usam `/v1`; `page.cursor` no catálogo                  | P2-11   |
+| `audit/API-04-openapi`          | `openapi.yaml` gerado dos decoradores e dos schemas: 88 operações, 31 corpos; teste falha se o contrato divergir; Redocly válido  | P2-11   |
+
+Verificação local: API 197 testes (com Postgres), web 16, shared 145;
+typecheck, lint, dependency-cruiser e Prettier verdes; E2E 12/12 em duas
+execuções seguidas (o site já chama `/v1` e passa pela validação Zod).
+
+| Domínio      | Antes | Agora (código) | Com o dono | O que falta                                                           |
+| ------------ | ----- | -------------- | ---------- | --------------------------------------------------------------------- |
+| API          | 7     | **8,5**        | 8,5        | Respostas tipadas no OpenAPI; a app ainda não envia `Idempotency-Key` |
+| Arquitectura | 8     | **8,5**        | 8,5        | Retirar o fluxo de encomendas legado                                  |
+| Pagamentos   | 8     | **8,5**        | 9          | Reembolsos (P2-02); transferência bancária (decisão)                  |
+| **Global**   | 7,7   | **7,8**        | **≈ 8,6**  |                                                                       |
+
+Para 9 continuam a faltar: as tarefas do dono e do advogado, a app (Expo SDK
+58, testes, build para as lojas) e os reembolsos.

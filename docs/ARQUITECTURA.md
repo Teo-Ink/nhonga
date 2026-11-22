@@ -64,7 +64,10 @@ pacotes, gateways com failover) · `promotions`, `subscriptions`, `ads`,
 `banners` (serviços pagos) · `alerts` (pesquisas guardadas) · `favorites`,
 `reviews`, `notifications` (SMS, push, in-app) · `assistant` (IA).
 
-Lista completa de rotas e autenticação: [`docs/api/rotas.md`](api/rotas.md).
+Contrato completo, gerado do código e verificado nos testes:
+[`apps/api/openapi.yaml`](../apps/api/openapi.yaml) (`/v1`, corpos validados
+por Zod, `Idempotency-Key` nos pagamentos, paginação por cursor). Resumo das
+rotas: [`docs/api/rotas.md`](api/rotas.md).
 
 ## Dados
 

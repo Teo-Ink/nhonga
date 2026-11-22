@@ -108,7 +108,7 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 
 | ID    | Tarefa                                                                         | Origem      | Esforço |
 | ----- | ------------------------------------------------------------------------------ | ----------- | ------- |
-| P2-01 | Validação Zod centralizada                                                     | ARQ-001     | L       |
+| P2-01 | ✅ Validação Zod centralizada (API-01)                                         | ARQ-001     | L       |
 | P2-02 | Reembolsos e estornos                                                          | PAG-003     | M       |
 | P2-03 | Transferência bancária (decisão)                                               | PAG-005     | M       |
 | P2-04 | Backoffice mínimo (moderação, revisão, publicidade)                            | ARQ-003     | L       |
@@ -118,7 +118,7 @@ por `normaliseMzMsisdn`); ACC-01, "4 imagens sem alt" (0/37 na visita de
 | P2-08 | Service worker e PWA offline                                                   | PERF-004    | M       |
 | P2-09 | ✅ Auditoria de acessibilidade com axe e TalkBack (TEST-01 (axe; TalkBack 🔶)) | ACC-003/005 | M       |
 | P2-10 | ✅ Expiração de anúncios e limpeza de dados (DAT-01)                           | DAT-005     | S       |
-| P2-11 | Versionar a API (`/v1`) e Idempotency-Key                                      | API-003/004 | M       |
+| P2-11 | ✅ Versionar a API (`/v1`) e Idempotency-Key (API-02/03/04)                    | API-003/004 | M       |
 | P2-12 | NAT por AZ ou VPC endpoints                                                    | ESC-002     | S       |
 | P2-13 | Remover ou isolar o fluxo de encomendas legado                                 | PAG-006     | M       |
 | P2-14 | ✅ README e documentação de arquitectura (ARQ-02)                              | ARQ-002     | S       |
