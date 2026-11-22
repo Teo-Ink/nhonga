@@ -29,9 +29,9 @@ trabalho (ver plano), a Nhonga pode lançar.
 | Domínio        | 1.ª ronda | 2.ª ronda (código) | Com o dono |
 | -------------- | --------- | ------------------ | ---------- |
 | Segurança      | 5 → 7     | 8                  | 9          |
-| Pagamentos     | 7         | 8                  | 8,5        |
-| Arquitectura   | 6         | 8                  | 8          |
-| API            | 6         | 7                  | 7          |
+| Pagamentos     | 7         | 8,5 (3.ª ronda)    | 9          |
+| Arquitectura   | 6         | 8,5 (3.ª ronda)    | 8,5        |
+| API            | 6         | 8,5 (3.ª ronda)    | 8,5        |
 | Dados          | 6         | 8                  | 9          |
 | Performance    | 4 → 6     | 8                  | 8,5        |
 | Escalabilidade | 6         | 8                  | 8,5        |
@@ -43,7 +43,7 @@ trabalho (ver plano), a Nhonga pode lançar.
 | Acessibilidade | 6         | 8                  | 8,5        |
 | Mobile         | 4         | 6                  | 7          |
 | Conformidade   | 4         | 7                  | 9          |
-| **Global**     | 5,5 → 6,3 | **7,7**            | **≈ 8,5**  |
+| **Global**     | 5,5 → 6,3 | **7,8**            | **≈ 8,6**  |
 
 "Código" = todos os ramos `audit/*` juntos ao `main`.
 
