@@ -193,6 +193,8 @@ jobs:
           output: trivy-iac.sarif
           exit-code: "1"
           severity: HIGH,CRITICAL
+          # Without this, SARIF output includes (and fails on) every severity.
+          limit-severities-for-sarif: true
 
       - name: Upload scan results
         if: always()
