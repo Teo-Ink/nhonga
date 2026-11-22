@@ -1,5 +1,7 @@
 'use client';
 import { IS_DEMO } from '../../lib/demo';
+
+const SOCIAL_LOGIN = process.env.NEXT_PUBLIC_SOCIAL_LOGIN === '1';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isValidMzMsisdn } from '@nhonga/shared';
@@ -138,31 +140,37 @@ export default function AuthPage() {
               </p>
             </form>
 
-            <div className="auth__divider" role="separator">
-              <span>{t.social_or}</span>
-            </div>
-            <div className="auth__social">
-              <button
-                type="button"
-                className="social-btn social-btn--google"
-                onClick={() => setSocialNotice(true)}
-              >
-                <IconGoogle />
-                <span>{t.google}</span>
-              </button>
-              <button
-                type="button"
-                className="social-btn social-btn--facebook"
-                onClick={() => setSocialNotice(true)}
-              >
-                <IconFacebook />
-                <span>{t.facebook}</span>
-              </button>
-            </div>
-            {socialNotice ? (
-              <p className="auth__notice" role="alert">
-                {t.not_wired}
-              </p>
+            {/* Social sign-in is not built yet: buttons that only say "not
+                available" erode trust, so they stay hidden until it exists. */}
+            {SOCIAL_LOGIN ? (
+              <>
+                <div className="auth__divider" role="separator">
+                  <span>{t.social_or}</span>
+                </div>
+                <div className="auth__social">
+                  <button
+                    type="button"
+                    className="social-btn social-btn--google"
+                    onClick={() => setSocialNotice(true)}
+                  >
+                    <IconGoogle />
+                    <span>{t.google}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="social-btn social-btn--facebook"
+                    onClick={() => setSocialNotice(true)}
+                  >
+                    <IconFacebook />
+                    <span>{t.facebook}</span>
+                  </button>
+                </div>
+                {socialNotice ? (
+                  <p className="auth__notice" role="alert">
+                    {t.not_wired}
+                  </p>
+                ) : null}
+              </>
             ) : null}
           </>
         ) : (

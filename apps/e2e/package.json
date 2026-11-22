@@ -1,0 +1,17 @@
+{
+  "name": "@nhonga/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests (Playwright) of the web site against a real API and Postgres (TEST-01 / P1-05).",
+  "scripts": {
+    "e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "20.16.11",
+    "typescript": "5.6.3"
+  }
+}
