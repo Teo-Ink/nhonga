@@ -298,3 +298,15 @@ module "waf" {
   environment = local.env
   alb_arn     = module.alb.arn
 }
+
+# The assistant key was created at the top level by the demo hotfix (AI-00):
+# move it into the module instead of recreating it (keeps the owner's value).
+moved {
+  from = aws_secretsmanager_secret.anthropic_api_key
+  to   = module.secrets.aws_secretsmanager_secret.optional["ANTHROPIC_API_KEY"]
+}
+
+moved {
+  from = terraform_data.anthropic_api_key_placeholder
+  to   = module.secrets.terraform_data.put_optional_placeholder["ANTHROPIC_API_KEY"]
+}
