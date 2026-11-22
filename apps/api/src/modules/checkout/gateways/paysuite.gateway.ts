@@ -40,17 +40,16 @@ export function paysuiteReference(intentId: string): string {
 }
 
 /** PaySuite's `method` values for the wallets we offer. */
-const METHOD: Partial<Record<PayMethod, string>> = {
+// Always sent, so the hosted page only offers the method the buyer picked.
+const METHOD: Readonly<Record<PayMethod, string>> = {
   mpesa: 'mpesa',
   emola: 'emola',
   card: 'credit_card',
-  // mKesh is listed in PaySuite's payment methods but not in the API's
-  // `method` enum; omitting `method` lets the buyer choose it on the page.
 };
 
 export class PaySuiteGateway implements CheckoutGateway {
   readonly id = 'paysuite' as const;
-  readonly methods: readonly PayMethod[] = ['mpesa', 'emola', 'mkesh', 'card'];
+  readonly methods: readonly PayMethod[] = ['mpesa', 'emola', 'card'];
 
   constructor(
     private readonly config: PaySuiteConfig,

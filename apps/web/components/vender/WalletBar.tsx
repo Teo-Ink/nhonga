@@ -10,12 +10,11 @@ interface Pkg {
   balanceCents: number;
   points: number;
 }
-type PayMethod = 'mpesa' | 'emola' | 'mkesh' | 'card';
+type PayMethod = 'mpesa' | 'emola' | 'card';
 const METHOD_LABEL: Record<PayMethod, string> = {
   mpesa: 'M-Pesa',
   emola: 'e-Mola',
-  mkesh: 'mKesh',
-  card: 'Cartão',
+  card: 'Visa',
 };
 
 interface WalletView {
@@ -31,7 +30,7 @@ interface WalletView {
 // Seller wallet strip for "Os teus anúncios": balance (MZN) + loyalty points,
 // with inline top-up and prepaid-package panels. Mirrors the marketplace
 // "Saldo em conta / Comprar pacote" header. Top-ups go through the hosted
-// checkout (M-Pesa / e-Mola / mKesh / card): we create a payment, send the
+// checkout (M-Pesa / e-Mola / Visa card): we create a payment, send the
 // seller to the gateway's page, and /pagamento/[id] shows the outcome.
 export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
   const dash = useDict().dash;

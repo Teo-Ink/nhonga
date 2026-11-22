@@ -19,7 +19,7 @@ import type {
 
 export class MockGateway implements CheckoutGateway {
   readonly id = 'mock' as const;
-  readonly methods: readonly PayMethod[] = ['mpesa', 'emola', 'mkesh', 'card'];
+  readonly methods: readonly PayMethod[] = ['mpesa', 'emola', 'card'];
   private readonly outcomes = new Map<
     string,
     { status: 'pending' | 'paid' | 'failed'; amountCents: number }

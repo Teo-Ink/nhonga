@@ -145,8 +145,8 @@ describe('PaySuite', () => {
       checkoutUrl: 'https://paysuite.tech/c/ps_1',
     });
     expect(calls[0]?.body).toMatchObject({ amount: '500.00', method: 'credit_card' });
-    await gw.create({ ...input, method: 'mkesh' });
-    expect(calls[1]?.body).not.toHaveProperty('method');
+    await gw.create({ ...input, method: 'emola' });
+    expect(calls[1]?.body).toMatchObject({ method: 'emola' });
   });
 
   it('verifies webhook signatures', () => {

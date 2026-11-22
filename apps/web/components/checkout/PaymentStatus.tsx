@@ -17,8 +17,7 @@ export interface CheckoutView {
 const METHOD_LABEL: Record<string, string> = {
   mpesa: 'M-Pesa',
   emola: 'e-Mola',
-  mkesh: 'mKesh',
-  card: 'Cartão',
+  card: 'Visa',
 };
 
 const POLL_MS = 3000;
