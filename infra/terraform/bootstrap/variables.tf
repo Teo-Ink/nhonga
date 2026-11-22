@@ -15,6 +15,23 @@ variable "github_repository" {
   }
 }
 
+variable "github_oidc_subject_prefix" {
+  description = <<-EOT
+    Start of the `sub` claim in GitHub's OIDC tokens for this repository.
+    The repository uses GitHub's immutable subject format, which pins the owner
+    and repository by numeric id as well as by name, so a renamed or recreated
+    repository with the same name cannot assume these roles. Read it with:
+      gh api repos/<owner>/<repo>/actions/oidc/customization/sub
+  EOT
+  type        = string
+  default     = "repo:Teo-Ink@291932914/nhonga@1373752316"
+
+  validation {
+    condition     = startswith(var.github_oidc_subject_prefix, "repo:")
+    error_message = "Must start with repo: as GitHub's sub claim does."
+  }
+}
+
 variable "project" {
   description = "Resource name prefix."
   type        = string

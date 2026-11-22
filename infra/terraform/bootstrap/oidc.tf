@@ -39,7 +39,7 @@ data "aws_iam_policy_document" "gha_assume_plan" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:*"]
+      values   = ["${local.oidc_sub}:*"]
     }
   }
 }
@@ -71,7 +71,7 @@ data "aws_iam_policy_document" "gha_assume_apply" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repository}:environment:${each.key}"]
+      values   = ["${local.oidc_sub}:environment:${each.key}"]
     }
   }
 }

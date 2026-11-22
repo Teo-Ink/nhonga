@@ -4,7 +4,7 @@ locals {
   account_id   = data.aws_caller_identity.current.account_id
   state_bucket = "${var.project}-tfstate-${local.account_id}"
   lock_table   = "${var.project}-tfstate-lock"
-  oidc_sub     = "repo:${var.github_repository}"
+  oidc_sub     = var.github_oidc_subject_prefix
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
