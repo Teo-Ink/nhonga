@@ -175,6 +175,7 @@ module "api" {
   min_count     = 1
   max_count     = 4
 
+  service_discovery              = true
   service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.internal.id
 
   # Staging tests the whole flow with simulated SMS and payments: the login

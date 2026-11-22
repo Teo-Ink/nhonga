@@ -62,6 +62,9 @@ jobs:
       - name: Plan
         id: plan
         working-directory: infra/terraform/envs/${{ matrix.env }}
+        # Explicit bash runs with pipefail, so a failed plan fails the job
+        # instead of being hidden behind tee's exit code.
+        shell: bash
         run: terraform plan -input=false -no-color -out=tfplan 2>&1 | tee plan.txt
 
       - name: Comment plan on PR
