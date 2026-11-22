@@ -26,6 +26,7 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   function load() {
@@ -77,6 +78,16 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
     }
   }
 
+  // Block the other side (P0-18): no more messages either way; the thread
+  // leaves the inbox. A report about a listing is on the listing page.
+  async function toggleBlock() {
+    if (!blocked && !window.confirm(t.block_confirm)) return;
+    const res = await fetch(`/api/conversations/${id}/block`, {
+      method: blocked ? 'DELETE' : 'POST',
+    }).catch(() => null);
+    if (res?.ok) setBlocked(!blocked);
+  }
+
   return (
     <section className="section msgthread">
       <a className="pdp__back" href="/mensagens">
@@ -96,7 +107,15 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
                 {t.about}: {thread.productTitle}
               </span>
             ) : null}
+            <button type="button" className="btn btn--ghost btn--sm" onClick={toggleBlock}>
+              {blocked ? t.unblock : t.block}
+            </button>
           </header>
+          {blocked ? (
+            <p className="account__muted" role="status">
+              {t.blocked_note}
+            </p>
+          ) : null}
 
           <div className="msgthread__scroll">
             {thread.messages.length === 0 ? (
@@ -119,7 +138,11 @@ export default function ThreadPage({ params }: { params: Promise<{ id: string }>
               placeholder={t.reply_ph}
               aria-label={t.reply_ph}
             />
-            <button type="submit" className="btn btn--cta" disabled={sending || text.trim() === ''}>
+            <button
+              type="submit"
+              className="btn btn--cta"
+              disabled={blocked || sending || text.trim() === ''}
+            >
               {t.send_reply}
             </button>
           </form>

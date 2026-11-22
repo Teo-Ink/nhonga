@@ -1000,6 +1000,11 @@ const enBase: Dictionary = {
       'To report a problem with a listing, use the “Report” button on the listing page.',
   },
   messages: {
+    block: 'Block',
+    unblock: 'Unblock',
+    block_confirm:
+      'Block this person? Neither of you can send messages and the conversation leaves your inbox.',
+    blocked_note: 'You blocked this conversation. No one can send messages.',
     title: 'Messages',
     demo_note: 'Demo: messaging is not wired yet. Nothing is sent or stored.',
     empty_title: 'You have no conversations yet',
@@ -1036,7 +1041,28 @@ const enBase: Dictionary = {
     send_error: 'Could not send. Please try again.',
     thread_empty: 'No messages yet.',
   },
+  privacyAccount: {
+    title: 'Privacy and account',
+    export_title: 'Your data',
+    export_body:
+      'Download a copy of everything Nhonga holds about you: account, listings, messages sent, favourites, alerts and orders.',
+    export_cta: 'Download my data',
+    delete_title: 'Delete account',
+    delete_body: 'Deletion is immediate and cannot be undone.',
+    delete_item_listings: 'Your listings leave the site and your shop closes.',
+    delete_item_sessions:
+      'You are signed out everywhere. Your number becomes free for a new account.',
+    delete_item_kept:
+      'We keep only what the law or other people need: payments and orders (accounting), and messages and reviews already sent, now shown as “Deleted account”.',
+    confirm_word: 'ELIMINAR',
+    confirm_label: 'To confirm, type {word}',
+    delete_cta: 'Delete my account',
+    deleting: 'Deleting…',
+    delete_error: 'Could not delete the account. Please try again.',
+    link: 'Privacy and account',
+  },
   account: {
+    privacy_link: 'Privacy and account',
     title: 'My account',
     demo_note:
       'Demo: accounts are not wired yet. Orders are stored only on this device and browser.',

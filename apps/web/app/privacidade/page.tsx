@@ -119,16 +119,21 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p>
-        Depois de encerrar a conta, apagamos ou anonimizamos os dados, exceto os que a lei nos
-        obriga a guardar.
+        Quando elimina a conta, apagamos de imediato o número, o nome, os endereços, os favoritos,
+        os alertas e as notificações, e retiramos os anúncios. Guardamos apenas o que a lei nos
+        obriga (pagamentos e encomendas) e as mensagens e avaliações já enviadas a outras pessoas,
+        agora sem o seu nome.
       </p>
 
       <h2>7. Os seus direitos</h2>
       <p>
         Pode pedir acesso aos seus dados, a sua correção ou eliminação, opor-se a certos usos,
-        retirar o consentimento e pedir uma cópia dos dados que nos forneceu. Escreva para{' '}
-        <strong>[privacidade@…]</strong>; respondemos em até <strong>[30]</strong> dias. Podemos
-        pedir uma confirmação por SMS para garantir que o pedido é seu.
+        retirar o consentimento e pedir uma cópia dos dados que nos forneceu. Sem esperar por nós,
+        pode descarregar os seus dados e eliminar a conta em{' '}
+        <a href="/conta/privacidade">Conta → Privacidade e conta</a> (e na app, em Conta). Para o
+        resto, escreva para <strong>[privacidade@…]</strong>; respondemos em até{' '}
+        <strong>[30]</strong> dias. Podemos pedir uma confirmação por SMS para garantir que o pedido
+        é seu.
       </p>
 
       <h2>8. Segurança</h2>

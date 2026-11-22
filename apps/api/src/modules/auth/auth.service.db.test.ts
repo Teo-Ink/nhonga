@@ -153,10 +153,12 @@ describe.skipIf(!hasTestDb)('AuthService staging allowlist (Postgres)', () => {
   });
 
   it('refuses numbers outside the list and serves the ones on it', async () => {
-    process.env['OTP_DEV_ALLOWLIST'] = '841234567, +258 85 765 4321';
+    const allowed = `85${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}`;
+    const spaced = `+258 ${allowed.slice(0, 2)} ${allowed.slice(2, 5)} ${allowed.slice(5)}`;
+    process.env['OTP_DEV_ALLOWLIST'] = `841234567, ${spaced}`;
     const auth = new AuthService(db);
     await expect(auth.requestOtp('846666666')).rejects.toMatchObject({ code: 'not_allowed' });
-    const ok = await auth.requestOtp('857654321');
+    const ok = await auth.requestOtp(allowed);
     expect(ok.devCode).toMatch(/^\d{6}$/);
   });
 });

@@ -723,3 +723,14 @@
   color: var(--link);
   text-decoration: underline;
 }
+
+/* Destructive action (account deletion). */
+.btn--danger {
+  background: #b42318;
+  color: #fff;
+  border-color: #b42318;
+}
+.btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
