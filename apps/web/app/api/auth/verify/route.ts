@@ -35,7 +35,10 @@ export async function POST(req: Request): Promise<Response> {
     sameSite: 'lax',
     path: '/',
     maxAge: 7 * 24 * 3600,
-    secure: process.env.NODE_ENV === 'production',
+    // Secure in production builds. Staging without a domain is plain HTTP, where
+    // browsers drop Secure cookies, so it opts out explicitly; never set this
+    // where real users sign in.
+    secure: process.env.NODE_ENV === 'production' && process.env.SESSION_COOKIE_INSECURE !== '1',
   });
   // The invite code has been consumed (or ignored) — clear it either way.
   if (referralCode) out.cookies.set(REFERRAL_COOKIE, '', { path: '/', maxAge: 0 });

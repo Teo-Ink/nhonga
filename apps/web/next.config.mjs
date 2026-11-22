@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url';
+
 // Mirrors lib/demo.ts: on in `next dev`, off in production builds unless
 // NEXT_PUBLIC_DEMO_MODE=1.
 const demoFlag = process.env.NEXT_PUBLIC_DEMO_MODE;
@@ -16,9 +18,20 @@ const imageHosts = (process.env.IMAGE_HOSTS ?? '')
   .filter(Boolean);
 if (isDemo) imageHosts.push('live.staticflickr.com'); // seed sample photos
 
+// The container image (apps/web/Dockerfile) sets NEXT_OUTPUT=standalone to get a
+// self-contained server bundle. Tracing starts at the monorepo root so the
+// workspace package (@nhonga/shared) is included. Local builds are unchanged.
+const standalone = process.env.NEXT_OUTPUT === 'standalone';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  ...(standalone
+    ? {
+        output: 'standalone',
+        outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
+      }
+    : {}),
   images: {
     remotePatterns: imageHosts.map((hostname) => ({ protocol: 'https', hostname })),
     // The /ph fallback placeholder is a local route carrying a query string

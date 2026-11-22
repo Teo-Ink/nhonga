@@ -26,6 +26,7 @@ permissions:
 env:
   AWS_REGION: af-south-1
   ECR_REPOSITORY: nhonga-api
+  WEB_ECR_REPOSITORY: nhonga-web
 
 jobs:
   # Only deploy on a green CI run, or an explicit dispatch. A failed CI run must
@@ -41,7 +42,12 @@ jobs:
   build-and-push:
     needs: guard
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+    # The staging deploy role pushes images (ECR is shared across environments).
+    # Its trust policy only accepts tokens minted for the staging environment,
+    # and AWS_DEPLOY_ROLE_ARN is an environment variable, so the job must run in
+    # that environment. Staging has no reviewer, so this adds no approval step.
+    environment: staging
     permissions:
       contents: read
       id-token: write
@@ -66,7 +72,7 @@ jobs:
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push
+      - name: Build and push api
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
           TAG: ${{ steps.meta.outputs.tag }}
@@ -75,6 +81,26 @@ jobs:
           # The repository is IMMUTABLE, so a re-run for an existing tag is a
           # no-op push rather than a silent overwrite.
           docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE"
+
+      # NEXT_PUBLIC_* values are baked into the browser bundle, so the web
+      # image is built per environment and tagged <sha>-<environment>. Only
+      # staging runs the web app on AWS today.
+      - name: Build and push web (staging)
+        if: github.event_name == 'workflow_run' || github.event.inputs.environment == 'staging'
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ steps.meta.outputs.tag }}-staging
+          SUPPORT_EMAIL: ${{ vars.NEXT_PUBLIC_SUPPORT_EMAIL }}
+          ADS_EMAIL: ${{ vars.NEXT_PUBLIC_ADS_EMAIL }}
+        run: |
+          IMAGE="$REGISTRY/$WEB_ECR_REPOSITORY:$TAG"
+          docker build -f apps/web/Dockerfile \
+            --build-arg NEXT_PUBLIC_DEMO_MODE=1 \
+            --build-arg NEXT_PUBLIC_SUPPORT_EMAIL="$SUPPORT_EMAIL" \
+            --build-arg NEXT_PUBLIC_ADS_EMAIL="$ADS_EMAIL" \
+            -t "$IMAGE" .
           docker push "$IMAGE"
           echo "Pushed $IMAGE"
 
@@ -94,12 +120,21 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: gha-deploy-staging-${{ github.run_id }}
-      - name: Deploy to ECS (staging)
+      - name: Deploy api to ECS (staging)
         uses: ./.github/actions/ecs-deploy
         with:
           cluster: nhonga-staging
           service: api
           image_tag: ${{ needs.build-and-push.outputs.image_tag }}
+          region: ${{ env.AWS_REGION }}
+      # After the api, so a release never serves a web that expects api changes
+      # that are not live yet.
+      - name: Deploy web to ECS (staging)
+        uses: ./.github/actions/ecs-deploy
+        with:
+          cluster: nhonga-staging
+          service: web
+          image_tag: ${{ needs.build-and-push.outputs.image_tag }}-staging
           region: ${{ env.AWS_REGION }}
 
   deploy-production:
