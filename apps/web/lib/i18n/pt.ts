@@ -648,8 +648,8 @@ const ptBase = {
     shop_name_ph: 'Ex.: Loja do João',
     shop_hint: 'Aparece nos seus anúncios. Pode mudar mais tarde.',
     publishing_as: 'A publicar como',
-    shop_community: 'Anúncios da Comunidade',
-    shop_login: 'Entrar para publicar na sua loja',
+    login_note: 'Para publicar precisa de entrar com o seu número. O que escrever fica guardado neste aparelho.',
+    shop_login: 'Entrar agora',
   },
   plans: {
     title: 'Planos e destaques',

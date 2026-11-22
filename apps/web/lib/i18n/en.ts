@@ -626,8 +626,8 @@ const enBase: Dictionary = {
     shop_name_ph: 'e.g. João’s Shop',
     shop_hint: 'Shown on your listings. You can change it later.',
     publishing_as: 'Publishing as',
-    shop_community: 'Community Listings',
-    shop_login: 'Sign in to publish to your shop',
+    login_note: 'To publish you need to sign in with your number. What you type is kept on this device.',
+    shop_login: 'Sign in now',
   },
   plans: {
     title: 'Plans & boosts',

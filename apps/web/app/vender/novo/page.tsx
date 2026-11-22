@@ -303,13 +303,18 @@ export default function NewListingPage() {
               </label>
             ) : (
               <p className="newlisting__as" role="note">
-                {t.publishing_as} <strong>{shop ? shop.displayName : t.shop_community}</strong>
-                {!user ? (
+                {user && shop ? (
                   <>
-                    {' · '}
-                    <a href="/entrar">{t.shop_login}</a>
+                    {t.publishing_as} <strong>{shop.displayName}</strong>
                   </>
-                ) : null}
+                ) : (
+                  <>
+                    {t.login_note}{' '}
+                    <a href={`/entrar?next=${encodeURIComponent('/vender/novo')}`}>
+                      {t.shop_login}
+                    </a>
+                  </>
+                )}
               </p>
             )
           ) : null}

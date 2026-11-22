@@ -55,7 +55,6 @@ export async function AdSlot({
           href={`/api/spot/${ad.id}/click`}
           target="_blank"
           rel="noopener noreferrer sponsored"
-          aria-label={ad.headline ?? ad.advertiser}
           style={{ backgroundImage: `url("${ad.imageUrl.replace(/["\\]/g, encodeURIComponent)}")` }}
         >
           <span className="spotbox__adscrim" aria-hidden="true" />
