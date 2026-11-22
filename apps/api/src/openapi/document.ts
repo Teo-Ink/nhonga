@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { API_BODIES } from '@nhonga/shared';
+import { API_BODIES, API_RESPONSES } from '@nhonga/shared';
 import { buildOpenApi, collectRoutes, nameSchemas } from './build.js';
 
 /** Finds every *.controller.(ts|js) under src/modules (or dist/modules). */
@@ -27,5 +27,6 @@ export async function apiDocument(): Promise<Record<string, unknown>> {
     }
   }
   nameSchemas(API_BODIES);
-  return buildOpenApi(collectRoutes(controllers), API_BODIES);
+  nameSchemas(API_RESPONSES);
+  return buildOpenApi(collectRoutes(controllers), API_BODIES, API_RESPONSES);
 }

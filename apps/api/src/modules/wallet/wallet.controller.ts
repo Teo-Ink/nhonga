@@ -8,6 +8,8 @@ import {
 } from './wallet.service.js';
 import { WalletBoost, WalletPurchase, WalletTopup } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { WalletOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -25,6 +27,7 @@ export class WalletController {
     return this.wallet.boostPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
   }
 
+  @Returns(WalletOut)
   @Post('pro')
   @HttpCode(200)
   subscribePro(@Headers('authorization') authz?: string): Promise<WalletView> {
@@ -42,6 +45,7 @@ export class WalletController {
     return this.wallet.boost(bearer(authz), productId, planCode);
   }
 
+  @Returns(WalletOut)
   @Get()
   get(@Headers('authorization') authz?: string): Promise<WalletView> {
     return this.wallet.get(bearer(authz));
@@ -52,6 +56,7 @@ export class WalletController {
     return this.wallet.packages();
   }
 
+  @Returns(WalletOut)
   @Post('topup')
   @HttpCode(200)
   topup(
@@ -63,6 +68,7 @@ export class WalletController {
     return this.wallet.topup(bearer(authz), amount);
   }
 
+  @Returns(WalletOut)
   @Post('purchase')
   @HttpCode(200)
   purchase(

@@ -24,6 +24,8 @@ import { ADMIN_HEADER, isAdminToken } from '../../common/admin.js';
 import { AuthService, type AuthUser } from '../auth/auth.service.js';
 import { SavedSearchCreate } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { IdOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 interface CreateBody {
   phone?: unknown;
@@ -53,6 +55,7 @@ export class AlertsController {
     return this.alerts.list(user.phoneE164);
   }
 
+  @Returns(IdOut)
   @Post()
   @HttpCode(201)
   async create(

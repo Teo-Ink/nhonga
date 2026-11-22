@@ -23,6 +23,8 @@ import type {
 } from './catalog.types.js';
 import { ListingEvent, ListingInput, ListingReport, ListingStatus } from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
+import { ListingCreatedOut, ProductListOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 const SORTS: readonly SortKey[] = ['relevance', 'price_asc', 'price_desc', 'rating', 'newest'];
 
@@ -41,6 +43,7 @@ interface CreateListingBody {
 export class CatalogController {
   constructor(private readonly catalog: CatalogService) {}
 
+  @Returns(ProductListOut)
   @Get('products')
   async list(
     @Headers('accept-language') acceptLanguage: string | undefined,
@@ -98,6 +101,7 @@ export class CatalogController {
   }
 
   /** Create a listing ("Publicar"). Needs a session; 10 per shop per day. */
+  @Returns(ListingCreatedOut)
   @Post('products')
   @HttpCode(201)
   create(

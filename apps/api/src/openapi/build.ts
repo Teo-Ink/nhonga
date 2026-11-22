@@ -18,6 +18,7 @@ import { z } from '@nhonga/shared';
 import { ZodBody } from '../common/zod-body.js';
 import { ADMIN_HEADER } from '../common/admin.js';
 import { IDEMPOTENT_ROUTES } from '../common/idempotency.js';
+import { RETURNS_METADATA } from '../common/returns.js';
 
 type Json = Record<string, unknown>;
 const VERBS = ['get', 'post', 'put', 'delete', 'patch'] as const;
@@ -37,6 +38,8 @@ export interface RouteInfo {
   readonly query: string[];
   readonly auth: 'none' | 'session' | 'admin';
   readonly body: { name: string; schema: z.ZodType } | null;
+  /** Named response schema (@Returns), when declared. */
+  readonly returns: string | null;
   readonly status: number;
 }
 
@@ -82,6 +85,7 @@ export function collectRoutes(
         .replace(/:(\w+)/g, '{$1}')
         .replace(/(.)\/$/, '$1');
       const explicit = Reflect.getMetadata(HTTP_CODE_METADATA, handler) as number | undefined;
+      const ret = Reflect.getMetadata(RETURNS_METADATA, handler) as z.ZodType | undefined;
       out.push({
         tag: base.split('/')[0] || 'root',
         method,
@@ -91,6 +95,7 @@ export function collectRoutes(
         query: [...new Set(query)].sort(),
         auth,
         body,
+        returns: ret ? schemaName(ret) : null,
         status: explicit ?? (method === 'post' ? 201 : 200),
       });
     }
@@ -132,7 +137,11 @@ function schemaName(s: z.ZodType): string {
 
 const problemRef = { $ref: '#/components/responses/Problem' };
 
-export function buildOpenApi(routes: RouteInfo[], bodies: Record<string, z.ZodType>): Json {
+export function buildOpenApi(
+  routes: RouteInfo[],
+  bodies: Record<string, z.ZodType>,
+  outputs: Record<string, z.ZodType> = {},
+): Json {
   const paths: Record<string, Json> = {};
   const schemas: Record<string, Json> = {
     Problem: {
@@ -162,6 +171,11 @@ export function buildOpenApi(routes: RouteInfo[], bodies: Record<string, z.ZodTy
   };
   for (const [name, s] of Object.entries(bodies)) {
     const js = z.toJSONSchema(s, { io: 'input', unrepresentable: 'any' }) as Json;
+    delete js['$schema'];
+    schemas[name] = js;
+  }
+  for (const [name, s] of Object.entries(outputs)) {
+    const js = z.toJSONSchema(s, { io: 'output', unrepresentable: 'any' }) as Json;
     delete js['$schema'];
     schemas[name] = js;
   }
@@ -202,11 +216,12 @@ export function buildOpenApi(routes: RouteInfo[], bodies: Record<string, z.ZodTy
         },
       };
     }
+    const content = r.returns
+      ? { 'application/json': { schema: { $ref: `#/components/schemas/${r.returns}` } } }
+      : { 'application/json': { schema: {} } };
     const responses: Json = {
       [String(r.status)]:
-        r.status === 204
-          ? { description: 'Sem conteúdo' }
-          : { description: 'Sucesso', content: { 'application/json': { schema: {} } } },
+        r.status === 204 ? { description: 'Sem conteúdo' } : { description: 'Sucesso', content },
     };
     if (r.body || r.params.length > 0 || r.query.length > 0) responses['400'] = problemRef;
     if (r.auth === 'session') responses['401'] = problemRef;

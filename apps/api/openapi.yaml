@@ -288,7 +288,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OkOut"
         "401":
           $ref: "#/components/responses/Problem"
         "429":
@@ -309,7 +310,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OkOut"
         "401":
           $ref: "#/components/responses/Problem"
         "429":
@@ -329,7 +331,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/AuthUserOut"
         "401":
           $ref: "#/components/responses/Problem"
         "429":
@@ -375,7 +378,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OtpRequestOut"
         "400":
           $ref: "#/components/responses/Problem"
         "429":
@@ -400,7 +404,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/SessionOut"
         "400":
           $ref: "#/components/responses/Problem"
         "429":
@@ -774,7 +779,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/ProductListOut"
         "400":
           $ref: "#/components/responses/Problem"
         "429":
@@ -800,7 +806,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/ListingCreatedOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1108,7 +1115,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/CheckoutOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1142,7 +1150,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/RefundOut"
         "400":
           $ref: "#/components/responses/Problem"
         "404":
@@ -1180,7 +1189,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/RefundOut"
         "400":
           $ref: "#/components/responses/Problem"
         "404":
@@ -1265,7 +1275,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/CheckoutOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1300,7 +1311,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/CheckoutOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1354,7 +1366,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/ConversationListOut"
         "401":
           $ref: "#/components/responses/Problem"
         "429":
@@ -1380,7 +1393,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/IdOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1409,7 +1423,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/ThreadOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1440,7 +1455,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OkOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1470,7 +1486,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OkOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1507,7 +1524,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/OkOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -1965,7 +1983,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/IdOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -2186,7 +2205,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/WalletOut"
         "401":
           $ref: "#/components/responses/Problem"
         "429":
@@ -2278,7 +2298,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/WalletOut"
         "401":
           $ref: "#/components/responses/Problem"
         "409":
@@ -2311,7 +2332,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/WalletOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -2346,7 +2368,8 @@ paths:
           description: Sucesso
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/WalletOut"
         "400":
           $ref: "#/components/responses/Problem"
         "401":
@@ -2905,3 +2928,551 @@ components:
         mediaType:
           type: string
           maxLength: 32
+    ProductListOut:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              slug:
+                type: string
+              title:
+                type: string
+              priceCents:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+                description: centavos (MZN)
+              compareAtCents:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+                description: centavos (MZN)
+              discountPercent:
+                type:
+                  - number
+                  - "null"
+              image:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  width:
+                    type: number
+                  height:
+                    type: number
+                  lqip:
+                    type: string
+                  alt:
+                    type: string
+                required:
+                  - url
+                  - width
+                  - height
+                additionalProperties: false
+              ratingAvg:
+                type:
+                  - number
+                  - "null"
+              ratingCount:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              inStock:
+                type: boolean
+              freeDelivery:
+                type: boolean
+              location:
+                type:
+                  - string
+                  - "null"
+              postedAt:
+                anyOf:
+                  - type: string
+                    description: ISO 8601
+                  - type: "null"
+              featured:
+                type: boolean
+              views:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              bannerUrl:
+                type:
+                  - string
+                  - "null"
+              category:
+                type: object
+                properties:
+                  slug:
+                    type: string
+                  name:
+                    type: string
+                required:
+                  - slug
+                  - name
+                additionalProperties: false
+              attributes:
+                type: object
+                propertyNames:
+                  type: string
+                additionalProperties:
+                  type: string
+              vendor:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  slug:
+                    type: string
+                  displayName:
+                    type: string
+                  isVerified:
+                    type: boolean
+                  isPro:
+                    type: boolean
+                  ratingAvg:
+                    type:
+                      - number
+                      - "null"
+                  ratingCount:
+                    type: integer
+                    minimum: -9007199254740991
+                    maximum: 9007199254740991
+                  whatsapp:
+                    type:
+                      - string
+                      - "null"
+                  phone:
+                    type:
+                      - string
+                      - "null"
+                required:
+                  - id
+                  - slug
+                  - displayName
+                  - isVerified
+                  - isPro
+                  - ratingAvg
+                  - ratingCount
+                  - whatsapp
+                  - phone
+                additionalProperties: false
+            required:
+              - id
+              - slug
+              - title
+              - priceCents
+              - discountPercent
+              - ratingAvg
+              - ratingCount
+              - inStock
+              - freeDelivery
+              - location
+              - postedAt
+              - featured
+              - views
+              - bannerUrl
+              - category
+              - attributes
+              - vendor
+            additionalProperties: false
+        page:
+          type: object
+          properties:
+            cursor:
+              type:
+                - string
+                - "null"
+            hasMore:
+              type: boolean
+          required:
+            - cursor
+            - hasMore
+          additionalProperties: false
+        correctedQuery:
+          type:
+            - string
+            - "null"
+        categoryCounts:
+          type: array
+          items:
+            type: object
+            properties:
+              slug:
+                type: string
+              name:
+                type: string
+              count:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+            required:
+              - slug
+              - name
+              - count
+            additionalProperties: false
+      required:
+        - total
+        - items
+        - page
+      additionalProperties: false
+    AuthUserOut:
+      type: object
+      properties:
+        id:
+          type: string
+        phoneE164:
+          type: string
+        displayName:
+          type: string
+        email:
+          type:
+            - string
+            - "null"
+        phoneVerified:
+          type: boolean
+      required:
+        - id
+        - phoneE164
+        - displayName
+        - email
+        - phoneVerified
+      additionalProperties: false
+    OtpRequestOut:
+      type: object
+      properties:
+        challengeId:
+          type: string
+        expiresInSeconds:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        devCode:
+          description: Só em ambientes de teste com SMS simulado
+          type: string
+      required:
+        - challengeId
+        - expiresInSeconds
+      additionalProperties: false
+    SessionOut:
+      type: object
+      properties:
+        sessionToken:
+          type: string
+        expiresAt:
+          type: string
+          description: ISO 8601
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            phoneE164:
+              type: string
+            displayName:
+              type: string
+            email:
+              type:
+                - string
+                - "null"
+            phoneVerified:
+              type: boolean
+          required:
+            - id
+            - phoneE164
+            - displayName
+            - email
+            - phoneVerified
+          additionalProperties: false
+      required:
+        - sessionToken
+        - expiresAt
+        - user
+      additionalProperties: false
+    WalletOut:
+      type: object
+      properties:
+        hasShop:
+          type: boolean
+        shopName:
+          type:
+            - string
+            - "null"
+        balanceCents:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          description: centavos (MZN)
+        points:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        isPro:
+          type: boolean
+        proUntil:
+          anyOf:
+            - type: string
+              description: ISO 8601
+            - type: "null"
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              kind:
+                type: string
+              amountCents:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+                description: centavos (MZN)
+              points:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              description:
+                type: string
+              createdAt:
+                type: string
+                description: ISO 8601
+            required:
+              - id
+              - kind
+              - amountCents
+              - points
+              - description
+              - createdAt
+            additionalProperties: false
+      required:
+        - hasShop
+        - shopName
+        - balanceCents
+        - points
+        - isPro
+        - proUntil
+        - transactions
+      additionalProperties: false
+    CheckoutOut:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - paid
+            - failed
+            - expired
+            - review
+        purpose:
+          type: string
+        amountCents:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          description: centavos (MZN)
+        method:
+          type: string
+        gateway:
+          type: string
+        checkoutUrl:
+          type:
+            - string
+            - "null"
+        failureReason:
+          type:
+            - string
+            - "null"
+        createdAt:
+          type: string
+          description: ISO 8601
+        paidAt:
+          anyOf:
+            - type: string
+              description: ISO 8601
+            - type: "null"
+      required:
+        - id
+        - status
+        - purpose
+        - amountCents
+        - method
+        - gateway
+        - checkoutUrl
+        - failureReason
+        - createdAt
+        - paidAt
+      additionalProperties: false
+    RefundOut:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        amountCents:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+          description: centavos (MZN)
+        refundStatus:
+          anyOf:
+            - type: string
+              enum:
+                - pending
+                - refunded
+                - failed
+            - type: "null"
+        refundAmountCents:
+          anyOf:
+            - type: integer
+              minimum: -9007199254740991
+              maximum: 9007199254740991
+              description: centavos (MZN)
+            - type: "null"
+        refundReason:
+          type:
+            - string
+            - "null"
+        refundedAt:
+          anyOf:
+            - type: string
+              description: ISO 8601
+            - type: "null"
+      required:
+        - id
+        - status
+        - amountCents
+        - refundStatus
+        - refundAmountCents
+        - refundReason
+        - refundedAt
+      additionalProperties: false
+    ConversationListOut:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              counterpart:
+                type: string
+              productTitle:
+                type:
+                  - string
+                  - "null"
+              productSlug:
+                type:
+                  - string
+                  - "null"
+              lastMessage:
+                type:
+                  - string
+                  - "null"
+              lastMessageAt:
+                type: string
+                description: ISO 8601
+              unread:
+                type: integer
+                minimum: -9007199254740991
+                maximum: 9007199254740991
+              role:
+                type: string
+                enum:
+                  - buyer
+                  - seller
+            required:
+              - id
+              - counterpart
+              - productTitle
+              - productSlug
+              - lastMessage
+              - lastMessageAt
+              - unread
+              - role
+            additionalProperties: false
+        unread:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+      required:
+        - items
+        - unread
+      additionalProperties: false
+    ThreadOut:
+      type: object
+      properties:
+        counterpart:
+          type: string
+        productTitle:
+          type:
+            - string
+            - "null"
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              mine:
+                type: boolean
+              body:
+                type: string
+              createdAt:
+                type: string
+                description: ISO 8601
+            required:
+              - id
+              - mine
+              - body
+              - createdAt
+            additionalProperties: false
+      required:
+        - counterpart
+        - productTitle
+        - messages
+      additionalProperties: false
+    IdOut:
+      type: object
+      properties:
+        id:
+          type: string
+      required:
+        - id
+      additionalProperties: false
+    ListingCreatedOut:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+      required:
+        - id
+        - slug
+      additionalProperties: false
+    OkOut:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          const: true
+      required:
+        - ok
+      additionalProperties: false
