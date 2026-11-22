@@ -70,7 +70,7 @@ resource "aws_secretsmanager_secret" "admin_api_token" {
 resource "terraform_data" "put_database_url" {
   triggers_replace = [aws_secretsmanager_secret.database_url.arn, sha256(local.database_url)]
   provisioner "local-exec" {
-    command     = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string \"$VALUE\" >/dev/null"
+    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string \"$VALUE\" >/dev/null"
     environment = {
       REGION = var.region
       ID     = aws_secretsmanager_secret.database_url.arn
@@ -82,7 +82,7 @@ resource "terraform_data" "put_database_url" {
 resource "terraform_data" "put_admin_api_token" {
   triggers_replace = [aws_secretsmanager_secret.admin_api_token.arn, sha256(random_password.admin_api_token.result)]
   provisioner "local-exec" {
-    command     = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string \"$VALUE\" >/dev/null"
+    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string \"$VALUE\" >/dev/null"
     environment = {
       REGION = var.region
       ID     = aws_secretsmanager_secret.admin_api_token.arn
@@ -115,7 +115,7 @@ resource "terraform_data" "put_otp_placeholder" {
   count            = var.otp_dev_allowlist ? 1 : 0
   triggers_replace = [aws_secretsmanager_secret.otp_dev_allowlist[0].arn]
   provisioner "local-exec" {
-    command     = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string definir-numeros >/dev/null"
+    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string definir-numeros >/dev/null"
     environment = {
       REGION = var.region
       ID     = aws_secretsmanager_secret.otp_dev_allowlist[0].arn
