@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Inter, Ubuntu } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { PromoBar } from '../components/PromoBar';
@@ -16,14 +16,21 @@ import './ux.css';
 // and Ubuntu for headings/display (warmth + local character). next/font
 // self-hosts both (no runtime request to Google) and exposes them via CSS
 // variables that tokens.css maps to --font-sans / --font-display.
-const inter = Inter({
-  subsets: ['latin'],
+// Self-hosted from app/fonts (Fontsource, latin subset, which covers
+// Portuguese), so builds need no network access to Google Fonts (WEB-03).
+// Licences: app/fonts/LICENSE-*.txt.
+const inter = localFont({
+  src: './fonts/inter-latin-wght-normal.woff2',
+  weight: '100 900',
   display: 'swap',
   variable: '--font-inter',
 });
-const ubuntu = Ubuntu({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const ubuntu = localFont({
+  src: [
+    { path: './fonts/ubuntu-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/ubuntu-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/ubuntu-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-ubuntu',
 });
