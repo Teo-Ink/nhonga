@@ -84,3 +84,12 @@ describe('shared limits', () => {
     expect((await run(mw, req('POST', '/catalog/products', 't'))).passed).toBe(true);
   });
 });
+
+describe('limitScale', () => {
+  it('defaults to 1 and never lowers a limit', async () => {
+    const { limitScale } = await import('./shared-limit.js');
+    expect(limitScale(undefined)).toBe(1);
+    expect(limitScale('0.1')).toBe(1);
+    expect(limitScale('100')).toBe(100);
+  });
+});

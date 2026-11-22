@@ -13,6 +13,7 @@ test('sign in with a phone number and see the account', async ({ page }) => {
 test('publish a listing: sign in at the end, the draft survives', async ({ page }) => {
   const title = `Bicicleta de montanha ${Date.now() % 100000}`;
   await page.goto('/vender/novo');
+  await page.waitForLoadState('networkidle');
   await page.getByRole('textbox', { name: 'Título do produto' }).fill(title);
   await page.getByRole('combobox', { name: 'Categoria' }).selectOption({ label: 'Casa e Cozinha' });
   await page.getByRole('textbox', { name: 'Descrição' }).fill('Pouco usada, travões novos.');
@@ -23,7 +24,9 @@ test('publish a listing: sign in at the end, the draft survives', async ({ page 
 
   await signIn(page, freshPhone(), '/vender/novo');
   await expect(page.getByRole('textbox', { name: 'Título do produto' })).toHaveValue(title);
-  const shop = page.getByRole('textbox', { name: 'Nome da sua loja' });
+  // A first-time seller names the shop; wait until the page knows which case it is.
+  const shop = page.getByRole('textbox', { name: /Nome da sua loja/ });
+  await expect(shop.or(page.getByText(/A publicar como/))).toBeVisible();
   if (await shop.isVisible()) await shop.fill('Loja de Teste E2E');
   await page.getByRole('button', { name: /Publicar/ }).click();
   await page.waitForURL(/\/produto\//);
@@ -35,8 +38,18 @@ test('message a seller from a listing', async ({ page }) => {
   await signIn(page);
   await page.goto('/produto/nissan-almera-2013');
   await page.getByRole('link', { name: 'Enviar mensagem' }).first().click();
-  await page.getByPlaceholder(/Escreva a sua pergunta/).fill('Ainda está disponível?');
-  await page.getByRole('button', { name: 'Enviar mensagem' }).click();
+  // Type only once React has taken over the form, or the text is reset.
+  await page.waitForLoadState('networkidle');
+  const box = page.getByPlaceholder(/Escreva a sua pergunta/);
+  await box.fill('Ainda está disponível?');
+  await expect(box).toHaveValue('Ainda está disponível?');
+  const [sent] = await Promise.all([
+    page.waitForResponse(
+      (r) => r.url().endsWith('/api/conversations') && r.request().method() === 'POST',
+    ),
+    page.getByRole('button', { name: 'Enviar mensagem' }).click(),
+  ]);
+  expect(sent.status()).toBe(201);
   await page.waitForURL(/\/mensagens\/[0-9a-f-]{36}/);
   await expect(page.getByText('Ainda está disponível?')).toBeVisible();
   page.once('dialog', (d) => void d.accept());
