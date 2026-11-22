@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0A6B50" />
+  <title>Sem ligação — Nhonga</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100dvh; display: grid; place-items: center;
+      padding: 24px; text-align: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #0A6B50 0%, #083b28 100%); color: #fff;
+    }
+    .card { max-width: 380px; }
+    .logo { width: 72px; height: 72px; margin: 0 auto 20px; display: block; border-radius: 18px; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; }
+    p { margin: 0 0 24px; color: rgba(255,255,255,.85); line-height: 1.5; }
+    button {
+      appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 700;
+      background: #F5C518; color: #1a1a1a; padding: 14px 28px; border-radius: 999px;
+    }
+    button:active { transform: translateY(1px); }
+    small { display: block; margin-top: 20px; color: rgba(255,255,255,.6); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="/icons/icon-192.png" alt="Nhonga" />
+    <h1>Está sem ligação</h1>
+    <p>Não conseguimos carregar esta página. Verifique a sua internet e tente novamente — o Nhonga volta assim que houver rede.</p>
+    <button onclick="location.reload()">Tentar novamente</button>
+    <small>Nhonga — o mercado online de Moçambique</small>
+  </div>
+</body>
+</html>

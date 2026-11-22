@@ -40,10 +40,21 @@ export const vendor = pgTable(
      *  also used for information requests. */
     kycReason: text('kyc_reason'),
 
+    /** Paid "Loja Pro" subscription: the shop carries the verified selo and Pro
+     *  benefits while this is in the future. Set by the subscriptions module. */
+    proUntil: timestamp('pro_until', { withTimezone: true }),
+
     ratingAvg: numeric('rating_avg', { precision: 2, scale: 1 }),
     ratingCount: integer('rating_count').notNull().default(0),
     /** Drives the "responde em ~2h" trust signal on the product page. */
     medianResponseMinutes: integer('median_response_minutes'),
+
+    /** Classifieds contact channels. The seller can hide either one; a null
+     *  number simply means the channel is unavailable. E.164 (2588…). */
+    whatsapp: text('whatsapp'),
+    contactPhone: text('contact_phone'),
+    showWhatsapp: boolean('show_whatsapp').notNull().default(true),
+    showPhone: boolean('show_phone').notNull().default(true),
 
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
@@ -174,6 +185,35 @@ export const commissionRule = pgTable(
     check(
       'commission_rule_window_check',
       sql`${table.effectiveTo} is null or ${table.effectiveTo} > ${table.effectiveFrom}`,
+    ),
+  ],
+);
+
+/**
+ * A purchase of a "Loja Pro" subscription for a vendor (paid verified shop).
+ * Doubles as the receipt. Payment settles through the payments module; in mock
+ * mode it settles immediately and sets vendor.proUntil.
+ */
+export const vendorSubscription = pgTable(
+  'vendor_subscription',
+  {
+    id: uuid('id').primaryKey(),
+    vendorId: uuid('vendor_id')
+      .notNull()
+      .references(() => vendor.id, { onDelete: 'cascade' }),
+    planCode: text('plan_code').notNull(),
+    amountCents: bigint('amount_cents', { mode: 'number' }).notNull(),
+    paymentMethod: text('payment_method').notNull(),
+    status: text('status').notNull().default('pending'),
+    startsAt: timestamp('starts_at', { withTimezone: true }),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
+  },
+  (table) => [
+    index('vendor_subscription_vendor_idx').on(table.vendorId),
+    check(
+      'vendor_subscription_status_check',
+      sql`${table.status} in ('pending','active','failed')`,
     ),
   ],
 );

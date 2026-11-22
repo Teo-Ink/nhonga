@@ -4,7 +4,21 @@ import { validateEnv } from './config/config.schema.js';
 import { DatabaseModule } from './db/database.module.js';
 import { WebhooksModule } from './modules/payments/http/webhooks/webhooks.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
 import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
+import { AssistantModule } from './modules/assistant/assistant.module.js';
+import { PromotionsModule } from './modules/promotions/promotions.module.js';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.js';
+import { AlertsModule } from './modules/alerts/alerts.module.js';
+import { MediaModule } from './modules/media/media.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { MessagingModule } from './modules/messaging/messaging.module.js';
+import { FavoritesModule } from './modules/favorites/favorites.module.js';
+import { ReviewsModule } from './modules/reviews/reviews.module.js';
+import { AdsModule } from './modules/ads/ads.module.js';
+import { WalletModule } from './modules/wallet/wallet.module.js';
+import { BannersModule } from './modules/banners/banners.module.js';
+import { CheckoutModule } from './modules/checkout/checkout.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -17,8 +31,22 @@ import { HealthController } from './health/health.controller.js';
     }),
     DatabaseModule,
     CatalogModule,
+    AuthModule,
     PaymentsHttpModule,
     WebhooksModule,
+    AssistantModule,
+    PromotionsModule,
+    SubscriptionsModule,
+    AlertsModule,
+    MediaModule,
+    NotificationsModule,
+    MessagingModule,
+    FavoritesModule,
+    ReviewsModule,
+    AdsModule,
+    WalletModule,
+    BannersModule,
+    CheckoutModule,
   ],
   controllers: [HealthController],
 })

@@ -30,6 +30,9 @@ locals {
   https_on = var.certificate_arn != ""
 }
 
+# The public entry point of the platform: it must be internet-facing. Only the
+# listener ports are open (security-groups module), and tasks/RDS stay private.
+#trivy:ignore:AWS-0053
 resource "aws_lb" "this" {
   name               = local.name
   load_balancer_type = "application"
@@ -64,6 +67,10 @@ resource "aws_lb_target_group" "app" {
 }
 
 # HTTP listener: redirect to HTTPS when a certificate exists, otherwise forward.
+# Forwarding plain HTTP only happens without a certificate, i.e. staging before
+# the domain exists (OQ-1). Production cannot take that path: envs/production
+# refuses to apply without certificate_arn.
+#trivy:ignore:AWS-0054
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
   port              = 80

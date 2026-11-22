@@ -69,6 +69,11 @@ describe('catalog mappers', () => {
       titleEn: null,
       ratingAvg: null,
       ratingCount: 0,
+      postedAt: new Date('2026-01-02T00:00:00Z'),
+      featuredUntil: null,
+      categorySlug: 'viaturas',
+      categoryNamePt: 'Viaturas',
+      categoryNameEn: 'Vehicles',
       vendor: {
         id: 'x',
         slug: 'x',
@@ -76,14 +81,80 @@ describe('catalog mappers', () => {
         status: 'active',
         ratingAvg: null,
         ratingCount: 0,
+        location: 'Maputo Cidade',
       },
       variants: [v({ priceCents: 1200, stockQuantity: 2 })],
       primaryImage: null,
+      bannerId: null,
     };
     const item = toListItem(input, 'pt');
     expect(item.freeDelivery).toBe(false);
     expect(item.priceCents).toBe(1200);
     expect(item.inStock).toBe(true);
+    expect(item.location).toBe('Maputo Cidade');
+    expect(item.postedAt).toBe('2026-01-02T00:00:00.000Z');
     expect(item.vendor.isVerified).toBe(true);
+    expect(item.featured).toBe(false);
+  });
+
+  it('maps the listing category, localized (PT-first, EN when asked)', () => {
+    const input: ListItemInput = {
+      id: 'p',
+      slug: 'p',
+      titlePt: 'P',
+      titleEn: 'P',
+      ratingAvg: null,
+      ratingCount: 0,
+      postedAt: null,
+      featuredUntil: null,
+      categorySlug: 'viaturas',
+      categoryNamePt: 'Viaturas',
+      categoryNameEn: 'Vehicles',
+      vendor: {
+        id: 'x',
+        slug: 'x',
+        displayName: 'Loja',
+        status: 'active',
+        ratingAvg: null,
+        ratingCount: 0,
+        location: null,
+      },
+      variants: [v({ priceCents: 1000, stockQuantity: 1 })],
+      primaryImage: null,
+      bannerId: null,
+    };
+    expect(toListItem(input, 'pt').category).toEqual({ slug: 'viaturas', name: 'Viaturas' });
+    expect(toListItem(input, 'en').category).toEqual({ slug: 'viaturas', name: 'Vehicles' });
+  });
+
+  it('marks a listing featured only while featuredUntil is in the future', () => {
+    const base = {
+      id: 'p',
+      slug: 'p',
+      titlePt: 'P',
+      titleEn: null,
+      ratingAvg: null,
+      ratingCount: 0,
+      postedAt: null,
+      categorySlug: 'moda',
+      categoryNamePt: 'Moda',
+      categoryNameEn: 'Fashion',
+      vendor: {
+        id: 'x',
+        slug: 'x',
+        displayName: 'Loja',
+        status: 'active',
+        ratingAvg: null,
+        ratingCount: 0,
+        location: null,
+      },
+      variants: [v({ priceCents: 1000, stockQuantity: 1 })],
+      primaryImage: null,
+      bannerId: null,
+    };
+    const future = toListItem({ ...base, featuredUntil: new Date(Date.now() + 60_000) }, 'pt');
+    const past = toListItem({ ...base, featuredUntil: new Date(Date.now() - 60_000) }, 'pt');
+    expect(future.featured).toBe(true);
+    expect(past.featured).toBe(false);
   });
 });

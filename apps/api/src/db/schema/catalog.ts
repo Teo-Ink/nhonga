@@ -99,6 +99,18 @@ export const product = pgTable(
     /** Denormalised from review, maintained by a worker. */
     ratingAvg: numeric('rating_avg', { precision: 2, scale: 1 }),
     ratingCount: integer('rating_count').notNull().default(0),
+    /** Classifieds engagement counters (views, WhatsApp/phone contacts, shares).
+     *  Incremented per event; per-week breakdowns come later from an events table. */
+    viewCount: integer('view_count').notNull().default(0),
+    contactCount: integer('contact_count').notNull().default(0),
+    shareCount: integer('share_count').notNull().default(0),
+    /** Paid visibility: featured until this time (null or past = not featured);
+     *  bumpedAt is the last "subir para o topo" time. Both drive search order. */
+    featuredUntil: timestamp('featured_until', { withTimezone: true }),
+    bumpedAt: timestamp('bumped_at', { withTimezone: true }),
+    /** Applied AI banner (listing_banner.id). The FK is declared in the
+     *  migration, not here, to avoid a schema import cycle with banners.ts. */
+    bannerId: uuid('banner_id'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
@@ -112,7 +124,7 @@ export const product = pgTable(
     index('product_attributes_gin').using('gin', table.attributes),
     check(
       'product_status_check',
-      sql`${table.status} in ('draft','pending_review','active','suspended','archived')`,
+      sql`${table.status} in ('draft','pending_review','active','suspended','archived','sold')`,
     ),
     check('product_weight_check', sql`${table.weightGrams} is null or ${table.weightGrams} > 0`),
   ],

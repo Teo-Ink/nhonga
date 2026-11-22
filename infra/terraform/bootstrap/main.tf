@@ -30,6 +30,10 @@ resource "aws_s3_bucket_versioning" "tfstate" {
   }
 }
 
+# Encrypted at rest with S3-managed keys, versioned, private and TLS-only.
+# A customer-managed KMS key is a planned follow-up: the bucket already exists,
+# so switching keys is a deliberate change to live state storage.
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
   bucket = aws_s3_bucket.tfstate.id
   rule {

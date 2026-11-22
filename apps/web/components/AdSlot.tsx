@@ -1,0 +1,95 @@
+import { getAd } from '../lib/api';
+import type { Dictionary } from '../lib/i18n/index';
+
+// A labelled advertising slot — the display-ad side of the classifieds revenue
+// model (leaderboard banner, in-feed unit, side rectangle), alongside the
+// seller-paid "destaque/turbo" boosts.
+//
+// It serves a real booked campaign when one is live for the slot/category
+// (counting an impression); otherwise it falls back to a HOUSE ad promoting
+// Nhonga's own features or inviting a business to advertise. Always labelled
+// "Publicidade" so it is never mistaken for a listing.
+type Placement = 'leaderboard' | 'mpu' | 'inline';
+type Variant = 'advertise' | 'promote' | 'sell';
+
+// Which house promo each placement carries by default, and where it links.
+const PROMO: Record<Placement, { kind: Variant; href: string }> = {
+  leaderboard: { kind: 'advertise', href: '/anunciar' },
+  mpu: { kind: 'promote', href: '/vender/promover' },
+  inline: { kind: 'promote', href: '/vender/promover' },
+};
+const HREF: Record<Variant, string> = {
+  advertise: '/anunciar',
+  promote: '/vender/promover',
+  sell: '/vender/novo',
+};
+
+export async function AdSlot({
+  t,
+  placement,
+  variant,
+  category,
+  houseOnly,
+}: {
+  t: Dictionary;
+  placement: Placement;
+  /** Overrides the default house promo for this placement (e.g. a second MPU). */
+  variant?: Variant;
+  /** Category context for ad targeting (results/category pages). */
+  category?: string;
+  /** Skip serving a booked campaign — always show the house promo (avoids two
+   *  identical ads when a rail has more slots than live campaigns). */
+  houseOnly?: boolean;
+}) {
+  const ad = houseOnly ? null : await getAd(placement, category);
+
+  return (
+    <aside className={`spotbox spotbox--${placement}`} aria-label={t.ads.label}>
+      <span className="spotbox__label">{t.ads.label}</span>
+      {ad ? (
+        // The creative is a CSS background image, not an <img>: it has no load-
+        // state management, lazy-unload or next/image involvement, so it renders
+        // immediately and never "disappears".
+        <a
+          className="spotbox__media"
+          href={`/api/spot/${ad.id}/click`}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          aria-label={ad.headline ?? ad.advertiser}
+          style={{ backgroundImage: `url("${ad.imageUrl.replace(/["\\]/g, encodeURIComponent)}")` }}
+        >
+          <span className="spotbox__adscrim" aria-hidden="true" />
+          <span className="spotbox__adtext">
+            <strong className="spotbox__adname">{ad.advertiser}</strong>
+            {ad.headline ? <span className="spotbox__adhead">{ad.headline}</span> : null}
+          </span>
+        </a>
+      ) : (
+        <HousePromo t={t} placement={placement} variant={variant} />
+      )}
+    </aside>
+  );
+}
+
+function HousePromo({
+  t,
+  placement,
+  variant,
+}: {
+  t: Dictionary;
+  placement: Placement;
+  variant?: Variant;
+}) {
+  const kind = variant ?? PROMO[placement].kind;
+  const href = variant ? HREF[variant] : PROMO[placement].href;
+  const ad = t.ads[kind];
+  return (
+    <a className="spotbox__promo" href={href}>
+      <span className="spotbox__text">
+        <strong className="spotbox__title">{ad.title}</strong>
+        <span className="spotbox__body">{ad.body}</span>
+      </span>
+      <span className="spotbox__cta">{ad.cta} →</span>
+    </a>
+  );
+}

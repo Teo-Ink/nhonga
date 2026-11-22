@@ -1,591 +1,426 @@
-/**
- * Checkout.
- *
- * The single most important code path in the system. It turns a cart into an order, reserves
- * stock, and initiates payment — and it is the place where getting concurrency or transaction
- * boundaries wrong costs real money.
- *
- * Three decisions are load-bearing, and each is enforced here rather than merely documented:
- *
- *   1. **One database transaction** covers stock validation, stock reservation, order creation,
- *      payment creation, and the outbox write. Either all of it happened or none of it did.
- *
- *   2. **The provider call happens after that transaction commits.** Holding row locks across a
- *      network call to Vodacom would pin them for the duration of an unpredictable external
- *      request — the classic way to take down a database under load.
- *
- *   3. **Stock is reserved at order creation, not at payment confirmation.** Reserving on
- *      creation can strand stock when payment fails; reserving on confirmation oversells.
- *      Overselling is worse — it breaks a promise already made to a buyer. Stranded stock is
- *      released by a worker when the payment reaches FAILED or EXPIRED.
- *
- * See docs/phase-2-architecture/01-system-architecture.md §3.
- */
-
-import type { Db, Tx } from '../../db/types.js';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+  UnauthorizedException,
+  type OnModuleDestroy,
+  type OnModuleInit,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import {
-  cents,
-  computeCartTotals,
-  distributeDiscount,
-  normaliseMzMsisdn,
-  type CartLine,
-  type Cents,
-} from '@nhonga/shared';
-import { product, productVariant, stockLedger } from '../../db/schema/catalog.js';
-import {
-  order as orderTable,
-  orderItem,
-  payment as paymentTable,
-  subOrder as subOrderTable,
-  type AddressSnapshot,
-  type ProductSnapshot,
-} from '../../db/schema/commerce.js';
-import { address as addressTable, district, province } from '../../db/schema/identity.js';
-import { vendor as vendorTable } from '../../db/schema/vendors.js';
-import { outbox } from '../../db/schema/platform.js';
-import type { PaymentProvider, ProviderId } from '../payments/payment-provider.interface.js';
+import { and, eq, inArray, lt, sql } from 'drizzle-orm';
+import { DB } from '../../db/database.module.js';
+import type { Db } from '../../db/types.js';
+import { checkoutIntent } from '../../db/schema/checkout.js';
+import { wallet, walletTransaction } from '../../db/schema/wallet.js';
+import { MAX_TOPUP_CENTS, WalletService, packageById } from '../wallet/wallet.service.js';
+import { creditFor } from './checkout.credit.js';
 
-export type CheckoutErrorCode =
-  | 'cart_empty'
-  | 'address_not_found'
-  | 'insufficient_stock'
-  | 'price_changed'
-  | 'total_mismatch'
-  | 'vendor_unavailable'
-  | 'variant_unavailable'
-  | 'invalid_msisdn'
-  | 'provider_unavailable';
+export { creditFor };
+import { buildCheckoutSetup, type CheckoutSetup } from './checkout.config.js';
+import {
+  GatewayUnavailableError,
+  PAY_METHODS,
+  type CheckoutGateway,
+  type FetchLike,
+  type GatewayId,
+  type PayMethod,
+} from './checkout.types.js';
 
-export class CheckoutError extends Error {
-  readonly code: CheckoutErrorCode;
-  /** Already localised and safe to show the buyer. */
-  readonly userMessage: string;
-  readonly details: Readonly<Record<string, unknown>>;
+export const CHECKOUT_SETUP = Symbol('CHECKOUT_SETUP');
+
+/** Unpaid intents give up after this long (PawaPay's page itself lasts 15 min). */
+export const INTENT_TTL_MS = 30 * 60_000;
+const MIN_TOPUP_CENTS = 1_000; // 10 MT
+const MAX_OPEN_PER_VENDOR = 5;
+const SWEEP_EVERY_MS = 60_000;
+
+export interface CheckoutView {
+  id: string;
+  status: 'pending' | 'paid' | 'failed' | 'expired' | 'review';
+  purpose: string;
+  amountCents: number;
+  method: string;
+  gateway: string;
+  checkoutUrl: string | null;
+  failureReason: string | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+type Intent = typeof checkoutIntent.$inferSelect;
+
+export function checkoutSetupFromEnv(): CheckoutSetup {
+  return buildCheckoutSetup(process.env, fetch as unknown as FetchLike);
+}
+
+/**
+ * Hosted checkout: create a payment at the gateway, send the buyer to its page,
+ * and credit the wallet exactly once when the gateway confirms.
+ *
+ * - Webhooks are hints; the outcome always comes from the gateway's status API.
+ * - Settlement is a single conditional UPDATE (pending/expired → paid) in the
+ *   same transaction as the wallet credit, so a webhook, a poll and the sweep
+ *   racing each other still credit once.
+ * - A paid amount that differs from the intent goes to 'review', not the wallet.
+ * - If the primary gateway is unreachable (network/5xx), the backup is tried.
+ */
+@Injectable()
+export class CheckoutService implements OnModuleInit, OnModuleDestroy {
+  private readonly log = new Logger('Checkout');
+  private sweepTimer: NodeJS.Timeout | null = null;
 
   constructor(
-    code: CheckoutErrorCode,
-    userMessage: string,
-    details: Readonly<Record<string, unknown>> = {},
-  ) {
-    super(`${code}: ${userMessage}`);
-    this.name = 'CheckoutError';
-    this.code = code;
-    this.userMessage = userMessage;
-    this.details = details;
-  }
-}
+    @Inject(DB) private readonly db: Db,
+    private readonly wallets: WalletService,
+    @Inject(CHECKOUT_SETUP) private readonly setup: CheckoutSetup,
+  ) {}
 
-export interface CheckoutRequest {
-  readonly userId: string;
-  readonly cartLines: readonly CartCandidate[];
-  readonly addressId: string;
-  readonly deliveryMethod: 'marketplace' | 'vendor' | 'pickup';
-  readonly paymentProvider: ProviderId;
-  readonly paymentMsisdn: string | null;
-  /** What the buyer was shown. If the server no longer agrees, we refuse rather than silently
-   *  charging a different amount than the one on their screen. */
-  readonly expectedTotalCents: Cents;
-  readonly idempotencyKey: string;
-}
-
-/** A cart line as read from the cart module, before validation against live catalogue state. */
-export interface CartCandidate {
-  readonly cartItemId: string;
-  readonly variantId: string;
-  readonly quantity: number;
-}
-
-export interface CheckoutResult {
-  readonly orderId: string;
-  readonly orderNumber: string;
-  readonly paymentId: string;
-  readonly paymentStatus: 'awaiting_user' | 'failed';
-  readonly providerTxId: string | null;
-  readonly expiresAt: Date;
-  readonly failure: {
-    readonly code: string;
-    readonly message: string;
-    readonly retryable: boolean;
-  } | null;
-}
-
-export interface ShippingQuoter {
-  /** Per-vendor delivery fee and window for a district. Keys strictly off district — free text
-   *  never enters a calculation (D-10). */
-  quote(input: {
-    readonly vendorId: string;
-    readonly districtId: string;
-    readonly method: 'marketplace' | 'vendor' | 'pickup';
-    readonly weightGrams: number;
-    readonly itemsTotalCents: Cents;
-  }): Promise<{ feeCents: Cents; minDays: number; maxDays: number }>;
-}
-
-export interface OrderNumberGenerator {
-  next(): Promise<string>;
-}
-
-/** Narrow surface so this service can be unit-tested without a database. */
-export interface CheckoutDeps {
-  readonly db: Db;
-  readonly shipping: ShippingQuoter;
-  readonly orderNumbers: OrderNumberGenerator;
-  readonly providers: ReadonlyMap<ProviderId, PaymentProvider>;
-  readonly approvalTimeoutSeconds: number;
-  readonly lateSweepHours: number;
-  /**
-   * Envelope encryption for PII columns, backed by KMS.
-   *
-   * A required dependency rather than an importable helper with a default, specifically so it
-   * cannot ship as a silent no-op — a stubbed encryptor that returns its input would look
-   * correct in review and store plaintext MSISDNs in production.
-   */
-  readonly encryptField: (plaintext: string) => string;
-  /** Schedules reconciliation immediately at order creation, so resolution never depends on the
-   *  webhook arriving, on the client staying connected, or on the user returning (D-23). */
-  readonly scheduleReconciliation: (paymentId: string) => Promise<void>;
-}
-
-interface ValidatedLine {
-  readonly cartItemId: string;
-  readonly variantId: string;
-  readonly productId: string;
-  readonly vendorId: string;
-  readonly vendorName: string;
-  readonly quantity: number;
-  readonly unitPriceCents: Cents;
-  readonly weightGrams: number;
-  readonly snapshot: ProductSnapshot;
-}
-
-export class CheckoutService {
-  private readonly deps: CheckoutDeps;
-
-  constructor(deps: CheckoutDeps) {
-    this.deps = deps;
+  onModuleInit(): void {
+    this.log.log(`mode=${this.setup.mode} gateways=${this.setup.chain.map((g) => g.id).join('→')}`);
+    this.sweepTimer = setInterval(() => void this.sweep(), SWEEP_EVERY_MS);
+    this.sweepTimer.unref();
   }
 
-  async placeOrder(request: CheckoutRequest): Promise<CheckoutResult> {
-    if (request.cartLines.length === 0) {
-      throw new CheckoutError('cart_empty', 'O seu carrinho está vazio.');
+  onModuleDestroy(): void {
+    if (this.sweepTimer) clearInterval(this.sweepTimer);
+  }
+
+  /** Which wallets can be offered right now (for the method picker). */
+  methods(): { mode: string; methods: PayMethod[] } {
+    const set = new Set<PayMethod>();
+    for (const g of this.setup.chain) for (const m of g.methods) set.add(m);
+    return { mode: this.setup.mode, methods: PAY_METHODS.filter((m) => set.has(m)) };
+  }
+
+  async startTopup(
+    token: string | null,
+    amountCents: number,
+    method: string,
+  ): Promise<CheckoutView> {
+    if (!token) throw new UnauthorizedException('Inicia sessão para carregar a carteira.');
+    const shop = await this.wallets.requireShop(token);
+    const amount = Math.round(amountCents);
+    if (!Number.isFinite(amount) || amount < MIN_TOPUP_CENTS || amount > MAX_TOPUP_CENTS) {
+      throw new BadRequestException('Montante inválido (mínimo 10 MT, máximo 100 000 MT).');
+    }
+    return this.start(shop.id, 'wallet_topup', amount, method, {}, 'Carregamento Nhonga');
+  }
+
+  /** Buy a wallet package (balance + bonus + points), credited once paid. */
+  async startPackage(
+    token: string | null,
+    packageId: string,
+    method: string,
+  ): Promise<CheckoutView> {
+    if (!token) throw new UnauthorizedException('Inicia sessão para comprar um pacote.');
+    const shop = await this.wallets.requireShop(token);
+    const pkg = packageById(packageId);
+    if (!pkg) throw new BadRequestException('Pacote inválido.');
+    return this.start(
+      shop.id,
+      'wallet_package',
+      pkg.priceCents,
+      method,
+      { packageId: pkg.id },
+      pkg.name,
+    );
+  }
+
+  private async start(
+    vendorId: string,
+    purpose: 'wallet_topup' | 'wallet_package',
+    amount: number,
+    method: string,
+    payload: Record<string, unknown>,
+    description: string,
+  ): Promise<CheckoutView> {
+    if (!PAY_METHODS.includes(method as PayMethod)) {
+      throw new BadRequestException('Método de pagamento inválido.');
+    }
+    const payMethod = method as PayMethod;
+    const candidates = this.setup.chain.filter((g) => g.methods.includes(payMethod));
+    if (candidates.length === 0) {
+      throw new BadRequestException('Esse método de pagamento ainda não está disponível.');
     }
 
-    const provider = this.deps.providers.get(request.paymentProvider);
-    if (provider === undefined) {
-      throw new CheckoutError(
-        'provider_unavailable',
-        'Este método de pagamento não está disponível de momento.',
-        { provider: request.paymentProvider },
+    const open = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(checkoutIntent)
+      .where(
+        and(
+          eq(checkoutIntent.vendorId, vendorId),
+          eq(checkoutIntent.status, 'pending'),
+          sql`${checkoutIntent.createdAt} > now() - interval '30 minutes'`,
+        ),
+      );
+    if ((open[0]?.n ?? 0) >= MAX_OPEN_PER_VENDOR) {
+      throw new BadRequestException(
+        'Tens pagamentos por concluir. Termina-os ou espera alguns minutos.',
       );
     }
 
-    const payerMsisdn = this.resolvePayerMsisdn(request, provider);
-
-    // ── Phase 1: everything that must be atomic ──────────────────────────────
-    const prepared = await this.deps.db.transaction(async (tx: Tx) =>
-      this.prepareOrder(tx, request, payerMsisdn),
-    );
-
-    // ── Phase 2: the external call, deliberately outside the transaction ─────
-    const requested = await provider.requestPayment({
-      paymentId: prepared.paymentId,
-      idempotencyKey: request.idempotencyKey,
-      amountCents: prepared.grandTotalCents,
-      currency: 'MZN',
-      payerMsisdn,
-      reference: prepared.providerRef,
-      description: `Pedido #${prepared.orderNumber}`,
+    const id = randomUUID();
+    const first = candidates[0] as CheckoutGateway;
+    await this.db.insert(checkoutIntent).values({
+      id,
+      purpose,
+      vendorId,
+      payload,
+      amountCents: amount,
+      method: payMethod,
+      gateway: first.id,
     });
 
-    if (requested.outcome === 'rejected') {
-      // The order exists and stock is reserved. The buyer can retry or switch rails; a worker
-      // releases the stock if they do neither. We do not roll the order back here — a vanished
-      // order is far more alarming to a buyer than a failed payment they can retry.
-      await this.markPaymentFailed(prepared.paymentId, requested.code, requested.message);
-      return {
-        orderId: prepared.orderId,
-        orderNumber: prepared.orderNumber,
-        paymentId: prepared.paymentId,
-        paymentStatus: 'failed',
-        providerTxId: null,
-        expiresAt: prepared.expiresAt,
-        failure: {
-          code: requested.code,
-          message: requested.message,
-          retryable: requested.retryable,
-        },
-      };
+    let lastError: unknown = null;
+    for (const gw of candidates) {
+      try {
+        const created = await gw.create({
+          intentId: id,
+          amountCents: amount,
+          method: payMethod,
+          description,
+          returnUrl: `${this.setup.publicWebUrl}/pagamento/${id}`,
+          webhookUrl: `${this.setup.publicApiUrl}/checkout/webhooks/${gw.id}`,
+        });
+        const [row] = await this.db
+          .update(checkoutIntent)
+          .set({
+            gateway: gw.id,
+            gatewayRef: created.gatewayRef,
+            checkoutUrl: created.checkoutUrl,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(checkoutIntent.id, id))
+          .returning();
+        if (gw !== first) this.log.warn(`intent ${id}: ${first.id} unavailable, used ${gw.id}`);
+        return view(row as Intent);
+      } catch (e) {
+        lastError = e;
+        if (e instanceof GatewayUnavailableError) {
+          this.log.warn(`intent ${id}: ${e.message}; trying next gateway`);
+          continue;
+        }
+        break; // a rejected request would be rejected by the backup too
+      }
     }
-
-    await this.markPaymentAwaiting(prepared.paymentId, requested.providerTxId, requested.expiresAt);
-    await this.deps.scheduleReconciliation(prepared.paymentId);
-
-    return {
-      orderId: prepared.orderId,
-      orderNumber: prepared.orderNumber,
-      paymentId: prepared.paymentId,
-      paymentStatus: 'awaiting_user',
-      providerTxId: requested.providerTxId,
-      expiresAt: requested.expiresAt,
-      failure: null,
-    };
+    await this.db
+      .update(checkoutIntent)
+      .set({ status: 'failed', failureReason: errText(lastError), updatedAt: sql`now()` })
+      .where(eq(checkoutIntent.id, id));
+    this.log.error(`intent ${id}: could not start payment: ${errText(lastError)}`);
+    throw new ServiceUnavailableException(
+      'Não foi possível iniciar o pagamento agora. Tenta de novo dentro de instantes.',
+    );
   }
 
-  // ── internals ──────────────────────────────────────────────────────────────
-
-  private resolvePayerMsisdn(request: CheckoutRequest, provider: PaymentProvider): string {
-    if (!provider.capabilities.requiresUserApproval) {
-      // COD: nothing is pushed to a handset, but we still record a contact number.
-      return request.paymentMsisdn ?? '';
-    }
-    const raw = request.paymentMsisdn;
-    if (raw === null || raw === '') {
-      throw new CheckoutError('invalid_msisdn', 'Indique o número de telemóvel para o pagamento.');
-    }
-    const normalised = normaliseMzMsisdn(raw);
-    if (normalised === null) {
-      throw new CheckoutError('invalid_msisdn', 'O número deve ter 9 dígitos e começar por 8.', {
-        provided: raw,
-      });
-    }
-    return normalised;
+  /** The caller's own intent, refreshed from the gateway while still pending. */
+  async get(token: string | null, id: string): Promise<CheckoutView> {
+    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    const shop = await this.wallets.requireShop(token);
+    const intent = await this.find(id);
+    if (!intent || intent.vendorId !== shop.id)
+      throw new NotFoundException('Pagamento não encontrado.');
+    return view(intent.status === 'pending' ? await this.refresh(intent) : intent);
   }
 
   /**
-   * The atomic part.
-   *
-   * Runs inside `db.transaction`. Every failure here rolls back cleanly, which is why stock can
-   * be decremented before we know whether the provider will accept the request.
+   * Gateway callback. Returns 'ok' for anything we could act on or safely
+   * ignore (unknown refs, already settled), so gateways stop retrying; throws
+   * 401 on a bad signature.
    */
-  private async prepareOrder(tx: Tx, request: CheckoutRequest, payerMsisdn: string) {
-    const deliveryAddress = await this.loadAddress(tx, request.userId, request.addressId);
-
-    const validated = await this.lockAndValidate(tx, request.cartLines);
-
-    const cartLines: CartLine[] = validated.map((line) => ({
-      lineId: line.cartItemId,
-      vendorId: line.vendorId,
-      unitPriceCents: line.unitPriceCents,
-      quantity: line.quantity,
-    }));
-
-    // Provisional totals, so shipping can be quoted per vendor against real subtotals.
-    const provisional = computeCartTotals(cartLines);
-
-    const shippingQuotes = new Map<string, { feeCents: Cents; minDays: number; maxDays: number }>();
-    for (const group of provisional.groups) {
-      const weightGrams = validated
-        .filter((line) => line.vendorId === group.vendorId)
-        .reduce((total, line) => total + line.weightGrams * line.quantity, 0);
-
-      const quote = await this.deps.shipping.quote({
-        vendorId: group.vendorId,
-        districtId: deliveryAddress.districtId,
-        method: request.deliveryMethod,
-        weightGrams,
-        itemsTotalCents: group.itemsTotalCents,
-      });
-      shippingQuotes.set(group.vendorId, quote);
+  async handleWebhook(
+    gatewayId: string,
+    headers: Readonly<Record<string, string | undefined>>,
+    rawBody: string,
+  ): Promise<'ok'> {
+    const gw = this.setup.byId.get(gatewayId as GatewayId);
+    if (!gw) throw new NotFoundException();
+    const parsed = gw.parseWebhook({ headers, rawBody });
+    if (!parsed.valid) {
+      this.log.warn(`webhook ${gatewayId}: ${parsed.reason}`);
+      if (parsed.reason === 'bad_signature') throw new UnauthorizedException();
+      return 'ok';
     }
-
-    const totals = computeCartTotals(
-      cartLines,
-      Array.from(shippingQuotes.entries()).map(([vendorId, quote]) => ({
-        vendorId,
-        feeCents: quote.feeCents,
-      })),
-    );
-
-    // The buyer is charged what the buyer was shown, or nothing at all.
-    if (totals.grandTotalCents !== request.expectedTotalCents) {
-      throw new CheckoutError(
-        'total_mismatch',
-        'O total mudou desde que viu o resumo. Verifique e tente novamente.',
-        { shown: request.expectedTotalCents, actual: totals.grandTotalCents },
-      );
+    const intent = (
+      await this.db
+        .select()
+        .from(checkoutIntent)
+        .where(
+          and(eq(checkoutIntent.gateway, gw.id), eq(checkoutIntent.gatewayRef, parsed.gatewayRef)),
+        )
+        .limit(1)
+    )[0];
+    if (!intent) {
+      this.log.warn(`webhook ${gatewayId}: unknown ref ${parsed.gatewayRef}`);
+      return 'ok';
     }
+    // A late payment on an expired intent still has to be credited.
+    if (intent.status === 'pending' || intent.status === 'expired')
+      await this.refresh(intent, true);
+    return 'ok';
+  }
 
-    const discountShares = distributeDiscount(totals.discountCents, cartLines);
+  /** Dev simulator: approve or decline a mock payment (mock mode only). */
+  async mockDecide(
+    token: string | null,
+    id: string,
+    outcome: 'paid' | 'failed',
+  ): Promise<CheckoutView> {
+    if (!this.setup.mock) throw new ForbiddenException('Simulador indisponível.');
+    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    const shop = await this.wallets.requireShop(token);
+    const intent = await this.find(id);
+    if (!intent || intent.vendorId !== shop.id || !intent.gatewayRef) {
+      throw new NotFoundException('Pagamento não encontrado.');
+    }
+    this.setup.mock.decide(intent.gatewayRef, outcome);
+    return view(intent.status === 'pending' ? await this.refresh(intent) : intent);
+  }
 
-    const orderId = randomUUID();
-    const orderNumber = await this.deps.orderNumbers.next();
-    const paymentId = randomUUID();
-    const providerRef = `NHONGA-${orderNumber}`;
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + this.deps.approvalTimeoutSeconds * 1000);
+  /** Reconcile pending intents whose callback we may have missed. */
+  async sweep(): Promise<number> {
+    let n = 0;
+    try {
+      const rows = await this.db
+        .select()
+        .from(checkoutIntent)
+        .where(
+          and(
+            eq(checkoutIntent.status, 'pending'),
+            lt(checkoutIntent.createdAt, sql`now() - interval '1 minute'`),
+          ),
+        )
+        .orderBy(checkoutIntent.createdAt)
+        .limit(50);
+      for (const r of rows) {
+        await this.refresh(r).catch((e) => this.log.warn(`sweep ${r.id}: ${errText(e)}`));
+        n++;
+      }
+    } catch (e) {
+      this.log.warn(`sweep failed: ${errText(e)}`);
+    }
+    return n;
+  }
 
-    await tx.insert(orderTable).values({
-      id: orderId,
-      orderNumber,
-      userId: request.userId,
-      addressId: deliveryAddress.id,
-      addressSnapshot: deliveryAddress.snapshot,
-      itemsTotalCents: totals.itemsTotalCents,
-      shippingTotalCents: totals.shippingTotalCents,
-      paymentFeeCents: totals.paymentFeeCents,
-      discountCents: totals.discountCents,
-      grandTotalCents: totals.grandTotalCents,
-      currency: 'MZN',
-      placedAt: now,
-    });
+  private async find(id: string): Promise<Intent | undefined> {
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return undefined;
+    return (
+      await this.db.select().from(checkoutIntent).where(eq(checkoutIntent.id, id)).limit(1)
+    )[0];
+  }
 
-    let suffixIndex = 0;
-    for (const group of totals.groups) {
-      const quote = shippingQuotes.get(group.vendorId);
-      const subOrderId = randomUUID();
-      const suffix = String.fromCharCode(65 + suffixIndex); // A, B, C…
-      suffixIndex += 1;
+  /** Ask the gateway, then settle / fail / expire. Never throws on gateway outages. */
+  private async refresh(intent: Intent, allowExpired = false): Promise<Intent> {
+    const gw = this.setup.byId.get(intent.gateway as GatewayId);
+    const expired = Date.now() - intent.createdAt.getTime() > INTENT_TTL_MS;
+    if (!gw || !intent.gatewayRef) {
+      return expired ? this.transition(intent, 'expired', 'Sem resposta do gateway') : intent;
+    }
+    let s;
+    try {
+      s = await gw.status(intent.gatewayRef, intent.createdAt);
+    } catch (e) {
+      this.log.warn(`status ${intent.id}: ${errText(e)}`);
+      return intent; // try again on the next poll / sweep
+    }
+    if (s.status === 'paid') {
+      return this.settle(intent, s.amountCents, allowExpired);
+    }
+    if (s.status === 'failed') return this.transition(intent, 'failed', s.failureReason);
+    return expired ? this.transition(intent, 'expired', 'Tempo esgotado') : intent;
+  }
 
-      await tx.insert(subOrderTable).values({
-        id: subOrderId,
-        orderId,
-        vendorId: group.vendorId,
-        subOrderNumber: `${orderNumber}-${suffix}`,
-        status: 'awaiting_payment',
-        itemsTotalCents: group.itemsTotalCents,
-        shippingCents: group.shippingCents,
-        deliveryMethod: request.deliveryMethod,
-        estimatedMinDays: quote?.minDays ?? null,
-        estimatedMaxDays: quote?.maxDays ?? null,
-      });
+  private async transition(
+    intent: Intent,
+    to: 'failed' | 'expired',
+    reason: string | null,
+  ): Promise<Intent> {
+    const [row] = await this.db
+      .update(checkoutIntent)
+      .set({ status: to, failureReason: reason, updatedAt: sql`now()` })
+      .where(and(eq(checkoutIntent.id, intent.id), eq(checkoutIntent.status, 'pending')))
+      .returning();
+    return row ?? ((await this.find(intent.id)) as Intent);
+  }
 
-      for (const line of validated.filter((candidate) => candidate.vendorId === group.vendorId)) {
-        await tx.insert(orderItem).values({
-          id: randomUUID(),
-          subOrderId,
-          variantId: line.variantId,
-          productSnapshot: line.snapshot,
-          unitPriceCents: line.unitPriceCents,
-          quantity: line.quantity,
-          lineTotalCents: cents(line.unitPriceCents * line.quantity),
-          discountCents: discountShares.get(line.cartItemId) ?? 0,
+  /** Exactly-once credit: the status flip and the wallet credit commit together. */
+  private async settle(
+    intent: Intent,
+    paidCents: number | null,
+    allowExpired: boolean,
+  ): Promise<Intent> {
+    const amountOk = paidCents === null || paidCents === Number(intent.amountCents);
+    // A paid intent we cannot map to a credit (unknown package) is never
+    // silently swallowed: it goes to review like an amount mismatch.
+    const credit = creditFor(intent);
+    const ok = amountOk && credit !== null;
+    const reason = !amountOk
+      ? `Montante recebido ${paidCents} ≠ ${intent.amountCents}`
+      : credit === null
+        ? 'Pagamento recebido sem crédito associado'
+        : null;
+    const from = allowExpired ? ['pending', 'expired'] : ['pending'];
+    const row = await this.db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(checkoutIntent)
+        .set({
+          status: ok ? 'paid' : 'review',
+          paidAt: sql`now()`,
+          failureReason: reason,
+          updatedAt: sql`now()`,
+        })
+        .where(and(eq(checkoutIntent.id, intent.id), inArray(checkoutIntent.status, from)))
+        .returning();
+      if (!updated) return null; // someone else settled it first
+      if (ok && credit && updated.vendorId) {
+        await tx.insert(wallet).values({ vendorId: updated.vendorId }).onConflictDoNothing();
+        await tx
+          .update(wallet)
+          .set({
+            balanceCents: sql`${wallet.balanceCents} + ${credit.balanceCents}`,
+            points: sql`${wallet.points} + ${credit.points}`,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(wallet.vendorId, updated.vendorId));
+        await tx.insert(walletTransaction).values({
+          vendorId: updated.vendorId,
+          kind: credit.kind,
+          amountCents: credit.balanceCents,
+          points: credit.points,
+          description: credit.description,
         });
       }
-    }
-
-    // Reserve stock. The database's own CHECK (stock_quantity >= 0) is the backstop — if this
-    // arithmetic is ever wrong, the transaction fails rather than overselling.
-    for (const line of validated) {
-      // Expressed as SQL rather than read-modify-write: the decrement happens in the database,
-      // against the row we already hold a lock on, and the CHECK constraint refuses it if the
-      // result would be negative.
-      await tx
-        .update(productVariant)
-        .set({
-          stockQuantity: sql`${productVariant.stockQuantity} - ${line.quantity}`,
-        })
-        .where(eq(productVariant.id, line.variantId));
-
-      await tx.insert(stockLedger).values({
-        id: randomUUID(),
-        variantId: line.variantId,
-        delta: -line.quantity,
-        reason: 'order_reserve',
-        referenceId: orderId,
-        actorId: request.userId,
-      });
-    }
-
-    await tx.insert(paymentTable).values({
-      id: paymentId,
-      orderId,
-      provider: request.paymentProvider,
-      msisdnEncrypted: payerMsisdn === '' ? null : this.deps.encryptField(payerMsisdn),
-      amountCents: totals.grandTotalCents,
-      currency: 'MZN',
-      status: 'initiated',
-      providerRef,
-      idempotencyKey: request.idempotencyKey,
-      attemptNumber: 1,
-      initiatedAt: now,
-      expiresAt,
-      reconcileUntil: new Date(now.getTime() + this.deps.lateSweepHours * 3600 * 1000),
+      return updated;
     });
-
-    await tx.insert(outbox).values({
-      id: randomUUID(),
-      aggregateType: 'order',
-      aggregateId: orderId,
-      eventType: 'order.created',
-      sequence: 1,
-      payload: {
-        orderId,
-        orderNumber,
-        userId: request.userId,
-        grandTotalCents: totals.grandTotalCents,
-        vendorIds: totals.groups.map((group) => group.vendorId),
-      },
-    });
-
-    return {
-      orderId,
-      orderNumber,
-      paymentId,
-      providerRef,
-      grandTotalCents: totals.grandTotalCents,
-      expiresAt,
-    };
-  }
-
-  /**
-   * Lock every variant in the cart, then validate.
-   *
-   * Locks are acquired in a single statement ordered by variant id. Ordering matters: two buyers
-   * with overlapping carts acquiring locks in different orders deadlock, and a deadlock at
-   * checkout surfaces to a buyer as an unexplained failure at the worst possible moment.
-   */
-  private async lockAndValidate(
-    tx: Tx,
-    candidates: readonly CartCandidate[],
-  ): Promise<ValidatedLine[]> {
-    const variantIds = Array.from(new Set(candidates.map((line) => line.variantId))).sort();
-
-    const rows = await tx
-      .select({
-        variantId: productVariant.id,
-        productId: productVariant.productId,
-        sku: productVariant.sku,
-        options: productVariant.options,
-        priceCents: productVariant.priceCents,
-        stockQuantity: productVariant.stockQuantity,
-        variantActive: productVariant.isActive,
-        productStatus: product.status,
-        productTitle: product.titlePt,
-        weightGrams: product.weightGrams,
-        vendorId: product.vendorId,
-        vendorName: vendorTable.displayName,
-        vendorStatus: vendorTable.status,
-      })
-      .from(productVariant)
-      .innerJoin(product, eq(product.id, productVariant.productId))
-      .innerJoin(vendorTable, eq(vendorTable.id, product.vendorId))
-      .where(inArray(productVariant.id, variantIds))
-      .orderBy(productVariant.id)
-      .for('update', { of: productVariant });
-
-    const byId = new Map<string, (typeof rows)[number]>();
-    for (const row of rows) byId.set(row.variantId, row);
-
-    const validated: ValidatedLine[] = [];
-
-    for (const candidate of candidates) {
-      const row = byId.get(candidate.variantId);
-
-      if (row === undefined || row.variantActive !== true || row.productStatus !== 'active') {
-        throw new CheckoutError(
-          'variant_unavailable',
-          'Um dos produtos já não está disponível. Remova-o e tente novamente.',
-          { variantId: candidate.variantId },
-        );
-      }
-
-      if (row.vendorStatus !== 'active') {
-        throw new CheckoutError(
-          'vendor_unavailable',
-          `A loja ${String(row.vendorName)} não está a aceitar encomendas de momento.`,
-          { vendorId: row.vendorId },
-        );
-      }
-
-      if (row.stockQuantity < candidate.quantity) {
-        throw new CheckoutError(
-          'insufficient_stock',
-          row.stockQuantity === 0
-            ? `"${String(row.productTitle)}" esgotou.`
-            : `Restam apenas ${String(row.stockQuantity)} unidades de "${String(row.productTitle)}".`,
-          { variantId: candidate.variantId, available: row.stockQuantity },
-        );
-      }
-
-      validated.push({
-        cartItemId: candidate.cartItemId,
-        variantId: candidate.variantId,
-        productId: row.productId,
-        vendorId: row.vendorId,
-        vendorName: String(row.vendorName),
-        quantity: candidate.quantity,
-        unitPriceCents: cents(Number(row.priceCents)),
-        weightGrams: Number(row.weightGrams ?? 0),
-        snapshot: {
-          title: String(row.productTitle),
-          optionsLabel: formatOptions(row.options as Record<string, string>),
-          imageUrl: null,
-          sku: String(row.sku),
-          vendorDisplayName: String(row.vendorName),
-        },
-      });
+    if (row) {
+      if (row.status === 'review')
+        this.log.error(`intent ${row.id} needs review: ${row.failureReason}`);
+      else this.log.log(`intent ${row.id} paid via ${row.gateway}`);
+      return row;
     }
-
-    return validated;
-  }
-
-  private async loadAddress(tx: Tx, userId: string, addressId: string) {
-    const rows = await tx
-      .select({
-        id: addressTable.id,
-        districtId: addressTable.districtId,
-        recipientName: addressTable.recipientName,
-        phoneE164: addressTable.phoneE164,
-        bairro: addressTable.bairro,
-        quarteirao: addressTable.quarteirao,
-        houseNumber: addressTable.houseNumber,
-        landmark: addressTable.landmark,
-        notes: addressTable.notes,
-        districtName: district.name,
-        provinceName: province.name,
-      })
-      .from(addressTable)
-      .innerJoin(district, eq(district.id, addressTable.districtId))
-      .innerJoin(province, eq(province.code, addressTable.provinceCode))
-      .where(and(eq(addressTable.id, addressId), eq(addressTable.userId, userId)))
-      .limit(1);
-
-    const row = rows[0];
-    if (row === undefined) {
-      throw new CheckoutError('address_not_found', 'A morada de entrega não foi encontrada.');
-    }
-
-    const snapshot: AddressSnapshot = {
-      recipientName: String(row.recipientName),
-      phoneE164: String(row.phoneE164),
-      provinceName: String(row.provinceName),
-      districtName: String(row.districtName),
-      bairro: String(row.bairro),
-      quarteirao: row.quarteirao === null ? null : String(row.quarteirao),
-      houseNumber: row.houseNumber === null ? null : String(row.houseNumber),
-      landmark: String(row.landmark),
-      notes: row.notes === null ? null : String(row.notes),
-    };
-
-    return { id: String(row.id), districtId: String(row.districtId), snapshot };
-  }
-
-  private async markPaymentAwaiting(
-    paymentId: string,
-    providerTxId: string,
-    expiresAt: Date,
-  ): Promise<void> {
-    await this.deps.db
-      .update(paymentTable)
-      .set({ status: 'awaiting_user', providerTxId, expiresAt })
-      .where(eq(paymentTable.id, paymentId));
-  }
-
-  private async markPaymentFailed(paymentId: string, code: string, message: string): Promise<void> {
-    await this.deps.db
-      .update(paymentTable)
-      .set({
-        status: 'failed',
-        failureCode: code,
-        failureMessage: message,
-        resolvedAt: new Date(),
-      })
-      .where(eq(paymentTable.id, paymentId));
+    return (await this.find(intent.id)) as Intent;
   }
 }
 
-function formatOptions(options: Record<string, string>): string {
-  return Object.values(options).join(' · ');
+function errText(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
+export function view(i: Intent): CheckoutView {
+  return {
+    id: i.id,
+    status: i.status as CheckoutView['status'],
+    purpose: i.purpose,
+    amountCents: Number(i.amountCents),
+    method: i.method,
+    gateway: i.gateway,
+    checkoutUrl: i.status === 'pending' ? i.checkoutUrl : null,
+    failureReason: i.failureReason,
+    createdAt: i.createdAt.toISOString(),
+    paidAt: i.paidAt ? i.paidAt.toISOString() : null,
+  };
 }

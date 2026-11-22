@@ -96,16 +96,27 @@ export interface ListItemInput {
   readonly titleEn: string | null;
   readonly ratingAvg: string | null; // numeric comes back as string from pg
   readonly ratingCount: number;
+  readonly postedAt: Date | null;
+  readonly featuredUntil: Date | null;
+  readonly viewCount: number;
+  readonly categorySlug: string;
+  readonly categoryNamePt: string;
+  readonly categoryNameEn: string;
+  readonly attributes: Record<string, string>;
   readonly vendor: {
     id: string;
     slug: string;
     displayName: string;
     status: string;
+    proUntil: Date | null;
     ratingAvg: string | null;
     ratingCount: number;
+    location: string | null;
   };
   readonly variants: readonly VariantRow[];
   readonly primaryImage: ImageRow | null;
+  /** Applied AI banner id, or null. */
+  readonly bannerId: string | null;
 }
 
 export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
@@ -125,13 +136,40 @@ export function toListItem(input: ListItemInput, lang: Lang): ProductListItem {
     ratingCount: input.ratingCount,
     inStock: active.some((v) => v.stockQuantity > 0),
     freeDelivery: false, // shipping logic is not built; never claim free delivery we cannot honour
+    location: input.vendor.location,
+    postedAt: input.postedAt === null ? null : input.postedAt.toISOString(),
+    featured: input.featuredUntil !== null && input.featuredUntil.getTime() > Date.now(),
+    views: input.viewCount,
+    bannerUrl: input.bannerId ? `/api/banners/${input.bannerId}.svg` : null,
+    category: {
+      slug: input.categorySlug,
+      name: pickText(input.categoryNamePt, input.categoryNameEn, lang),
+    },
+    attributes: input.attributes,
     vendor: {
       id: input.vendor.id,
       slug: input.vendor.slug,
       displayName: input.vendor.displayName,
       isVerified: input.vendor.status === 'active',
+      isPro: input.vendor.proUntil != null && input.vendor.proUntil.getTime() > Date.now(),
       ratingAvg: input.vendor.ratingAvg === null ? null : Number(input.vendor.ratingAvg),
       ratingCount: input.vendor.ratingCount,
+      // Contact channels are exposed only on the product detail, never in lists.
+      whatsapp: null,
+      phone: null,
     },
+  };
+}
+
+/** Apply the seller's contact channels, honouring their visibility flags. */
+export function sellerContact(v: {
+  whatsapp: string | null;
+  contactPhone: string | null;
+  showWhatsapp: boolean;
+  showPhone: boolean;
+}): { whatsapp: string | null; phone: string | null } {
+  return {
+    whatsapp: v.showWhatsapp ? v.whatsapp : null,
+    phone: v.showPhone ? v.contactPhone : null,
   };
 }

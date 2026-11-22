@@ -1,52 +1,75 @@
-import { IconCart, IconSearch, IconUser } from './icons';
+import { IconHeart, IconGrid } from './icons';
+import { Logo } from './Logo';
 import { LocaleControls } from './LocaleControls';
+import { AccountMenu } from './auth/AccountMenu';
+import { SellButton } from './auth/SellButton';
+import { NotificationBell } from './notifications/NotificationBell';
+import { MessagesLink } from './messaging/MessagesLink';
+import { HeaderSearch } from './search/HeaderSearch';
 import type { Dictionary, Locale } from '../lib/i18n/index';
 
-const CATEGORY_KEYS = [
-  'moda',
-  'electronica',
-  'telemoveis',
-  'casa',
-  'alimentacao',
-  'beleza',
-] as const;
+// Gumtree-style pillars: the verticals stand alone, everyday goods live under a
+// single "Compra e Vendas" (For Sale) section at /compra-e-vendas.
+const PILLARS = [
+  { href: '/categoria/viaturas', key: 'viaturas' as const },
+  { href: '/compra-e-vendas', key: 'compra_vendas' as const },
+  { href: '/categoria/servicos', key: 'servicos' as const },
+  { href: '/categoria/empregos', key: 'empregos' as const },
+  { href: '/categoria/eventos', key: 'eventos' as const },
+];
 
+// Clean, modern marketplace header (Wallapop-structured UX, Nhonga's own brand):
+// a rounded pill search front and centre, compact action icons, a prominent
+// yellow "Vender" button, and a text category nav below. The mobile experience
+// is carried by the bottom tab bar, so this collapses gracefully on phones.
 export function Header({ t, locale }: { t: Dictionary; locale: Locale }) {
   return (
-    <header className="hdr">
-      <div className="hdr__top">
-        <a href="/" className="hdr__brand" aria-label={t.common.brand}>
-          Nhonga<b>.</b>
+    <header className="wlhdr">
+      <div className="wlhdr__bar">
+        <a href="/" className="wlhdr__brand">
+          <Logo variant="auto" label={t.common.brand} />
         </a>
 
-        <form className="hdr__search" role="search" action="/pesquisa" method="get">
-          <IconSearch width={18} height={18} aria-hidden />
-          <label htmlFor="q" className="sr-only" style={{ position: 'absolute', left: -9999 }}>
-            {t.common.search_placeholder}
-          </label>
-          <input id="q" name="q" placeholder={t.common.search_placeholder} autoComplete="off" />
-        </form>
+        <HeaderSearch
+          placeholder={t.common.search_placeholder}
+          categories={Object.entries(t.categories).map(([slug, label]) => ({ slug, label }))}
+          tools={{
+            voice: t.common.search_voice,
+            image: t.common.search_image,
+            listening: t.common.search_listening,
+            thinking: t.common.search_thinking,
+            unsupported: t.common.search_voice_unsupported,
+            error: t.common.search_ai_error,
+            unconfigured: t.common.search_ai_unconfigured,
+          }}
+        />
 
-        <div className="hdr__actions">
+        <div className="wlhdr__actions">
           <LocaleControls locale={locale} />
-          <a className="iconbtn" href="/conta" aria-label={t.common.account}>
-            <IconUser />
+          <span className="wlhdr__sep" aria-hidden="true" />
+          <a className="wlact wlact--hide-sm" href="/favoritos" aria-label={t.common.favorites}>
+            <IconHeart width={22} height={22} />
           </a>
-          <a className="iconbtn" href="/carrinho" aria-label={t.common.cart}>
-            <IconCart />
-            <span className="badge-count" aria-hidden>
-              0
-            </span>
-          </a>
+          <MessagesLink label={t.common.messages} />
+          <NotificationBell label={t.common.notifications} />
+          <AccountMenu t={t.account} label={t.common.account} signInLabel={t.common.sign_in} />
+          <SellButton label={t.common.sell} />
         </div>
       </div>
 
-      <nav className="catrow" aria-label={t.home.categories}>
-        {CATEGORY_KEYS.map((k) => (
-          <a className="catchip" key={k} href={`/categoria/${k}`}>
-            {t.categories[k]}
+      <nav className="wlnav" aria-label={t.home.categories}>
+        <a className="wlnav__all" href="/pesquisa">
+          <IconGrid width={16} height={16} aria-hidden />
+          {t.common.nav_all}
+        </a>
+        {PILLARS.map((p) => (
+          <a className="wlnav__link" key={p.key} href={p.href}>
+            {t.categories[p.key]}
           </a>
         ))}
+        <a className="wlnav__link wlnav__link--accent" href="/pesquisa?sort=price_asc">
+          {t.common.nav_deals}
+        </a>
       </nav>
     </header>
   );

@@ -1,15 +1,13 @@
-import { cents, formatMZN } from '@nhonga/shared';
 import type { ReactNode } from 'react';
 import { IconShield, IconStar, IconTruck, IconWallet } from './icons';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatPrice } from '../lib/format';
 
 export function Price({ now, was, large }: { now: number; was?: number; large?: boolean }) {
   return (
     <div className="price">
-      <span className={large ? 'price__now price__now--lg' : 'price__now'}>
-        {formatMZN(cents(now))}
-      </span>
-      {was && was > now ? <span className="price__was">{formatMZN(cents(was))}</span> : null}
+      <span className={large ? 'price__now price__now--lg' : 'price__now'}>{formatPrice(now)}</span>
+      {was && was > now ? <span className="price__was">{formatPrice(was)}</span> : null}
     </div>
   );
 }
@@ -34,6 +32,16 @@ export function DealBadge({ percent }: { percent: number }) {
 export function VerifiedBadge({ label }: { label: string }) {
   return (
     <span className="badge badge--verified">
+      <IconStar width={11} height={11} /> {label}
+    </span>
+  );
+}
+
+// Paid "Loja Pro" subscription — a premium, gold selo distinct from the
+// (free) KYC "Verificado" badge.
+export function ProBadge({ label }: { label: string }) {
+  return (
+    <span className="badge badge--pro">
       <IconStar width={11} height={11} /> {label}
     </span>
   );

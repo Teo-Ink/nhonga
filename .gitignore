@@ -64,3 +64,6 @@ apps/web/.next/
 apps/web/next-env.d.ts
 apps/web/.next/
 apps/web/*.tsbuildinfo
+
+# Local-only sales mock-ups (third-party brand names; never commit)
+apps/web/public/spec/

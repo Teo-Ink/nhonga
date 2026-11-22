@@ -18,6 +18,10 @@
 # layers into separately-assumed roles).
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Broad by design (see the header above): the provisioning role creates the
+# buckets it manages, so S3 cannot be scoped to existing ARNs. Follow-up:
+# split network/data roles and narrow S3 actions.
+#trivy:ignore:AWS-0345
 data "aws_iam_policy_document" "deploy" {
   statement {
     sid    = "ProvisionApplicationInfrastructure"

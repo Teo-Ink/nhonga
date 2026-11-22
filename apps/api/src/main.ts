@@ -2,20 +2,60 @@ import 'reflect-metadata';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { rateLimitMiddleware } from './common/rate-limit.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     // Preserve the exact request bytes so webhook signature verification can
     // run against them (payments webhook receiver).
     rawBody: true,
   });
+  // Allow base64 image uploads (AI photo listing + listing photos). Nest still
+  // captures rawBody for the payments webhook — `verify` is reserved for that.
+  app.useBodyParser('json', { limit: '12mb' });
   const log = new Logger('Bootstrap');
+  const config = app.get(ConfigService<AppConfig, true>);
+  const nodeEnv = config.get('nodeEnv', { infer: true });
+  const corsOrigins = config.get('corsOrigins', { infer: true });
 
   app.use(helmet());
+
+  // Behind the ALB, req.ip must be the client (from X-Forwarded-For), not the
+  // load balancer; one trusted hop.
+  if (nodeEnv !== 'development') app.set('trust proxy', 1);
+  app.use(rateLimitMiddleware());
+
+  // CORS for browser clients only. The web app reaches the API server-side via
+  // its BFF and native mobile fetches are not subject to CORS, so this exists
+  // mainly for the Expo web preview and any other browser origin we allowlist.
+  // In development, any localhost/127.0.0.1 origin (on any port) is reflected so
+  // the mobile preview just works; elsewhere only CORS_ORIGINS entries pass.
+  const isDev = nodeEnv === 'development';
+  const allowList = new Set(corsOrigins);
+  const isLocalhost = (origin: string): boolean =>
+    /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+  if (isDev || allowList.size > 0) {
+    app.enableCors({
+      credentials: true,
+      origin: (
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void,
+      ) => {
+        // Non-browser / same-origin requests (no Origin header) are always fine.
+        if (!origin) return callback(null, true);
+        if (allowList.has(origin) || (isDev && isLocalhost(origin))) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
+    });
+  }
+
   app.useGlobalFilters(new ProblemDetailsFilter());
 
   // Request-body validation is deliberately not wired globally yet. The stack
@@ -26,10 +66,9 @@ async function bootstrap(): Promise<void> {
   // Let ECS stop a task cleanly: onApplicationShutdown drains the DB pool.
   app.enableShutdownHooks();
 
-  const config = app.get(ConfigService<AppConfig, true>);
   const port = config.get('port', { infer: true });
   await app.listen(port, '0.0.0.0');
-  log.log(`nhonga api listening on :${port} (${config.get('nodeEnv', { infer: true })})`);
+  log.log(`nhonga api listening on :${port} (${nodeEnv})`);
 }
 
 void bootstrap();

@@ -2,6 +2,7 @@ import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/config.schema.js';
 import type { PaymentProvider, ProviderId } from './payment-provider.interface.js';
+import type { CallbackDelivery } from './providers/mock-wallet.provider.js';
 import { buildProviderRegistry, type PaymentsConfig } from './registry.js';
 
 /**
@@ -14,9 +15,41 @@ import { buildProviderRegistry, type PaymentsConfig } from './registry.js';
 export class PaymentProvidersService implements OnModuleInit {
   private registry: ReadonlyMap<ProviderId, PaymentProvider> | null = null;
 
+  /**
+   * Where a mock callback is delivered. Set late (by the checkout/webhook wiring)
+   * to route into the webhook ingestion service, which avoids a construction-time
+   * DI cycle. Until wired it fails loudly rather than swallowing a callback.
+   */
+  private deliver: CallbackDelivery = () => {
+    throw new Error(
+      'Mock callback delivery target is not wired. It is set by MockCallbackWiring once the ' +
+        'checkout flow is present (Phase 3d).',
+    );
+  };
+
   constructor(private readonly config: ConfigService<AppConfig, true>) {}
 
+  /** Route mock provider callbacks somewhere (the webhook ingestion service). */
+  setCallbackDelivery(deliver: CallbackDelivery): void {
+    this.deliver = deliver;
+  }
+
+  /** The full provider registry — shared by the webhook receiver and checkout. */
+  getRegistry(): ReadonlyMap<ProviderId, PaymentProvider> {
+    return this.ensureRegistry();
+  }
+
   onModuleInit(): void {
+    this.ensureRegistry();
+  }
+
+  /**
+   * Build the registry once and cache it. Idempotent so it is safe whether the
+   * first caller is onModuleInit or a factory (e.g. checkout) that constructs
+   * before lifecycle hooks run.
+   */
+  private ensureRegistry(): ReadonlyMap<ProviderId, PaymentProvider> {
+    if (this.registry !== null) return this.registry;
     const mode = this.config.get('paymentsMode', { infer: true });
 
     const paymentsConfig: PaymentsConfig = {
@@ -48,24 +81,16 @@ export class PaymentProvidersService implements OnModuleInit {
     };
 
     this.registry = buildProviderRegistry(paymentsConfig, {
-      // The mock provider only invokes this from requestPayment (the checkout
-      // side), which the webhook receiver never calls. Wiring the mock delivery
-      // loop belongs with checkout (Phase 3d); until then it must fail loudly
-      // rather than silently swallow a callback.
-      deliverMockCallback: () => {
-        throw new Error(
-          'Mock callback delivery is not wired in the webhook-receiver context. ' +
-            'It belongs with the checkout flow (Phase 3d).',
-        );
-      },
+      // Delegates to the late-wired target (set by MockCallbackWiring). The mock
+      // provider only invokes this asynchronously, after requestPayment, so the
+      // target is always set by the time a callback is delivered.
+      deliverMockCallback: (payload) => this.deliver(payload),
     });
+    return this.registry;
   }
 
   /** The provider for an id, or undefined if the id is not a registered rail. */
   get(id: ProviderId): PaymentProvider | undefined {
-    if (this.registry === null) {
-      throw new Error('PaymentProvidersService used before onModuleInit');
-    }
-    return this.registry.get(id);
+    return this.ensureRegistry().get(id);
   }
 }
