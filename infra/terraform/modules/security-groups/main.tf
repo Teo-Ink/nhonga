@@ -32,13 +32,7 @@ resource "aws_security_group" "alb" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  egress {
-    description = "To the tasks"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Egress is defined by the separate rules below (only to the tasks).
   tags = { Name = "${local.name}-alb" }
 }
 
@@ -54,13 +48,7 @@ resource "aws_security_group" "tasks" {
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
-  egress {
-    description = "Outbound for image pulls, provider APIs, package registries (via NAT)"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Egress is defined by the separate rules below (HTTPS out, Postgres to RDS).
   tags = { Name = "${local.name}-tasks" }
 }
 
@@ -78,6 +66,47 @@ resource "aws_security_group" "database" {
   }
   # No egress rule: the database initiates nothing.
   tags = { Name = "${local.name}-database" }
+}
+
+# ── Egress rules ────────────────────────────────────────────────────────────
+# Separate rule resources (not inline blocks) because the ALB and task groups
+# reference each other. Amazon-provided DNS is not filtered by security groups,
+# so no DNS rule is needed.
+
+resource "aws_security_group_rule" "alb_to_tasks" {
+  type                     = "egress"
+  description              = "Load balancer to the tasks, app port only"
+  security_group_id        = aws_security_group.alb.id
+  from_port                = var.app_port
+  to_port                  = var.app_port
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.tasks.id
+}
+
+# The API must reach services that only exist on the public internet over
+# HTTPS: PawaPay and PaySuite (payments), the SMS gateway, the AI providers,
+# plus ECR/Secrets Manager/CloudWatch via the NAT gateway. Their IP ranges are
+# not published or stable, so 443 to any address is required; every other port
+# is closed. Narrow this with VPC endpoints / an egress proxy later.
+#trivy:ignore:AWS-0104
+resource "aws_security_group_rule" "tasks_https_out" {
+  type              = "egress"
+  description       = "HTTPS to payment, SMS and AWS APIs"
+  security_group_id = aws_security_group.tasks.id
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "tasks_to_database" {
+  type                     = "egress"
+  description              = "Postgres to RDS only"
+  security_group_id        = aws_security_group.tasks.id
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.database.id
 }
 
 output "alb_sg_id" { value = aws_security_group.alb.id }
