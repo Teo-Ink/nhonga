@@ -1,6 +1,8 @@
 // Portuguese — the primary locale. All UI copy lives here; no hardcoded strings
 // in components. English (en.ts) mirrors this shape exactly.
-export const pt = {
+import { CLASSIFIEDS_PT, withListingCopy } from './classifieds';
+
+const ptBase = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Pesquisar carros, casas, empregos…',
@@ -447,12 +449,6 @@ export const pt = {
     payment_title: 'Pagamento',
     pay_phone_label: 'Número para o pagamento',
     pay_phone_hint: 'Receberá um pedido de confirmação neste telemóvel',
-    pay_mpesa: 'M-Pesa',
-    pay_mpesa_note: 'Vodacom',
-    pay_emola: 'e-Mola',
-    pay_emola_note: 'Movitel',
-    pay_cod: 'Dinheiro na entrega',
-    pay_cod_note: 'Pague quando receber',
     suggested: 'Sugerido para o seu número',
     summary_title: 'Resumo do pedido',
     summary_items: 'Artigos',
@@ -1291,4 +1287,7 @@ export const pt = {
   },
 };
 
-export type Dictionary = typeof pt;
+export type Dictionary = typeof ptBase;
+
+// Marketplace promises are replaced by classifieds copy unless enabled (CONT-01).
+export const pt: Dictionary = withListingCopy(ptBase, CLASSIFIEDS_PT);

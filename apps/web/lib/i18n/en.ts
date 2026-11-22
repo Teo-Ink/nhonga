@@ -1,7 +1,8 @@
+import { CLASSIFIEDS_EN, withListingCopy } from './classifieds';
 import type { Dictionary } from './pt';
 
 // English — secondary locale, same shape as pt.ts.
-export const en: Dictionary = {
+const enBase: Dictionary = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Search cars, homes, jobs…',
@@ -427,12 +428,6 @@ export const en: Dictionary = {
     payment_title: 'Payment',
     pay_phone_label: 'Number for payment',
     pay_phone_hint: 'You will get a confirmation request on this phone',
-    pay_mpesa: 'M-Pesa',
-    pay_mpesa_note: 'Vodacom',
-    pay_emola: 'e-Mola',
-    pay_emola_note: 'Movitel',
-    pay_cod: 'Cash on delivery',
-    pay_cod_note: 'Pay when you receive it',
     suggested: 'Suggested for your number',
     summary_title: 'Order summary',
     summary_items: 'Items',
@@ -1262,3 +1257,5 @@ export const en: Dictionary = {
     status_note: 'Demo statuses — the order does not advance because the payment is not real.',
   },
 };
+
+export const en: Dictionary = withListingCopy(enBase, CLASSIFIEDS_EN);
