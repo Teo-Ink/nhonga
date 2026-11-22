@@ -1,0 +1,15 @@
+# Build contexts are the repository root (see apps/*/Dockerfile). Keep local
+# installs, build output and secrets out of them.
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+infra/terraform/**/.terraform
+**/*.tfstate
+**/*.tfstate.*
+apps/web/public/spec

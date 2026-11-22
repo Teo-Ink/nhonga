@@ -24,10 +24,28 @@ variable "certificate_arn" {
   type    = string
   default = ""
 }
+# Optional web app behind the same load balancer. When web_port is set, the
+# web target group becomes the default route and the api stays reachable from
+# the web tasks directly (service discovery) and, optionally, on
+# api_public_port for the mobile app and webhooks.
+variable "web_port" {
+  type    = number
+  default = 0
+}
+variable "web_health_check_path" {
+  type    = string
+  default = "/api/health"
+}
+variable "api_public_port" {
+  description = "Plain-HTTP listener forwarding to the api, for environments without a certificate. 0 for none."
+  type        = number
+  default     = 0
+}
 
 locals {
   name     = "${var.project}-${var.environment}"
   https_on = var.certificate_arn != ""
+  web_on   = var.web_port > 0
 }
 
 # The public entry point of the platform: it must be internet-facing. Only the
@@ -66,6 +84,32 @@ resource "aws_lb_target_group" "app" {
   tags                 = { Name = local.name }
 }
 
+resource "aws_lb_target_group" "web" {
+  count       = local.web_on ? 1 : 0
+  name        = "${local.name}-web"
+  port        = var.web_port
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path                = var.web_health_check_path
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    interval            = 15
+    timeout             = 5
+    matcher             = "200"
+  }
+
+  deregistration_delay = 30
+  tags                 = { Name = "${local.name}-web" }
+}
+
+locals {
+  # Where the main listener sends traffic: the web app when there is one.
+  default_target_group_arn = local.web_on ? aws_lb_target_group.web[0].arn : aws_lb_target_group.app.arn
+}
+
 # HTTP listener: redirect to HTTPS when a certificate exists, otherwise forward.
 # Forwarding plain HTTP only happens without a certificate, i.e. staging before
 # the domain exists (OQ-1). Production cannot take that path: envs/production
@@ -92,7 +136,7 @@ resource "aws_lb_listener" "http" {
     for_each = local.https_on ? [] : [1]
     content {
       type             = "forward"
-      target_group_arn = aws_lb_target_group.app.arn
+      target_group_arn = local.default_target_group_arn
     }
   }
 }
@@ -107,10 +151,27 @@ resource "aws_lb_listener" "https" {
 
   default_action {
     type             = "forward"
+    target_group_arn = local.default_target_group_arn
+  }
+}
+
+# The api on its own port while there is no certificate (and so no domain for
+# host-based routing). Plain HTTP for the same reason as the listener above;
+# with a certificate this listener is not created.
+#trivy:ignore:AWS-0054
+resource "aws_lb_listener" "api_public" {
+  count             = var.api_public_port > 0 && !local.https_on ? 1 : 0
+  load_balancer_arn = aws_lb.this.arn
+  port              = var.api_public_port
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
   }
 }
 
 output "dns_name" { value = aws_lb.this.dns_name }
 output "target_group_arn" { value = aws_lb_target_group.app.arn }
+output "web_target_group_arn" { value = local.web_on ? aws_lb_target_group.web[0].arn : null }
 output "zone_id" { value = aws_lb.this.zone_id }

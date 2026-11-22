@@ -39,6 +39,8 @@ COPY --from=builder --chown=node:node /out/package.json ./package.json
 # the image: drizzle's journaled files plus the hand-written 0016+ files.
 COPY --from=builder --chown=node:node /repo/apps/api/drizzle ./drizzle
 COPY --from=builder --chown=node:node /repo/apps/api/scripts/migrate.mjs /repo/apps/api/scripts/manual-migrations.mjs ./scripts/
+# Demo data, loaded only when SEED_DEMO=1 on an empty non-production database.
+COPY --from=builder --chown=node:node /repo/apps/api/scripts/seed.sql /repo/apps/api/scripts/districts.sql ./scripts/
 
 USER node
 EXPOSE 3000

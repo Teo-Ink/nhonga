@@ -50,6 +50,12 @@ variable "health_check_path" {
   type    = string
   default = "/health/live"
 }
+# Cloud Map private DNS namespace. When set, the service registers as
+# <service_name>.<namespace> so other services in the VPC can call it directly.
+variable "service_discovery_namespace_id" {
+  type    = string
+  default = ""
+}
 
 locals {
   name = "${var.project}-${var.environment}-${var.service_name}"
@@ -151,6 +157,24 @@ resource "aws_ecs_task_definition" "this" {
   tags = { Name = local.name }
 }
 
+resource "aws_service_discovery_service" "this" {
+  count = var.service_discovery_namespace_id != "" ? 1 : 0
+  name  = var.service_name
+
+  dns_config {
+    namespace_id   = var.service_discovery_namespace_id
+    routing_policy = "MULTIVALUE"
+    dns_records {
+      type = "A"
+      ttl  = 10
+    }
+  }
+
+  # ECS reports task health to Cloud Map, so unhealthy tasks leave DNS.
+  health_check_custom_config {}
+  tags = { Name = local.name }
+}
+
 resource "aws_ecs_service" "this" {
   name            = var.service_name
   cluster         = var.cluster_arn
@@ -177,6 +201,13 @@ resource "aws_ecs_service" "this" {
     target_group_arn = var.target_group_arn
     container_name   = var.service_name
     container_port   = var.app_port
+  }
+
+  dynamic "service_registries" {
+    for_each = aws_service_discovery_service.this
+    content {
+      registry_arn = service_registries.value.arn
+    }
   }
 
   # Give a new task time to boot and pass health checks before the LB counts it.

@@ -44,6 +44,11 @@ variable "image_tag" {
   default     = "latest"
   description = "The api image tag to deploy. The deploy pipeline overrides this per release."
 }
+variable "web_image_tag" {
+  type        = string
+  default     = "latest"
+  description = "The web image tag to deploy. The deploy pipeline advances it per release."
+}
 variable "certificate_arn" {
   type        = string
   default     = ""
@@ -57,6 +62,11 @@ locals {
   env     = "staging"
   azs     = ["af-south-1a", "af-south-1b"]
   ecr_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project}-api"
+  web_ecr = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/${local.project}-web"
+
+  web_port      = 3001
+  api_port      = 3000
+  api_http_port = 8080 # api on the load balancer until a domain exists (OQ-1)
 }
 
 module "network" {
@@ -71,7 +81,10 @@ module "security_groups" {
   project     = local.project
   environment = local.env
   vpc_id      = module.network.vpc_id
-  app_port    = 3000
+  app_port    = local.api_port
+
+  web_port        = local.web_port
+  api_public_port = local.api_http_port
 }
 
 module "database" {
@@ -103,14 +116,33 @@ module "alb" {
   vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
   security_group_id = module.security_groups.alb_sg_id
-  app_port          = 3000
+  app_port          = local.api_port
   certificate_arn   = var.certificate_arn
+
+  web_port        = local.web_port
+  api_public_port = local.api_http_port
+}
+
+# Private DNS inside the VPC: the web tasks reach the api as
+# api.nhonga-staging.local without leaving the network.
+resource "aws_service_discovery_private_dns_namespace" "internal" {
+  name        = "${local.project}-${local.env}.local"
+  description = "Service-to-service names for ${local.env}"
+  vpc         = module.network.vpc_id
 }
 
 # Container registry for the api image (shared across environments; created here
 # so staging is self-contained on first apply).
 resource "aws_ecr_repository" "api" {
   name                 = "${local.project}-api"
+  image_tag_mutability = "IMMUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "web" {
+  name                 = "${local.project}-web"
   image_tag_mutability = "IMMUTABLE"
   image_scanning_configuration {
     scan_on_push = true
@@ -133,7 +165,7 @@ module "api" {
   cluster_arn       = aws_ecs_cluster.this.arn
   cluster_name      = aws_ecs_cluster.this.name
   image             = "${local.ecr_url}:${var.image_tag}"
-  app_port          = 3000
+  app_port          = local.api_port
   region            = var.region
   subnet_ids        = module.network.private_subnet_ids
   security_group_id = module.security_groups.tasks_sg_id
@@ -142,15 +174,63 @@ module "api" {
   desired_count = 1
   min_count     = 1
   max_count     = 4
+
+  service_discovery_namespace_id = aws_service_discovery_private_dns_namespace.internal.id
+
+  # Staging tests the whole flow with simulated SMS and payments: the login
+  # code is shown on screen and payments go through /pagamento/simulador. No
+  # real money moves. NODE_ENV=staging (from the module) keeps the production
+  # safety check off for exactly this reason.
   environment_vars = {
-    PAYMENTS_MODE = "mock"
-    LOG_LEVEL     = "debug"
+    PAYMENTS_MODE  = "mock"
+    CHECKOUT_MODE  = "mock"
+    SMS_MODE       = "mock"
+    LOG_LEVEL      = "debug"
+    SEED_DEMO      = "1" # demo catalogue on first start of an empty database
+    PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
+    PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
   }
   secret_arns = {
     DATABASE_URL = module.secrets.database_url_arn
   }
 }
 
+module "web" {
+  source            = "../../modules/ecs-service"
+  project           = local.project
+  environment       = local.env
+  service_name      = "web"
+  cluster_arn       = aws_ecs_cluster.this.arn
+  cluster_name      = aws_ecs_cluster.this.name
+  image             = "${local.web_ecr}:${var.web_image_tag}"
+  app_port          = local.web_port
+  region            = var.region
+  subnet_ids        = module.network.private_subnet_ids
+  security_group_id = module.security_groups.tasks_sg_id
+  target_group_arn  = module.alb.web_target_group_arn
+  health_check_path = "/api/health"
+  desired_count     = 1
+  min_count         = 1
+  max_count         = 3
+
+  environment_vars = {
+    # The Next.js server always runs as production; staging-ness lives in the
+    # build arguments (demo mode) and in the api it talks to.
+    NODE_ENV = "production"
+    API_URL  = "http://api.${aws_service_discovery_private_dns_namespace.internal.name}:${local.api_port}"
+
+    # No domain, so no HTTPS yet: browsers drop Secure cookies over plain
+    # HTTP. Staging only; production always has a certificate.
+    SESSION_COOKIE_INSECURE = "1"
+
+    # The stand-in payment page for CHECKOUT_MODE=mock on the api.
+    CHECKOUT_SIMULATOR = "1"
+  }
+}
+
 output "alb_dns_name" { value = module.alb.dns_name }
+output "web_url" { value = "http://${module.alb.dns_name}" }
+output "api_url" { value = "http://${module.alb.dns_name}:${local.api_http_port}" }
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
+output "web_ecr_repository_url" { value = aws_ecr_repository.web.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
