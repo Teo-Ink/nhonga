@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Inter, Ubuntu } from 'next/font/google';
 import { Header } from '../components/Header';
@@ -9,6 +10,7 @@ import { DictProvider } from '../components/i18n/DictProvider';
 import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
 import { getDictionary } from '../lib/i18n/index';
+import { isIndexable, siteOrigin } from '../lib/site';
 import './globals.css';
 import './ux.css';
 
@@ -28,21 +30,41 @@ const ubuntu = Ubuntu({
   variable: '--font-ubuntu',
 });
 
-export const metadata = {
-  title: 'Nhonga — Compre e venda em Moçambique',
-  description:
-    'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, transferência bancária, Visa ou na entrega.',
-  manifest: '/manifest.webmanifest',
-  applicationName: 'Nhonga',
-  appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: 'Nhonga' },
-  icons: {
-    icon: [
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [{ url: '/icons/icon-180.png', sizes: '180x180' }],
-  },
-};
+const SITE_TITLE = 'Nhonga — Compre e venda em Moçambique';
+const SITE_DESCRIPTION =
+  'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, transferência bancária, Visa ou na entrega.';
+
+// Site-wide defaults, including the Open Graph card used when any page is
+// shared on WhatsApp or Facebook (WEB-02). Pages override title, description
+// and image. Outside production, every page is marked noindex.
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await siteOrigin();
+  return {
+    metadataBase: new URL(origin),
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    manifest: '/manifest.webmanifest',
+    applicationName: 'Nhonga',
+    appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Nhonga' },
+    icons: {
+      icon: [
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [{ url: '/icons/icon-180.png', sizes: '180x180' }],
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'Nhonga',
+      locale: 'pt_MZ',
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'Nhonga' }],
+    },
+    twitter: { card: 'summary', title: SITE_TITLE, description: SITE_DESCRIPTION },
+    ...(isIndexable() ? {} : { robots: { index: false, follow: false } }),
+  };
+}
 
 export const viewport = {
   // Browser/status bar = the header colour (tokens.css --header-bg).
