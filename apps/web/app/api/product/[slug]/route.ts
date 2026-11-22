@@ -1,12 +1,12 @@
 // BFF: a product's full detail (for the edit form to prefill), from the API.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../../lib/bff';
 
-export async function GET(
+async function handleGET(
   _req: Request,
   { params }: { params: Promise<{ slug: string }> },
 ): Promise<Response> {
   const { slug } = await params;
-  const res = await fetch(`${API_URL}/catalog/products/${encodeURIComponent(slug)}`, {
+  const res = await apiFetch(`/catalog/products/${encodeURIComponent(slug)}`, {
     headers: { 'accept-language': 'pt' },
     cache: 'no-store',
   });
@@ -16,3 +16,5 @@ export async function GET(
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);

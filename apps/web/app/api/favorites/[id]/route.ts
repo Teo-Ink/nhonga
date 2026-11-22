@@ -1,16 +1,14 @@
 // BFF: remove a server favourite.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function DELETE(
+async function handleDELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const { id } = await params;
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const res = await fetch(`${API_URL}/favorites/${encodeURIComponent(id)}`, {
+  const res = await apiFetch(`/favorites/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers: token ? { authorization: `Bearer ${token}` } : {},
     cache: 'no-store',
@@ -20,3 +18,5 @@ export async function DELETE(
     headers: { 'content-type': 'application/json' },
   });
 }
+
+export const DELETE = withApi(handleDELETE);

@@ -1,12 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
+import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../../lib/bff';
 
 // Post a seller review. Forwards the httpOnly session cookie to the API as a
 // Bearer token, so the API identifies the reviewer; 401 when signed out.
-export async function POST(
+async function handlePOST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
@@ -21,12 +19,14 @@ export async function POST(
   } catch {
     body = {};
   }
-  const res = await fetch(`${API_URL}/vendors/${encodeURIComponent(id)}/reviews`, {
+  const res = await apiFetch(`/vendors/${encodeURIComponent(id)}/reviews`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
+
+export const POST = withApi(handlePOST);

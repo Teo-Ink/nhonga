@@ -1,19 +1,19 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
+import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 // Current user, or { user: null } when not signed in. Never errors, so the
 // client can treat a signed-out visitor as an ordinary state.
-export async function GET(): Promise<Response> {
+async function handleGET(): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return NextResponse.json({ user: null });
-  const res = await fetch(`${API_URL}/auth/me`, {
+  const res = await apiFetch(`/auth/me`, {
     headers: { authorization: `Bearer ${token}` },
     cache: 'no-store',
   });
   if (!res.ok) return NextResponse.json({ user: null });
-  const user = await res.json();
+  const user = await readJson(res);
   return NextResponse.json({ user });
 }
+
+export const GET = withApi(handleGET, () => Response.json({ user: null }));

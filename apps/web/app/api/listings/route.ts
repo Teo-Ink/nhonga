@@ -1,12 +1,10 @@
 // BFF: the full listings feed, forwarded to the private catalogue API. Used by
 // the favourites page, which filters it against the viewer's local list.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function GET(): Promise<Response> {
-  const res = await fetch(`${API_URL}/catalog/products?limit=48`, {
+async function handleGET(): Promise<Response> {
+  const res = await apiFetch(`/catalog/products?limit=48`, {
     headers: { 'accept-language': 'pt' },
     cache: 'no-store',
   });
@@ -20,10 +18,10 @@ export async function GET(): Promise<Response> {
 // Create a listing (real "Publicar"), forwarded to the catalogue API. Forwards
 // the session cookie as a bearer token so the listing attaches to the signed-in
 // seller's own shop (or the community shop when signed out).
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const res = await fetch(`${API_URL}/catalog/products`, {
+  const res = await apiFetch(`/catalog/products`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -39,3 +37,6 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);
+export const POST = withApi(handlePOST);

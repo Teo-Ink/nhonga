@@ -1,16 +1,14 @@
 // BFF: list conversations (GET) / start a conversation (POST).
 import { cookies } from 'next/headers';
-
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../lib/bff';
 
 async function auth(): Promise<Record<string, string>> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return token ? { authorization: `Bearer ${token}` } : {};
 }
 
-export async function GET(): Promise<Response> {
-  const res = await fetch(`${API_URL}/conversations`, {
+async function handleGET(): Promise<Response> {
+  const res = await apiFetch(`/conversations`, {
     headers: await auth(),
     cache: 'no-store',
   });
@@ -21,9 +19,9 @@ export async function GET(): Promise<Response> {
   });
 }
 
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
-  const res = await fetch(`${API_URL}/conversations`, {
+  const res = await apiFetch(`/conversations`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...(await auth()) },
     body,
@@ -35,3 +33,6 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);
+export const POST = withApi(handlePOST);

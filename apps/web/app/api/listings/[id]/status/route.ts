@@ -1,17 +1,15 @@
 // BFF: change a listing's status (active/sold/archived), forwarding the session.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, withApi } from '../../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function PATCH(
+async function handlePATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const { id } = await params;
   const body = await req.text();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const res = await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}/status`, {
+  const res = await apiFetch(`/catalog/products/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     headers: {
       'content-type': 'application/json',
@@ -26,3 +24,5 @@ export async function PATCH(
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const PATCH = withApi(handlePATCH);
