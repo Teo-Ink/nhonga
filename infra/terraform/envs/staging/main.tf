@@ -190,9 +190,35 @@ module "api" {
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
+
+    # The demo uses the real assistant: cap the monthly spend (AI-00).
+    ASSISTANT_MONTHLY_TOKEN_CAP = "500000"
   }
   secret_arns = {
-    DATABASE_URL = module.secrets.database_url_arn
+    DATABASE_URL      = module.secrets.database_url_arn
+    ANTHROPIC_API_KEY = aws_secretsmanager_secret.anthropic_api_key.arn
+  }
+}
+
+# ── AI assistant key (AI-00) ────────────────────────────────────────────────
+# Container plus a placeholder written once, so the API task starts before the
+# owner puts the real key (the API ignores anything not starting "sk-ant-").
+# The owner's value is never overwritten: the placeholder runs only when the
+# container is created. AI-01 moves both into module.secrets.
+resource "aws_secretsmanager_secret" "anthropic_api_key" {
+  name                    = "${local.project}-${local.env}/ANTHROPIC_API_KEY"
+  description             = "ANTHROPIC_API_KEY for the ${local.env} API (optional, set by the owner)"
+  recovery_window_in_days = 7
+}
+
+resource "terraform_data" "anthropic_api_key_placeholder" {
+  triggers_replace = [aws_secretsmanager_secret.anthropic_api_key.arn]
+  provisioner "local-exec" {
+    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string definir-chave >/dev/null"
+    environment = {
+      REGION = var.region
+      ID     = aws_secretsmanager_secret.anthropic_api_key.arn
+    }
   }
 }
 
