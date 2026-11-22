@@ -49,6 +49,11 @@ variable "web_image_tag" {
   default     = "latest"
   description = "The web image tag to deploy. The deploy pipeline advances it per release."
 }
+variable "alarm_email" {
+  type        = string
+  default     = ""
+  description = "Email for CloudWatch alarm notifications (OPS-02). Empty: subscribe later."
+}
 variable "certificate_arn" {
   type        = string
   default     = ""
@@ -227,6 +232,20 @@ module "web" {
     # The stand-in payment page for CHECKOUT_MODE=mock on the api.
     CHECKOUT_SIMULATOR = "1"
   }
+}
+
+module "alarms" {
+  source                    = "../../modules/alarms"
+  project                   = local.project
+  environment               = local.env
+  alarm_email               = var.alarm_email
+  alb_arn_suffix            = module.alb.arn_suffix
+  target_group_arn_suffixes = { api = module.alb.target_group_arn_suffix, web = module.alb.web_target_group_arn_suffix }
+  cluster_name              = aws_ecs_cluster.this.name
+  service_names             = ["api", "web"]
+  db_identifier             = module.database.identifier
+  db_allocated_storage_gb   = module.database.allocated_storage_gb
+  api_log_group             = module.api.log_group
 }
 
 output "alb_dns_name" { value = module.alb.dns_name }

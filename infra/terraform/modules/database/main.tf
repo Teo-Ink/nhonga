@@ -98,3 +98,5 @@ output "password" {
   value     = random_password.master.result
   sensitive = true
 }
+output "identifier" { value = aws_db_instance.this.identifier }
+output "allocated_storage_gb" { value = var.allocated_storage }
