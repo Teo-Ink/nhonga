@@ -129,3 +129,10 @@ export function logJson(
   if (level === 'ERROR') console.error(line);
   else console.warn(line);
 }
+
+/** Forwards the browser's Idempotency-Key (P2-11) on money routes, so a retried
+ *  or double-tapped payment is answered once by the API. */
+export function idempotency(req: Request): Record<string, string> {
+  const key = req.headers.get('idempotency-key');
+  return key ? { 'idempotency-key': key } : {};
+}

@@ -5,6 +5,7 @@ import { pt } from '../../../lib/i18n/pt';
 import { IconChevronLeft, IconCheck } from '../../../components/icons';
 import type { ProductListItem } from '../../../lib/api';
 import { formatPrice } from '../../../lib/format';
+import { useActionKey } from '../../../lib/action-key';
 
 interface Plan {
   code: string;
@@ -32,6 +33,7 @@ const METHODS = [
 // list is derived from the catalogue's listings, since there is no vendor-list
 // endpoint. Payment is a labelled mock — no real charge — like the rest of the demo.
 export default function VerifyShopPage() {
+  const payKey = useActionKey();
   const t = pt.verify;
   const [shops, setShops] = useState<Shop[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -75,7 +77,10 @@ export default function VerifyShopPage() {
     try {
       const res = await fetch('/api/subscriptions', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...payKey.headers(JSON.stringify({ vendorSlug: slug, planCode, paymentMethod: method })),
+        },
         body: JSON.stringify({ vendorSlug: slug, planCode, paymentMethod: method }),
       });
       const data = (await res.json().catch(() => ({}))) as { receipt?: Receipt; message?: string };
@@ -83,6 +88,7 @@ export default function VerifyShopPage() {
         setError(data.message ?? t.error);
         return;
       }
+      payKey.done();
       setReceipt(data.receipt);
     } catch {
       setError(t.error);

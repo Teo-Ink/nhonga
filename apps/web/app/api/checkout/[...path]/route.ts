@@ -6,7 +6,7 @@
 //   POST /api/checkout/mock/{id}     → dev simulator approve/decline
 // Gateway webhooks go straight to the API, not through here.
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
+import { SESSION_COOKIE, apiFetch, idempotency, withApi } from '../../../../lib/bff';
 
 const SAFE = /^[A-Za-z0-9-]+$/;
 
@@ -22,7 +22,10 @@ async function forward(req: Request, path: string[], method: 'GET' | 'POST'): Pr
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const headers: Record<string, string> = { 'accept-language': 'pt' };
   if (token) headers.authorization = `Bearer ${token}`;
-  if (method === 'POST') headers['content-type'] = 'application/json';
+  if (method === 'POST') {
+    headers['content-type'] = 'application/json';
+    Object.assign(headers, idempotency(req));
+  }
   const res = await apiFetch(`/checkout/${path.join('/')}`, {
     method,
     headers,

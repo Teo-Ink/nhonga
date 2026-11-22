@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useDict } from '../i18n/DictProvider';
 import { formatPrice } from '../../lib/format';
+import { useActionKey } from '../../lib/action-key';
 
 interface Pkg {
   id: string;
@@ -33,6 +34,7 @@ interface WalletView {
 // checkout (M-Pesa / e-Mola / Visa card): we create a payment, send the
 // seller to the gateway's page, and /pagamento/[id] shows the outcome.
 export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
+  const payKey = useActionKey();
   const dash = useDict().dash;
   const [w, setW] = useState<WalletView | null>(null);
   const [panel, setPanel] = useState<'none' | 'topup' | 'packages'>('none');
@@ -109,7 +111,10 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     try {
       const res = await fetch('/api/checkout/topup', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...payKey.headers(JSON.stringify({ amountCents: mt * 100, method })),
+        },
         body: JSON.stringify({ amountCents: mt * 100, method }),
       });
       const d = (await res.json()) as { checkoutUrl?: string; detail?: string; message?: string };
@@ -133,7 +138,10 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     try {
       const res = await fetch('/api/checkout/package', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...payKey.headers(JSON.stringify({ packageId: id, method })),
+        },
         body: JSON.stringify({ packageId: id, method }),
       });
       const d = (await res.json()) as { checkoutUrl?: string; detail?: string; message?: string };
@@ -154,12 +162,16 @@ export function WalletBar({ reloadSignal = 0 }: { reloadSignal?: number }) {
     setBusy(true);
     setMsg(null);
     try {
-      const res = await fetch('/api/wallet/pro', { method: 'POST' });
+      const res = await fetch('/api/wallet/pro', {
+        method: 'POST',
+        headers: payKey.headers('pro'),
+      });
       const d = await res.json();
       if (!res.ok) {
         setMsg(d.detail ?? d.message ?? dash.pro_fail);
         return;
       }
+      payKey.done();
       setW(d);
       setMsg(dash.pro_activated);
     } finally {

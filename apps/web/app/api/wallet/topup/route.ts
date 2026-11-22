@@ -1,6 +1,6 @@
 // BFF: top up the signed-in seller's wallet balance (demo credit).
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
+import { SESSION_COOKIE, apiFetch, idempotency, withApi } from '../../../../lib/bff';
 
 async function handlePOST(req: Request): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -9,6 +9,7 @@ async function handlePOST(req: Request): Promise<Response> {
   const res = await apiFetch(`/wallet/topup`, {
     method: 'POST',
     headers: {
+      ...idempotency(req),
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
       'accept-language': 'pt',

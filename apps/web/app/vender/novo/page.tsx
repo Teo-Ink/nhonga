@@ -13,6 +13,7 @@ import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
 import { formatPrice } from '../../../lib/format';
 import { clearDraft, loadDraft, saveDraft } from '../../../lib/listing-draft';
+import { useActionKey } from '../../../lib/action-key';
 
 // Create listing — fully wired. The form POSTs to /api/listings (real
 // createListing under the signed-in seller's shop); photos are picked and
@@ -34,6 +35,7 @@ const CATEGORY_KEYS = [
 ] as const;
 
 export default function NewListingPage() {
+  const payKey = useActionKey();
   const t = pt.sell;
   const cats = pt.categories;
   const [title, setTitle] = useState('');
@@ -262,7 +264,12 @@ export default function NewListingPage() {
       if (plan !== 'free') {
         await fetch('/api/promotions', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            ...payKey.headers(
+              JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
+            ),
+          },
           body: JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
         }).catch(() => undefined);
       }
