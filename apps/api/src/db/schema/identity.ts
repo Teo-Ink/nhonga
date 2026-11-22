@@ -73,6 +73,8 @@ export const otpChallenge = pgTable(
   },
   (table) => [
     index('otp_challenge_phone_idx').on(table.phoneE164, table.createdAt.desc()),
+    // Global hourly OTP limit (SEC-02, migration 0019).
+    index('otp_challenge_created_idx').on(table.createdAt.desc()),
     check(
       'otp_challenge_purpose_check',
       sql`${table.purpose} in ('login','verify_phone','payout_change')`,
