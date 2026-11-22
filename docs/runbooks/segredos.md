@@ -33,7 +33,7 @@ um marcador (`definir-chave`) que a API ignora. Para o ligar:
 
 ```bash
 aws secretsmanager put-secret-value --secret-id nhonga-staging/ANTHROPIC_API_KEY --secret-string 'sk-ant-…'
-aws ecs update-service --cluster nhonga-staging --service nhonga-staging-api --force-new-deployment
+aws ecs update-service --cluster nhonga-staging --service api --force-new-deployment
 ```
 
 3. Confirme: `curl http://<ALB>:8080/v1/assistant/status` devolve
@@ -44,7 +44,7 @@ O tecto mensal é `ASSISTANT_MONTHLY_TOKEN_CAP` (staging 500 000, produção
 (`ANTHROPIC_MODEL` para mudar).
 
 Depois de mudar um valor, force um novo deploy do serviço para as tarefas o
-lerem: `aws ecs update-service --cluster nhonga-$ENV --service nhonga-$ENV-api --force-new-deployment`.
+lerem: `aws ecs update-service --cluster nhonga-$ENV --service api --force-new-deployment`.
 
 ## Ler o token de operações
 
