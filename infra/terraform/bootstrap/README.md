@@ -18,7 +18,10 @@ temporary credentials only when the token's `sub` claim matches a role's trust
 policy. There is no secret in the repository, nothing to rotate, and nothing
 that keeps working if it leaks.
 
-The production role trusts `repo:<owner>/<repo>:environment:production`.
+The production role trusts `<subject prefix>:environment:production`. This
+repository uses GitHub's immutable subject format, so the prefix is
+`repo:Teo-Ink@291932914/nhonga@1373752316` (owner and repository pinned by id);
+see `github_oidc_subject_prefix` in `variables.tf`.
 GitHub does not put that claim in a token until the environment's protection
 rules are satisfied, so adding a required reviewer to the `production`
 environment makes the approval gate an IAM control rather than a line of YAML

@@ -3,10 +3,11 @@ name: Terraform
 on:
   pull_request:
     branches: [main]
-    paths: ["infra/terraform/**", ".github/workflows/terraform.yml"]
+    paths:
+      ["infra/terraform/envs/**", "infra/terraform/modules/**", ".github/workflows/terraform.yml"]
   push:
     branches: [main]
-    paths: ["infra/terraform/**"]
+    paths: ["infra/terraform/envs/**", "infra/terraform/modules/**"]
   workflow_dispatch:
     inputs:
       environment:
@@ -56,7 +57,7 @@ jobs:
 
       - name: Init
         working-directory: infra/terraform/envs/${{ matrix.env }}
-        run: terraform init -input=false
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
 
       - name: Plan
         id: plan
@@ -104,7 +105,7 @@ jobs:
 
       - working-directory: infra/terraform/envs/staging
         run: |
-          terraform init -input=false
+          terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
           terraform apply -input=false -auto-approve
 
   apply-production:
@@ -136,5 +137,5 @@ jobs:
 
       - working-directory: infra/terraform/envs/production
         run: |
-          terraform init -input=false
+          terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
           terraform apply -input=false -auto-approve

@@ -10,17 +10,16 @@ terraform {
 
   # Bootstrap is the chicken-and-egg layer: it CREATES the state bucket and lock
   # table that every other layer uses, so it cannot itself start in S3.
-  # Run it once with local state, then uncomment this block and
-  # `terraform init -migrate-state` to move the bootstrap state into the bucket
-  # it just created. See README.md in this directory.
-  #
-  # backend "s3" {
-  #   bucket         = "nhonga-tfstate-<account-id>"
-  #   key            = "bootstrap/terraform.tfstate"
-  #   region         = "af-south-1"
-  #   dynamodb_table = "nhonga-tfstate-lock"
-  #   encrypt        = true
-  # }
+  # It was applied once with local state; this block was then enabled and
+  # `terraform init -migrate-state` moved the state into the bucket it created.
+  # See README.md in this directory.
+  backend "s3" {
+    bucket         = "nhonga-tfstate-526156223765"
+    key            = "bootstrap/terraform.tfstate"
+    region         = "af-south-1"
+    dynamodb_table = "nhonga-tfstate-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
