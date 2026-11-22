@@ -50,8 +50,14 @@ variable "health_check_path" {
   type    = string
   default = "/health/live"
 }
-# Cloud Map private DNS namespace. When set, the service registers as
-# <service_name>.<namespace> so other services in the VPC can call it directly.
+# Register the service in a Cloud Map private DNS namespace as
+# <service_name>.<namespace>, so other services in the VPC can call it
+# directly. A separate flag, because the namespace id is only known after
+# apply and count must be known at plan time.
+variable "service_discovery" {
+  type    = bool
+  default = false
+}
 variable "service_discovery_namespace_id" {
   type    = string
   default = ""
@@ -158,7 +164,7 @@ resource "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_service_discovery_service" "this" {
-  count = var.service_discovery_namespace_id != "" ? 1 : 0
+  count = var.service_discovery ? 1 : 0
   name  = var.service_name
 
   dns_config {
