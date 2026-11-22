@@ -772,6 +772,7 @@ export class CatalogService {
     filters: ProductFilters,
     limit: number,
   ): Promise<ProductListResponse> {
+    const offset = decodeCursor(filters.cursor);
     const conds: SQL[] = [eq(product.status, 'active')];
     if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
     if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
@@ -845,7 +846,8 @@ export class CatalogService {
       .leftJoin(district, eq(vendor.districtId, district.id))
       .where(and(...conds))
       .orderBy(...order)
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
 
     const ids = rows.map((p) => p.id);
     const [variantsByProduct, imagesByProduct] = await Promise.all([
@@ -886,7 +888,12 @@ export class CatalogService {
       ),
     );
     const total = Number(rows[0]?.total ?? 0);
-    return { total, items, page: { cursor: null, hasMore: total > limit } };
+    const hasMore = total > offset + rows.length;
+    return {
+      total,
+      items,
+      page: { cursor: hasMore ? encodeCursor(offset + rows.length) : null, hasMore },
+    };
   }
 
   private async runListQuery(
@@ -1067,11 +1074,13 @@ export class CatalogService {
     mapped.sort((a, b) => Number(b.item.featured) - Number(a.item.featured));
 
     const total = mapped.length;
-    const page = mapped.slice(0, limit).map((m) => m.item);
+    const offset = decodeCursor(filters.cursor);
+    const page = mapped.slice(offset, offset + limit).map((m) => m.item);
+    const hasMore = total > offset + page.length;
     return {
       total,
       items: page,
-      page: { cursor: null, hasMore: total > limit },
+      page: { cursor: hasMore ? encodeCursor(offset + page.length) : null, hasMore },
       ...(categoryCounts ? { categoryCounts } : {}),
     };
   }
@@ -1449,4 +1458,19 @@ function asUuidOrNil(value: string): string {
 export function listingsPerDay(raw: string | undefined = process.env['LISTINGS_PER_DAY']): number {
   const n = Number(raw);
   return Number.isInteger(n) && n > 0 ? n : 10;
+}
+
+/**
+ * Page cursors (P2-11). Opaque to clients ("c1." + base64url of the offset), so
+ * the API can move to keyset pagination later without breaking anyone. A bad
+ * cursor means the first page; deep pages are capped at 2 000 results.
+ */
+const MAX_OFFSET = 2000;
+export function encodeCursor(offset: number): string {
+  return `c1.${Buffer.from(String(offset)).toString('base64url')}`;
+}
+export function decodeCursor(cursor: string | undefined): number {
+  if (!cursor?.startsWith('c1.')) return 0;
+  const n = Number(Buffer.from(cursor.slice(3), 'base64url').toString());
+  return Number.isInteger(n) && n >= 0 ? Math.min(n, MAX_OFFSET) : 0;
 }

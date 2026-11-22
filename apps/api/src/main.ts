@@ -13,6 +13,7 @@ import { DB } from './db/database.module.js';
 import type { Db } from './db/types.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { requestContextMiddleware } from './common/request-context.js';
+import { apiVersionMiddleware } from './common/api-version.js';
 import { JsonLogger } from './common/json-logger.js';
 import { initErrorReporting } from './common/error-reporter.js';
 import type { AppConfig } from './config/config.schema.js';
@@ -30,6 +31,8 @@ async function bootstrap(): Promise<void> {
   // 100 KB JSON everywhere, 12 MB only on the photo upload routes (SEC-07).
   // Registered first so Nest's default parser skips already-parsed bodies; it
   // keeps rawBody for the payment webhook signatures.
+  // /v1/… is the canonical address; the prefix is stripped before routing.
+  app.use(apiVersionMiddleware());
   app.use(requestContextMiddleware());
   app.use(jsonBodyLimits());
   const log = new Logger('Bootstrap');

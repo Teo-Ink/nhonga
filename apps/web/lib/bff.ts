@@ -11,6 +11,8 @@
 
 export const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 export const SESSION_COOKIE = 'nhonga_session';
+/** Every call goes to the versioned API (P2-11). */
+export const API_VERSION = 'v1';
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 // Generative endpoints (assistant, banner studio, AI search) legitimately take
@@ -50,7 +52,7 @@ export async function apiFetch(
   const headers = new Headers(rest.headers);
   if (!headers.has('x-request-id')) headers.set('x-request-id', `web-${crypto.randomUUID()}`);
   try {
-    return await fetchImpl(`${API_URL}${path}`, {
+    return await fetchImpl(`${API_URL}/${API_VERSION}${path}`, {
       ...rest,
       headers,
       signal: AbortSignal.timeout(timeoutMs),
