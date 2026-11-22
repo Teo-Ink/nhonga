@@ -4,7 +4,7 @@ import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
 
 async function handlePOST(): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return Response.json({ detail: 'Inicia sessão.' }, { status: 401 });
+  if (!token) return Response.json({ detail: 'Inicie sessão.' }, { status: 401 });
   const res = await apiFetch(`/wallet/pro`, {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'accept-language': 'pt' },

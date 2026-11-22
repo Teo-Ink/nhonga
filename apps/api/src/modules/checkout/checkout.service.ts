@@ -101,7 +101,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     amountCents: number,
     method: string,
   ): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão para carregar a carteira.');
+    if (!token) throw new UnauthorizedException('Inicie sessão para carregar a carteira.');
     const shop = await this.wallets.requireShop(token);
     const amount = Math.round(amountCents);
     if (!Number.isFinite(amount) || amount < MIN_TOPUP_CENTS || amount > MAX_TOPUP_CENTS) {
@@ -116,7 +116,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     packageId: string,
     method: string,
   ): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão para comprar um pacote.');
+    if (!token) throw new UnauthorizedException('Inicie sessão para comprar um pacote.');
     const shop = await this.wallets.requireShop(token);
     const pkg = packageById(packageId);
     if (!pkg) throw new BadRequestException('Pacote inválido.');
@@ -219,7 +219,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
 
   /** The caller's own intent, refreshed from the gateway while still pending. */
   async get(token: string | null, id: string): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    if (!token) throw new UnauthorizedException('Inicie sessão.');
     const shop = await this.wallets.requireShop(token);
     const intent = await this.find(id);
     if (!intent || intent.vendorId !== shop.id)
@@ -271,7 +271,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     outcome: 'paid' | 'failed',
   ): Promise<CheckoutView> {
     if (!this.setup.mock) throw new ForbiddenException('Simulador indisponível.');
-    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    if (!token) throw new UnauthorizedException('Inicie sessão.');
     const shop = await this.wallets.requireShop(token);
     const intent = await this.find(id);
     if (!intent || intent.vendorId !== shop.id || !intent.gatewayRef) {

@@ -254,7 +254,7 @@ export default function AccountScreen() {
             </Text>
             <Text style={styles.notifyHint}>
               {push === 'on'
-                ? 'Avisamos-te por notificação e SMS quando surgir algo nas tuas pesquisas guardadas.'
+                ? 'Avisamos por notificação e SMS quando surgir algo nas suas pesquisas guardadas.'
                 : push === 'unavailable'
                   ? 'As notificações push funcionam na app instalada; aqui usamos SMS.'
                   : 'Recebe uma notificação quando surgirem novos anúncios para ti.'}
@@ -279,7 +279,7 @@ export default function AccountScreen() {
               <Stat n={stats?.contacts ?? 0} label="Contactos" />
             </View>
             {items.length === 0 ? (
-              <Text style={styles.muted}>Ainda não tens anúncios.</Text>
+              <Text style={styles.muted}>Ainda não tem anúncios.</Text>
             ) : (
               items.map((it) => {
                 const rowBusy = busyId === it.id;
