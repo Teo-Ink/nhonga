@@ -104,9 +104,32 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+        # The gitleaks CLI (MIT) rather than gitleaks-action, which now needs a
+        # paid licence for organisation repos. Same scanner, pinned version,
+        # checksum-verified. Scans the commits this PR / push introduces.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: "8.30.1"
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$RUNNER_TEMP/$tarball" "$base/$tarball"
+          curl -sSfL -o "$RUNNER_TEMP/checksums.txt" "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd "$RUNNER_TEMP" && grep " ${tarball}\$" checksums.txt | sha256sum -c -)
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+          if [ "$EVENT" = "pull_request" ]; then
+            range="${PR_BASE}..${PR_HEAD}"
+          elif [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            range="${PUSH_BEFORE}..${PUSH_AFTER}"
+          else
+            range="${PUSH_AFTER}"
+          fi
+          "$RUNNER_TEMP/gitleaks" git --redact --verbose --log-opts="$range" .
 
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -160,7 +183,9 @@ jobs:
 
       - name: IaC security scan
         # tfsec is now part of Trivy; this replaces the standalone action.
-        uses: aquasecurity/trivy-action@0.28.0
+        # Pinned to the commit of tag v0.36.0, so a moved tag cannot change
+        # what runs here.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config
           scan-ref: infra/terraform
