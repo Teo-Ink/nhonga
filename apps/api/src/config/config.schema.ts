@@ -175,6 +175,10 @@ export function validateEnv(raw: Record<string, string | undefined>): AppConfig 
  * which would let anyone sign in as any phone number; mock payments grant
  * paid features for free. Staging may still use mocks for testing.
  */
+function isTruthy(v: string | undefined): boolean {
+  return v !== undefined && ['1', 'true', 'yes', 'on'].includes(v.trim().toLowerCase());
+}
+
 export function assertProductionSafe(
   config: AppConfig,
   raw: Record<string, string | undefined>,
@@ -189,6 +193,13 @@ export function assertProductionSafe(
     problems.push('CHECKOUT_MODE must be "live"');
   }
   if (config.corsOrigins.length === 0) problems.push('CORS_ORIGINS must list the site origin(s)');
+  // Demo catalogue and demo storefront mode must never reach production (CONT-02).
+  if (isTruthy(raw['SEED_DEMO'])) problems.push('SEED_DEMO must be unset');
+  if (isTruthy(raw['NEXT_PUBLIC_DEMO_MODE'])) problems.push('NEXT_PUBLIC_DEMO_MODE must be unset');
+  // Generative AI is billed per token: production needs a monthly ceiling (SEC-08).
+  if (config.assistantMonthlyTokenCap <= 0) {
+    problems.push('ASSISTANT_MONTHLY_TOKEN_CAP must be a positive monthly token ceiling');
+  }
   if (problems.length > 0) {
     throw new ConfigError(`Unsafe production configuration: ${problems.join('; ')}`);
   }
