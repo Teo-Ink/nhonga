@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 // AI search: forwards a spoken phrase or a photo to the API's search-query
 // drafter, which returns { query, category }. Keeps API_URL server-side; bodies
@@ -19,7 +19,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../lib/bff';
 
 // Self-serve promo booking: forwards the campaign to the API (book → mock pay →
 // activate). Path is /api/spot (not /api/ads) so ad blockers don't block it.
@@ -16,7 +16,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

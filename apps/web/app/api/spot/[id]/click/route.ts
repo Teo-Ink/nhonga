@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../../../lib/bff';
 
 // Promo click tracker: records the click on the API, then redirects to the
 // advertiser's URL. Only redirects to the campaign's stored http(s) URL (set by
@@ -16,7 +16,7 @@ async function handleGET(
       cache: 'no-store',
     });
     if (res.ok) {
-      const { clickUrl } = (await res.json()) as { clickUrl?: string };
+      const { clickUrl } = (await readJson(res)) as { clickUrl?: string };
       if (clickUrl && /^https?:\/\//i.test(clickUrl)) {
         return NextResponse.redirect(clickUrl, 302);
       }

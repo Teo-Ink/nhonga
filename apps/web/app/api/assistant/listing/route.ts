@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 // AI-assisted posting (D): forwards the seller's notes to the API's listing
 // drafter. Keeps API_URL server-side.
@@ -16,7 +16,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

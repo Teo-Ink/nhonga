@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../lib/bff';
 
 // Report a listing (trust & safety). Forwards to the catalogue reports endpoint.
 async function handlePOST(req: Request): Promise<Response> {
@@ -19,7 +19,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify({ reason: body.reason, note: body.note }),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

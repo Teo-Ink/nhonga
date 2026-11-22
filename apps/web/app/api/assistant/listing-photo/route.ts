@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { apiFetch, withApi } from '../../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 // AI-assisted posting from a photo (vision): forwards the image to the API's
 // photo drafter. Keeps API_URL server-side. Bodies carry a base64 image, so the
@@ -19,7 +19,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

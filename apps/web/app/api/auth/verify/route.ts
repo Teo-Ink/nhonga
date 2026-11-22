@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
+import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 const REFERRAL_COOKIE = 'nhonga_ref';
 
@@ -16,7 +16,7 @@ async function handlePOST(req: Request): Promise<Response> {
     body: JSON.stringify(referralCode ? { ...body, referralCode } : body),
     cache: 'no-store',
   });
-  const data = (await res.json().catch(() => ({}))) as {
+  const data = (await readJson(res).catch(() => ({}))) as {
     sessionToken?: string;
     user?: unknown;
     message?: string;

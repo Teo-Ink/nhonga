@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE, apiFetch, withApi } from '../../../../lib/bff';
+import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../lib/bff';
 
 // Current user, or { user: null } when not signed in. Never errors, so the
 // client can treat a signed-out visitor as an ordinary state.
@@ -12,7 +12,7 @@ async function handleGET(): Promise<Response> {
     cache: 'no-store',
   });
   if (!res.ok) return NextResponse.json({ user: null });
-  const user = await res.json();
+  const user = await readJson(res);
   return NextResponse.json({ user });
 }
 

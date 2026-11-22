@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE, apiFetch, withApi } from '../../../../../lib/bff';
+import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../../lib/bff';
 
 // Post a seller review. Forwards the httpOnly session cookie to the API as a
 // Bearer token, so the API identifies the reviewer; 401 when signed out.
@@ -25,7 +25,7 @@ async function handlePOST(
     body: JSON.stringify(body),
     cache: 'no-store',
   });
-  const data = await res.json().catch(() => ({}));
+  const data = await readJson(res).catch(() => ({}));
   return NextResponse.json(data, { status: res.status });
 }
 

@@ -56,6 +56,15 @@ export async function apiFetch(
   }
 }
 
+/**
+ * Reads a JSON body that may be empty. Nest sends no body for a handler that
+ * returns null (e.g. "no shop yet"), and res.json() throws on that.
+ */
+export async function readJson<T = unknown>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  return text ? (JSON.parse(text) as T) : null;
+}
+
 export function problem(status: number, title: string, detail: string): Response {
   return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
     status,

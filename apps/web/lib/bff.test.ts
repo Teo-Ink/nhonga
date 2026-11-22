@@ -73,3 +73,11 @@ describe('withApi', () => {
     spy.mockRestore();
   });
 });
+
+describe('readJson', () => {
+  it('returns null for an empty body (Nest null) instead of throwing', async () => {
+    const { readJson } = await import('./bff');
+    expect(await readJson(new Response(''))).toBeNull();
+    expect(await readJson(new Response('{"a":1}'))).toEqual({ a: 1 });
+  });
+});
