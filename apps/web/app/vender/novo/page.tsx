@@ -246,7 +246,7 @@ export default function NewListingPage() {
           ...(needsShopName && shopName.trim() ? { shopName: shopName.trim() } : {}),
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { slug?: string };
+      const data = (await res.json().catch(() => ({}))) as { id?: string; slug?: string };
       if (res.status === 401) {
         window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
         return;
@@ -260,17 +260,17 @@ export default function NewListingPage() {
         return;
       }
       clearDraft();
-      // A paid plan boosts the fresh listing (mock payment), like /vender/promover.
-      if (plan !== 'free') {
-        await fetch('/api/promotions', {
+      // A paid plan is charged to the seller's wallet, like "Promover" on the
+      // account page. Without enough balance the listing is still published,
+      // and the seller can promote it later from there.
+      if (plan !== 'free' && data.id) {
+        await fetch('/api/wallet/boost', {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            ...payKey.headers(
-              JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
-            ),
+            ...payKey.headers(JSON.stringify({ productId: data.id, planCode: plan })),
           },
-          body: JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
+          body: JSON.stringify({ productId: data.id, planCode: plan }),
         }).catch(() => undefined);
       }
       window.location.href = `/produto/${data.slug}`;

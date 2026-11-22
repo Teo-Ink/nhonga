@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { WebhooksModule } from '../payments/http/webhooks/webhooks.module.js';
+import { PaymentProvidersModule } from '../payments/payment-providers.module.js';
 import { SubscriptionsController } from './subscriptions.controller.js';
 import { SubscriptionsService } from './subscriptions.service.js';
 
-// Reuses PaymentProvidersService (exported by WebhooksModule) to validate the
+// Reuses PaymentProvidersService (exported by PaymentProvidersModule) to validate the
 // payment method against the real provider registry.
 @Module({
-  imports: [WebhooksModule],
+  imports: [PaymentProvidersModule],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService],
 })

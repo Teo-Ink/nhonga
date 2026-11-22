@@ -73,15 +73,6 @@ export class AuthController {
     }
   }
 
-  @Get('orders')
-  async orders(@Headers('authorization') authz?: string): Promise<unknown> {
-    try {
-      return { orders: await this.auth.listOrders(bearer(authz)) };
-    } catch (e) {
-      throw toHttp(e);
-    }
-  }
-
   /** Delete my account (P0-06): immediate, every session ends. */
   @Delete('me')
   @HttpCode(200)

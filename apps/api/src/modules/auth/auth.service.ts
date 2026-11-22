@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import { normaliseMzMsisdn } from '@nhonga/shared';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
@@ -8,12 +8,6 @@ import { appUser, otpChallenge, refreshToken } from '../../db/schema/identity.js
 import { referral } from '../../db/schema/referrals.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
-import {
-  order as orderTable,
-  orderItem,
-  payment as paymentTable,
-  subOrder,
-} from '../../db/schema/commerce.js';
 import {
   generateOtpCode,
   hashOtpCode,
@@ -290,45 +284,6 @@ export class AuthService {
       .update(refreshToken)
       .set({ revokedAt: new Date() })
       .where(eq(refreshToken.tokenHash, hashSessionToken(rawToken)));
-  }
-
-  async listOrders(rawToken: string | null): Promise<
-    ReadonlyArray<{
-      orderNumber: string;
-      placedAt: string;
-      grandTotalCents: number;
-      paymentStatus: string;
-      itemCount: number;
-    }>
-  > {
-    const userId = await this.userIdForToken(rawToken);
-    const orders = await this.db
-      .select({
-        id: orderTable.id,
-        orderNumber: orderTable.orderNumber,
-        placedAt: orderTable.placedAt,
-        grandTotalCents: orderTable.grandTotalCents,
-        paymentStatus: paymentTable.status,
-        itemCount: sql<number>`(
-          select coalesce(sum(${orderItem.quantity}), 0)::int
-          from ${orderItem}
-          join ${subOrder} on ${subOrder.id} = ${orderItem.subOrderId}
-          where ${subOrder.orderId} = ${orderTable.id}
-        )`,
-      })
-      .from(orderTable)
-      .leftJoin(paymentTable, eq(paymentTable.orderId, orderTable.id))
-      .where(eq(orderTable.userId, userId))
-      .orderBy(desc(orderTable.placedAt))
-      .limit(50);
-
-    return orders.map((o) => ({
-      orderNumber: o.orderNumber,
-      placedAt: o.placedAt.toISOString(),
-      grandTotalCents: o.grandTotalCents,
-      paymentStatus: o.paymentStatus ?? 'unknown',
-      itemCount: o.itemCount,
-    }));
   }
 
   private async userIdForToken(rawToken: string | null): Promise<string> {
