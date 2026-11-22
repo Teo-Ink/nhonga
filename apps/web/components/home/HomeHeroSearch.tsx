@@ -26,11 +26,15 @@ export function HomeHeroSearch({
         className="herofind__photo"
         aria-hidden="true"
         style={{
-          backgroundImage: 'url("https://live.staticflickr.com/2618/3858546840_da8a76b450_b.jpg")',
+          // Local still (a frame of the hero video, ~75 KB WebP) instead of a
+          // hotlinked photo: works under the CSP and costs little on mobile.
+          backgroundImage: 'url("/hero/market-poster.webp")',
         }}
       />
       <HeroVideo
         src="/hero/market.mp4"
+        webmSrc="/hero/market.webm"
+        poster="/hero/market-poster.webp"
         pauseLabel={t.home.hero_pause}
         playLabel={t.home.hero_play}
       />
