@@ -21,6 +21,7 @@ import {
   newSessionToken,
   verifyOtpCode,
 } from './auth-crypto.js';
+import { breachMessage, checkOtpLimits, otpLimitsFromEnv, type OtpLimits } from './otp-limits.js';
 
 export class AuthError extends Error {
   constructor(
@@ -63,7 +64,6 @@ export interface VerifyResult {
 const OTP_TTL_SECONDS = 600; // 10 minutes
 const SESSION_TTL_DAYS = 7;
 const MAX_ATTEMPTS = 5;
-const MAX_REQUESTS_PER_WINDOW = 5;
 
 /** Whether SMS is mocked. In mock mode we log the code and return it for testing. */
 // Never mock in production, whatever SMS_MODE says (config validation also
@@ -75,6 +75,8 @@ const SMS_MOCK =
 export class AuthService {
   private readonly log = new Logger('Auth');
 
+  private readonly limits: OtpLimits = otpLimitsFromEnv();
+
   constructor(@Inject(DB) private readonly db: Db) {}
 
   async requestOtp(phone: string): Promise<OtpRequestResult> {
@@ -83,14 +85,17 @@ export class AuthService {
       throw new AuthError('invalid_phone', 'O número deve ter 9 dígitos e começar por 8.');
     }
 
-    // Basic rate limit: cap active challenges per phone in the TTL window.
-    const since = new Date(Date.now() - OTP_TTL_SECONDS * 1000);
-    const recent = await this.db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(otpChallenge)
-      .where(and(eq(otpChallenge.phoneE164, phoneE164), gt(otpChallenge.createdAt, since)));
-    if ((recent[0]?.n ?? 0) >= MAX_REQUESTS_PER_WINDOW) {
-      throw new AuthError('rate_limited', 'Pediu códigos demasiadas vezes. Tente mais tarde.');
+    // Limits counted in Postgres, so they hold across every API instance (SEC-02).
+    const usage = await this.otpUsage(phoneE164);
+    const breach = checkOtpLimits(usage, this.limits);
+    if (breach !== null) {
+      if (breach.kind === 'global_hour') {
+        // Stable marker for a CloudWatch metric filter and alarm (SMS pumping).
+        this.log.warn(`ALERT otp_global_limit_reached count=${usage.globalLastHour}`);
+      } else {
+        this.log.log(`otp_limited kind=${breach.kind}`);
+      }
+      throw new AuthError('rate_limited', breachMessage(breach));
     }
 
     const code = generateOtpCode();
@@ -173,6 +178,26 @@ export class AuthService {
     }
 
     return { sessionToken: token.raw, expiresAt: expiresAt.toISOString(), user };
+  }
+
+  private async otpUsage(phoneE164: string) {
+    const rows = await this.db
+      .select({
+        lastAt: sql<Date | null>`max(${otpChallenge.createdAt}) filter (where ${otpChallenge.phoneE164} = ${phoneE164})`,
+        inWindow: sql<number>`count(*) filter (where ${otpChallenge.phoneE164} = ${phoneE164} and ${otpChallenge.createdAt} > now() - make_interval(secs => ${OTP_TTL_SECONDS}))::int`,
+        today: sql<number>`count(*) filter (where ${otpChallenge.phoneE164} = ${phoneE164} and ${otpChallenge.createdAt} > now() - interval '24 hours')::int`,
+        globalHour: sql<number>`count(*) filter (where ${otpChallenge.createdAt} > now() - interval '1 hour')::int`,
+      })
+      .from(otpChallenge)
+      .where(gt(otpChallenge.createdAt, sql`now() - interval '24 hours'`));
+    const r = rows[0];
+    const lastAt = r?.lastAt ? new Date(r.lastAt) : null;
+    return {
+      secondsSinceLast: lastAt === null ? null : (Date.now() - lastAt.getTime()) / 1000,
+      perNumberInWindow: r?.inWindow ?? 0,
+      perNumberToday: r?.today ?? 0,
+      globalLastHour: r?.globalHour ?? 0,
+    };
   }
 
   /** Explains why no attempt could be claimed, for the user-facing message. */

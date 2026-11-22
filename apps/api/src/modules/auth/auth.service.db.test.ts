@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { otpChallenge, refreshToken } from '../../db/schema/identity.js';
 import type { Db } from '../../db/types.js';
@@ -72,5 +72,68 @@ describe.skipIf(!hasTestDb)('AuthService.verifyOtp under concurrency (Postgres)'
     await expect(auth.verifyOtp(challengeId, devCode ?? '')).rejects.toMatchObject({
       code: 'challenge_not_found',
     });
+  });
+});
+
+// SEC-02: limits counted in Postgres, so they hold across API instances.
+describe.skipIf(!hasTestDb)('AuthService.requestOtp limits (Postgres)', () => {
+  let db: Db;
+  let close: () => Promise<void>;
+
+  beforeAll(() => {
+    migrateTestDb();
+    ({ db, close } = openTestDb());
+  });
+  afterAll(async () => close());
+
+  const freshPhone = () => `85${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}`;
+
+  it('refuses a resend inside the cooldown, from any instance', async () => {
+    const a = new AuthService(db);
+    const b = new AuthService(db); // a second API task sharing the database
+    const phone = freshPhone();
+    await a.requestOtp(phone);
+    await expect(b.requestOtp(phone)).rejects.toMatchObject({ code: 'rate_limited' });
+  });
+
+  it('caps codes per number per day', async () => {
+    const phone = freshPhone();
+    process.env['OTP_RESEND_COOLDOWN_SECONDS'] = '1';
+    process.env['OTP_MAX_PER_NUMBER_DAY'] = '2';
+    process.env['OTP_MAX_PER_NUMBER_WINDOW'] = '50';
+    try {
+      const auth = new AuthService(db);
+      // Backdate earlier codes past the cooldown instead of sleeping.
+      await auth.requestOtp(phone);
+      await db.execute(
+        sql`update otp_challenge set created_at = now() - interval '5 minutes' where phone_e164 = ${'+258' + phone}`,
+      );
+      await auth.requestOtp(phone);
+      await db.execute(
+        sql`update otp_challenge set created_at = now() - interval '5 minutes' where phone_e164 = ${'+258' + phone}`,
+      );
+      await expect(auth.requestOtp(phone)).rejects.toMatchObject({
+        code: 'rate_limited',
+        userMessage: expect.stringContaining('por hoje'),
+      });
+    } finally {
+      delete process.env['OTP_RESEND_COOLDOWN_SECONDS'];
+      delete process.env['OTP_MAX_PER_NUMBER_DAY'];
+      delete process.env['OTP_MAX_PER_NUMBER_WINDOW'];
+    }
+  });
+
+  it('trips the global hourly limit', async () => {
+    process.env['OTP_MAX_GLOBAL_HOUR'] = '1';
+    try {
+      const auth = new AuthService(db);
+      // The table already holds codes from earlier tests in the last hour.
+      await expect(auth.requestOtp(freshPhone())).rejects.toMatchObject({
+        code: 'rate_limited',
+        userMessage: expect.stringContaining('temporariamente'),
+      });
+    } finally {
+      delete process.env['OTP_MAX_GLOBAL_HOUR'];
+    }
   });
 });
