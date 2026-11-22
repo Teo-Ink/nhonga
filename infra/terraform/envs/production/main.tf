@@ -204,3 +204,18 @@ module "media" {
   environment    = local.env
   task_role_name = module.api.task_role_name
 }
+
+# Web application firewall on the load balancer (P2-05).
+module "waf" {
+  source      = "../../modules/waf"
+  project     = local.project
+  environment = local.env
+  alb_arn     = module.alb.arn
+}
+
+# Account-wide CloudTrail and GuardDuty (P2-05), applied from production only.
+module "account_security" {
+  source          = "../../modules/account-security"
+  project         = local.project
+  alarm_topic_arn = module.alarms.topic_arn
+}

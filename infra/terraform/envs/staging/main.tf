@@ -280,3 +280,11 @@ module "media" {
   environment    = local.env
   task_role_name = module.api.task_role_name
 }
+
+# Web application firewall on the load balancer (P2-05).
+module "waf" {
+  source      = "../../modules/waf"
+  project     = local.project
+  environment = local.env
+  alb_arn     = module.alb.arn
+}
