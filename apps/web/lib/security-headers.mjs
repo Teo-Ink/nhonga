@@ -1,16 +1,20 @@
 // Security headers for every page and route (SEC-03). Kept in a plain .mjs
 // module so next.config.mjs and the tests share one definition.
 //
-// Scripts: Next.js App Router streams inline <script> chunks and the layout has
-// a small inline theme boot script, so script-src allows 'unsafe-inline' but no
-// other origin. Third-party script hosts are blocked outright. Moving to nonces
-// needs every page rendered dynamically; tracked as a follow-up.
+// Scripts (SEC-10 / P2-07): every page gets a fresh nonce from middleware.ts.
+// Only scripts carrying it run ('strict-dynamic' lets them load Next's own
+// chunks); an injected <script> without the nonce is refused. Pages are
+// therefore rendered per request. Without a nonce (a response that did not
+// pass through the middleware) the policy falls back to 'unsafe-inline'.
 
-/** @param {{ dev?: boolean, imageHosts?: string[] }} [opts] */
-export function contentSecurityPolicy({ dev = false, imageHosts = [] } = {}) {
+/** @param {{ dev?: boolean, imageHosts?: string[], nonce?: string }} [opts] */
+export function contentSecurityPolicy({ dev = false, imageHosts = [], nonce } = {}) {
+  const scripts = nonce
+    ? ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"]
+    : ["'self'", "'unsafe-inline'"];
   const directives = {
     'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'", ...(dev ? ["'unsafe-eval'"] : [])],
+    'script-src': [...scripts, ...(dev ? ["'unsafe-eval'"] : [])],
     'style-src': ["'self'", "'unsafe-inline'"],
     // Listing photos come through Nhonga (/api/media, /_next/image); data: and
     // blob: cover inline SVG placeholders and local previews before upload.
@@ -34,6 +38,8 @@ export function contentSecurityPolicy({ dev = false, imageHosts = [] } = {}) {
 
 /** @param {{ dev?: boolean, imageHosts?: string[] }} [opts] */
 export function securityHeaders({ dev = false, imageHosts = [] } = {}) {
+  // The page CSP (with its nonce) is set per request by middleware.ts; this
+  // static one covers what the middleware does not see (static files).
   return [
     { key: 'Content-Security-Policy', value: contentSecurityPolicy({ dev, imageHosts }) },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -51,3 +57,21 @@ export function securityHeaders({ dev = false, imageHosts = [] } = {}) {
 }
 
 // HSTS is added by middleware.ts, only on HTTPS requests.
+
+/**
+ * Image hosts the CSP allows: IMAGE_HOSTS (the media CDN), plus the demo photo
+ * host when the demo catalogue is on. Shared by next.config.mjs and
+ * middleware.ts so both policies agree.
+ * @param {Record<string, string | undefined>} env
+ */
+export function imageHostsFromEnv(env) {
+  const hosts = (env.IMAGE_HOSTS ?? '')
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean);
+  const flag = env.NEXT_PUBLIC_DEMO_MODE;
+  const demo =
+    flag === '1' || flag === 'true' || (flag === undefined && env.NODE_ENV !== 'production');
+  if (demo) hosts.push('live.staticflickr.com'); // seed sample photos
+  return hosts;
+}

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { securityHeaders } from './lib/security-headers.mjs';
+import { imageHostsFromEnv, securityHeaders } from './lib/security-headers.mjs';
 
 // Mirrors lib/demo.ts: on in `next dev`, off in production builds unless
 // NEXT_PUBLIC_DEMO_MODE=1.
@@ -13,11 +13,7 @@ const isDemo =
 // Nhonga itself (/api/media), so production needs none unless IMAGE_HOSTS lists
 // e.g. the CDN domain. A wildcard would let anyone use our server to fetch and
 // resize arbitrary images.
-const imageHosts = (process.env.IMAGE_HOSTS ?? '')
-  .split(',')
-  .map((h) => h.trim())
-  .filter(Boolean);
-if (isDemo) imageHosts.push('live.staticflickr.com'); // seed sample photos
+const imageHosts = imageHostsFromEnv(process.env);
 
 // The container image (apps/web/Dockerfile) sets NEXT_OUTPUT=standalone to get a
 // self-contained server bundle. Tracing starts at the monorepo root so the

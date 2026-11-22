@@ -2,6 +2,11 @@
 
 ## Veredicto: **Não pronto** para produção pública. Pronto para demos controladas.
 
+> **Actualização (4.ª ronda, 22/11/2026):** a engenharia que dependia só de
+> código está feita (app no SDK 58, reembolsos, fluxo legado removido,
+> respostas tipadas, produção com o site, CSP com nonce). O código chega a
+> **8,3**; com as tarefas do dono e do advogado, a **≈ 9**.
+>
 > **Actualização (2.ª ronda, 22/11/2026):** com os 9 ramos novos o código
 > chega a **7,7**; com as tarefas do dono e do advogado, a **≈ 8,5**; a nota 9
 > precisa ainda de ≈ 2 semanas de engenharia (API, app, reembolsos). Os
@@ -26,24 +31,24 @@ trabalho (ver plano), a Nhonga pode lançar.
 
 ## Pontuação (0–10)
 
-| Domínio        | 1.ª ronda | 2.ª ronda (código) | Com o dono |
-| -------------- | --------- | ------------------ | ---------- |
-| Segurança      | 5 → 7     | 8                  | 9          |
-| Pagamentos     | 7         | 8,5 (3.ª ronda)    | 9          |
-| Arquitectura   | 6         | 8,5 (3.ª ronda)    | 8,5        |
-| API            | 6         | 8,5 (3.ª ronda)    | 8,5        |
-| Dados          | 6         | 8                  | 9          |
-| Performance    | 4 → 6     | 8                  | 8,5        |
-| Escalabilidade | 6         | 8                  | 8,5        |
-| DevOps         | 6         | 7                  | 8,5        |
-| DevSecOps      | 6         | 7                  | 9          |
-| Testes         | 4 → 6     | 8                  | 9          |
-| UX             | 6         | 8                  | 8,5        |
-| Design e cores | 8         | 9                  | 9          |
-| Acessibilidade | 6         | 8                  | 8,5        |
-| Mobile         | 4         | 6                  | 7          |
-| Conformidade   | 4         | 7                  | 9          |
-| **Global**     | 5,5 → 6,3 | **7,8**            | **≈ 8,6**  |
+| Domínio        | 1.ª ronda | Código (última ronda) | Com o dono |
+| -------------- | --------- | --------------------- | ---------- |
+| Segurança      | 5 → 7     | 8,5 (4.ª ronda)       | 9,5        |
+| Pagamentos     | 7         | 9 (4.ª ronda)         | 9          |
+| Arquitectura   | 6         | 9 (4.ª ronda)         | 9          |
+| API            | 6         | 9 (4.ª ronda)         | 9          |
+| Dados          | 6         | 8                     | 9          |
+| Performance    | 4 → 6     | 8                     | 9          |
+| Escalabilidade | 6         | 8,5 (4.ª ronda)       | 9          |
+| DevOps         | 6         | 8 (4.ª ronda)         | 9          |
+| DevSecOps      | 6         | 7,5 (4.ª ronda)       | 9          |
+| Testes         | 4 → 6     | 8,5 (4.ª ronda)       | 9          |
+| UX             | 6         | 8                     | 8,5        |
+| Design e cores | 8         | 9                     | 9          |
+| Acessibilidade | 6         | 8                     | 8,5        |
+| Mobile         | 4         | 8 (4.ª ronda)         | 8,5        |
+| Conformidade   | 4         | 7                     | 9          |
+| **Global**     | 5,5 → 6,3 | **8,3** (4.ª ronda)   | **≈ 9**    |
 
 "Código" = todos os ramos `audit/*` juntos ao `main`.
 

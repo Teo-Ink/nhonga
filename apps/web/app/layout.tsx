@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { headers } from 'next/headers';
 import localFont from 'next/font/local';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
@@ -87,12 +88,14 @@ const bootScript = `(function(){try{var d=document.documentElement;var t=localSt
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getDictionary();
+  // Per-request CSP nonce from middleware.ts (SEC-10).
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     // The no-flash script sets data-theme on <html> before hydration, so the
     // server markup intentionally differs from the client here.
     <html lang={locale} className={`${inter.variable} ${ubuntu.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) mutate body
           before hydration; suppress the resulting attribute mismatch. */}

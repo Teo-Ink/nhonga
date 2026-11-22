@@ -93,3 +93,16 @@ o vendedor) ou desligado.
 
 Produção começa com **2 000 000 tokens/mês** (`ASSISTANT_MONTHLY_TOKEN_CAP`).
 Rever com o consumo real e o preço do fornecedor.
+
+### Reembolsos: quem pode pedir
+
+Só a administração (token de admin) pede reembolsos, e só do saldo que o
+utilizador ainda não gastou. Alternativa: o utilizador pedir na app dentro de
+N dias. Recomendação: manter manual até haver volume; ver
+`runbooks/reembolsos.md`.
+
+### Segredos de produção
+
+O Terraform cria só os contentores dos segredos; os valores são postos por
+`put-secret-value` (ver `runbooks/segredos.md`) e nunca ficam no estado.
+Confirme que quem aplica o Terraform tem o AWS CLI configurado.
