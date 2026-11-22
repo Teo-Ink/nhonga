@@ -40,7 +40,7 @@ export MOCK_PAYMENT_MIN_DELAY_MS=2500 MOCK_PAYMENT_MAX_DELAY_MS=5000
 # Optional: enable the AI customer-service assistant (Claude). Without a key the
 # assistant answers with a "not configured" notice. Never commit this key.
 export ANTHROPIC_API_KEY="<your Anthropic API key>"
-export ANTHROPIC_MODEL="claude-sonnet-5"   # optional; this is the default
+export ANTHROPIC_MODEL="claude-sonnet-5-5"   # optional; this is the default
 # Cost/abuse guards (optional): per-client chat requests per minute, and a
 # monthly token budget (0 = no cap). Usage + a rough cost estimate are logged.
 export ASSISTANT_RATE_PER_MIN=15

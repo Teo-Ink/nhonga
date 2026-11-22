@@ -134,7 +134,9 @@ module "secrets" {
   db_username = module.database.username
   db_password = module.database.password
 
-  # Put by the owner before the first production deploy (runbooks/segredos.md).
+  # Put by the owner (runbooks/segredos.md): external before the first
+  # production deploy; optional (the assistant key) whenever it is ready.
+  optional = ["ANTHROPIC_API_KEY"]
   external = ["PAWAPAY_API_TOKEN", "SMS_GATEWAY_URL", "SMS_GATEWAY_TOKEN"]
 }
 
@@ -226,6 +228,7 @@ module "api" {
       ADMIN_API_TOKEN = module.secrets.admin_api_token_arn
     },
     module.secrets.external_arns,
+    module.secrets.optional_arns,
   )
 }
 

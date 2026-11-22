@@ -122,6 +122,9 @@ module "secrets" {
 
   # Simulated SMS shows the login code on screen: limit sign-in to the team (P0-05).
   otp_dev_allowlist = true
+
+  # AI assistant: placeholder until the owner puts the key (runbooks/segredos.md).
+  optional = ["ANTHROPIC_API_KEY"]
 }
 
 module "alb" {
@@ -209,12 +212,18 @@ module "api" {
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
+
+    # The demo uses the real assistant: cap the monthly spend (AI-01).
+    ASSISTANT_MONTHLY_TOKEN_CAP = "500000"
   }
-  secret_arns = {
-    DATABASE_URL      = module.secrets.database_url_arn
-    ADMIN_API_TOKEN   = module.secrets.admin_api_token_arn
-    OTP_DEV_ALLOWLIST = module.secrets.otp_dev_allowlist_arn
-  }
+  secret_arns = merge(
+    {
+      DATABASE_URL      = module.secrets.database_url_arn
+      ADMIN_API_TOKEN   = module.secrets.admin_api_token_arn
+      OTP_DEV_ALLOWLIST = module.secrets.otp_dev_allowlist_arn
+    },
+    module.secrets.optional_arns,
+  )
 }
 
 module "web" {
