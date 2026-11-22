@@ -12,7 +12,7 @@ function fakeConfig(
 ): ConfigService<AppConfig, true> {
   const values: Record<string, unknown> = {
     assistantApiKey: apiKey,
-    assistantModel: 'claude-sonnet-5',
+    assistantModel: 'claude-sonnet-5-5',
     assistantRatePerMin: ratePerMin,
     assistantMonthlyTokenCap: cap,
   };
