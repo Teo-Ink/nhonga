@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { securityHeaders } from './lib/security-headers.mjs';
 
 // Mirrors lib/demo.ts: on in `next dev`, off in production builds unless
 // NEXT_PUBLIC_DEMO_MODE=1.
@@ -26,6 +27,16 @@ const standalone = process.env.NEXT_OUTPUT === 'standalone';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Don't advertise the framework (SEC-03).
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders({ dev: process.env.NODE_ENV !== 'production', imageHosts }),
+      },
+    ];
+  },
   ...(standalone
     ? {
         output: 'standalone',
