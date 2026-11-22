@@ -119,37 +119,38 @@ export class AuthService {
   }
 
   async verifyOtp(challengeId: string, code: string, referralCode?: string): Promise<VerifyResult> {
-    const rows = await this.db
-      .select()
-      .from(otpChallenge)
-      .where(eq(otpChallenge.id, challengeId))
-      .limit(1);
-    const ch = rows[0];
-    if (ch === undefined) {
-      throw new AuthError('challenge_not_found', 'Pedido de código inválido. Comece de novo.');
-    }
-    if (ch.consumedAt !== null) {
-      throw new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
-    }
-    if (ch.expiresAt.getTime() < Date.now()) {
-      throw new AuthError('expired', 'O código expirou. Peça um novo.');
-    }
-    if (ch.attempts >= ch.maxAttempts) {
-      throw new AuthError('too_many_attempts', 'Demasiadas tentativas. Peça um novo código.');
-    }
+    // Claim one attempt atomically BEFORE checking the code (SEC-01). Concurrent
+    // guesses each need their own row update, so at most max_attempts of them
+    // ever get to compare a code, however many arrive at once.
+    const claimed = await this.db
+      .update(otpChallenge)
+      .set({ attempts: sql`${otpChallenge.attempts} + 1` })
+      .where(
+        and(
+          eq(otpChallenge.id, challengeId),
+          sql`${otpChallenge.attempts} < ${otpChallenge.maxAttempts}`,
+          isNull(otpChallenge.consumedAt),
+          gt(otpChallenge.expiresAt, sql`now()`),
+        ),
+      )
+      .returning({ phoneE164: otpChallenge.phoneE164, codeHash: otpChallenge.codeHash });
+    const ch = claimed[0];
+    if (ch === undefined) throw await this.whyNoAttempt(challengeId);
 
     if (!verifyOtpCode(code.trim(), ch.codeHash)) {
-      await this.db
-        .update(otpChallenge)
-        .set({ attempts: ch.attempts + 1 })
-        .where(eq(otpChallenge.id, challengeId));
       throw new AuthError('wrong_code', 'Código incorreto. Verifique e tente novamente.');
     }
 
-    await this.db
+    // Consume atomically: of two correct submissions racing, exactly one wins
+    // and only that one gets a session.
+    const consumed = await this.db
       .update(otpChallenge)
-      .set({ consumedAt: new Date() })
-      .where(eq(otpChallenge.id, challengeId));
+      .set({ consumedAt: sql`now()` })
+      .where(and(eq(otpChallenge.id, challengeId), isNull(otpChallenge.consumedAt)))
+      .returning({ id: otpChallenge.id });
+    if (consumed.length === 0) {
+      throw new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
+    }
 
     const { user, created } = await this.upsertUser(ch.phoneE164);
     const token = newSessionToken();
@@ -172,6 +173,31 @@ export class AuthService {
     }
 
     return { sessionToken: token.raw, expiresAt: expiresAt.toISOString(), user };
+  }
+
+  /** Explains why no attempt could be claimed, for the user-facing message. */
+  private async whyNoAttempt(challengeId: string): Promise<AuthError> {
+    const rows = await this.db
+      .select({
+        attempts: otpChallenge.attempts,
+        maxAttempts: otpChallenge.maxAttempts,
+        expiresAt: otpChallenge.expiresAt,
+        consumedAt: otpChallenge.consumedAt,
+      })
+      .from(otpChallenge)
+      .where(eq(otpChallenge.id, challengeId))
+      .limit(1);
+    const ch = rows[0];
+    if (ch === undefined) {
+      return new AuthError('challenge_not_found', 'Pedido de código inválido. Comece de novo.');
+    }
+    if (ch.consumedAt !== null) {
+      return new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
+    }
+    if (ch.attempts >= ch.maxAttempts) {
+      return new AuthError('too_many_attempts', 'Demasiadas tentativas. Peça um novo código.');
+    }
+    return new AuthError('expired', 'O código expirou. Peça um novo.');
   }
 
   async me(rawToken: string | null): Promise<AuthUser> {
