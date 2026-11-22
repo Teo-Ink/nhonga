@@ -111,6 +111,11 @@ export const product = pgTable(
     /** Applied AI banner (listing_banner.id). The FK is declared in the
      *  migration, not here, to avoid a schema import cycle with banners.ts. */
     bannerId: uuid('banner_id'),
+    /** Normalised search text, kept by triggers (migration 0022); never written by the app. */
+    searchDoc: text('search_doc').notNull().default(''),
+    /** Shown price and stock (headlineVariant), kept by a variant trigger (0022). */
+    displayPriceCents: bigint('display_price_cents', { mode: 'number' }).notNull().default(0),
+    inStock: boolean('in_stock').notNull().default(false),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),

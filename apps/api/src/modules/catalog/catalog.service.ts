@@ -760,6 +760,135 @@ export class CatalogService {
 
   private vocabCache: { at: number; vocab: Map<string, number> } | null = null;
 
+  /**
+   * Browsing without words (home, category, shop, location, price, filters):
+   * filtering, ordering and the page cut all happen in Postgres, so the API
+   * reads one page of listings, not the whole catalogue (P1-01).
+   * The order matches the in-memory path: Destaque first, then listings with a
+   * banner, then the chosen sort.
+   */
+  private async runBrowseQuery(
+    lang: Lang,
+    filters: ProductFilters,
+    limit: number,
+  ): Promise<ProductListResponse> {
+    const conds: SQL[] = [eq(product.status, 'active')];
+    if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
+    if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
+    if (filters.province) conds.push(eq(district.provinceCode, filters.province));
+    if (filters.district) conds.push(eq(vendor.districtId, asUuidOrNil(filters.district)));
+    if (filters.inStockOnly) conds.push(sql`${IN_STOCK}`);
+    if (filters.minPriceCents !== undefined) {
+      conds.push(sql`${HEAD_PRICE} >= ${filters.minPriceCents}`);
+    }
+    if (filters.maxPriceCents !== undefined) {
+      conds.push(sql`${HEAD_PRICE} <= ${filters.maxPriceCents}`);
+    }
+    for (const [key, cond] of Object.entries(filters.attributes ?? {})) {
+      const v = sql`(${product.attributes} ->> ${key})`;
+      if (typeof cond === 'string') {
+        conds.push(sql`${v} = ${cond}`);
+        continue;
+      }
+      conds.push(sql`${v} ~ '^\s*-?[0-9]+(\.[0-9]+)?\s*$'`);
+      if (cond.min !== undefined) conds.push(sql`${v}::numeric >= ${cond.min}`);
+      if (cond.max !== undefined) conds.push(sql`${v}::numeric <= ${cond.max}`);
+    }
+
+    const recent = sql`greatest(${product.publishedAt}, ${product.bumpedAt})`;
+    const sortKey = filters.sort ?? 'relevance';
+    const chosen: SQL[] =
+      sortKey === 'price_asc'
+        ? [sql`${HEAD_PRICE} asc`]
+        : sortKey === 'price_desc'
+          ? [sql`${HEAD_PRICE} desc`]
+          : sortKey === 'rating'
+            ? [sql`coalesce(${product.ratingAvg}, 0) desc`]
+            : [];
+    const order: SQL[] = [
+      sql`(${product.featuredUntil} is not null and ${product.featuredUntil} > now()) desc`,
+      sql`(${product.bannerId} is not null) desc`,
+      ...chosen,
+      sql`${recent} desc nulls last`,
+      sql`${product.id}`,
+    ];
+
+    const rows = await this.db
+      .select({
+        id: product.id,
+        slug: product.slug,
+        titlePt: product.titlePt,
+        titleEn: product.titleEn,
+        ratingAvg: product.ratingAvg,
+        ratingCount: product.ratingCount,
+        attributes: product.attributes,
+        publishedAt: product.publishedAt,
+        featuredUntil: product.featuredUntil,
+        viewCount: product.viewCount,
+        bannerId: product.bannerId,
+        catSlug: category.slug,
+        catPt: category.namePt,
+        catEn: category.nameEn,
+        vId: vendor.id,
+        vSlug: vendor.slug,
+        vName: vendor.displayName,
+        vStatus: vendor.status,
+        vProUntil: vendor.proUntil,
+        vLocation: district.name,
+        vRatingAvg: vendor.ratingAvg,
+        vRatingCount: vendor.ratingCount,
+        total: sql<number>`count(*) over ()`,
+      })
+      .from(product)
+      .innerJoin(vendor, eq(product.vendorId, vendor.id))
+      .innerJoin(category, eq(product.categoryId, category.id))
+      .leftJoin(district, eq(vendor.districtId, district.id))
+      .where(and(...conds))
+      .orderBy(...order)
+      .limit(limit);
+
+    const ids = rows.map((p) => p.id);
+    const [variantsByProduct, imagesByProduct] = await Promise.all([
+      this.variantsFor(ids),
+      this.primaryImageFor(ids),
+    ]);
+    const items = rows.map((p) =>
+      toListItem(
+        {
+          id: p.id,
+          slug: p.slug,
+          titlePt: p.titlePt,
+          titleEn: p.titleEn,
+          ratingAvg: p.ratingAvg,
+          ratingCount: p.ratingCount,
+          postedAt: p.publishedAt,
+          featuredUntil: p.featuredUntil,
+          attributes: p.attributes,
+          viewCount: p.viewCount,
+          categorySlug: p.catSlug,
+          categoryNamePt: p.catPt,
+          categoryNameEn: p.catEn,
+          vendor: {
+            id: p.vId,
+            slug: p.vSlug,
+            displayName: p.vName,
+            status: p.vStatus,
+            proUntil: p.vProUntil,
+            ratingAvg: p.vRatingAvg,
+            ratingCount: p.vRatingCount,
+            location: p.vLocation,
+          },
+          variants: variantsByProduct.get(p.id) ?? [],
+          primaryImage: imagesByProduct.get(p.id) ?? null,
+          bannerId: p.bannerId,
+        },
+        lang,
+      ),
+    );
+    const total = Number(rows[0]?.total ?? 0);
+    return { total, items, page: { cursor: null, hasMore: total > limit } };
+  }
+
   private async runListQuery(
     lang: Lang,
     filters: ProductFilters,
@@ -767,6 +896,7 @@ export class CatalogService {
   ): Promise<ProductListResponse> {
     const limit = Math.min(Math.max(filters.limit ?? 24, 1), 48);
     const hasQuery = tokens.length > 0;
+    if (!hasQuery) return this.runBrowseQuery(lang, filters, limit);
 
     // The category filter is applied after the query when there is free text,
     // so the per-category counts can be computed from the same result set.
@@ -779,7 +909,7 @@ export class CatalogService {
     // inflection or synonym (OR), at the start of a word, accent-insensitively.
     for (const token of tokens) {
       const alts = expandToken(token);
-      const m = or(...alts.map((a) => sql`${SEARCH_HAYSTACK} ~ ${termRegex(a)}`));
+      const m = or(...alts.map((a) => sql`${product.searchDoc} ~ ${termRegex(a)}`));
       if (m) conds.push(m);
     }
 
@@ -817,7 +947,11 @@ export class CatalogService {
       .innerJoin(category, eq(product.categoryId, category.id))
       .leftJoin(district, eq(vendor.districtId, district.id))
       .leftJoin(province, eq(district.provinceCode, province.code))
-      .where(and(...conds));
+      .where(and(...conds))
+      // Bounded: a text query is scored in memory, so it looks at the most
+      // recent matches only (a query that matches more is too broad to rank).
+      .orderBy(desc(sql`greatest(${product.publishedAt}, ${product.bumpedAt})`))
+      .limit(MAX_TEXT_CANDIDATES);
 
     // Relevance score per listing (only meaningful with a text query).
     const scores = new Map<string, number>();
@@ -1291,17 +1425,17 @@ function sorter(key: SortKey): (a: Sortable, b: Sortable) => number {
   }
 }
 
-/**
- * Normalised haystack every search token is matched against: titles,
- * descriptions, category, attributes, vendor and place names, lower-cased,
- * accent-stripped and with punctuation collapsed to spaces (the same rules as
- * normalise() in search-text.ts).
- */
-const SEARCH_HAYSTACK = sql`regexp_replace(translate(lower(concat_ws(' ',
-  ${product.titlePt}, ${product.titleEn}, ${product.descriptionPt}, ${product.descriptionEn},
-  ${category.slug}, ${category.namePt}, ${category.nameEn}, ${product.attributes}::text,
-  ${vendor.displayName}, ${district.name}, ${province.name})),
-  ${SQL_ACCENTS_FROM}, ${SQL_ACCENTS_TO}), '[^a-z0-9]+', ' ', 'g')`;
+/** Upper bound on rows a text query scores in memory. */
+const MAX_TEXT_CANDIDATES = 1000;
+
+/** The price and stock a listing shows (headlineVariant), denormalised on the
+ *  listing by the variant trigger of migration 0022. */
+const HEAD_PRICE = sql`${product.displayPriceCents}`;
+const IN_STOCK = sql`${product.inStock}`;
+
+// Search words are matched against product.search_doc: the same normalised
+// text (titles, description, category, attributes, shop, place), built by the
+// triggers of migration 0022 with the rules of normalise() in search-text.ts.
 
 /** Products may be addressed by slug or UUID. When the value is not a UUID, this
  *  returns a sentinel that cannot match any id, so the slug branch decides. */
