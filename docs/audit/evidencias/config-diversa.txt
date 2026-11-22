@@ -1,0 +1,56 @@
+## Cookie de sessão
+9:// store in an httpOnly cookie so it is never exposed to page JavaScript.
+34:    httpOnly: true,
+35:    sameSite: 'lax',
+37:    maxAge: 7 * 24 * 3600,
+41:    secure: process.env.NODE_ENV === 'production' && process.env.SESSION_COOKIE_INSECURE !== '1',
+44:  if (referralCode) out.cookies.set(REFERRAL_COOKIE, '', { path: '/', maxAge: 0 });
+
+## Contraste (scripts/check-contrast.mjs)
+    at node:internal/main/run_main_module:36:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.23.5
+
+## app.json (mobile)
+{'name': 'Nhonga', 'slug': 'nhonga', 'version': '1.0.0', 'scheme': 'nhonga'}
+ios None android None
+android perms None
+plugins ['expo-router', 'expo-splash-screen', 'expo-notifications', 'expo-image-picker']
+
+## Workflows
+ci.yml
+deploy.yml
+terraform.yml
+6:  push:
+23:  quality:
+56:  test:
+80:  api-contract:
+96:  security:
+148:  iac:
+
+## Dependabot / branch protection
+ls: cannot access '.github/dependabot.yml': No such file or directory
+
+## pnpm audit (resumo)
+9 vulnerabilities found
+Severity: 3 low | 6 moderate
+
+## Instâncias e escala (Terraform)
+infra/terraform/envs/staging/main.tf:97:  instance_class = "db.t4g.small"
+infra/terraform/envs/staging/main.tf:98:  multi_az       = false
+infra/terraform/envs/staging/main.tf:174:  desired_count = 1
+infra/terraform/envs/staging/main.tf:175:  min_count     = 1
+infra/terraform/envs/staging/main.tf:176:  max_count     = 4
+infra/terraform/envs/staging/main.tf:213:  desired_count     = 1
+infra/terraform/envs/staging/main.tf:214:  min_count         = 1
+infra/terraform/envs/staging/main.tf:215:  max_count         = 3
+infra/terraform/envs/production/main.tf:84:  instance_class = "db.t4g.medium"
+infra/terraform/envs/production/main.tf:85:  multi_az       = true
+infra/terraform/envs/production/main.tf:142:  desired_count = 2
+infra/terraform/envs/production/main.tf:143:  min_count     = 2
+infra/terraform/envs/production/main.tf:144:  max_count     = 8
+infra/terraform/modules/network/main.tf:70:resource "aws_nat_gateway" "this" {
+infra/terraform/modules/network/main.tf:90:    nat_gateway_id = aws_nat_gateway.this.id

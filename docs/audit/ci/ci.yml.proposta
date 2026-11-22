@@ -1,0 +1,244 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A new push to the same branch makes the previous run irrelevant. Cancel it
+# rather than paying for it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  # ── Gate 1: does it meet the house style and compile at all? ──────────────
+  quality:
+    name: Format, lint, typecheck, boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # version is read from the "packageManager" field in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Architectural boundaries
+        # Fails if packages/shared ever imports from an app. See
+        # .dependency-cruiser.cjs for why that specific rule matters.
+        run: pnpm boundaries
+
+  # ── Gate 2: does it behave? ───────────────────────────────────────────────
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # TEST-02 / TST-004: database-backed tests (OTP races, checkout money path)
+    # run against a throwaway Postgres; without TEST_DATABASE_URL they skip.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nhonga_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nhonga_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        # packages/shared publishes from dist and the API consumes its emitted
+        # declarations, so the build must precede the API tests.
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+
+  # ── Gate 3: does the published contract still match the code? ─────────────
+  api-contract:
+    name: OpenAPI lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint OpenAPI spec
+        run: pnpm api:lint
+
+  # ── Gate 4: secrets and vulnerable dependencies ───────────────────────────
+  security:
+    name: Secret scan and dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs history to scan commits, not just the tree.
+          fetch-depth: 0
+
+      - name: Secret scan
+        # The gitleaks CLI (MIT) rather than gitleaks-action, which now needs a
+        # paid licence for organisation repos. Same scanner, pinned version,
+        # checksum-verified. Scans the commits this PR / push introduces.
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$RUNNER_TEMP/$tarball" "$base/$tarball"
+          curl -sSfL -o "$RUNNER_TEMP/checksums.txt" "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd "$RUNNER_TEMP" && grep " ${tarball}\$" checksums.txt | sha256sum -c -)
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+          if [ "$EVENT" = "pull_request" ]; then
+            range="${PR_BASE}..${PR_HEAD}"
+          elif [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            range="${PUSH_BEFORE}..${PUSH_AFTER}"
+          else
+            range="${PUSH_AFTER}"
+          fi
+          "$RUNNER_TEMP/gitleaks" git --redact --verbose --log-opts="$range" .
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Dependency audit
+        # Blocks on high and critical only. Moderate findings are reported but
+        # do not stop a release; a payments platform that cannot ship a fix
+        # because of a moderate advisory in a build tool is less safe, not more.
+        run: pnpm audit --audit-level high
+
+  # ── Gate 5: infrastructure as code ────────────────────────────────────────
+  iac:
+    name: Terraform fmt, validate and scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive infra/terraform
+
+      # validate every layer offline (-backend=false makes no AWS calls).
+      - name: Terraform validate (bootstrap)
+        working-directory: infra/terraform/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (staging)
+        working-directory: infra/terraform/envs/staging
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Terraform validate (production)
+        working-directory: infra/terraform/envs/production
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: IaC security scan
+        # tfsec is now part of Trivy; this replaces the standalone action.
+        # Pinned to the commit of tag v0.36.0, so a moved tag cannot change
+        # what runs here.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra/terraform
+          format: sarif
+          output: trivy-iac.sarif
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          # Without this, SARIF output includes (and fails on) every severity.
+          limit-severities-for-sarif: true
+
+      - name: Upload scan results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-iac.sarif
+          category: trivy-iac
+
+  # ── MOB-01: the Expo app is outside the pnpm workspace; check it here. ─────
+  mobile:
+    name: Mobile app (typecheck, lint, audit, doctor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npx expo lint
+      - name: Audit (high and critical)
+        run: npm audit --audit-level high
+      - name: Expo doctor
+        run: npx expo-doctor
