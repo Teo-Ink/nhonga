@@ -42,6 +42,12 @@ variable "api_public_port" {
   default     = 0
 }
 
+variable "api_host" {
+  description = "Host name of the API (e.g. api.nhonga.co.mz). With HTTPS and the web app on this ALB, requests for this host go to the API."
+  type        = string
+  default     = ""
+}
+
 locals {
   name     = "${var.project}-${var.environment}"
   https_on = var.certificate_arn != ""
@@ -152,6 +158,25 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = local.default_target_group_arn
+  }
+}
+
+# Host-based routing (P0-08): with a domain, the site and the API share the
+# HTTPS listener; api.<domain> goes to the API, everything else to the site.
+resource "aws_lb_listener_rule" "api_host" {
+  count        = local.https_on && local.web_on && var.api_host != "" ? 1 : 0
+  listener_arn = aws_lb_listener.https[0].arn
+  priority     = 10
+
+  condition {
+    host_header {
+      values = [var.api_host]
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
   }
 }
 
