@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -11,12 +11,14 @@ import {
   type WalletPackage,
   type WalletView,
 } from '@/lib/api';
+import { ActionKeys } from '@/lib/action-key';
 import { brand, radius, shadow, space } from '@/lib/theme';
 
 // Seller wallet: balance (MZN) + loyalty points, with demo top-ups and prepaid
 // packages. Mirrors the web "Saldo em conta / Comprar pacote" strip. Shown only
 // for sellers (the account screen gates on that).
 export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
+  const payKeys = useRef(new ActionKeys());
   const [w, setW] = useState<WalletView | null>(null);
   const [panel, setPanel] = useState<'none' | 'topup' | 'packages'>('none');
   const [amount, setAmount] = useState('');
@@ -61,13 +63,14 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
   async function submitTopup() {
     const mt = Number(amount.replace(/[^\d]/g, ''));
     if (!mt || mt <= 0) {
-      setMsg('Indica um montante válido.');
+      setMsg('Indique um montante válido.');
       return;
     }
     setBusy(true);
     setMsg(null);
     try {
-      const d = await topupWallet(mt * 100);
+      const d = await topupWallet(mt * 100, payKeys.current.keyFor(`topup:${mt}`));
+      payKeys.current.done();
       setW(d);
       setAmount('');
       setPanel('none');
@@ -83,7 +86,8 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
     setBusy(true);
     setMsg(null);
     try {
-      const d = await purchasePackage(id);
+      const d = await purchasePackage(id, payKeys.current.keyFor(`package:${id}`));
+      payKeys.current.done();
       setW(d);
       setPanel('none');
       setMsg('Pacote adicionado à sua conta.');
@@ -98,7 +102,8 @@ export function WalletCard({ reloadSignal = 0 }: { reloadSignal?: number }) {
     setBusy(true);
     setMsg(null);
     try {
-      const d = await subscribePro();
+      const d = await subscribePro(payKeys.current.keyFor('pro'));
+      payKeys.current.done();
       setW(d);
       setMsg('Loja Pro ativada.');
     } catch (e) {

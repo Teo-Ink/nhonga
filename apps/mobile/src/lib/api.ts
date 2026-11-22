@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { assertReleaseApiUrl } from './release-config';
 
 // The API base URL. Set EXPO_PUBLIC_API_URL to your machine's LAN address when
 // running on a physical device (localhost points at the phone itself), e.g.
@@ -7,12 +8,7 @@ export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000
 /** Versioned API base (P2-11): every call goes to /v1. */
 const API = `${API_URL}/v1`;
 
-// Release builds talk to the API over HTTPS only (P0-19): a session token or a
-// phone number must never cross a mobile network in clear text. Development
-// builds may use a LAN address over HTTP.
-if (typeof __DEV__ !== 'undefined' && !__DEV__ && !API_URL.startsWith('https://')) {
-  throw new Error(`EXPO_PUBLIC_API_URL must be https:// in release builds (got ${API_URL})`);
-}
+assertReleaseApiUrl(API_URL, typeof __DEV__ !== 'undefined' ? __DEV__ : true);
 
 const TOKEN_KEY = 'nhonga_session';
 
@@ -83,10 +79,16 @@ async function get<T>(path: string, auth = false): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function post<T>(path: string, body: unknown, auth = false): Promise<T> {
+async function post<T>(
+  path: string,
+  body: unknown,
+  auth = false,
+  idempotencyKey?: string,
+): Promise<T> {
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'accept-language': 'pt',
+    ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
   };
   if (auth) {
     const token = await getToken();
@@ -359,14 +361,14 @@ export function getWallet(): Promise<WalletView> {
 export function getWalletPackages(): Promise<WalletPackage[]> {
   return get('/wallet/packages');
 }
-export function topupWallet(amountCents: number): Promise<WalletView> {
-  return post('/wallet/topup', { amountCents }, true);
+export function topupWallet(amountCents: number, key?: string): Promise<WalletView> {
+  return post('/wallet/topup', { amountCents }, true, key);
 }
-export function purchasePackage(packageId: string): Promise<WalletView> {
-  return post('/wallet/purchase', { packageId }, true);
+export function purchasePackage(packageId: string, key?: string): Promise<WalletView> {
+  return post('/wallet/purchase', { packageId }, true, key);
 }
-export function subscribePro(): Promise<WalletView> {
-  return post('/wallet/pro', {}, true);
+export function subscribePro(key?: string): Promise<WalletView> {
+  return post('/wallet/pro', {}, true, key);
 }
 export interface BoostPlan {
   code: string;
@@ -384,8 +386,12 @@ export interface BoostResult {
 export function getWalletPlans(): Promise<BoostPlan[]> {
   return get('/wallet/plans');
 }
-export function boostListing(productId: string, planCode: string): Promise<BoostResult> {
-  return post('/wallet/boost', { productId, planCode }, true);
+export function boostListing(
+  productId: string,
+  planCode: string,
+  key?: string,
+): Promise<BoostResult> {
+  return post('/wallet/boost', { productId, planCode }, true, key);
 }
 
 // ── Push token registration (signed-in) ───────────────────────────

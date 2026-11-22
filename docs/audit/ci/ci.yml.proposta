@@ -238,10 +238,10 @@ jobs:
         run: npx tsc --noEmit
       - name: Lint
         run: npx expo lint
-      - name: Audit (critical)
-        # 3 "high" remain in expo-router 57 (fix needs Expo SDK 58, a major
-        # upgrade planned in the backlog); raise to --audit-level high after it.
-        run: npm audit --audit-level critical
+      - name: Unit tests
+        run: npm test
+      - name: Audit (high and critical)
+        run: npm audit --audit-level high
       - name: Expo doctor
         run: npx expo-doctor
 

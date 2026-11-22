@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -30,6 +30,7 @@ import {
   type BoostPlan,
   type MineResponse,
 } from '@/lib/api';
+import { ActionKeys } from '@/lib/action-key';
 import { registerForPush, unregisterForPush } from '@/lib/push';
 import { useFavorites } from '@/lib/favorites';
 import { WalletCard } from '@/components/WalletCard';
@@ -39,6 +40,7 @@ type Step = 'phone' | 'code' | 'done';
 type PushState = 'unknown' | 'on' | 'off' | 'unavailable';
 
 export default function AccountScreen() {
+  const payKeys = useRef(new ActionKeys());
   const router = useRouter();
   const { count: favCount } = useFavorites();
   const [step, setStep] = useState<Step>('phone');
@@ -68,7 +70,12 @@ export default function AccountScreen() {
   async function doBoost(productId: string, planCode: string) {
     setBoostBusy(productId);
     try {
-      const r = await boostListing(productId, planCode);
+      const r = await boostListing(
+        productId,
+        planCode,
+        payKeys.current.keyFor(`boost:${productId}:${planCode}`),
+      );
+      payKeys.current.done();
       setBoostFor(null);
       setWalletSignal((s) => s + 1);
       loadMine();

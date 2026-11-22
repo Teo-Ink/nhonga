@@ -10,6 +10,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { brand, radius, shadow, space } from '@/lib/theme';
 
 export interface GalleryImage {
@@ -23,7 +24,7 @@ export interface GalleryImage {
 export function ImageGallery({ images }: { images: GalleryImage[] }) {
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
