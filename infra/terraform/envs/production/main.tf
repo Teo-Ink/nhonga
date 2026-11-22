@@ -159,7 +159,8 @@ module "api" {
     LOG_LEVEL     = "info"
   }
   secret_arns = {
-    DATABASE_URL = module.secrets.database_url_arn
+    DATABASE_URL    = module.secrets.database_url_arn
+    ADMIN_API_TOKEN = module.secrets.admin_api_token_arn
   }
 }
 

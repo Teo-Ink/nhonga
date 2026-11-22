@@ -7,6 +7,9 @@ import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 import { jsonBodyLimits } from './common/body-limits.js';
 import { rateLimitMiddleware } from './common/rate-limit.js';
+import { postgresCounter, sharedLimitMiddleware } from './common/shared-limit.js';
+import { DB } from './db/database.module.js';
+import type { Db } from './db/types.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import type { AppConfig } from './config/config.schema.js';
 
@@ -31,6 +34,8 @@ async function bootstrap(): Promise<void> {
   // load balancer; one trusted hop.
   if (nodeEnv !== 'development') app.set('trust proxy', 1);
   app.use(rateLimitMiddleware());
+  // Abuse-prone writes are counted in Postgres so the limit holds across tasks (P0-04).
+  app.use(sharedLimitMiddleware(postgresCounter(app.get<Db>(DB))));
 
   // CORS for browser clients only. The web app reaches the API server-side via
   // its BFF and native mobile fetches are not subject to CORS, so this exists

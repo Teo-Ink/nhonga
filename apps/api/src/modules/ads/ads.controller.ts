@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpException,
   HttpStatus,
@@ -10,6 +11,7 @@ import {
   Param,
   Post,
   Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   AdError,
@@ -18,6 +20,8 @@ import {
   type Placement,
   type ServedAd,
 } from './ads.service.js';
+import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
+import { AuthService } from '../auth/auth.service.js';
 
 interface BookBody {
   advertiserName?: unknown;
@@ -34,7 +38,10 @@ interface BookBody {
 /** Display-ad serving, click tracking, and self-serve booking (house-ads). */
 @Controller('ads')
 export class AdsController {
-  constructor(private readonly ads: AdsService) {}
+  constructor(
+    private readonly ads: AdsService,
+    private readonly auth: AuthService,
+  ) {}
 
   /** Serve a live creative for a slot (counts an impression). */
   @Get()
@@ -55,7 +62,8 @@ export class AdsController {
 
   /** Ops/admin-lite: all campaigns with impressions/clicks. */
   @Get('admin')
-  admin(): Promise<CampaignAdmin[]> {
+  admin(@Headers(ADMIN_HEADER) adminToken?: string): Promise<CampaignAdmin[]> {
+    assertAdmin(adminToken);
     return this.ads.listAdmin();
   }
 
@@ -64,7 +72,10 @@ export class AdsController {
   @HttpCode(201)
   async book(
     @Body() body: BookBody,
+    @Headers('authorization') authz?: string,
   ): Promise<{ id: string; priceCents: number; status: string; endsAt: string }> {
+    // Booking needs an account, so every creative is traceable to a person.
+    await this.requireUser(authz);
     const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
     const input = {
       advertiserName: str(body.advertiserName) ?? '',
@@ -80,6 +91,15 @@ export class AdsController {
       return await this.ads.bookAndPay(input, str(body.paymentMethod) ?? '');
     } catch (e) {
       throw toHttp(e);
+    }
+  }
+
+  private async requireUser(authz: string | undefined): Promise<void> {
+    const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
+    try {
+      await this.auth.me(token);
+    } catch {
+      throw new UnauthorizedException({ message: 'Inicie sessão para continuar.' });
     }
   }
 

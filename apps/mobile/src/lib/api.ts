@@ -372,21 +372,26 @@ export interface SavedSearch {
   createdAt: string;
   lastRunAt: string | null;
 }
-export function listSavedSearches(phoneE164: string): Promise<SavedSearch[]> {
-  return get(`/saved-searches?phone=${encodeURIComponent(phoneE164)}`);
+// Alerts belong to the signed-in account and go to its verified number; the
+// API ignores any phone sent in the body (P0-02/SEC-09).
+export function listSavedSearches(_phoneE164?: string): Promise<SavedSearch[]> {
+  return get('/saved-searches', true);
 }
 export function createSavedSearch(input: {
-  phone: string;
+  phone?: string;
   label: string;
   href: string;
   query: Record<string, unknown>;
 }): Promise<{ id: string }> {
-  return post('/saved-searches', input);
+  const { label, href, query } = input;
+  return post('/saved-searches', { label, href, query }, true);
 }
 export async function removeSavedSearch(id: string): Promise<void> {
-  await fetch(`${API_URL}/saved-searches/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(
-    () => undefined,
-  );
+  const token = await getToken();
+  await fetch(`${API_URL}/saved-searches/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  }).catch(() => undefined);
 }
 export function addFavorite(productId: string): Promise<{ ok: true }> {
   return post('/favorites', { productId }, true);

@@ -112,6 +112,8 @@ module "secrets" {
   db_name     = module.database.db_name
   db_username = module.database.username
   db_password = module.database.password
+  # Simulated SMS shows the login code on screen: limit sign-in to the team (P0-05).
+  otp_dev_allowlist = true
 }
 
 module "alb" {
@@ -197,7 +199,9 @@ module "api" {
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
   }
   secret_arns = {
-    DATABASE_URL = module.secrets.database_url_arn
+    DATABASE_URL      = module.secrets.database_url_arn
+    ADMIN_API_TOKEN   = module.secrets.admin_api_token_arn
+    OTP_DEV_ALLOWLIST = module.secrets.otp_dev_allowlist_arn
   }
 }
 

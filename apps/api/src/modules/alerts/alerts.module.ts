@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { CatalogModule } from '../catalog/catalog.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { AlertsController } from './alerts.controller.js';
@@ -9,7 +10,7 @@ import { AlertsSweeper } from './alerts.sweeper.js';
 // DeliveryService (SMS + push + in-app) from NotificationsModule. The sweeper
 // runs the alert loop on an interval.
 @Module({
-  imports: [CatalogModule, NotificationsModule],
+  imports: [CatalogModule, NotificationsModule, AuthModule],
   controllers: [AlertsController],
   providers: [AlertsService, AlertsSweeper],
 })

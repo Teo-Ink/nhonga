@@ -93,7 +93,7 @@ export class CatalogController {
     return this.catalog.districts();
   }
 
-  /** Create a listing (real "Publicar"). No auth in the demo. */
+  /** Create a listing ("Publicar"). Needs a session; 10 per shop per day. */
   @Post('products')
   @HttpCode(201)
   create(

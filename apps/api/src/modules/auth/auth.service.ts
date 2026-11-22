@@ -22,6 +22,7 @@ import {
   verifyOtpCode,
 } from './auth-crypto.js';
 import { breachMessage, checkOtpLimits, otpLimitsFromEnv, type OtpLimits } from './otp-limits.js';
+import { createSmsSender, type SmsSender } from '../notifications/sms.sender.js';
 
 export class AuthError extends Error {
   constructor(
@@ -32,7 +33,9 @@ export class AuthError extends Error {
       | 'expired'
       | 'too_many_attempts'
       | 'wrong_code'
-      | 'unauthenticated',
+      | 'unauthenticated'
+      | 'not_allowed'
+      | 'sms_unavailable',
     readonly userMessage: string,
   ) {
     super(`${code}: ${userMessage}`);
@@ -71,11 +74,37 @@ const MAX_ATTEMPTS = 5;
 const SMS_MOCK =
   process.env['NODE_ENV'] !== 'production' && (process.env['SMS_MODE'] ?? 'mock') !== 'live';
 
+/**
+ * Test environments (staging) with mocked SMS hand the login code back in the
+ * response, which lets anyone sign in as any number. OTP_DEV_ALLOWLIST limits
+ * that to the team's own numbers (P0-05): any other number is refused before a
+ * code exists. Empty = no restriction, for a developer's own machine.
+ */
+export function parseAllowlist(raw: string | undefined): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const part of (raw ?? '').split(/[,;]+/)) {
+    const n = normaliseMzMsisdn(part);
+    if (n !== null) out.add(n);
+  }
+  return out;
+}
+
+export function otpSmsText(code: string): string {
+  return `Nhonga: o seu código é ${code}. Válido 10 minutos. Não o partilhe com ninguém.`;
+}
+
 @Injectable()
 export class AuthService {
   private readonly log = new Logger('Auth');
 
   private readonly limits: OtpLimits = otpLimitsFromEnv();
+  private readonly devAllowlist = parseAllowlist(process.env['OTP_DEV_ALLOWLIST']);
+  private readonly sms: SmsSender = createSmsSender({
+    mode: SMS_MOCK ? 'mock' : 'live',
+    gatewayUrl: process.env['SMS_GATEWAY_URL'] ?? null,
+    gatewayToken: process.env['SMS_GATEWAY_TOKEN'] ?? null,
+    senderId: process.env['SMS_SENDER_ID'] ?? null,
+  });
 
   constructor(@Inject(DB) private readonly db: Db) {}
 
@@ -83,6 +112,13 @@ export class AuthService {
     const phoneE164 = normaliseMzMsisdn(phone);
     if (phoneE164 === null) {
       throw new AuthError('invalid_phone', 'O número deve ter 9 dígitos e começar por 8.');
+    }
+
+    if (SMS_MOCK && this.devAllowlist.size > 0 && !this.devAllowlist.has(phoneE164)) {
+      throw new AuthError(
+        'not_allowed',
+        'Este ambiente de testes só aceita números autorizados pela equipa Nhonga.',
+      );
     }
 
     // Limits counted in Postgres, so they hold across every API instance (SEC-02).
@@ -110,10 +146,21 @@ export class AuthService {
     });
 
     if (SMS_MOCK) {
-      this.log.log(`[mock SMS] login code for ${phoneE164}: ${code}`);
+      this.log.log(`[mock SMS] login code issued for …${phoneE164.slice(-3)}`);
     } else {
-      // Live SMS gateway is not wired (OQ). Fail loud rather than silently drop.
-      throw new AuthError('rate_limited', 'O envio de SMS ainda não está disponível.');
+      const res = await this.sms.send(phoneE164, otpSmsText(code));
+      if (!res.sent || res.channel !== 'live') {
+        // Nothing reached the phone: burn the challenge so it cannot be guessed,
+        // and say so instead of leaving the user waiting for an SMS.
+        await this.db
+          .update(otpChallenge)
+          .set({ consumedAt: new Date() })
+          .where(eq(otpChallenge.id, challengeId));
+        throw new AuthError(
+          'sms_unavailable',
+          'Não foi possível enviar o SMS agora. Tente de novo dentro de alguns minutos.',
+        );
+      }
     }
 
     return {
@@ -311,6 +358,12 @@ export class AuthService {
       .where(and(eq(appUser.phoneE164, phoneE164), isNull(appUser.deletedAt)))
       .limit(1);
     if (existing[0]) {
+      if (existing[0].status !== 'active') {
+        throw new AuthError(
+          'not_allowed',
+          'Esta conta está suspensa. Contacte o apoio da Nhonga se acha que é um engano.',
+        );
+      }
       if (existing[0].phoneVerifiedAt === null) {
         await this.db
           .update(appUser)

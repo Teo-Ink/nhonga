@@ -2,9 +2,12 @@ import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
@@ -77,11 +80,24 @@ export class CatalogService {
   ) {}
 
   /**
-   * Create a listing from the seller form (G — real "Publicar"). No seller auth
-   * in the demo, so listings attach to a shared "Anúncios da Comunidade" shop
-   * that is created on first use. Photos are browser-compressed data URLs; each
-   * is stored as a media asset and referenced by its /api/media URL.
+   * Create a listing from the seller form ("Publicar"). Needs a verified
+   * session (P0-02); the listing goes under the seller's own shop, created on
+   * their first listing, with a daily ceiling per shop.
    */
+  /** Listings this shop created in the last 24 hours (any status). */
+  private async listingsCreatedToday(vendorId: string): Promise<number> {
+    const rows = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(product)
+      .where(
+        and(
+          eq(product.vendorId, vendorId),
+          sql`${product.createdAt} > now() - interval '24 hours'`,
+        ),
+      );
+    return rows[0]?.n ?? 0;
+  }
+
   async createListing(
     input: {
       title: string;
@@ -109,18 +125,28 @@ export class CatalogService {
     )[0];
     if (!cat) throw new BadRequestException({ message: 'unknown category' });
 
-    // Signed-in seller → their own shop (created on first listing); otherwise
-    // the shared community shop, so the demo works without an account.
-    let vendorId: string;
-    if (sessionToken) {
-      try {
-        const user = await this.auth.me(sessionToken);
-        vendorId = await this.ensureUserVendor(user, input.shopName);
-      } catch {
-        vendorId = await this.ensureCommunityVendor();
-      }
-    } else {
-      vendorId = await this.ensureCommunityVendor();
+    // Publishing needs a verified account (P0-02): every listing belongs to a
+    // person who confirmed their number, which is what makes a scam traceable
+    // and a ban stick. The seller's shop is created on their first listing.
+    let user: AuthUser;
+    try {
+      user = await this.auth.me(sessionToken ?? null);
+    } catch {
+      throw new UnauthorizedException({
+        message: 'Inicie sessão para publicar o anúncio.',
+        code: 'login_required',
+      });
+    }
+    const vendorId = await this.ensureUserVendor(user, input.shopName);
+    const today = await this.listingsCreatedToday(vendorId);
+    if (today >= listingsPerDay()) {
+      throw new HttpException(
+        {
+          message: `Chegou ao limite de ${listingsPerDay()} anúncios por dia. Tente amanhã.`,
+          code: 'daily_limit',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
     const slug = await this.uniqueSlug(title);
     const productId = randomUUID();
@@ -1282,4 +1308,11 @@ const SEARCH_HAYSTACK = sql`regexp_replace(translate(lower(concat_ws(' ',
 function asUuidOrNil(value: string): string {
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return UUID.test(value) ? value : '00000000-0000-0000-0000-000000000000';
+}
+
+/** Daily listing ceiling per shop (LISTINGS_PER_DAY, default 10). It stops
+ *  flooding without getting in the way of a real seller. */
+export function listingsPerDay(raw: string | undefined = process.env['LISTINGS_PER_DAY']): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 10;
 }
