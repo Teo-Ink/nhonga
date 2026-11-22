@@ -1,0 +1,62 @@
+## ads.controller (admin-lite)
+  /** Example rate card (cents/day per placement) for the booking UI. */
+  @Get('plans')
+  plans(): Record<Placement, number> {
+    return this.ads.rateCard();
+  }
+
+  /** Ops/admin-lite: all campaigns with impressions/clicks. */
+  @Get('admin')
+  admin(): Promise<CampaignAdmin[]> {
+    return this.ads.listAdmin();
+  }
+
+  /** Book a campaign and pay (mock) — it goes live immediately. */
+  @Post()
+  @HttpCode(201)
+  async book(
+    @Body() body: BookBody,
+  ): Promise<{ id: string; priceCents: number; status: string; endsAt: string }> {
+    const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
+    const input = {
+      advertiserName: str(body.advertiserName) ?? '',
+      ...(str(body.advertiserContact) ? { advertiserContact: str(body.advertiserContact)! } : {}),
+      imageUrl: str(body.imageUrl) ?? '',
+      clickUrl: str(body.clickUrl) ?? '',
+      ...(str(body.headline) ? { headline: str(body.headline)! } : {}),
+      placement: (str(body.placement) ?? '') as Placement,
+
+## promotions.controller (admin-lite)
+  plans(@Headers('accept-language') lang?: string): Promise<PlanDto[]> {
+    return this.promotions.listPlans(lang?.toLowerCase().startsWith('en') ? 'en' : 'pt');
+  }
+
+  /** Ops/admin-lite: active promotions (E4). */
+  @Get('admin/active')
+  active(): Promise<ReceiptDto[]> {
+    return this.promotions.listActive();
+  }
+
+  @Post()
+  @HttpCode(201)
+  async buy(
+    @Body() body: PurchaseBody,
+  ): Promise<{ id: string; status: string; receipt: ReceiptDto }> {
+
+## Publicação anónima (createListing sem sessão)
+80:   * Create a listing from the seller form (G — real "Publicar"). No seller auth
+113:    // the shared community shop, so the demo works without an account.
+120:        vendorId = await this.ensureCommunityVendor();
+123:      vendorId = await this.ensureCommunityVendor();
+634:  private async ensureCommunityVendor(): Promise<string> {
+
+## Denúncias: guardadas? moderação?
+apps/api/src/modules/catalog/catalog.controller.ts:241:  /** File a trust-&-safety report against a listing (anonymous). */
+apps/api/src/modules/catalog/catalog.controller.ts:242:  @Post('products/:idOrSlug/reports')
+apps/api/src/modules/catalog/catalog.controller.ts:244:  async report(
+apps/api/src/db/schema/reports.ts
+10:import { check, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+16:export const listingReport = pgTable(
+
+## Bloquear utilizador (exigido pelas lojas de apps para UGC)
+(vazio = não existe)
