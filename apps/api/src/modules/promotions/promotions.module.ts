@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { WebhooksModule } from '../payments/http/webhooks/webhooks.module.js';
+import { PaymentProvidersModule } from '../payments/payment-providers.module.js';
 import { PromotionsController } from './promotions.controller.js';
 import { PromotionsService } from './promotions.service.js';
 
-// Reuses PaymentProvidersService (exported by WebhooksModule) to validate the
+// Reuses PaymentProvidersService (exported by PaymentProvidersModule) to validate the
 // payment method against the real provider registry.
 @Module({
-  imports: [WebhooksModule],
+  imports: [PaymentProvidersModule],
   controllers: [PromotionsController],
   providers: [PromotionsService],
   exports: [PromotionsService],

@@ -22,7 +22,7 @@ describe('openapi.yaml', () => {
       >;
     };
     const ops = Object.values(doc.paths).flatMap((p) => Object.values(p));
-    expect(ops.length).toBeGreaterThanOrEqual(88);
+    expect(ops.length).toBeGreaterThanOrEqual(80);
     expect(ops.filter((o) => o.requestBody).length).toBeGreaterThanOrEqual(32);
     expect(
       doc.paths['/ads/admin']?.['get']?.parameters?.some((p) => p.name === 'x-admin-token'),

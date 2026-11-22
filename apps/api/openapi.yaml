@@ -357,27 +357,6 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
-  /auth/orders:
-    get:
-      tags:
-        - auth
-      operationId: Auth_orders
-      summary: GET /auth/orders
-      security:
-        - bearerAuth: []
-        - {}
-      responses:
-        "200":
-          description: Sucesso
-          content:
-            application/json:
-              schema: {}
-        "401":
-          $ref: "#/components/responses/Problem"
-        "429":
-          $ref: "#/components/responses/Problem"
-        default:
-          $ref: "#/components/responses/Problem"
   /auth/otp/request:
     post:
       tags:
@@ -1755,33 +1734,6 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
-  /payments/{paymentId}:
-    get:
-      tags:
-        - payments
-      operationId: Payments_getById
-      summary: GET /payments/{paymentId}
-      parameters:
-        - name: paymentId
-          in: path
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        "200":
-          description: Sucesso
-          content:
-            application/json:
-              schema: {}
-        "400":
-          $ref: "#/components/responses/Problem"
-        "404":
-          $ref: "#/components/responses/Problem"
-        "429":
-          $ref: "#/components/responses/Problem"
-        default:
-          $ref: "#/components/responses/Problem"
   /promotions:
     post:
       tags:
@@ -2332,33 +2284,6 @@ paths:
         "409":
           $ref: "#/components/responses/Problem"
         "422":
-          $ref: "#/components/responses/Problem"
-        "429":
-          $ref: "#/components/responses/Problem"
-        default:
-          $ref: "#/components/responses/Problem"
-  /webhooks/payments/{provider}:
-    post:
-      tags:
-        - webhooks
-      operationId: Webhooks_receive
-      summary: POST /webhooks/payments/{provider}
-      parameters:
-        - name: provider
-          in: path
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        "200":
-          description: Sucesso
-          content:
-            application/json:
-              schema: {}
-        "400":
-          $ref: "#/components/responses/Problem"
-        "404":
           $ref: "#/components/responses/Problem"
         "429":
           $ref: "#/components/responses/Problem"
