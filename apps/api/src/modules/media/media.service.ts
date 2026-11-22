@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import sharp from 'sharp';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { mediaAsset } from '../../db/schema/media.js';
+import type { ObjectStore } from './object-store.js';
 
 export class MediaError extends Error {
   constructor(
@@ -65,9 +66,21 @@ export async function sanitiseImage(
   }
 }
 
+export const MEDIA_OBJECT_STORE = Symbol('MEDIA_OBJECT_STORE');
+
+export interface MediaAsset {
+  readonly contentType: string;
+  readonly bytes: Buffer;
+}
+
 @Injectable()
 export class MediaService {
-  constructor(@Inject(DB) private readonly db: Db) {}
+  private readonly cdn = (process.env['MEDIA_CDN_URL'] ?? '').replace(/\/+$/, '');
+
+  constructor(
+    @Inject(DB) private readonly db: Db,
+    @Optional() @Inject(MEDIA_OBJECT_STORE) private readonly store: ObjectStore | null = null,
+  ) {}
 
   /** Store a `data:<type>;base64,<payload>` string; returns the new asset id. */
   async storeDataUrl(dataUrl: string): Promise<string> {
@@ -79,23 +92,66 @@ export class MediaService {
     if (payload.length > MAX_B64) throw new MediaError('image too large', 'too_large');
     const clean = await sanitiseImage(Buffer.from(payload, 'base64'));
     const id = randomUUID();
-    await this.db.insert(mediaAsset).values({
-      id,
-      contentType: clean.contentType,
-      dataBase64: clean.bytes.toString('base64'),
-    });
+    if (this.store) {
+      // Object first, row second: a failed upload leaves no row pointing at nothing.
+      const key = mediaKey(id, clean.contentType);
+      await this.store.put(key, clean.bytes, clean.contentType);
+      await this.db
+        .insert(mediaAsset)
+        .values({ id, contentType: clean.contentType, storageKey: key });
+    } else {
+      await this.db.insert(mediaAsset).values({
+        id,
+        contentType: clean.contentType,
+        dataBase64: clean.bytes.toString('base64'),
+      });
+    }
     return id;
   }
 
-  async get(id: string): Promise<{ contentType: string; bytes: Buffer } | null> {
-    const row = (
-      await this.db
-        .select({ contentType: mediaAsset.contentType, dataBase64: mediaAsset.dataBase64 })
-        .from(mediaAsset)
-        .where(eq(mediaAsset.id, id))
-        .limit(1)
-    )[0];
+  /** The bytes, wherever they live (used by the banner studio and the endpoint). */
+  async get(id: string): Promise<MediaAsset | null> {
+    const row = await this.row(id);
     if (!row) return null;
-    return { contentType: row.contentType, bytes: Buffer.from(row.dataBase64, 'base64') };
+    if (row.dataBase64 !== null) {
+      return { contentType: row.contentType, bytes: Buffer.from(row.dataBase64, 'base64') };
+    }
+    if (row.storageKey && this.store) {
+      const bytes = await this.store.get(row.storageKey);
+      return bytes ? { contentType: row.contentType, bytes } : null;
+    }
+    return null;
   }
+
+  /** Where the browser should fetch the photo from: the CDN when there is one
+   *  and the photo is in S3, otherwise null (the API serves the bytes). */
+  async cdnUrl(id: string): Promise<string | null> {
+    if (!this.cdn) return null;
+    const row = await this.row(id);
+    return row?.storageKey ? `${this.cdn}/${row.storageKey}` : null;
+  }
+
+  private async row(id: string) {
+    if (!UUID.test(id)) return null;
+    return (
+      (
+        await this.db
+          .select({
+            contentType: mediaAsset.contentType,
+            dataBase64: mediaAsset.dataBase64,
+            storageKey: mediaAsset.storageKey,
+          })
+          .from(mediaAsset)
+          .where(eq(mediaAsset.id, id))
+          .limit(1)
+      )[0] ?? null
+    );
+  }
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function mediaKey(id: string, contentType: string): string {
+  const ext = contentType === 'image/png' ? 'png' : contentType === 'image/jpeg' ? 'jpg' : 'webp';
+  return `media/${id}.${ext}`;
 }

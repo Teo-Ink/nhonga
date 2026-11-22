@@ -166,6 +166,8 @@ module "api" {
     LOG_LEVEL     = "info"
     APP_VERSION   = var.image_tag
     SENTRY_DSN    = var.sentry_dsn
+    MEDIA_BUCKET  = module.media.bucket
+    MEDIA_CDN_URL = "https://${module.media.cdn_domain}"
     # Listings untouched for 90 days leave search (P2-10).
     LISTING_TTL_DAYS = "90"
     # Monthly ceiling on generative-AI tokens (SEC-08); review with real usage.
@@ -195,3 +197,10 @@ output "alb_dns_name" { value = module.alb.dns_name }
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
 
+# Listing photos in S3 behind CloudFront (P1-03, P1-04).
+module "media" {
+  source         = "../../modules/media"
+  project        = local.project
+  environment    = local.env
+  task_role_name = module.api.task_role_name
+}
