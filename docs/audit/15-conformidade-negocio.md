@@ -2,6 +2,9 @@
 
 **Pontuação: 4/10.** A maior parte precisa de validação jurídica.
 
+> Análise actualizada face à lei moçambicana em
+> [`docs/juridico/01-analise-conformidade.md`](../juridico/01-analise-conformidade.md).
+>
 > Nada neste documento é parecer jurídico. Os pontos marcados **[jurista]**
 > precisam de validação por um advogado em Moçambique.
 
