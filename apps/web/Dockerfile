@@ -8,7 +8,7 @@
 # they are build arguments, and an image is built per environment (the deploy
 # workflow tags it <sha>-<environment>).
 # ─────────────────────────────────────────────────────────────────────────────
-FROM node:24-bookworm-slim AS builder
+FROM node:25-bookworm-slim AS builder
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 WORKDIR /repo
@@ -39,7 +39,7 @@ RUN pnpm --filter @nhonga/shared build \
 # ─────────────────────────────────────────────────────────────────────────────
 # Runtime: slim, non-root, only the standalone server plus static assets.
 # ─────────────────────────────────────────────────────────────────────────────
-FROM node:24-bookworm-slim AS runtime
+FROM node:25-bookworm-slim AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3001 HOSTNAME=0.0.0.0
 WORKDIR /app
 
