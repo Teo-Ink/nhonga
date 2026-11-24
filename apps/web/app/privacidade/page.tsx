@@ -93,6 +93,12 @@ export default function PrivacyPage() {
           América). Não envie dados pessoais de terceiros ao assistente{' '}
           <strong>[confirmar contratos]</strong>;
         </li>
+        <li>
+          <strong>Registo de erros técnicos</strong>: Sentry (Functional Software, Inc.), com
+          alojamento na Alemanha. Recebe dados técnicos de falhas do serviço (data, endereço pedido,
+          versão e tipo de dispositivo), sem o seu endereço IP, cookies ou conteúdo dos pedidos{' '}
+          <strong>[confirmar contrato]</strong>;
+        </li>
         <li>autoridades, quando a lei o exigir.</li>
       </ul>
       <p>
@@ -103,8 +109,9 @@ export default function PrivacyPage() {
       <h2>5. Transferências para fora de Moçambique</h2>
       <p>
         Alguns fornecedores, incluindo o alojamento, tratam dados fora de Moçambique (na África do
-        Sul, o alojamento; nos Estados Unidos da América, os serviços de inteligência artificial).
-        Nesses casos exigimos garantias de proteção equivalentes às desta política.{' '}
+        Sul, o alojamento; nos Estados Unidos da América, os serviços de inteligência artificial; na
+        Alemanha, o registo de erros técnicos). Nesses casos exigimos garantias de proteção
+        equivalentes às desta política.{' '}
         <strong>[Confirmar requisitos de notificação/registo junto do INTIC.]</strong>
       </p>
 
