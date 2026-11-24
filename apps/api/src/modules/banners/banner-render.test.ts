@@ -45,7 +45,9 @@ describe('renderBanner', () => {
     expect(svg).toContain('Moda');
     expect(svg).toContain('Camisola da Selecção');
     expect(svg).toContain('Contacta já');
-    expect(svg).toContain('📍 Maputo Cidade');
+    expect(svg).toContain('Maputo Cidade');
+    expect(svg).toContain('class="location"');
+    expect(svg).not.toContain('📍');
   });
 
   it('XML-escapes model-provided text so it cannot inject markup', () => {
@@ -107,7 +109,7 @@ describe('renderBanner', () => {
 
   it('omits the location line when there is no location', () => {
     const svg = render({ location: '' });
-    expect(svg).not.toContain('📍');
+    expect(svg).not.toContain('class="location"');
   });
 
   it('exposes six presets with a palette each', () => {

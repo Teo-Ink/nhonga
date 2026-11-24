@@ -14,6 +14,7 @@ import { wallet, walletTransaction } from '../../db/schema/wallet.js';
 import { AuthService } from '../auth/auth.service.js';
 import { MediaService } from '../media/media.service.js';
 import { AnthropicProvider } from '../assistant/anthropic.provider.js';
+import { rasterizeBanner } from './banner-png.js';
 import {
   PRESETS,
   PRESET_PALETTE,
@@ -308,9 +309,7 @@ export class BannersService {
     const key = createHash('sha1').update(svg).digest('hex');
     const cached = this.pngCache.get(key);
     if (cached) return cached;
-    const { Resvg } = await import('@resvg/resvg-js');
-    const png = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } }).render().asPng();
-    const buf = Buffer.from(png);
+    const buf = await rasterizeBanner(svg);
     // Keep the cache small (banners are large); drop the oldest when it grows.
     if (this.pngCache.size > 64) this.pngCache.delete(this.pngCache.keys().next().value!);
     this.pngCache.set(key, buf);
