@@ -63,7 +63,6 @@ describe('JsonLogger', () => {
     const reported: unknown[] = [];
     setReporter({
       captureException: (e) => reported.push(e),
-      captureMessage: (m) => reported.push(m),
     });
     const log = new JsonLogger('warn', (l) => out.push(l));
     log.log('hidden', 'Ctx');
@@ -77,6 +76,10 @@ describe('JsonLogger', () => {
       stack: 'stack here',
     });
     expect(out[1]).toContain('ALERT payment_review');
-    expect(reported).toEqual(['ALERT payment_review intent=1']);
+    expect(reported).toHaveLength(1);
+    expect(reported[0]).toMatchObject({
+      name: 'Checkout',
+      message: 'ALERT payment_review intent=1',
+    });
   });
 });

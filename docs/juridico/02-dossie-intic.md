@@ -106,6 +106,7 @@ _(Anexar o diagrama de `docs/` do repositório.)_
 | [Fornecedor de SMS] | Códigos de acesso          | [confirmar]   |
 | Anthropic           | Assistente de IA           | EUA           |
 | fal.ai              | Imagens de banners         | EUA           |
+| Sentry              | Registo de erros técnicos  | Alemanha      |
 
 ### 5. Segurança
 
