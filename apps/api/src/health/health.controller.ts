@@ -1,4 +1,15 @@
-import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import {
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Inject,
+  Logger,
+  Post,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ADMIN_HEADER, assertAdmin } from '../common/admin.js';
 import { SQL, type Sql } from '../db/database.module.js';
 
 /**
@@ -28,5 +39,19 @@ export class HealthController {
       throw new ServiceUnavailableException({ checks: { database: 'failed' } });
     }
     return { status: 'ok', checks: { database: 'ok' } };
+  }
+
+  /**
+   * Proves the error tracker end to end: writes one ERROR line with a fresh
+   * reference, which the logger forwards to Sentry. Admin token only (404
+   * otherwise). The answer says where to look, never whether tracking is on.
+   */
+  @Post('admin/error-test')
+  @HttpCode(202)
+  errorTest(@Headers(ADMIN_HEADER) adminToken?: string): { reference: string } {
+    assertAdmin(adminToken);
+    const reference = `diag-${randomUUID().slice(0, 8)}`;
+    new Logger('Diagnostics').error(`Error tracking test ${reference} (not a real failure)`);
+    return { reference };
   }
 }
