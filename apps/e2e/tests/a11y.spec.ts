@@ -9,6 +9,11 @@ const PAGES = [
   '/produto/nissan-almera-2013',
   '/entrar',
   '/vender/novo',
+  '/pesquisa?q=toyota',
+  '/loja/mama-rosa',
+  '/reclamacoes',
+  '/termos',
+  '/privacidade',
 ];
 
 for (const path of PAGES) {

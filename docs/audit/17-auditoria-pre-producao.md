@@ -24,7 +24,7 @@ que os testes anteriores não apanhavam. Estão corrigidos e com testes.
 | PRE-02  | **Alta**  | O site chama a API a partir dos seus servidores, por isso a API via todos os visitantes como um único endereço. Os limites "por visitante" eram uma quota única para o site inteiro: **30 inícios de sessão por hora**, 5 reclamações, 10 denúncias. O limitador do site lia o primeiro valor de `X-Forwarded-For`, que o cliente controla, o que deixava contornar o limite de SMS. | O site passa o endereço real do visitante à API (o valor acrescentado pelo balanceador, contado da direita; `TRUSTED_PROXY_HOPS`). Testado: um visitante esgota o seu limite sem afectar outro, e falsificar o cabeçalho não ajuda. |
 | PRIV-01 | **Alta**  | O número de telefone do vendedor ia no HTML e no JSON público de cada anúncio e loja. Qualquer pessoa podia recolher todos os números; a Política de Privacidade dizia que só eram mostrados a pedido.                                                                                                                                                                               | As páginas só sabem que canais o vendedor oferece. Os dígitos vêm de `POST /catalog/contacts`, a pedido, com limite de 30 por hora por visitante. Site e app actualizados.                                                          |
 | PRE-05  | **Média** | Com 50 000 anúncios, a lista da página inicial custava ~120 ms de base de dados e a API servia **20 pedidos por segundo**; as sugestões de pesquisa faziam uma leitura completa (250 ms).                                                                                                                                                                                            | Cache de 15 s para listas, sugestões e contadores públicos (limpa em cada alteração de anúncio) e sugestões com o índice de pesquisa. Ver números abaixo.                                                                           |
-| PRE-01  | Baixa     | Um id inválido no URL dava erro 500 (avaliações, promoções, subscrições, alertas), o que sujaria os alarmes.                                                                                                                                                                                                                                                                         | Passa a 404.                                                                                                                                                                                                                        |
+| PRE-01  | Baixa     | Um id inválido no URL dava erro 500 (avaliações, promoções, subscrições, alertas, anúncios pagos), o que sujaria os alarmes.                                                                                                                                                                                                                                                         | Passa a 404.                                                                                                                                                                                                                        |
 | PRE-03  | Baixa     | Um pedido de escrita vindo de outro site só era travado pelo cookie `SameSite=Lax`.                                                                                                                                                                                                                                                                                                  | O site recusa (403) escritas com `Origin` de outro site.                                                                                                                                                                            |
 | PRE-04  | Baixa     | A imagem principal da página inicial só era descoberta depois do CSS.                                                                                                                                                                                                                                                                                                                | Pré-carregada com prioridade. LCP 4,6 s → 3,9 s (simulação 4G lenta).                                                                                                                                                               |
 
@@ -82,16 +82,19 @@ interiores, 87 na inicial depois da correcção; acessibilidade 98 a 100; CLS 0;
 ## Acessibilidade e design
 
 - Os testes automáticos (axe, WCAG 2.1 AA) passam nas páginas cobertas.
-- Lighthouse aponta a ordem dos títulos nas páginas de categoria e de
-  pesquisa (os cartões saltam um nível). Não impede o uso; fica por corrigir.
+- A ordem dos títulos nas páginas de categoria e de pesquisa foi corrigida
+  (os cartões saltavam um nível) e a classificação por estrelas passou a ser
+  lida correctamente por leitores de ecrã. Os testes automáticos cobrem agora
+  também a pesquisa, a página de loja, as reclamações, os termos e a
+  privacidade.
 - **Por fazer, e não é automatizável:** leitor de ecrã num Android real e
   teste com utilizadores em telemóveis fracos.
 
 ## Arquitectura e base do código
 
 - Build, tipos, lint, fronteiras entre módulos, contrato OpenAPI e Prettier
-  verdes. Testes: API 207 (1 ignorado), site 25, partilhado 145, app 3,
-  ponta a ponta 20/20.
+  verdes. Testes: API 207 (1 ignorado), site 25, partilhado 145, app 20,
+  ponta a ponta 25/25.
 - As 27 migrações aplicam numa base vazia em menos de 1 s.
 - **Risco:** o CI actual do `main` não corre os testes com base de dados nem
   os de ponta a ponta (41 testes ficam ignorados). As propostas em
@@ -102,13 +105,19 @@ interiores, 87 na inicial depois da correcção; acessibilidade 98 a 100; CLS 0;
 - Tipos e testes passam; o pacote JavaScript gera para Android (3,5 MB) e
   iOS (3,1 MB), o que confirma que a actualização para o SDK 58 compila.
 - O token de sessão fica no armazenamento seguro do telemóvel.
+- 20 testes cobrem a camada lógica da app sem telemóvel (`apps/mobile/test`):
+  endereços e filtros enviados à API, sessão e saída, chave de idempotência
+  nos carregamentos, mensagens de erro, pedido do contacto do vendedor e
+  formatação de meticais. Os ecrãs não são testados por estes testes.
 - **Não verificado:** build nativa (EAS), execução num telemóvel, notificações,
   câmara, comportamento em rede lenta. `expo-doctor` passou 18 de 20
   verificações; as 2 restantes precisam de Internet.
 
 ## Infraestrutura
 
-Não foi possível validar o Terraform aqui. Revisão por leitura: produção com
+Não foi possível correr o Terraform aqui. O formato e a validação
+(`terraform fmt` e `validate`, staging e produção) correm no CI de cada PR
+para o `main`. Revisão por leitura: produção com
 base de dados em duas zonas, 2 tarefas por serviço com escalonamento
 automático, WAF, segredos fora do estado. **O primeiro `apply` de produção é
 o verdadeiro teste** e deve ser feito com tempo.
