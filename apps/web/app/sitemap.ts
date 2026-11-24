@@ -11,11 +11,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [
     { url: `${origin}/`, lastModified: now, changeFrequency: 'hourly', priority: 1 },
-    ...['/ajuda', '/seguranca', '/termos', '/privacidade', '/compra-e-vendas'].map((p) => ({
-      url: `${origin}${p}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.3,
-    })),
+    ...['/ajuda', '/seguranca', '/termos', '/privacidade', '/reclamacoes', '/compra-e-vendas'].map(
+      (p) => ({
+        url: `${origin}${p}`,
+        changeFrequency: 'monthly' as const,
+        priority: 0.3,
+      }),
+    ),
     ...CATEGORY_SLUGS.map((slug) => ({
       url: `${origin}/categoria/${slug}`,
       lastModified: now,

@@ -88,6 +88,7 @@ const enBase: Dictionary = {
     link_design: 'Design system',
     link_terms: 'Terms of use',
     link_privacy: 'Privacy',
+    link_complaints: 'Complaints',
     payments: 'Payments: M-Pesa · e-Mola · Bank transfer · Visa · Cash on delivery',
     rights: '© 2026 Nhonga',
     demo_suffix: 'Demo store',

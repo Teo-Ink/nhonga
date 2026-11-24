@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // once approved by a lawyer qualified in Mozambique.
 export default function TermsPage() {
   return (
-    <LegalPage title="Termos de Uso" updated="22 de novembro de 2026" draft>
+    <LegalPage title="Termos de Uso" updated="24 de novembro de 2026" draft>
       <p>
         Bem-vindo ao Nhonga, um mercado online de anúncios classificados em Moçambique. Estes Termos
         regulam o uso do site nhonga.co.mz, das aplicações móveis e dos serviços associados (o
@@ -83,8 +83,14 @@ export default function TermsPage() {
         O saldo da carteira e os pontos só podem ser usados em serviços do Nhonga, não são
         convertíveis em dinheiro e não rendem juros. Os preços são apresentados em meticais (MT)
         <strong> [indicar se incluem IVA]</strong>. Um serviço já ativado não é reembolsável, salvo
-        se não tiver sido prestado por falha nossa ou nos casos previstos na lei.{' '}
-        <strong>[Confirmar política de reembolso e prazos com o advogado.]</strong>
+        se não tiver sido prestado por falha nossa ou nos casos previstos na lei.
+      </p>
+      <p>
+        Se carregou a carteira e ainda não gastou esse saldo, pode pedir o reembolso para o mesmo
+        meio de pagamento que usou, escrevendo para os contactos abaixo no prazo de{' '}
+        <strong>[prazo, a confirmar com o advogado]</strong> dias. Bónus e pontos oferecidos não são
+        reembolsáveis. Isto não limita o direito de livre resolução nem outros direitos que a lei
+        lhe dê como consumidor.
       </p>
 
       <h2>5. Mensagens e conduta</h2>
@@ -120,24 +126,37 @@ export default function TermsPage() {
         Termos <strong>[definir tratamento com o advogado]</strong>.
       </p>
 
-      <h2>9. Alterações</h2>
+      <h2>9. Publicidade</h2>
+      <p>
+        Os espaços pagos por anunciantes aparecem sempre identificados com a palavra «Publicidade»,
+        e os anúncios destacados com o selo «Destaque». O anunciante é responsável pelo conteúdo da
+        sua publicidade e por ter as licenças que a lei exige. Só aceitamos publicidade a jogos de
+        fortuna ou azar e a apostas de entidades com concessão em Moçambique e com a autorização das
+        entidades competentes para essa publicidade; nunca é dirigida a menores.
+      </p>
+
+      <h2>10. Alterações</h2>
       <p>
         Podemos atualizar estes Termos. Avisaremos as alterações importantes no Nhonga ou por SMS
         antes de entrarem em vigor. Continuar a usar o Nhonga depois disso significa que aceita a
         nova versão.
       </p>
 
-      <h2>10. Lei aplicável e litígios</h2>
+      <h2>11. Lei aplicável e litígios</h2>
       <p>
         Estes Termos regem-se pela lei da República de Moçambique. Em caso de litígio, procuraremos
         primeiro uma solução amigável; não sendo possível, são competentes os tribunais judiciais da
-        cidade de Maputo, sem prejuízo de outras regras legais imperativas.
+        cidade de Maputo, sem prejuízo de outras regras legais imperativas. Pode apresentar uma
+        reclamação em <a href="/reclamacoes">Reclamações</a> e também às entidades de defesa do
+        consumidor.
       </p>
 
-      <h2>11. Contactos</h2>
+      <h2>12. Contactos e identificação</h2>
       <p>
-        <strong>[Nome legal da empresa]</strong> · <strong>[morada]</strong> · email{' '}
-        <strong>[suporte@…]</strong> · WhatsApp <strong>[+258 …]</strong>
+        <strong>[Nome legal da empresa]</strong> · NUIT <strong>[número]</strong> · registo
+        comercial <strong>[número]</strong> · registo/licença INTIC <strong>[número]</strong> ·{' '}
+        <strong>[morada]</strong> · email <strong>[suporte@…]</strong> · WhatsApp{' '}
+        <strong>[+258 …]</strong>
       </p>
     </LegalPage>
   );

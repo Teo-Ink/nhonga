@@ -48,6 +48,12 @@ variable "api_host" {
   default     = ""
 }
 
+variable "access_log_retention_days" {
+  description = "Keep ALB access logs in S3 for this many days (0 = off). The INTIC regulation (Decreto 59/2023, art. 42) asks for 5 years of access logs."
+  type        = number
+  default     = 0
+}
+
 locals {
   name     = "${var.project}-${var.environment}"
   https_on = var.certificate_arn != ""
@@ -67,6 +73,111 @@ resource "aws_lb" "this" {
   drop_invalid_header_fields = true
   enable_deletion_protection = var.environment == "production"
   tags                       = { Name = local.name }
+
+  dynamic "access_logs" {
+    for_each = var.access_log_retention_days > 0 ? [1] : []
+    content {
+      bucket  = aws_s3_bucket.access_logs[0].id
+      prefix  = "alb"
+      enabled = true
+    }
+  }
+
+  # The bucket policy must exist before the ALB validates log delivery.
+  depends_on = [aws_s3_bucket_policy.access_logs]
+}
+
+# ── Access logs (LEG-02) ─────────────────────────────────────────────────────
+# Who requested what and when (client IP, time, path, status), kept for the
+# period the INTIC regulation asks. Private bucket, moved to cold storage after
+# 90 days and deleted when the retention period ends.
+data "aws_caller_identity" "current" {}
+data "aws_elb_service_account" "this" {}
+
+# Logging a log bucket would loop; versioning adds cost for write-once objects.
+#trivy:ignore:AWS-0089
+#trivy:ignore:AWS-0090
+resource "aws_s3_bucket" "access_logs" {
+  count  = var.access_log_retention_days > 0 ? 1 : 0
+  bucket = "${local.name}-access-logs-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_s3_bucket_public_access_block" "access_logs" {
+  count                   = var.access_log_retention_days > 0 ? 1 : 0
+  bucket                  = aws_s3_bucket.access_logs[0].id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# ALB log delivery only supports SSE-S3 (not a customer-managed KMS key).
+#trivy:ignore:AWS-0132
+resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
+  count  = var.access_log_retention_days > 0 ? 1 : 0
+  bucket = aws_s3_bucket.access_logs[0].id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "access_logs" {
+  count  = var.access_log_retention_days > 0 ? 1 : 0
+  bucket = aws_s3_bucket.access_logs[0].id
+  rule {
+    id     = "retain-then-expire"
+    status = "Enabled"
+    filter {}
+
+    dynamic "transition" {
+      for_each = var.access_log_retention_days > 90 ? [1] : []
+      content {
+        days          = 90
+        storage_class = "GLACIER_IR"
+      }
+    }
+    expiration {
+      days = var.access_log_retention_days
+    }
+  }
+}
+
+data "aws_iam_policy_document" "access_logs" {
+  count = var.access_log_retention_days > 0 ? 1 : 0
+
+  statement {
+    sid       = "AlbLogDelivery"
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.access_logs[0].arn}/alb/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_elb_service_account.this.arn]
+    }
+  }
+
+  statement {
+    sid       = "TlsOnly"
+    effect    = "Deny"
+    actions   = ["s3:*"]
+    resources = [aws_s3_bucket.access_logs[0].arn, "${aws_s3_bucket.access_logs[0].arn}/*"]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "access_logs" {
+  count  = var.access_log_retention_days > 0 ? 1 : 0
+  bucket = aws_s3_bucket.access_logs[0].id
+  policy = data.aws_iam_policy_document.access_logs[0].json
 }
 
 resource "aws_lb_target_group" "app" {

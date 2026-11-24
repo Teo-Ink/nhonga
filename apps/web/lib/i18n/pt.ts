@@ -88,6 +88,7 @@ const ptBase = {
     link_design: 'Sistema de design',
     link_terms: 'Termos de uso',
     link_privacy: 'Privacidade',
+    link_complaints: 'Reclamações',
     payments: 'Pagamentos: M-Pesa · e-Mola · Transferência bancária · Visa · Dinheiro na entrega',
     rights: '© 2026 Nhonga',
     demo_suffix: 'Loja de demonstração',
