@@ -45,7 +45,7 @@ jobs:
       matrix:
         env: [staging, production]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Assume plan role
         uses: aws-actions/configure-aws-credentials@v4
@@ -96,7 +96,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Assume staging deploy role
         uses: aws-actions/configure-aws-credentials@v4
@@ -128,7 +128,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Assume production deploy role
         uses: aws-actions/configure-aws-credentials@v4
