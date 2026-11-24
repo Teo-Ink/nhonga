@@ -12,6 +12,8 @@ import {
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
 import { formatPrice } from '../../../lib/format';
+import { clearDraft, loadDraft, saveDraft } from '../../../lib/listing-draft';
+import { useActionKey } from '../../../lib/action-key';
 
 // Create listing — fully wired. The form POSTs to /api/listings (real
 // createListing under the signed-in seller's shop); photos are picked and
@@ -33,6 +35,7 @@ const CATEGORY_KEYS = [
 ] as const;
 
 export default function NewListingPage() {
+  const payKey = useActionKey();
   const t = pt.sell;
   const cats = pt.categories;
   const [title, setTitle] = useState('');
@@ -48,13 +51,38 @@ export default function NewListingPage() {
   const [shopName, setShopName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [pubError, setPubError] = useState(false);
+  const [pubError, setPubError] = useState<null | 'generic' | 'limit'>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
   const [aiNotes, setAiNotes] = useState('');
   const [aiState, setAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>('idle');
   const [photoAiState, setPhotoAiState] = useState<'idle' | 'loading' | 'error' | 'unconfigured'>(
     'idle',
   );
   const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'unsupported'>('idle');
+
+  // Restore the local draft once, then keep it up to date as the seller types.
+  useEffect(() => {
+    const d = loadDraft();
+    if (d) {
+      setTitle(d.title);
+      setCategory(d.category);
+      setDescription(d.description);
+      setPrice(d.price);
+      setStock(d.stock);
+      setPlan(d.plan);
+      setShopName(d.shopName);
+      setPhotos(d.photos);
+    }
+    setDraftRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!draftRestored) return;
+    const id = window.setTimeout(
+      () => saveDraft({ title, category, description, price, stock, plan, shopName, photos }),
+      400,
+    );
+    return () => window.clearTimeout(id);
+  }, [draftRestored, title, category, description, price, stock, plan, shopName, photos]);
 
   // Draft title + description + category from the first uploaded photo (vision).
   async function analyzePhoto() {
@@ -191,9 +219,16 @@ export default function NewListingPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
-    setPubError(false);
+    setPubError(null);
     if (!valid) {
       document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+      return;
+    }
+    // Publishing needs an account. The draft is already saved on this device,
+    // so sign-in brings the seller straight back to a filled-in form.
+    if (!user) {
+      saveDraft({ title, category, description, price, stock, plan, shopName, photos });
+      window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
       return;
     }
     setPublishing(true);
@@ -211,22 +246,36 @@ export default function NewListingPage() {
           ...(needsShopName && shopName.trim() ? { shopName: shopName.trim() } : {}),
         }),
       });
-      const data = (await res.json().catch(() => ({}))) as { slug?: string };
-      if (!res.ok || !data.slug) {
-        setPubError(true);
+      const data = (await res.json().catch(() => ({}))) as { id?: string; slug?: string };
+      if (res.status === 401) {
+        window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
         return;
       }
-      // A paid plan boosts the fresh listing (mock payment), like /vender/promover.
-      if (plan !== 'free') {
-        await fetch('/api/promotions', {
+      if (res.status === 429) {
+        setPubError('limit');
+        return;
+      }
+      if (!res.ok || !data.slug) {
+        setPubError('generic');
+        return;
+      }
+      clearDraft();
+      // A paid plan is charged to the seller's wallet, like "Promover" on the
+      // account page. Without enough balance the listing is still published,
+      // and the seller can promote it later from there.
+      if (plan !== 'free' && data.id) {
+        await fetch('/api/wallet/boost', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ productSlug: data.slug, planCode: plan, paymentMethod: 'mpesa' }),
+          headers: {
+            'content-type': 'application/json',
+            ...payKey.headers(JSON.stringify({ productId: data.id, planCode: plan })),
+          },
+          body: JSON.stringify({ productId: data.id, planCode: plan }),
         }).catch(() => undefined);
       }
       window.location.href = `/produto/${data.slug}`;
     } catch {
-      setPubError(true);
+      setPubError('generic');
     } finally {
       setPublishing(false);
     }
@@ -261,13 +310,18 @@ export default function NewListingPage() {
               </label>
             ) : (
               <p className="newlisting__as" role="note">
-                {t.publishing_as} <strong>{shop ? shop.displayName : t.shop_community}</strong>
-                {!user ? (
+                {user && shop ? (
                   <>
-                    {' · '}
-                    <a href="/entrar">{t.shop_login}</a>
+                    {t.publishing_as} <strong>{shop.displayName}</strong>
                   </>
-                ) : null}
+                ) : (
+                  <>
+                    {t.login_note}{' '}
+                    <a href={`/entrar?next=${encodeURIComponent('/vender/novo')}`}>
+                      {t.shop_login}
+                    </a>
+                  </>
+                )}
               </p>
             )
           ) : null}
@@ -467,7 +521,7 @@ export default function NewListingPage() {
           ) : null}
           {pubError ? (
             <p className="field__error" role="alert">
-              {t.publish_error}
+              {pubError === 'limit' ? t.publish_limit : t.publish_error}
             </p>
           ) : null}
         </form>

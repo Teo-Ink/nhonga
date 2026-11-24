@@ -2,16 +2,18 @@
 import { useEffect, useState } from 'react';
 import { IconWhatsApp, IconPhone, IconShare, IconChat } from './icons';
 import type { Dictionary } from '../lib/i18n/index';
+import { formatMsisdn, maskedNumber, openWhenReady, revealContact } from '../lib/seller-contact';
 
 // Classifieds contact block: WhatsApp first, then "Ver número" and in-app
-// messaging, with sharing demoted to small links. Each action records an engagement event (fire-and-forget)
-// so sellers see contacts/shares. WhatsApp opens with a pre-filled message.
+// messaging, with sharing demoted to small links. WhatsApp opens with a
+// pre-filled message. The page only knows WHICH channels the seller offers:
+// the digits are fetched when the visitor taps (PRIV-01), and the API counts
+// that request as a contact for the seller.
 export function ContactSeller({
   slug,
   title,
   priceLabel,
-  whatsapp,
-  phone,
+  contact,
   t,
   ctaLabel,
   waMessage,
@@ -22,8 +24,8 @@ export function ContactSeller({
   slug: string;
   title: string;
   priceLabel: string;
-  whatsapp: string | null;
-  phone: string | null;
+  /** Channels the seller offers, without the digits. */
+  contact: { whatsapp: boolean; phone: boolean; hint: string | null } | null;
   t: Dictionary['contact'];
   /** Overrides the WhatsApp button label (e.g. "Candidatar-me" for jobs). */
   ctaLabel?: string;
@@ -35,7 +37,7 @@ export function ContactSeller({
   /** Vertical-specific safety line; falls back to the generic one. */
   safetyNote?: string;
 }) {
-  function track(type: 'contact' | 'share') {
+  function track(type: 'share') {
     void fetch('/api/track', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -56,7 +58,23 @@ export function ContactSeller({
   const messageTpl = waMessage ?? t.wa_message;
   const message = messageTpl.replace('{title}', title).replace('{price}', priceLabel);
   const waText = pageUrl ? `${message} ${pageUrl}` : message;
-  const waHref = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(waText)}` : null;
+  const hasWa = contact?.whatsapp === true;
+  const hasPhone = contact?.phone === true;
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function numbers() {
+    const r = await revealContact({ productSlug: slug });
+    if (!r.ok) setNotice(r.limited ? t.reveal_limited : t.reveal_failed);
+    else setNotice(null);
+    return r.ok ? r.numbers : null;
+  }
+  function openWhatsApp() {
+    void openWhenReady(
+      numbers().then((n) =>
+        n?.whatsapp ? `https://wa.me/${n.whatsapp}?text=${encodeURIComponent(waText)}` : null,
+      ),
+    );
+  }
 
   async function share() {
     track('share');
@@ -84,55 +102,47 @@ export function ContactSeller({
     ? `https://wa.me/?text=${encodeURIComponent(`${shareText} ${pageUrl}`)}`
     : '';
 
-  const hasContact = Boolean(waHref || phone);
+  const hasContact = hasWa || hasPhone;
   const msgHref = vendorSlug
     ? `/mensagens/novo?loja=${encodeURIComponent(vendorSlug)}&produto=${encodeURIComponent(slug)}${
         vendorName ? `&nome=${encodeURIComponent(vendorName)}` : ''
       }`
     : null;
 
-  // "Ver número" (OLX pattern): the number stays masked on screen until asked
-  // for, and revealing it counts as a lead. Note the digits still travel in the
-  // page payload; full anti-scraping needs a server endpoint that returns the
-  // number on reveal (follow-up).
-  const [revealed, setRevealed] = useState(false);
-  function reveal() {
-    if (!revealed) track('contact');
-    setRevealed(true);
+  // "Ver número" (OLX pattern): the number is not in the page at all; it is
+  // fetched when asked for, which also counts as a lead for the seller.
+  const [phone, setPhone] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  async function reveal() {
+    setLoading(true);
+    const n = await numbers();
+    setLoading(false);
+    if (n?.phone) setPhone(n.phone);
   }
   const phoneButton = (cls: string, short: boolean) =>
-    phone ? (
-      revealed ? (
-        <a
-          className={cls}
-          href={`tel:+${phone}`}
-          onClick={() => track('contact')}
-          aria-label={`${t.call} ${formatMsisdn(phone)}`}
-        >
+    hasPhone ? (
+      phone ? (
+        <a className={cls} href={`tel:+${phone}`} aria-label={`${t.call} ${formatMsisdn(phone)}`}>
           <IconPhone width={18} height={18} /> {short ? t.call_short : formatMsisdn(phone)}
         </a>
       ) : (
-        <button type="button" className={cls} onClick={reveal}>
+        <button type="button" className={cls} onClick={reveal} disabled={loading}>
           <IconPhone width={18} height={18} />{' '}
-          {short ? t.call_short : `${t.show_number} · ${maskMsisdn(phone)}`}
+          {short ? t.call_short : `${t.show_number} · ${maskedNumber(contact?.hint ?? null)}`}
         </button>
       )
+    ) : null;
+  const waButton = (label: string, size: number) =>
+    hasWa ? (
+      <button type="button" className="btn contactbtn contactbtn--wa" onClick={openWhatsApp}>
+        <IconWhatsApp width={size} height={size} /> {label}
+      </button>
     ) : null;
 
   return (
     <>
       <div className="contactbox">
-        {waHref ? (
-          <a
-            className="btn contactbtn contactbtn--wa"
-            href={waHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => track('contact')}
-          >
-            <IconWhatsApp width={20} height={20} /> {ctaLabel ?? t.whatsapp}
-          </a>
-        ) : null}
+        {waButton(ctaLabel ?? t.whatsapp, 20)}
         {phoneButton('btn contactbtn contactbtn--call', false)}
         {msgHref ? (
           <a className="btn contactbtn contactbtn--msg" href={msgHref}>
@@ -156,6 +166,11 @@ export function ContactSeller({
           </button>
         </div>
         {!hasContact ? <p className="contactbox__none">{t.no_contact}</p> : null}
+        {notice ? (
+          <p className="contactbox__none" role="alert">
+            {notice}
+          </p>
+        ) : null}
         <p className="contactbox__safe">{safetyNote ?? t.safety}</p>
       </div>
 
@@ -165,41 +180,16 @@ export function ContactSeller({
         <div className="stickycontact" role="region" aria-label={t.whatsapp}>
           <span className="stickycontact__price">{priceLabel}</span>
           <div className="stickycontact__btns">
-            {msgHref && !waHref ? (
+            {msgHref && !hasWa ? (
               <a className="btn contactbtn contactbtn--msg" href={msgHref}>
                 <IconChat width={18} height={18} /> {t.send_message}
               </a>
             ) : null}
             {phoneButton('btn contactbtn contactbtn--call', true)}
-            {waHref ? (
-              <a
-                className="btn contactbtn contactbtn--wa"
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track('contact')}
-              >
-                <IconWhatsApp width={18} height={18} /> {t.whatsapp_short}
-              </a>
-            ) : null}
+            {waButton(t.whatsapp_short, 18)}
           </div>
         </div>
       ) : null}
     </>
   );
-}
-
-// Display a Mozambican MSISDN (E.164 "258841234567") as "+258 84 123 4567".
-// Falls back to a plain "+<digits>" for anything unexpected.
-function formatMsisdn(e164: string): string {
-  const digits = e164.replace(/\D/g, '');
-  const m = /^258(\d{2})(\d{3})(\d{4})$/.exec(digits);
-  return m ? `+258 ${m[1]} ${m[2]} ${m[3]}` : `+${digits}`;
-}
-
-// "+258 84 ••• ••••": enough to recognise the network, not enough to scrape.
-function maskMsisdn(e164: string): string {
-  const digits = e164.replace(/\D/g, '');
-  const m = /^258(\d{2})\d{7}$/.exec(digits);
-  return m ? `+258 ${m[1]} ••• ••••` : '••• ••• •••';
 }

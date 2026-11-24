@@ -6,9 +6,8 @@
 //   POST /api/checkout/mock/{id}     → dev simulator approve/decline
 // Gateway webhooks go straight to the API, not through here.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, idempotency, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
 const SAFE = /^[A-Za-z0-9-]+$/;
 
 async function forward(req: Request, path: string[], method: 'GET' | 'POST'): Promise<Response> {
@@ -23,8 +22,11 @@ async function forward(req: Request, path: string[], method: 'GET' | 'POST'): Pr
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const headers: Record<string, string> = { 'accept-language': 'pt' };
   if (token) headers.authorization = `Bearer ${token}`;
-  if (method === 'POST') headers['content-type'] = 'application/json';
-  const res = await fetch(`${API_URL}/checkout/${path.join('/')}`, {
+  if (method === 'POST') {
+    headers['content-type'] = 'application/json';
+    Object.assign(headers, idempotency(req));
+  }
+  const res = await apiFetch(`/checkout/${path.join('/')}`, {
     method,
     headers,
     ...(method === 'POST' ? { body: await req.text() } : {}),
@@ -38,10 +40,13 @@ async function forward(req: Request, path: string[], method: 'GET' | 'POST'): Pr
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
-export async function GET(req: Request, ctx: Ctx): Promise<Response> {
+async function handleGET(req: Request, ctx: Ctx): Promise<Response> {
   return forward(req, (await ctx.params).path, 'GET');
 }
 
-export async function POST(req: Request, ctx: Ctx): Promise<Response> {
+async function handlePOST(req: Request, ctx: Ctx): Promise<Response> {
   return forward(req, (await ctx.params).path, 'POST');
 }
+
+export const GET = withApi(handleGET);
+export const POST = withApi(handlePOST);

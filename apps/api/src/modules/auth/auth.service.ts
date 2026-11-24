@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import { normaliseMzMsisdn } from '@nhonga/shared';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
@@ -9,18 +9,14 @@ import { referral } from '../../db/schema/referrals.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
 import {
-  order as orderTable,
-  orderItem,
-  payment as paymentTable,
-  subOrder,
-} from '../../db/schema/commerce.js';
-import {
   generateOtpCode,
   hashOtpCode,
   hashSessionToken,
   newSessionToken,
   verifyOtpCode,
 } from './auth-crypto.js';
+import { breachMessage, checkOtpLimits, otpLimitsFromEnv, type OtpLimits } from './otp-limits.js';
+import { createSmsSender, type SmsSender } from '../notifications/sms.sender.js';
 
 export class AuthError extends Error {
   constructor(
@@ -31,7 +27,9 @@ export class AuthError extends Error {
       | 'expired'
       | 'too_many_attempts'
       | 'wrong_code'
-      | 'unauthenticated',
+      | 'unauthenticated'
+      | 'not_allowed'
+      | 'sms_unavailable',
     readonly userMessage: string,
   ) {
     super(`${code}: ${userMessage}`);
@@ -63,7 +61,6 @@ export interface VerifyResult {
 const OTP_TTL_SECONDS = 600; // 10 minutes
 const SESSION_TTL_DAYS = 7;
 const MAX_ATTEMPTS = 5;
-const MAX_REQUESTS_PER_WINDOW = 5;
 
 /** Whether SMS is mocked. In mock mode we log the code and return it for testing. */
 // Never mock in production, whatever SMS_MODE says (config validation also
@@ -71,9 +68,37 @@ const MAX_REQUESTS_PER_WINDOW = 5;
 const SMS_MOCK =
   process.env['NODE_ENV'] !== 'production' && (process.env['SMS_MODE'] ?? 'mock') !== 'live';
 
+/**
+ * Test environments (staging) with mocked SMS hand the login code back in the
+ * response, which lets anyone sign in as any number. OTP_DEV_ALLOWLIST limits
+ * that to the team's own numbers (P0-05): any other number is refused before a
+ * code exists. Empty = no restriction, for a developer's own machine.
+ */
+export function parseAllowlist(raw: string | undefined): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const part of (raw ?? '').split(/[,;]+/)) {
+    const n = normaliseMzMsisdn(part);
+    if (n !== null) out.add(n);
+  }
+  return out;
+}
+
+export function otpSmsText(code: string): string {
+  return `Nhonga: o seu código é ${code}. Válido 10 minutos. Não o partilhe com ninguém.`;
+}
+
 @Injectable()
 export class AuthService {
   private readonly log = new Logger('Auth');
+
+  private readonly limits: OtpLimits = otpLimitsFromEnv();
+  private readonly devAllowlist = parseAllowlist(process.env['OTP_DEV_ALLOWLIST']);
+  private readonly sms: SmsSender = createSmsSender({
+    mode: SMS_MOCK ? 'mock' : 'live',
+    gatewayUrl: process.env['SMS_GATEWAY_URL'] ?? null,
+    gatewayToken: process.env['SMS_GATEWAY_TOKEN'] ?? null,
+    senderId: process.env['SMS_SENDER_ID'] ?? null,
+  });
 
   constructor(@Inject(DB) private readonly db: Db) {}
 
@@ -83,14 +108,24 @@ export class AuthService {
       throw new AuthError('invalid_phone', 'O número deve ter 9 dígitos e começar por 8.');
     }
 
-    // Basic rate limit: cap active challenges per phone in the TTL window.
-    const since = new Date(Date.now() - OTP_TTL_SECONDS * 1000);
-    const recent = await this.db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(otpChallenge)
-      .where(and(eq(otpChallenge.phoneE164, phoneE164), gt(otpChallenge.createdAt, since)));
-    if ((recent[0]?.n ?? 0) >= MAX_REQUESTS_PER_WINDOW) {
-      throw new AuthError('rate_limited', 'Pediu códigos demasiadas vezes. Tente mais tarde.');
+    if (SMS_MOCK && this.devAllowlist.size > 0 && !this.devAllowlist.has(phoneE164)) {
+      throw new AuthError(
+        'not_allowed',
+        'Este ambiente de testes só aceita números autorizados pela equipa Nhonga.',
+      );
+    }
+
+    // Limits counted in Postgres, so they hold across every API instance (SEC-02).
+    const usage = await this.otpUsage(phoneE164);
+    const breach = checkOtpLimits(usage, this.limits);
+    if (breach !== null) {
+      if (breach.kind === 'global_hour') {
+        // Stable marker for a CloudWatch metric filter and alarm (SMS pumping).
+        this.log.warn(`ALERT otp_global_limit_reached count=${usage.globalLastHour}`);
+      } else {
+        this.log.log(`otp_limited kind=${breach.kind}`);
+      }
+      throw new AuthError('rate_limited', breachMessage(breach));
     }
 
     const code = generateOtpCode();
@@ -105,10 +140,21 @@ export class AuthService {
     });
 
     if (SMS_MOCK) {
-      this.log.log(`[mock SMS] login code for ${phoneE164}: ${code}`);
+      this.log.log(`[mock SMS] login code issued for …${phoneE164.slice(-3)}`);
     } else {
-      // Live SMS gateway is not wired (OQ). Fail loud rather than silently drop.
-      throw new AuthError('rate_limited', 'O envio de SMS ainda não está disponível.');
+      const res = await this.sms.send(phoneE164, otpSmsText(code));
+      if (!res.sent || res.channel !== 'live') {
+        // Nothing reached the phone: burn the challenge so it cannot be guessed,
+        // and say so instead of leaving the user waiting for an SMS.
+        await this.db
+          .update(otpChallenge)
+          .set({ consumedAt: new Date() })
+          .where(eq(otpChallenge.id, challengeId));
+        throw new AuthError(
+          'sms_unavailable',
+          'Não foi possível enviar o SMS agora. Tente de novo dentro de alguns minutos.',
+        );
+      }
     }
 
     return {
@@ -119,37 +165,38 @@ export class AuthService {
   }
 
   async verifyOtp(challengeId: string, code: string, referralCode?: string): Promise<VerifyResult> {
-    const rows = await this.db
-      .select()
-      .from(otpChallenge)
-      .where(eq(otpChallenge.id, challengeId))
-      .limit(1);
-    const ch = rows[0];
-    if (ch === undefined) {
-      throw new AuthError('challenge_not_found', 'Pedido de código inválido. Comece de novo.');
-    }
-    if (ch.consumedAt !== null) {
-      throw new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
-    }
-    if (ch.expiresAt.getTime() < Date.now()) {
-      throw new AuthError('expired', 'O código expirou. Peça um novo.');
-    }
-    if (ch.attempts >= ch.maxAttempts) {
-      throw new AuthError('too_many_attempts', 'Demasiadas tentativas. Peça um novo código.');
-    }
+    // Claim one attempt atomically BEFORE checking the code (SEC-01). Concurrent
+    // guesses each need their own row update, so at most max_attempts of them
+    // ever get to compare a code, however many arrive at once.
+    const claimed = await this.db
+      .update(otpChallenge)
+      .set({ attempts: sql`${otpChallenge.attempts} + 1` })
+      .where(
+        and(
+          eq(otpChallenge.id, challengeId),
+          sql`${otpChallenge.attempts} < ${otpChallenge.maxAttempts}`,
+          isNull(otpChallenge.consumedAt),
+          gt(otpChallenge.expiresAt, sql`now()`),
+        ),
+      )
+      .returning({ phoneE164: otpChallenge.phoneE164, codeHash: otpChallenge.codeHash });
+    const ch = claimed[0];
+    if (ch === undefined) throw await this.whyNoAttempt(challengeId);
 
     if (!verifyOtpCode(code.trim(), ch.codeHash)) {
-      await this.db
-        .update(otpChallenge)
-        .set({ attempts: ch.attempts + 1 })
-        .where(eq(otpChallenge.id, challengeId));
       throw new AuthError('wrong_code', 'Código incorreto. Verifique e tente novamente.');
     }
 
-    await this.db
+    // Consume atomically: of two correct submissions racing, exactly one wins
+    // and only that one gets a session.
+    const consumed = await this.db
       .update(otpChallenge)
-      .set({ consumedAt: new Date() })
-      .where(eq(otpChallenge.id, challengeId));
+      .set({ consumedAt: sql`now()` })
+      .where(and(eq(otpChallenge.id, challengeId), isNull(otpChallenge.consumedAt)))
+      .returning({ id: otpChallenge.id });
+    if (consumed.length === 0) {
+      throw new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
+    }
 
     const { user, created } = await this.upsertUser(ch.phoneE164);
     const token = newSessionToken();
@@ -174,6 +221,51 @@ export class AuthService {
     return { sessionToken: token.raw, expiresAt: expiresAt.toISOString(), user };
   }
 
+  private async otpUsage(phoneE164: string) {
+    const rows = await this.db
+      .select({
+        lastAt: sql<Date | null>`max(${otpChallenge.createdAt}) filter (where ${otpChallenge.phoneE164} = ${phoneE164})`,
+        inWindow: sql<number>`count(*) filter (where ${otpChallenge.phoneE164} = ${phoneE164} and ${otpChallenge.createdAt} > now() - make_interval(secs => ${OTP_TTL_SECONDS}))::int`,
+        today: sql<number>`count(*) filter (where ${otpChallenge.phoneE164} = ${phoneE164} and ${otpChallenge.createdAt} > now() - interval '24 hours')::int`,
+        globalHour: sql<number>`count(*) filter (where ${otpChallenge.createdAt} > now() - interval '1 hour')::int`,
+      })
+      .from(otpChallenge)
+      .where(gt(otpChallenge.createdAt, sql`now() - interval '24 hours'`));
+    const r = rows[0];
+    const lastAt = r?.lastAt ? new Date(r.lastAt) : null;
+    return {
+      secondsSinceLast: lastAt === null ? null : (Date.now() - lastAt.getTime()) / 1000,
+      perNumberInWindow: r?.inWindow ?? 0,
+      perNumberToday: r?.today ?? 0,
+      globalLastHour: r?.globalHour ?? 0,
+    };
+  }
+
+  /** Explains why no attempt could be claimed, for the user-facing message. */
+  private async whyNoAttempt(challengeId: string): Promise<AuthError> {
+    const rows = await this.db
+      .select({
+        attempts: otpChallenge.attempts,
+        maxAttempts: otpChallenge.maxAttempts,
+        expiresAt: otpChallenge.expiresAt,
+        consumedAt: otpChallenge.consumedAt,
+      })
+      .from(otpChallenge)
+      .where(eq(otpChallenge.id, challengeId))
+      .limit(1);
+    const ch = rows[0];
+    if (ch === undefined) {
+      return new AuthError('challenge_not_found', 'Pedido de código inválido. Comece de novo.');
+    }
+    if (ch.consumedAt !== null) {
+      return new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
+    }
+    if (ch.attempts >= ch.maxAttempts) {
+      return new AuthError('too_many_attempts', 'Demasiadas tentativas. Peça um novo código.');
+    }
+    return new AuthError('expired', 'O código expirou. Peça um novo.');
+  }
+
   async me(rawToken: string | null): Promise<AuthUser> {
     const userId = await this.userIdForToken(rawToken);
     const rows = await this.db
@@ -192,45 +284,6 @@ export class AuthService {
       .update(refreshToken)
       .set({ revokedAt: new Date() })
       .where(eq(refreshToken.tokenHash, hashSessionToken(rawToken)));
-  }
-
-  async listOrders(rawToken: string | null): Promise<
-    ReadonlyArray<{
-      orderNumber: string;
-      placedAt: string;
-      grandTotalCents: number;
-      paymentStatus: string;
-      itemCount: number;
-    }>
-  > {
-    const userId = await this.userIdForToken(rawToken);
-    const orders = await this.db
-      .select({
-        id: orderTable.id,
-        orderNumber: orderTable.orderNumber,
-        placedAt: orderTable.placedAt,
-        grandTotalCents: orderTable.grandTotalCents,
-        paymentStatus: paymentTable.status,
-        itemCount: sql<number>`(
-          select coalesce(sum(${orderItem.quantity}), 0)::int
-          from ${orderItem}
-          join ${subOrder} on ${subOrder.id} = ${orderItem.subOrderId}
-          where ${subOrder.orderId} = ${orderTable.id}
-        )`,
-      })
-      .from(orderTable)
-      .leftJoin(paymentTable, eq(paymentTable.orderId, orderTable.id))
-      .where(eq(orderTable.userId, userId))
-      .orderBy(desc(orderTable.placedAt))
-      .limit(50);
-
-    return orders.map((o) => ({
-      orderNumber: o.orderNumber,
-      placedAt: o.placedAt.toISOString(),
-      grandTotalCents: o.grandTotalCents,
-      paymentStatus: o.paymentStatus ?? 'unknown',
-      itemCount: o.itemCount,
-    }));
   }
 
   private async userIdForToken(rawToken: string | null): Promise<string> {
@@ -260,6 +313,12 @@ export class AuthService {
       .where(and(eq(appUser.phoneE164, phoneE164), isNull(appUser.deletedAt)))
       .limit(1);
     if (existing[0]) {
+      if (existing[0].status !== 'active') {
+        throw new AuthError(
+          'not_allowed',
+          'Esta conta está suspensa. Contacte o apoio da Nhonga se acha que é um engano.',
+        );
+      }
       if (existing[0].phoneVerifiedAt === null) {
         await this.db
           .update(appUser)

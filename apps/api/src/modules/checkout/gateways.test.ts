@@ -59,6 +59,30 @@ describe('PawaPay', () => {
     expect(calls[0]?.body).toMatchObject({ depositId: ID, amount: '500.00', country: 'MOZ' });
   });
 
+  it('asks for a refund of the deposit and reads its result (P2-02)', async () => {
+    const calls: Call[] = [];
+    const gw = new PawaPayGateway(cfg, fakeFetch(200, { status: 'ACCEPTED' }, calls));
+    const r = await gw.refund({ refundId: ID, gatewayRef: ID, amountCents: 50_000 });
+    expect(r).toEqual({ status: 'accepted', reason: null });
+    expect(calls[0]?.url).toBe('https://api.sandbox.pawapay.io/v2/refunds');
+    expect(calls[0]?.body).toMatchObject({
+      refundId: ID,
+      depositId: ID,
+      amount: '500.00',
+      currency: 'MZN',
+    });
+    const rejected = await new PawaPayGateway(
+      cfg,
+      fakeFetch(200, { status: 'REJECTED', failureReason: { failureMessage: 'not enough funds' } }),
+    ).refund({ refundId: ID, gatewayRef: ID, amountCents: 1 });
+    expect(rejected).toEqual({ status: 'rejected', reason: 'not enough funds' });
+    const done = await new PawaPayGateway(
+      cfg,
+      fakeFetch(200, { status: 'FOUND', data: { status: 'COMPLETED' } }),
+    ).refundStatus(ID);
+    expect(done.status).toBe('completed');
+  });
+
   it('maps deposit statuses', async () => {
     const st = async (body: unknown, created?: Date, now = Date.now()) =>
       new PawaPayGateway(cfg, fakeFetch(200, body), () => now).status(ID, created);

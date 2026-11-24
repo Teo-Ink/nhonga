@@ -173,3 +173,23 @@ export function sellerContact(v: {
     phone: v.showPhone ? v.contactPhone : null,
   };
 }
+
+/**
+ * What a public page may know about a seller's contact (PRIV-01): which
+ * channels exist and the operator prefix for the masked label, never the
+ * digits. The numbers come from POST /catalog/contacts, which is rate limited.
+ */
+export function contactAvailability(v: {
+  whatsapp: string | null;
+  contactPhone: string | null;
+  showWhatsapp: boolean;
+  showPhone: boolean;
+}): { whatsapp: boolean; phone: boolean; hint: string | null } {
+  const c = sellerContact(v);
+  const digits = (c.phone ?? c.whatsapp ?? '').replace(/\D/g, '');
+  return {
+    whatsapp: c.whatsapp !== null,
+    phone: c.phone !== null,
+    hint: /^258\d{9}$/.test(digits) ? digits.slice(0, 5) : null,
+  };
+}

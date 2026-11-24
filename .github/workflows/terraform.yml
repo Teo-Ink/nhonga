@@ -39,6 +39,9 @@ jobs:
       id-token: write # required to request the OIDC token
       pull-requests: write # to post the plan as a comment
     strategy:
+      # One environment failing (production without a certificate) must not
+      # cancel the other plan: each plan is a separate signal.
+      fail-fast: false
       matrix:
         env: [staging, production]
     steps:

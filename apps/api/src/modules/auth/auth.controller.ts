@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -10,7 +11,12 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { AccountService } from './account.service.js';
 import { AuthError, AuthService, type AuthUser } from './auth.service.js';
+import { OtpRequest, OtpVerify } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
+import { AuthUserOut, OkOut, OtpRequestOut, SessionOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 interface RequestBody {
   phone?: unknown;
@@ -24,12 +30,16 @@ interface VerifyBody {
 /** Phone-OTP authentication. The web BFF stores the session token in an httpOnly cookie. */
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly account: AccountService,
+  ) {}
 
+  @Returns(OtpRequestOut)
   @Post('otp/request')
   @HttpCode(200)
   async request(
-    @Body() body: RequestBody,
+    @Body(new ZodBody(OtpRequest)) body: RequestBody,
   ): Promise<{ challengeId: string; expiresInSeconds: number; devCode?: string }> {
     if (typeof body.phone !== 'string' || body.phone.trim() === '') {
       throw new BadRequestException({ message: 'phone is required' });
@@ -41,10 +51,11 @@ export class AuthController {
     }
   }
 
+  @Returns(SessionOut)
   @Post('otp/verify')
   @HttpCode(200)
   async verify(
-    @Body() body: VerifyBody,
+    @Body(new ZodBody(OtpVerify)) body: VerifyBody,
   ): Promise<{ sessionToken: string; expiresAt: string; user: AuthUser }> {
     if (typeof body.challengeId !== 'string' || typeof body.code !== 'string') {
       throw new BadRequestException({ message: 'challengeId and code are required' });
@@ -57,6 +68,7 @@ export class AuthController {
     }
   }
 
+  @Returns(AuthUserOut)
   @Get('me')
   async me(@Headers('authorization') authz?: string): Promise<AuthUser> {
     try {
@@ -66,15 +78,29 @@ export class AuthController {
     }
   }
 
-  @Get('orders')
-  async orders(@Headers('authorization') authz?: string): Promise<unknown> {
+  /** Delete my account (P0-06): immediate, every session ends. */
+  @Returns(OkOut)
+  @Delete('me')
+  @HttpCode(200)
+  async deleteMe(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
     try {
-      return { orders: await this.auth.listOrders(bearer(authz)) };
+      return await this.account.deleteAccount(bearer(authz));
     } catch (e) {
       throw toHttp(e);
     }
   }
 
+  /** Download my data as JSON (P0-06). */
+  @Get('me/export')
+  async exportMe(@Headers('authorization') authz?: string): Promise<Record<string, unknown>> {
+    try {
+      return await this.account.exportData(bearer(authz));
+    } catch (e) {
+      throw toHttp(e);
+    }
+  }
+
+  @Returns(OkOut)
   @Post('logout')
   @HttpCode(200)
   async logout(@Headers('authorization') authz?: string): Promise<{ ok: true }> {
@@ -94,6 +120,10 @@ function toHttp(e: unknown): HttpException {
     const payload = { error: 'Auth', message: e.userMessage, code: e.code };
     if (e.code === 'unauthenticated') return new UnauthorizedException(payload);
     if (e.code === 'rate_limited') return new HttpException(payload, HttpStatus.TOO_MANY_REQUESTS);
+    if (e.code === 'not_allowed') return new HttpException(payload, HttpStatus.FORBIDDEN);
+    if (e.code === 'sms_unavailable') {
+      return new HttpException(payload, HttpStatus.SERVICE_UNAVAILABLE);
+    }
     return new BadRequestException(payload);
   }
   return e instanceof HttpException

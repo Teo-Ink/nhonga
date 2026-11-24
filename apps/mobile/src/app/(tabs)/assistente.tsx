@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { chat, type ChatMessage } from '@/lib/api';
 import { brand, radius, space } from '@/lib/theme';
 
@@ -22,7 +23,7 @@ export default function AssistantScreen() {
   ]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   async function send() {
     const text = input.trim();
@@ -75,7 +76,7 @@ export default function AssistantScreen() {
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder="Escreve a tua pergunta…"
+          placeholder="Escreva a sua pergunta…"
           placeholderTextColor={brand.muted}
           multiline
           maxLength={2000}

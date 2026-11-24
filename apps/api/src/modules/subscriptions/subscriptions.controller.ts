@@ -1,3 +1,4 @@
+import { isMalformedId } from '../../common/problem-details.filter.js';
 import {
   BadRequestException,
   Body,
@@ -17,6 +18,8 @@ import {
   type SubPlanDto,
   type SubReceiptDto,
 } from './subscriptions.service.js';
+import { SubscriptionCreate } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface SubscribeBody {
   vendorSlug?: unknown;
@@ -37,7 +40,7 @@ export class SubscriptionsController {
   @Post()
   @HttpCode(201)
   async subscribe(
-    @Body() body: SubscribeBody,
+    @Body(new ZodBody(SubscriptionCreate)) body: SubscribeBody,
   ): Promise<{ id: string; status: string; receipt: SubReceiptDto }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
     const vendorSlug = str(body.vendorSlug);
@@ -72,5 +75,7 @@ function toHttp(e: unknown): HttpException {
       return new HttpException({ message: e.message }, HttpStatus.SERVICE_UNAVAILABLE);
     return new BadRequestException({ message: e.message });
   }
+  if (e instanceof HttpException) return e;
+  if (isMalformedId(e)) return new NotFoundException({ message: 'Not found' });
   return new HttpException({ message: 'internal error' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

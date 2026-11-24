@@ -1,10 +1,10 @@
 // BFF: search autocomplete suggestions, forwarded from the catalogue API.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../lib/bff';
 
-export async function GET(req: Request): Promise<Response> {
+async function handleGET(req: Request): Promise<Response> {
   const q = new URL(req.url).searchParams.get('q') ?? '';
   if (q.trim().length < 2) return Response.json([]);
-  const res = await fetch(`${API_URL}/catalog/suggest?q=${encodeURIComponent(q)}`, {
+  const res = await apiFetch(`/catalog/suggest?q=${encodeURIComponent(q)}`, {
     headers: { 'accept-language': 'pt' },
     cache: 'no-store',
   });
@@ -14,3 +14,5 @@ export async function GET(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);

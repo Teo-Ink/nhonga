@@ -114,6 +114,11 @@ export function AccountMenu({
           ))}
 
           {user ? (
+            <a className="acctmenu__item" href="/conta/privacidade" role="menuitem">
+              <span className="acctmenu__itemlabel">{t.privacy_link}</span>
+            </a>
+          ) : null}
+          {user ? (
             <button
               type="button"
               className="acctmenu__signout"

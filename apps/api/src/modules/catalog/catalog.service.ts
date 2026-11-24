@@ -1,10 +1,14 @@
+import { BrowseCache, browseCacheTtlMs } from './browse-cache.js';
 import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
@@ -39,6 +43,7 @@ import {
   buildOptions,
   headlineVariant,
   pickText,
+  contactAvailability,
   sellerContact,
   toImageDto,
   toListItem,
@@ -77,12 +82,26 @@ export class CatalogService {
   ) {}
 
   /**
-   * Create a listing from the seller form (G — real "Publicar"). No seller auth
-   * in the demo, so listings attach to a shared "Anúncios da Comunidade" shop
-   * that is created on first use. Photos are browser-compressed data URLs; each
-   * is stored as a media asset and referenced by its /api/media URL.
+   * Create a listing from the seller form ("Publicar"). Needs a verified
+   * session (P0-02); the listing goes under the seller's own shop, created on
+   * their first listing, with a daily ceiling per shop.
    */
-  async createListing(
+  /** Listings this shop created in the last 24 hours (any status). */
+  private async listingsCreatedToday(vendorId: string): Promise<number> {
+    const rows = await this.db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(product)
+      .where(
+        and(
+          eq(product.vendorId, vendorId),
+          sql`${product.createdAt} > now() - interval '24 hours'`,
+        ),
+      );
+    return rows[0]?.n ?? 0;
+  }
+
+  /** @internal use createListing(): it also refreshes the public lists. */
+  async createListingImpl(
     input: {
       title: string;
       categorySlug: string;
@@ -94,6 +113,18 @@ export class CatalogService {
     },
     sessionToken?: string | null,
   ): Promise<{ id: string; slug: string }> {
+    // Publishing needs a verified account (P0-02): every listing belongs to a
+    // person who confirmed their number, which is what makes a scam traceable
+    // and a ban stick. The seller's shop is created on their first listing.
+    let user: AuthUser;
+    try {
+      user = await this.auth.me(sessionToken ?? null);
+    } catch {
+      throw new UnauthorizedException({
+        message: 'Inicie sessão para publicar o anúncio.',
+        code: 'login_required',
+      });
+    }
     const title = input.title.trim();
     if (title.length < 3) throw new BadRequestException({ message: 'title too short' });
     if (!Number.isFinite(input.priceCents) || input.priceCents < 0) {
@@ -109,18 +140,16 @@ export class CatalogService {
     )[0];
     if (!cat) throw new BadRequestException({ message: 'unknown category' });
 
-    // Signed-in seller → their own shop (created on first listing); otherwise
-    // the shared community shop, so the demo works without an account.
-    let vendorId: string;
-    if (sessionToken) {
-      try {
-        const user = await this.auth.me(sessionToken);
-        vendorId = await this.ensureUserVendor(user, input.shopName);
-      } catch {
-        vendorId = await this.ensureCommunityVendor();
-      }
-    } else {
-      vendorId = await this.ensureCommunityVendor();
+    const vendorId = await this.ensureUserVendor(user, input.shopName);
+    const today = await this.listingsCreatedToday(vendorId);
+    if (today >= listingsPerDay()) {
+      throw new HttpException(
+        {
+          message: `Chegou ao limite de ${listingsPerDay()} anúncios por dia. Tente amanhã.`,
+          code: 'daily_limit',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
     const slug = await this.uniqueSlug(title);
     const productId = randomUUID();
@@ -212,6 +241,7 @@ export class CatalogService {
     soldCount: number;
     whatsapp: string | null;
     phone: string | null;
+    contact: { whatsapp: boolean; phone: boolean; hint: string | null };
   } | null> {
     const v = (
       await this.db
@@ -244,7 +274,7 @@ export class CatalogService {
       .groupBy(product.status);
     const activeCount = counts.find((c) => c.status === 'active')?.n ?? 0;
     const soldCount = counts.find((c) => c.status === 'sold')?.n ?? 0;
-    const contact = sellerContact({
+    const contact = contactAvailability({
       whatsapp: v.whatsapp,
       contactPhone: v.contactPhone,
       showWhatsapp: v.showWhatsapp,
@@ -262,9 +292,47 @@ export class CatalogService {
       memberSince: v.createdAt.toISOString(),
       activeCount,
       soldCount,
-      whatsapp: contact.whatsapp,
-      phone: contact.phone,
+      whatsapp: null,
+      phone: null,
+      contact,
     };
+  }
+
+  /**
+   * The seller's numbers for one listing or shop (PRIV-01). Public pages carry
+   * only which channels exist; the digits are handed out here, one request at
+   * a time and rate limited, so the catalogue cannot be harvested for phone
+   * numbers. Asking through a listing counts as a contact for the seller.
+   */
+  async revealContact(input: {
+    productSlug?: string;
+    vendorSlug?: string;
+  }): Promise<{ whatsapp: string | null; phone: string | null }> {
+    const cols = {
+      whatsapp: vendor.whatsapp,
+      contactPhone: vendor.contactPhone,
+      showWhatsapp: vendor.showWhatsapp,
+      showPhone: vendor.showPhone,
+    };
+    const row = input.productSlug
+      ? (
+          await this.db
+            .select(cols)
+            .from(product)
+            .innerJoin(vendor, eq(product.vendorId, vendor.id))
+            .where(and(eq(product.slug, input.productSlug), eq(product.status, 'active')))
+            .limit(1)
+        )[0]
+      : (
+          await this.db
+            .select(cols)
+            .from(vendor)
+            .where(eq(vendor.slug, input.vendorSlug ?? ''))
+            .limit(1)
+        )[0];
+    if (!row) throw new NotFoundException({ message: 'Anúncio ou loja não encontrados.' });
+    if (input.productSlug) await this.recordEvent(input.productSlug, 'contact');
+    return sellerContact(row);
   }
 
   /** The signed-in seller's own listings — all statuses (active/sold/archived),
@@ -376,7 +444,8 @@ export class CatalogService {
   }
 
   /** Change one of the seller's listings between active / sold / archived. */
-  async setListingStatus(
+  /** @internal use setListingStatus(): it also refreshes the public lists. */
+  async setListingStatusImpl(
     id: string,
     status: 'active' | 'sold' | 'archived',
     sessionToken: string | null,
@@ -398,7 +467,8 @@ export class CatalogService {
   }
 
   /** Edit one of the seller's own listings. */
-  async updateListing(
+  /** @internal use updateListing(): it also refreshes the public lists. */
+  async updateListingImpl(
     id: string,
     input: {
       title?: string;
@@ -517,7 +587,8 @@ export class CatalogService {
   }
 
   /** Remove (archive) one of the seller's own listings. */
-  async archiveListing(id: string, sessionToken: string | null): Promise<{ ok: true }> {
+  /** @internal use archiveListing(): it also refreshes the public lists. */
+  async archiveListingImpl(id: string, sessionToken: string | null): Promise<{ ok: true }> {
     const vendorIds = await this.userVendorIds(sessionToken);
     const prod = (
       await this.db
@@ -691,6 +762,47 @@ export class CatalogService {
    * the headline price is derived from the cheapest in-stock variant. At real
    * scale this moves to OpenSearch (D-09); the behaviour and shape are the same.
    */
+  // Listing writes go through these, so public lists never show stale data
+  // from this process after a seller changes something (PRE-05).
+  createListing(...a: Parameters<CatalogService['createListingImpl']>) {
+    return this.createListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  setListingStatus(...a: Parameters<CatalogService['setListingStatusImpl']>) {
+    return this.setListingStatusImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  updateListing(...a: Parameters<CatalogService['updateListingImpl']>) {
+    return this.updateListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  archiveListing(...a: Parameters<CatalogService['archiveListingImpl']>) {
+    return this.archiveListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+
+  /** listProducts for public pages, answered from the short cache (PRE-05). */
+  listProductsCached(lang: Lang, filters: ProductFilters = {}): Promise<ProductListResponse> {
+    return this.browse.get(`list:${lang}:${JSON.stringify(filters)}`, () =>
+      this.listProducts(lang, filters),
+    ) as Promise<ProductListResponse>;
+  }
+
+  /** suggest for the search box, answered from the short cache (PRE-05). */
+  suggestCached(q: string, lang: Lang): Promise<{ slug: string; title: string }[]> {
+    return this.browse.get(`suggest:${lang}:${q.trim().toLowerCase().slice(0, 60)}`, () =>
+      this.suggest(q, lang),
+    ) as Promise<{ slug: string; title: string }[]>;
+  }
+
+  /** Home page counters, answered from the short cache (PRE-05). */
+  homeStatsCached(): ReturnType<CatalogService['homeStats']> {
+    return this.browse.get('stats', () => this.homeStats()) as ReturnType<
+      CatalogService['homeStats']
+    >;
+  }
+
+  /** Called after any listing write, so public lists show it at once. */
+  invalidateBrowse(): void {
+    this.browse.clear();
+  }
+
   async listProducts(lang: Lang, filters: ProductFilters = {}): Promise<ProductListResponse> {
     const tokens = tokenize(filters.q ?? '');
     const first = await this.runListQuery(lang, filters, tokens);
@@ -732,7 +844,147 @@ export class CatalogService {
     return vocab;
   }
 
+  private readonly browse = new BrowseCache<unknown>(
+    browseCacheTtlMs(process.env['CATALOG_CACHE_SECONDS']),
+  );
+
   private vocabCache: { at: number; vocab: Map<string, number> } | null = null;
+
+  /**
+   * Browsing without words (home, category, shop, location, price, filters):
+   * filtering, ordering and the page cut all happen in Postgres, so the API
+   * reads one page of listings, not the whole catalogue (P1-01).
+   * The order matches the in-memory path: Destaque first, then listings with a
+   * banner, then the chosen sort.
+   */
+  private async runBrowseQuery(
+    lang: Lang,
+    filters: ProductFilters,
+    limit: number,
+  ): Promise<ProductListResponse> {
+    const offset = decodeCursor(filters.cursor);
+    const conds: SQL[] = [eq(product.status, 'active')];
+    if (filters.categorySlug) conds.push(eq(category.slug, filters.categorySlug));
+    if (filters.vendorSlug) conds.push(eq(vendor.slug, filters.vendorSlug));
+    if (filters.province) conds.push(eq(district.provinceCode, filters.province));
+    if (filters.district) conds.push(eq(vendor.districtId, asUuidOrNil(filters.district)));
+    if (filters.inStockOnly) conds.push(sql`${IN_STOCK}`);
+    if (filters.minPriceCents !== undefined) {
+      conds.push(sql`${HEAD_PRICE} >= ${filters.minPriceCents}`);
+    }
+    if (filters.maxPriceCents !== undefined) {
+      conds.push(sql`${HEAD_PRICE} <= ${filters.maxPriceCents}`);
+    }
+    for (const [key, cond] of Object.entries(filters.attributes ?? {})) {
+      const v = sql`(${product.attributes} ->> ${key})`;
+      if (typeof cond === 'string') {
+        conds.push(sql`${v} = ${cond}`);
+        continue;
+      }
+      conds.push(sql`${v} ~ '^\s*-?[0-9]+(\.[0-9]+)?\s*$'`);
+      if (cond.min !== undefined) conds.push(sql`${v}::numeric >= ${cond.min}`);
+      if (cond.max !== undefined) conds.push(sql`${v}::numeric <= ${cond.max}`);
+    }
+
+    const recent = sql`greatest(${product.publishedAt}, ${product.bumpedAt})`;
+    const sortKey = filters.sort ?? 'relevance';
+    const chosen: SQL[] =
+      sortKey === 'price_asc'
+        ? [sql`${HEAD_PRICE} asc`]
+        : sortKey === 'price_desc'
+          ? [sql`${HEAD_PRICE} desc`]
+          : sortKey === 'rating'
+            ? [sql`coalesce(${product.ratingAvg}, 0) desc`]
+            : [];
+    const order: SQL[] = [
+      sql`(${product.featuredUntil} is not null and ${product.featuredUntil} > now()) desc`,
+      sql`(${product.bannerId} is not null) desc`,
+      ...chosen,
+      sql`${recent} desc nulls last`,
+      sql`${product.id}`,
+    ];
+
+    const rows = await this.db
+      .select({
+        id: product.id,
+        slug: product.slug,
+        titlePt: product.titlePt,
+        titleEn: product.titleEn,
+        ratingAvg: product.ratingAvg,
+        ratingCount: product.ratingCount,
+        attributes: product.attributes,
+        publishedAt: product.publishedAt,
+        featuredUntil: product.featuredUntil,
+        viewCount: product.viewCount,
+        bannerId: product.bannerId,
+        catSlug: category.slug,
+        catPt: category.namePt,
+        catEn: category.nameEn,
+        vId: vendor.id,
+        vSlug: vendor.slug,
+        vName: vendor.displayName,
+        vStatus: vendor.status,
+        vProUntil: vendor.proUntil,
+        vLocation: district.name,
+        vRatingAvg: vendor.ratingAvg,
+        vRatingCount: vendor.ratingCount,
+        total: sql<number>`count(*) over ()`,
+      })
+      .from(product)
+      .innerJoin(vendor, eq(product.vendorId, vendor.id))
+      .innerJoin(category, eq(product.categoryId, category.id))
+      .leftJoin(district, eq(vendor.districtId, district.id))
+      .where(and(...conds))
+      .orderBy(...order)
+      .limit(limit)
+      .offset(offset);
+
+    const ids = rows.map((p) => p.id);
+    const [variantsByProduct, imagesByProduct] = await Promise.all([
+      this.variantsFor(ids),
+      this.primaryImageFor(ids),
+    ]);
+    const items = rows.map((p) =>
+      toListItem(
+        {
+          id: p.id,
+          slug: p.slug,
+          titlePt: p.titlePt,
+          titleEn: p.titleEn,
+          ratingAvg: p.ratingAvg,
+          ratingCount: p.ratingCount,
+          postedAt: p.publishedAt,
+          featuredUntil: p.featuredUntil,
+          attributes: p.attributes,
+          viewCount: p.viewCount,
+          categorySlug: p.catSlug,
+          categoryNamePt: p.catPt,
+          categoryNameEn: p.catEn,
+          vendor: {
+            id: p.vId,
+            slug: p.vSlug,
+            displayName: p.vName,
+            status: p.vStatus,
+            proUntil: p.vProUntil,
+            ratingAvg: p.vRatingAvg,
+            ratingCount: p.vRatingCount,
+            location: p.vLocation,
+          },
+          variants: variantsByProduct.get(p.id) ?? [],
+          primaryImage: imagesByProduct.get(p.id) ?? null,
+          bannerId: p.bannerId,
+        },
+        lang,
+      ),
+    );
+    const total = Number(rows[0]?.total ?? 0);
+    const hasMore = total > offset + rows.length;
+    return {
+      total,
+      items,
+      page: { cursor: hasMore ? encodeCursor(offset + rows.length) : null, hasMore },
+    };
+  }
 
   private async runListQuery(
     lang: Lang,
@@ -741,6 +993,7 @@ export class CatalogService {
   ): Promise<ProductListResponse> {
     const limit = Math.min(Math.max(filters.limit ?? 24, 1), 48);
     const hasQuery = tokens.length > 0;
+    if (!hasQuery) return this.runBrowseQuery(lang, filters, limit);
 
     // The category filter is applied after the query when there is free text,
     // so the per-category counts can be computed from the same result set.
@@ -753,7 +1006,7 @@ export class CatalogService {
     // inflection or synonym (OR), at the start of a word, accent-insensitively.
     for (const token of tokens) {
       const alts = expandToken(token);
-      const m = or(...alts.map((a) => sql`${SEARCH_HAYSTACK} ~ ${termRegex(a)}`));
+      const m = or(...alts.map((a) => sql`${product.searchDoc} ~ ${termRegex(a)}`));
       if (m) conds.push(m);
     }
 
@@ -791,7 +1044,11 @@ export class CatalogService {
       .innerJoin(category, eq(product.categoryId, category.id))
       .leftJoin(district, eq(vendor.districtId, district.id))
       .leftJoin(province, eq(district.provinceCode, province.code))
-      .where(and(...conds));
+      .where(and(...conds))
+      // Bounded: a text query is scored in memory, so it looks at the most
+      // recent matches only (a query that matches more is too broad to rank).
+      .orderBy(desc(sql`greatest(${product.publishedAt}, ${product.bumpedAt})`))
+      .limit(MAX_TEXT_CANDIDATES);
 
     // Relevance score per listing (only meaningful with a text query).
     const scores = new Map<string, number>();
@@ -907,11 +1164,13 @@ export class CatalogService {
     mapped.sort((a, b) => Number(b.item.featured) - Number(a.item.featured));
 
     const total = mapped.length;
-    const page = mapped.slice(0, limit).map((m) => m.item);
+    const offset = decodeCursor(filters.cursor);
+    const page = mapped.slice(offset, offset + limit).map((m) => m.item);
+    const hasMore = total > offset + page.length;
     return {
       total,
       items: page,
-      page: { cursor: null, hasMore: total > limit },
+      page: { cursor: hasMore ? encodeCursor(offset + page.length) : null, hasMore },
       ...(categoryCounts ? { categoryCounts } : {}),
     };
   }
@@ -970,7 +1229,13 @@ export class CatalogService {
     const conds: SQL[] = [eq(product.status, 'active')];
     for (const token of tokens) {
       // Prefix match (not whole-word): suggestions run while the user is still typing.
-      const m = or(...inflections(token).map((a) => sql`${titleHay} ~ ${`\\m${a}`}`));
+      const alts = inflections(token);
+      // search_doc contains the title, so a word starting in the title also
+      // starts in search_doc: this first test uses the trigram index and
+      // leaves the exact title test only a few rows to check (PRE-05).
+      const pre = or(...alts.map((a) => sql`${product.searchDoc} ~ ${`\\m${a}`}`));
+      if (pre) conds.push(pre);
+      const m = or(...alts.map((a) => sql`${titleHay} ~ ${`\\m${a}`}`));
       if (m) conds.push(m);
     }
     const rows = await this.db
@@ -1075,7 +1340,9 @@ export class CatalogService {
       ...base,
       vendor: {
         ...base.vendor,
-        ...sellerContact({
+        whatsapp: null,
+        phone: null,
+        contact: contactAvailability({
           whatsapp: p.vWhatsapp,
           contactPhone: p.vContactPhone,
           showWhatsapp: p.vShowWhatsapp,
@@ -1265,21 +1532,43 @@ function sorter(key: SortKey): (a: Sortable, b: Sortable) => number {
   }
 }
 
-/**
- * Normalised haystack every search token is matched against: titles,
- * descriptions, category, attributes, vendor and place names, lower-cased,
- * accent-stripped and with punctuation collapsed to spaces (the same rules as
- * normalise() in search-text.ts).
- */
-const SEARCH_HAYSTACK = sql`regexp_replace(translate(lower(concat_ws(' ',
-  ${product.titlePt}, ${product.titleEn}, ${product.descriptionPt}, ${product.descriptionEn},
-  ${category.slug}, ${category.namePt}, ${category.nameEn}, ${product.attributes}::text,
-  ${vendor.displayName}, ${district.name}, ${province.name})),
-  ${SQL_ACCENTS_FROM}, ${SQL_ACCENTS_TO}), '[^a-z0-9]+', ' ', 'g')`;
+/** Upper bound on rows a text query scores in memory. */
+const MAX_TEXT_CANDIDATES = 1000;
+
+/** The price and stock a listing shows (headlineVariant), denormalised on the
+ *  listing by the variant trigger of migration 0022. */
+const HEAD_PRICE = sql`${product.displayPriceCents}`;
+const IN_STOCK = sql`${product.inStock}`;
+
+// Search words are matched against product.search_doc: the same normalised
+// text (titles, description, category, attributes, shop, place), built by the
+// triggers of migration 0022 with the rules of normalise() in search-text.ts.
 
 /** Products may be addressed by slug or UUID. When the value is not a UUID, this
  *  returns a sentinel that cannot match any id, so the slug branch decides. */
 function asUuidOrNil(value: string): string {
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return UUID.test(value) ? value : '00000000-0000-0000-0000-000000000000';
+}
+
+/** Daily listing ceiling per shop (LISTINGS_PER_DAY, default 10). It stops
+ *  flooding without getting in the way of a real seller. */
+export function listingsPerDay(raw: string | undefined = process.env['LISTINGS_PER_DAY']): number {
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : 10;
+}
+
+/**
+ * Page cursors (P2-11). Opaque to clients ("c1." + base64url of the offset), so
+ * the API can move to keyset pagination later without breaking anyone. A bad
+ * cursor means the first page; deep pages are capped at 2 000 results.
+ */
+const MAX_OFFSET = 2000;
+export function encodeCursor(offset: number): string {
+  return `c1.${Buffer.from(String(offset)).toString('base64url')}`;
+}
+export function decodeCursor(cursor: string | undefined): number {
+  if (!cursor?.startsWith('c1.')) return 0;
+  const n = Number(Buffer.from(cursor.slice(3), 'base64url').toString());
+  return Number.isInteger(n) && n >= 0 ? Math.min(n, MAX_OFFSET) : 0;
 }

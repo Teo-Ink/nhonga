@@ -1,8 +1,8 @@
 // BFF: the admin-set promotion plans, forwarded from the API.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../../lib/bff';
 
-export async function GET(): Promise<Response> {
-  const res = await fetch(`${API_URL}/promotions/plans`, {
+async function handleGET(): Promise<Response> {
+  const res = await apiFetch(`/promotions/plans`, {
     headers: { 'accept-language': 'pt' },
     cache: 'no-store',
   });
@@ -12,3 +12,5 @@ export async function GET(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const GET = withApi(handleGET);

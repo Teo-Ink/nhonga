@@ -1,7 +1,12 @@
 import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { CheckoutService, type CheckoutView } from './checkout.service.js';
+import { CheckoutService, type CheckoutView, type RefundView } from './checkout.service.js';
+import { CheckoutMockDecide, CheckoutRefund, CheckoutPackage, CheckoutTopup } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
+import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
+import { CheckoutOut, RefundOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 function bearer(authz: string | undefined): string | null {
   return authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
@@ -18,10 +23,11 @@ export class CheckoutController {
   }
 
   /** Start a wallet top-up; the client then redirects to `checkoutUrl`. */
+  @Returns(CheckoutOut)
   @Post('topup')
   @HttpCode(201)
   topup(
-    @Body() body: { amountCents?: unknown; method?: unknown },
+    @Body(new ZodBody(CheckoutTopup)) body: { amountCents?: unknown; method?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     const amount =
@@ -31,10 +37,11 @@ export class CheckoutController {
   }
 
   /** Buy a wallet package; the client then redirects to `checkoutUrl`. */
+  @Returns(CheckoutOut)
   @Post('package')
   @HttpCode(201)
   buyPackage(
-    @Body() body: { packageId?: unknown; method?: unknown },
+    @Body(new ZodBody(CheckoutPackage)) body: { packageId?: unknown; method?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     return this.checkout.startPackage(
@@ -59,12 +66,36 @@ export class CheckoutController {
     return { ok: true };
   }
 
+  /** Ops: refund a paid top-up or package (P2-02). */
+  @Returns(RefundOut)
+  @Post('admin/:id/refund')
+  @HttpCode(200)
+  refund(
+    @Param('id') id: string,
+    @Body(new ZodBody(CheckoutRefund)) body: { reason: string },
+    @Headers(ADMIN_HEADER) adminToken?: string,
+  ): Promise<RefundView> {
+    assertAdmin(adminToken);
+    return this.checkout.refund(id, body.reason);
+  }
+
+  /** Ops: payment and refund state, refreshed from the gateway. */
+  @Returns(RefundOut)
+  @Get('admin/:id')
+  adminView(
+    @Param('id') id: string,
+    @Headers(ADMIN_HEADER) adminToken?: string,
+  ): Promise<RefundView> {
+    assertAdmin(adminToken);
+    return this.checkout.refreshRefund(id);
+  }
+
   /** Dev simulator only (CHECKOUT_MODE=mock). */
   @Post('mock/:id')
   @HttpCode(200)
   mock(
     @Param('id') id: string,
-    @Body() body: { outcome?: unknown },
+    @Body(new ZodBody(CheckoutMockDecide)) body: { outcome?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<CheckoutView> {
     return this.checkout.mockDecide(
@@ -74,6 +105,7 @@ export class CheckoutController {
     );
   }
 
+  @Returns(CheckoutOut)
   @Get(':id')
   get(@Param('id') id: string, @Headers('authorization') authz?: string): Promise<CheckoutView> {
     return this.checkout.get(bearer(authz), id);

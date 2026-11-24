@@ -254,7 +254,7 @@ export class WalletService {
         .where(and(eq(product.id, productId), eq(product.vendorId, v.id)))
         .limit(1)
     )[0];
-    if (!owned) throw new BadRequestException('Esse anúncio não é da tua loja.');
+    if (!owned) throw new BadRequestException('Esse anúncio não é da sua loja.');
     const plan = await this.promotions.planFor(planCode);
     if (!plan) throw new BadRequestException('Plano de destaque inválido.');
     await this.ensureWallet(v.id);
@@ -274,7 +274,7 @@ export class WalletService {
     } else {
       // "Destaque"/"Turbo" are paid with balance.
       if (!(await this.debit(v.id, plan.priceCents, 0))) {
-        throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+        throw new BadRequestException('Saldo insuficiente. Carregue a sua conta.');
       }
       await this.db.insert(walletTransaction).values({
         vendorId: v.id,
@@ -298,7 +298,7 @@ export class WalletService {
     await this.ensureWallet(v.id);
     // Charge first (atomically); only then extend the subscription.
     if (!(await this.debit(v.id, PRO_PRICE_CENTS, 0))) {
-      throw new BadRequestException('Saldo insuficiente. Carrega a tua conta.');
+      throw new BadRequestException('Saldo insuficiente. Carregue a sua conta.');
     }
     const row = (
       await this.db.select({ proUntil: vendor.proUntil }).from(vendor).where(eq(vendor.id, v.id))
@@ -325,7 +325,7 @@ export class WalletService {
 
   private async requireVendor(token: string | null): Promise<{ id: string; name: string }> {
     const v = await this.vendorOf(token);
-    if (!v) throw new BadRequestException('Cria a tua loja antes de usares a carteira.');
+    if (!v) throw new BadRequestException('Crie a sua loja antes de usar a carteira.');
     return v;
   }
 }

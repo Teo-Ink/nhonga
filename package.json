@@ -30,9 +30,9 @@
     "dependency-cruiser": "16.10.4",
     "eslint": "^9.14.0",
     "husky": "9.1.6",
-    "lint-staged": "15.2.10",
+    "lint-staged": "15.5.2",
     "prettier": "3.3.3",
-    "turbo": "2.1.3",
+    "turbo": "2.11.13",
     "typescript": "5.6.3",
     "typescript-eslint": "^8.15.0",
     "vitest": "4.1.12"
@@ -58,7 +58,10 @@
       "body-parser@<2.4.0": "^2.4.0",
       "multer@<2.5.0": "^2.5.0",
       "source-map-js@<1.2.2": "^1.2.2",
-      "vite@<6.4.4": "^6.4.4"
+      "vite@<6.4.4": "^6.4.4",
+      "fast-uri@<3.1.9": "^3.1.9",
+      "yaml@>=2.0.0 <2.8.3": "^2.8.3",
+      "esbuild@<0.25.0": "^0.25.0"
     }
   }
 }

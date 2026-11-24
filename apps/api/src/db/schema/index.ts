@@ -16,6 +16,7 @@ export * from './promotions.js';
 export * from './reviews.js';
 export * from './ads.js';
 export * from './reports.js';
+export * from './complaints.js';
 export * from './alerts.js';
 export * from './media.js';
 export * from './notifications.js';

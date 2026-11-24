@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
 import { savedSearch } from '../../db/schema/alerts.js';
@@ -87,8 +87,11 @@ export class AlertsService {
     }));
   }
 
-  async remove(id: string): Promise<void> {
-    await this.db.delete(savedSearch).where(eq(savedSearch.id, id));
+  /** Deletes one of the owner's searches; another number's search is left alone. */
+  async remove(id: string, ownerPhoneE164: string): Promise<void> {
+    await this.db
+      .delete(savedSearch)
+      .where(and(eq(savedSearch.id, asUuid(id)), eq(savedSearch.phoneE164, ownerPhoneE164)));
   }
 
   /**
@@ -96,9 +99,16 @@ export class AlertsService {
    * SMS when there are new ones. New = published/bumped since the last run; on
    * the very first run every current match counts, so the alert is demonstrable.
    */
-  async run(id?: string): Promise<AlertRunResult[]> {
+  async run(id?: string, ownerPhoneE164?: string): Promise<AlertRunResult[]> {
     const rows = id
-      ? await this.db.select().from(savedSearch).where(eq(savedSearch.id, id))
+      ? await this.db
+          .select()
+          .from(savedSearch)
+          .where(
+            ownerPhoneE164
+              ? and(eq(savedSearch.id, asUuid(id)), eq(savedSearch.phoneE164, ownerPhoneE164))
+              : eq(savedSearch.id, asUuid(id)),
+          )
       : await this.db.select().from(savedSearch);
     if (id && rows.length === 0) throw new AlertError('saved search not found', 'not_found');
 
@@ -173,4 +183,12 @@ function toFilters(q: Record<string, unknown>): ProductFilters {
     f['sort'] = sort as SortKey;
   }
   return f as ProductFilters;
+}
+
+/** A non-UUID id can never match; map it to the nil UUID instead of letting
+ *  Postgres reject the cast with a 500. */
+function asUuid(id: string): string {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    ? id
+    : '00000000-0000-0000-0000-000000000000';
 }

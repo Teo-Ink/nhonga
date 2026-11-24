@@ -1,15 +1,16 @@
 // Per-visitor limits for the few BFF routes where abuse costs money (each OTP
 // request sends a paid SMS — "SMS pumping" fraud). In memory, per web server.
-// The visitor is identified by the first X-Forwarded-For address set by the
-// load balancer / platform in front of Next. Mozambican mobile networks share
+// The visitor is the address our load balancer appended to X-Forwarded-For
+// (see client-ip.ts): never the first entry, which the client controls. Mozambican mobile networks share
 // public IPs (CGNAT), so limits are generous; the API also limits per phone.
+
+import { clientIpFromXff } from './client-ip';
 
 const hits = new Map<string, { count: number; resetAt: number }>();
 let lastSweep = 0;
 
 export function clientIp(req: Request): string {
-  const xff = req.headers.get('x-forwarded-for');
-  return (xff?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown').slice(0, 64);
+  return clientIpFromXff(req.headers.get('x-forwarded-for')) ?? 'unknown';
 }
 
 /** Returns seconds to wait when over `limit` per `windowMs`, else 0. */

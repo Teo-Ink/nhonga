@@ -1,3 +1,4 @@
+import { isMalformedId } from '../../common/problem-details.filter.js';
 import {
   BadRequestException,
   Body,
@@ -17,6 +18,9 @@ import {
   type PlanDto,
   type ReceiptDto,
 } from './promotions.service.js';
+import { ADMIN_HEADER, assertAdmin } from '../../common/admin.js';
+import { PromotionPurchase } from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
 
 interface PurchaseBody {
   productSlug?: unknown;
@@ -37,14 +41,15 @@ export class PromotionsController {
 
   /** Ops/admin-lite: active promotions (E4). */
   @Get('admin/active')
-  active(): Promise<ReceiptDto[]> {
+  active(@Headers(ADMIN_HEADER) adminToken?: string): Promise<ReceiptDto[]> {
+    assertAdmin(adminToken);
     return this.promotions.listActive();
   }
 
   @Post()
   @HttpCode(201)
   async buy(
-    @Body() body: PurchaseBody,
+    @Body(new ZodBody(PromotionPurchase)) body: PurchaseBody,
   ): Promise<{ id: string; status: string; receipt: ReceiptDto }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
     const productSlug = str(body.productSlug);
@@ -84,5 +89,7 @@ function toHttp(e: unknown): HttpException {
       return new HttpException({ message: e.message }, HttpStatus.SERVICE_UNAVAILABLE);
     return new BadRequestException({ message: e.message });
   }
+  if (e instanceof HttpException) return e;
+  if (isMalformedId(e)) return new NotFoundException({ message: 'Not found' });
   return new HttpException({ message: 'internal error' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

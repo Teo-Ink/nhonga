@@ -58,10 +58,12 @@ export async function generateMetadata({
     return {
       title,
       description,
+      alternates: { canonical: `/produto/${encodeURIComponent(p.slug)}` },
       openGraph: {
         title,
         description,
         type: 'website',
+        url: `/produto/${encodeURIComponent(p.slug)}`,
         ...(image ? { images: [{ url: image }] } : {}),
       },
       twitter: { card: image ? 'summary_large_image' : 'summary', title, description },
@@ -69,6 +71,38 @@ export async function generateMetadata({
   } catch {
     return { title: 'Nhonga' };
   }
+}
+
+// Product + Offer structured data (WEB-02). MZN amounts are stored in centavos.
+function productJsonLd(p: ProductDetail): string {
+  const image = p.images.map((i) => i.url).filter(Boolean);
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.title,
+    description: p.description?.slice(0, 500),
+    ...(image.length ? { image } : {}),
+    category: p.category?.name,
+    offers: {
+      '@type': 'Offer',
+      price: (p.priceCents / 100).toFixed(2),
+      priceCurrency: 'MZN',
+      availability: p.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      url: `/produto/${encodeURIComponent(p.slug)}`,
+      ...(p.vendor ? { seller: { '@type': 'Organization', name: p.vendor.displayName } } : {}),
+      ...(p.location ? { areaServed: p.location } : {}),
+    },
+    ...(p.ratingCount > 0 && p.ratingAvg !== null
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: p.ratingAvg,
+            reviewCount: p.ratingCount,
+          },
+        }
+      : {}),
+  };
+  return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -145,6 +179,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <article className="pdp">
+      <script
+        type="application/ld+json"
+        // JSON-LD for search results (price, availability, seller). Escaped so
+        // a listing title can never close the script element.
+        dangerouslySetInnerHTML={{ __html: productJsonLd(product) }}
+      />
       <RecordRecentView
         item={{
           slug: product.slug,
@@ -223,8 +263,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             slug={product.slug}
             title={product.title}
             priceLabel={priceText}
-            whatsapp={product.vendor.whatsapp ?? null}
-            phone={product.vendor.phone ?? null}
+            contact={product.vendor.contact ?? null}
             t={t.contact}
             ctaLabel={ctaLabel}
             waMessage={waMessage}

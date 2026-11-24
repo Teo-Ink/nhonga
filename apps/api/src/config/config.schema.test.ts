@@ -10,6 +10,7 @@ const SAFE_PROD = {
   PAYMENTS_MODE: 'live',
   CHECKOUT_MODE: 'live',
   CORS_ORIGINS: 'https://nhonga.co.mz',
+  ASSISTANT_MONTHLY_TOKEN_CAP: '5000000',
 };
 
 describe('production safety', () => {
@@ -42,6 +43,23 @@ describe('production safety', () => {
 
   it('refuses production without CORS origins', () => {
     expect(() => validateEnv({ ...SAFE_PROD, CORS_ORIGINS: '' })).toThrow(/CORS_ORIGINS/);
+  });
+
+  it('refuses the demo catalogue or demo storefront in production (CONT-02)', () => {
+    expect(() => validateEnv({ ...SAFE_PROD, SEED_DEMO: '1' })).toThrow(/SEED_DEMO/);
+    expect(() => validateEnv({ ...SAFE_PROD, NEXT_PUBLIC_DEMO_MODE: 'true' })).toThrow(
+      /NEXT_PUBLIC_DEMO_MODE/,
+    );
+    expect(() => validateEnv({ ...SAFE_PROD, SEED_DEMO: '0' })).not.toThrow();
+  });
+
+  it('refuses production without a monthly AI token ceiling (SEC-08)', () => {
+    expect(() => validateEnv({ ...SAFE_PROD, ASSISTANT_MONTHLY_TOKEN_CAP: '0' })).toThrow(
+      /ASSISTANT_MONTHLY_TOKEN_CAP/,
+    );
+    const { ASSISTANT_MONTHLY_TOKEN_CAP: _c, ...noCap } = SAFE_PROD;
+    void _c;
+    expect(() => validateEnv(noCap)).toThrow(/ASSISTANT_MONTHLY_TOKEN_CAP/);
   });
 
   it('lets development and staging use mocks', () => {

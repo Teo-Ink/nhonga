@@ -1,6 +1,8 @@
 // Portuguese — the primary locale. All UI copy lives here; no hardcoded strings
 // in components. English (en.ts) mirrors this shape exactly.
-export const pt = {
+import { CLASSIFIEDS_PT, withListingCopy } from './classifieds';
+
+const ptBase = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Pesquisar carros, casas, empregos…',
@@ -86,6 +88,7 @@ export const pt = {
     link_design: 'Sistema de design',
     link_terms: 'Termos de uso',
     link_privacy: 'Privacidade',
+    link_complaints: 'Reclamações',
     payments: 'Pagamentos: M-Pesa · e-Mola · Transferência bancária · Visa · Dinheiro na entrega',
     rights: '© 2026 Nhonga',
     demo_suffix: 'Loja de demonstração',
@@ -346,15 +349,15 @@ export const pt = {
     copy: 'Copiar',
     copied: 'Copiado!',
     share_wa: 'Partilhar no WhatsApp',
-    wa_text: 'Estou a usar o Nhonga para comprar e vender em Moçambique. Junta-te por aqui:',
+    wa_text: 'Estou a usar o Nhonga para comprar e vender em Moçambique. Junte-se por aqui:',
     how_title: 'Como funciona',
     step1: 'Partilhe o seu link com amigos.',
     step2: 'Eles criam conta no Nhonga pelo seu link.',
-    step3: 'Ganha 20 pontos por cada amigo que se junta (creditados se tiver loja).',
+    step3: 'Ganhe 20 pontos por cada amigo que se junta (creditados se tiver loja).',
     stat_friends: 'amigos juntaram-se',
     stat_points: 'pontos ganhos',
     reward_hint:
-      'Ganha 20 pontos por cada amigo que cria conta pelo seu link. Os pontos são creditados na carteira da sua loja — abra uma loja para os receber.',
+      'Ganhe 20 pontos por cada amigo que cria conta pelo seu link. Os pontos são creditados na carteira da sua loja — abra uma loja para os receber.',
     demo_note:
       'Os convites são registados quando um amigo cria conta pelo seu link. Nenhum pagamento envolvido.',
     signin_prompt: 'Inicie sessão para obter o seu link de convite.',
@@ -447,12 +450,6 @@ export const pt = {
     payment_title: 'Pagamento',
     pay_phone_label: 'Número para o pagamento',
     pay_phone_hint: 'Receberá um pedido de confirmação neste telemóvel',
-    pay_mpesa: 'M-Pesa',
-    pay_mpesa_note: 'Vodacom',
-    pay_emola: 'e-Mola',
-    pay_emola_note: 'Movitel',
-    pay_cod: 'Dinheiro na entrega',
-    pay_cod_note: 'Pague quando receber',
     suggested: 'Sugerido para o seu número',
     summary_title: 'Resumo do pedido',
     summary_items: 'Artigos',
@@ -607,10 +604,10 @@ export const pt = {
     ai_photo: 'Analisar foto com IA',
     ai_photo_loading: 'A analisar foto…',
     ai_photo_hint:
-      'Adiciona uma foto abaixo e a IA sugere o título, a descrição e a categoria a partir dela.',
+      'Adicione uma foto abaixo e a IA sugere o título, a descrição e a categoria a partir dela.',
     voice: 'Ditar por voz',
     voice_listening: 'A ouvir… fala agora.',
-    voice_unsupported: 'O teu navegador não suporta ditado por voz. Experimenta o Chrome.',
+    voice_unsupported: 'O seu navegador não suporta ditado por voz. Experimente o Chrome.',
     f_title: 'Título do produto',
     f_title_ph: 'Ex.: Capulana tradicional mocambicana',
     f_category: 'Categoria',
@@ -646,13 +643,15 @@ export const pt = {
     publish_free: 'Publicar grátis',
     publish_paid: 'Publicar com destaque',
     publishing: 'A publicar…',
+    publish_limit: 'Chegou ao limite de anúncios por hoje. Tente amanhã.',
     publish_error: 'Não foi possível publicar. Tente novamente.',
     shop_label: 'Nome da sua loja',
     shop_name_ph: 'Ex.: Loja do João',
     shop_hint: 'Aparece nos seus anúncios. Pode mudar mais tarde.',
     publishing_as: 'A publicar como',
-    shop_community: 'Anúncios da Comunidade',
-    shop_login: 'Entrar para publicar na sua loja',
+    login_note:
+      'Para publicar precisa de entrar com o seu número. O que escrever fica guardado neste aparelho.',
+    shop_login: 'Entrar agora',
   },
   plans: {
     title: 'Planos e destaques',
@@ -711,7 +710,7 @@ export const pt = {
     subtitle: 'Apoio ao cliente · IA',
     greeting:
       'Olá! Sou o assistente do Nhonga. Posso ajudar com pagamentos, entregas, encomendas ou como vender. Em que posso ajudar?',
-    placeholder: 'Escreve a tua pergunta…',
+    placeholder: 'Escreva a sua pergunta…',
     send: 'Enviar',
     thinking: 'A escrever…',
     error: 'Ocorreu um erro. Tenta novamente.',
@@ -744,12 +743,15 @@ export const pt = {
     },
     wa_message: 'Olá! Tenho interesse no anúncio «{title}» ({price}) no Nhonga.',
     share_wa: 'Partilhar no WhatsApp',
-    share_wa_text: 'Vê este anúncio no Nhonga: «{title}» — {price}.',
+    share_wa_text: 'Veja este anúncio no Nhonga: «{title}» — {price}.',
     cta_apply: 'Candidatar-me pelo WhatsApp',
     wa_apply: 'Olá! Vi a vaga «{title}» no Nhonga e gostaria de me candidatar.',
     cta_quote: 'Pedir orçamento pelo WhatsApp',
     wa_quote: 'Olá! Vi o serviço «{title}» no Nhonga e gostaria de um orçamento.',
     show_number: 'Ver número',
+    reveal_failed: 'Não foi possível mostrar o contacto. Tente de novo.',
+    reveal_limited:
+      'Pediu muitos contactos há pouco. Tente de novo mais tarde ou envie uma mensagem.',
     send_message: 'Enviar mensagem',
     whatsapp_short: 'WhatsApp',
     call_short: 'Ligar',
@@ -1032,6 +1034,11 @@ export const pt = {
       'Para reportar um problema com um anúncio, use o botão «Denunciar» na página do anúncio.',
   },
   messages: {
+    block: 'Bloquear',
+    unblock: 'Desbloquear',
+    block_confirm:
+      'Bloquear esta pessoa? Deixam de poder trocar mensagens e a conversa sai da sua caixa.',
+    blocked_note: 'Bloqueou esta conversa. Ninguém pode enviar mensagens.',
     title: 'Mensagens',
     demo_note: 'Demonstração: as mensagens ainda não estão ligadas. Nada é enviado nem guardado.',
     empty_title: 'Ainda não tem conversas',
@@ -1068,7 +1075,28 @@ export const pt = {
     send_error: 'Não foi possível enviar. Tente novamente.',
     thread_empty: 'Sem mensagens ainda.',
   },
+  privacyAccount: {
+    title: 'Privacidade e conta',
+    export_title: 'Os seus dados',
+    export_body:
+      'Descarregue uma cópia de tudo o que a Nhonga guarda sobre si: conta, anúncios, mensagens enviadas, favoritos, alertas e encomendas.',
+    export_cta: 'Descarregar os meus dados',
+    delete_title: 'Eliminar a conta',
+    delete_body: 'A eliminação é imediata e não pode ser desfeita.',
+    delete_item_listings: 'Os seus anúncios saem do site e a sua loja fecha.',
+    delete_item_sessions:
+      'Sai de todos os dispositivos. O seu número fica livre para uma conta nova.',
+    delete_item_kept:
+      'Guardamos só o que a lei ou outras pessoas precisam: pagamentos e encomendas (contabilidade) e as mensagens e avaliações já enviadas, agora como “Conta eliminada”.',
+    confirm_word: 'ELIMINAR',
+    confirm_label: 'Para confirmar, escreva {word}',
+    delete_cta: 'Eliminar a minha conta',
+    deleting: 'A eliminar…',
+    delete_error: 'Não foi possível eliminar a conta. Tente de novo.',
+    link: 'Privacidade e conta',
+  },
   account: {
+    privacy_link: 'Privacidade e conta',
     title: 'A minha conta',
     demo_note:
       'Demonstração: as contas ainda não estão ligadas. As encomendas ficam guardadas apenas neste dispositivo e navegador.',
@@ -1103,7 +1131,7 @@ export const pt = {
     st_other: 'Em processamento',
     loading_orders: 'A carregar as suas encomendas…',
     // Account dashboard (buyer vs seller) + header "A tua conta" menu
-    account_label: 'A tua conta',
+    account_label: 'A sua conta',
     menu_account: 'A minha conta',
     menu_favorites: 'Favoritos',
     menu_more: 'Mais',
@@ -1114,7 +1142,7 @@ export const pt = {
     m_promote: 'Promover anúncio',
     m_plans: 'Planos e pagamentos',
     buyer_overview_title: 'A minha atividade',
-    buyer_overview_sub: 'Os teus favoritos, pesquisas e mensagens num só lugar.',
+    buyer_overview_sub: 'Os seus favoritos, pesquisas e mensagens num só lugar.',
     cta_sell_title: 'Comece a vender no Nhonga',
     cta_sell_body: 'Crie a sua loja grátis e anuncie em minutos — é simples e seguro.',
     cta_sell_btn: 'Criar a minha loja',
@@ -1133,7 +1161,7 @@ export const pt = {
     free_limit: 'Ver limite de anúncios grátis',
     stats: 'Estatísticas',
     create_shop: 'Criar a minha loja',
-    buyer_empty: 'Ainda não tens anúncios. Cria a tua loja grátis e começa a vender em minutos.',
+    buyer_empty: 'Ainda não tem anúncios. Crie a sua loja grátis e comece a vender em minutos.',
     clear_filters: 'Limpar filtros',
     search_ph: 'Pesquisar por título ou ID…',
     any_category: 'Qualquer categoria',
@@ -1151,7 +1179,7 @@ export const pt = {
     points: 'Pontos disponíveis',
     topup: 'Carregar conta',
     buy_package: 'Comprar pacote',
-    wallet_hint: 'Cria a tua loja (publica um anúncio) para ativar a carteira.',
+    wallet_hint: 'Crie a sua loja (publique um anúncio) para ativar a carteira.',
     pro_name: 'Loja Pro',
     pro_active_until: 'ativa até',
     pro_offer: 'selo verificado + destaque · 750 MT/mês',
@@ -1160,13 +1188,13 @@ export const pt = {
     topup_amount: 'Montante a carregar (MT)',
     topup_submit: 'Continuar para pagamento',
     pay_with: 'Pagar com',
-    pay_secure: 'Pagamento seguro. Confirmas no teu telemóvel; o Nhonga nunca vê o teu PIN.',
+    pay_secure: 'Pagamento seguro. Confirma no seu telemóvel; a Nhonga nunca vê o seu PIN.',
     redirecting: 'A abrir o pagamento…',
     loading: 'A carregar…',
     of_balance: 'de saldo',
     pts: 'pts',
     topped_up: 'Saldo carregado',
-    package_added: 'Pacote adicionado à tua conta.',
+    package_added: 'Pacote adicionado à sua conta.',
     pro_activated: 'Loja Pro ativada.',
     pro_fail: 'Não foi possível ativar a Loja Pro.',
     topup_fail: 'Não foi possível carregar.',
@@ -1176,17 +1204,17 @@ export const pt = {
   pay: {
     title: 'Pagamento',
     pending_title: 'A aguardar confirmação',
-    pending_body: 'Confirma o pagamento no teu telemóvel. Esta página atualiza sozinha.',
+    pending_body: 'Confirme o pagamento no seu telemóvel. Esta página atualiza sozinha.',
     paid_title: 'Pagamento recebido',
-    paid_body: 'O saldo já está na tua carteira.',
+    paid_body: 'O saldo já está na sua carteira.',
     failed_title: 'Pagamento não concluído',
     failed_body: 'Nada foi cobrado. Podes tentar de novo ou escolher outro método.',
     expired_title: 'O pagamento expirou',
     expired_body:
-      'Não recebemos confirmação a tempo. Se o valor saiu da tua conta, ele será creditado assim que o operador confirmar.',
+      'Não recebemos confirmação a tempo. Se o valor saiu da sua conta, ele será creditado assim que o operador confirmar.',
     review_title: 'Pagamento em verificação',
     review_body:
-      'Recebemos um valor diferente do esperado. A nossa equipa vai verificar e contactar-te.',
+      'Recebemos um valor diferente do esperado. A nossa equipa vai verificar e contactá-lo.',
     amount: 'Montante',
     method: 'Método',
     reference: 'Referência',
@@ -1219,7 +1247,7 @@ export const pt = {
   },
   banner: {
     title: 'Banner com IA',
-    subtitle: 'Cria um banner profissional para este anúncio em segundos.',
+    subtitle: 'Crie um banner profissional para este anúncio em segundos.',
     open_cta: 'Banner IA',
     ratio: 'Formato',
     ratio_square: 'Quadrado',
@@ -1235,13 +1263,13 @@ export const pt = {
     prompt_label: 'Pedido (opcional)',
     prompt_ph: 'ex.: estilo festivo, cores vivas…',
     ai_bg: 'Fundo gerado por IA',
-    ai_bg_hint: 'Cria um fundo artístico com IA em vez da foto do anúncio (estilo premium).',
+    ai_bg_hint: 'Crie um fundo artístico com IA em vez da foto do anúncio (estilo premium).',
     ai_bg_used: 'Fundo criado por IA ✨',
     ai_bg_unavailable: 'Fundo IA indisponível de momento — usámos a foto do anúncio.',
     generate: 'Gerar banner',
     generating: 'A gerar…',
     regenerate: 'Gerar outra vez',
-    pick_hint: 'Escolhe o teu preferido e aplica ao anúncio.',
+    pick_hint: 'Escolha o seu preferido e aplique ao anúncio.',
     edit_toggle: 'Editar texto',
     edit_hide: 'Fechar edição',
     f_headline: 'Título',
@@ -1260,9 +1288,9 @@ export const pt = {
     no_points: 'Sem pontos suficientes. Faz Loja Pro para gerar sem limites.',
     watermark_note: 'Os banners grátis trazem a marca Nhonga. Loja Pro remove-a.',
     ai_offline:
-      'Sugestão de IA indisponível de momento — o texto foi criado a partir do teu anúncio.',
+      'Sugestão de IA indisponível de momento — o texto foi criado a partir do seu anúncio.',
     error: 'Não foi possível gerar o banner. Tenta novamente.',
-    signin: 'Inicia sessão como vendedor para criar banners.',
+    signin: 'Inicie sessão como vendedor para criar banners.',
     demo_note: 'Banner gerado pela plataforma (sem custos de imagem externos).',
   },
   confirmation: {
@@ -1291,4 +1319,7 @@ export const pt = {
   },
 };
 
-export type Dictionary = typeof pt;
+export type Dictionary = typeof ptBase;
+
+// Marketplace promises are replaced by classifieds copy unless enabled (CONT-01).
+export const pt: Dictionary = withListingCopy(ptBase, CLASSIFIEDS_PT);

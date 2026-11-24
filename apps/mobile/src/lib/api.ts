@@ -1,9 +1,14 @@
 import * as SecureStore from 'expo-secure-store';
+import { assertReleaseApiUrl } from './release-config';
 
 // The API base URL. Set EXPO_PUBLIC_API_URL to your machine's LAN address when
 // running on a physical device (localhost points at the phone itself), e.g.
 // EXPO_PUBLIC_API_URL="http://192.168.1.10:3000".
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+/** Versioned API base (P2-11): every call goes to /v1. */
+const API = `${API_URL}/v1`;
+
+assertReleaseApiUrl(API_URL, typeof __DEV__ !== 'undefined' ? __DEV__ : true);
 
 const TOKEN_KEY = 'nhonga_session';
 
@@ -48,7 +53,7 @@ export interface ProductDetail extends ProductListItem {
   attributes: Record<string, string>;
   ratingAvg: number;
   ratingCount: number;
-  vendor: { displayName: string; slug: string; whatsapp: string | null; phone: string | null };
+  vendor: { displayName: string; slug: string; contact?: SellerChannels };
   variants: ProductVariant[];
   options: OptionGroup[];
   stats: { views: number; contacts: number; shares: number };
@@ -69,21 +74,27 @@ async function get<T>(path: string, auth = false): Promise<T> {
     const token = await getToken();
     if (token) headers['authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${API_URL}${path}`, { headers });
+  const res = await fetch(`${API}${path}`, { headers });
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return (await res.json()) as T;
 }
 
-async function post<T>(path: string, body: unknown, auth = false): Promise<T> {
+async function post<T>(
+  path: string,
+  body: unknown,
+  auth = false,
+  idempotencyKey?: string,
+): Promise<T> {
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'accept-language': 'pt',
+    ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
   };
   if (auth) {
     const token = await getToken();
     if (token) headers['authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
@@ -161,8 +172,32 @@ export interface Shop {
   memberSince: string;
   activeCount: number;
   soldCount: number;
+  contact?: SellerChannels;
+}
+
+/** Channels a seller offers, without the digits (PRIV-01). */
+export interface SellerChannels {
+  whatsapp: boolean;
+  phone: boolean;
+  hint: string | null;
+}
+export interface SellerNumbers {
   whatsapp: string | null;
   phone: string | null;
+}
+/**
+ * The seller's numbers, asked for when the user taps WhatsApp or Ligar. The
+ * API counts it as a contact and limits how many a person may ask for.
+ * Returns null when it cannot be shown now (limit reached or no network).
+ */
+export async function revealContact(
+  target: { productSlug: string } | { vendorSlug: string },
+): Promise<SellerNumbers | null> {
+  try {
+    return await post<SellerNumbers>('/catalog/contacts', target);
+  } catch {
+    return null;
+  }
 }
 export function getShop(slug: string): Promise<Shop | null> {
   return get(`/catalog/shops/${encodeURIComponent(slug)}`);
@@ -217,7 +252,7 @@ export async function setListingStatus(
   const token = await getToken();
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}/status`, {
+  await fetch(`${API}/catalog/products/${encodeURIComponent(id)}/status`, {
     method: 'PATCH',
     headers,
     body: JSON.stringify({ status }),
@@ -227,7 +262,7 @@ export async function removeListing(id: string): Promise<void> {
   const token = await getToken();
   const headers: Record<string, string> = {};
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/catalog/products/${encodeURIComponent(id)}`, {
+  await fetch(`${API}/catalog/products/${encodeURIComponent(id)}`, {
     method: 'DELETE',
     headers,
   });
@@ -253,7 +288,7 @@ export interface GenerateBannerResult {
 }
 /** Public SVG url for a banner (native renders it via expo-image). */
 export function bannerSvgUrl(id: string): string {
-  return `${API_URL}/banners/${encodeURIComponent(id)}.svg`;
+  return `${API}/banners/${encodeURIComponent(id)}.svg`;
 }
 export function bannerQuota(): Promise<BannerQuota> {
   return get('/banners/quota', true);
@@ -281,6 +316,29 @@ export function verifyOtp(
 }
 export function me(): Promise<{ user: AuthUser | null }> {
   return get('/auth/me', true);
+}
+
+/** Delete the signed-in account (P0-06). Immediate; every session ends. */
+export async function deleteAccount(): Promise<void> {
+  const token = await getToken();
+  const res = await fetch(`${API}/auth/me`, {
+    method: 'DELETE',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error('Não foi possível eliminar a conta. Tente de novo.');
+}
+
+export type ReportReason =
+  | 'fraud'
+  | 'prohibited'
+  | 'spam'
+  | 'wrong_category'
+  | 'offensive'
+  | 'other';
+
+/** Report a listing to the Nhonga team (P0-18). Works without an account. */
+export function reportListing(slug: string, reason: ReportReason): Promise<{ ok: true }> {
+  return post(`/catalog/products/${encodeURIComponent(slug)}/reports`, { reason }, true);
 }
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; configured: boolean }> {
   return post('/assistant/chat', { messages });
@@ -327,14 +385,14 @@ export function getWallet(): Promise<WalletView> {
 export function getWalletPackages(): Promise<WalletPackage[]> {
   return get('/wallet/packages');
 }
-export function topupWallet(amountCents: number): Promise<WalletView> {
-  return post('/wallet/topup', { amountCents }, true);
+export function topupWallet(amountCents: number, key?: string): Promise<WalletView> {
+  return post('/wallet/topup', { amountCents }, true, key);
 }
-export function purchasePackage(packageId: string): Promise<WalletView> {
-  return post('/wallet/purchase', { packageId }, true);
+export function purchasePackage(packageId: string, key?: string): Promise<WalletView> {
+  return post('/wallet/purchase', { packageId }, true, key);
 }
-export function subscribePro(): Promise<WalletView> {
-  return post('/wallet/pro', {}, true);
+export function subscribePro(key?: string): Promise<WalletView> {
+  return post('/wallet/pro', {}, true, key);
 }
 export interface BoostPlan {
   code: string;
@@ -352,8 +410,12 @@ export interface BoostResult {
 export function getWalletPlans(): Promise<BoostPlan[]> {
   return get('/wallet/plans');
 }
-export function boostListing(productId: string, planCode: string): Promise<BoostResult> {
-  return post('/wallet/boost', { productId, planCode }, true);
+export function boostListing(
+  productId: string,
+  planCode: string,
+  key?: string,
+): Promise<BoostResult> {
+  return post('/wallet/boost', { productId, planCode }, true, key);
 }
 
 // ── Push token registration (signed-in) ───────────────────────────
@@ -372,21 +434,26 @@ export interface SavedSearch {
   createdAt: string;
   lastRunAt: string | null;
 }
-export function listSavedSearches(phoneE164: string): Promise<SavedSearch[]> {
-  return get(`/saved-searches?phone=${encodeURIComponent(phoneE164)}`);
+// Alerts belong to the signed-in account and go to its verified number; the
+// API ignores any phone sent in the body (P0-02/SEC-09).
+export function listSavedSearches(_phoneE164?: string): Promise<SavedSearch[]> {
+  return get('/saved-searches', true);
 }
 export function createSavedSearch(input: {
-  phone: string;
+  phone?: string;
   label: string;
   href: string;
   query: Record<string, unknown>;
 }): Promise<{ id: string }> {
-  return post('/saved-searches', input);
+  const { label, href, query } = input;
+  return post('/saved-searches', { label, href, query }, true);
 }
 export async function removeSavedSearch(id: string): Promise<void> {
-  await fetch(`${API_URL}/saved-searches/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(
-    () => undefined,
-  );
+  const token = await getToken();
+  await fetch(`${API}/saved-searches/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  }).catch(() => undefined);
 }
 export function addFavorite(productId: string): Promise<{ ok: true }> {
   return post('/favorites', { productId }, true);
@@ -395,14 +462,14 @@ export async function removeFavorite(productId: string): Promise<void> {
   const token = await getToken();
   const headers: Record<string, string> = {};
   if (token) headers['authorization'] = `Bearer ${token}`;
-  await fetch(`${API_URL}/favorites/${encodeURIComponent(productId)}`, {
+  await fetch(`${API}/favorites/${encodeURIComponent(productId)}`, {
     method: 'DELETE',
     headers,
   }).catch(() => undefined);
 }
 /** Record an engagement event on a listing (contact / share). Best-effort. */
 export function recordEvent(slug: string, type: 'contact' | 'share' | 'view'): void {
-  void fetch(`${API_URL}/catalog/products/${encodeURIComponent(slug)}/events`, {
+  void fetch(`${API}/catalog/products/${encodeURIComponent(slug)}/events`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ type }),

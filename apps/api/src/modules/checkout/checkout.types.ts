@@ -62,6 +62,24 @@ export interface CheckoutGateway {
   status(gatewayRef: string, createdAt?: Date): Promise<GatewayStatus>;
   /** Verify (if the gateway signs) and extract which payment changed. Pure. */
   parseWebhook(input: WebhookInput): WebhookResult;
+  /** Sends the money back to the payer (P2-02). Absent when the gateway has
+   *  no refund API; the refund is then done in its dashboard. */
+  refund?(input: RefundInput): Promise<RefundResult>;
+  /** Final state of a refund that was accepted but not yet completed. */
+  refundStatus?(refundId: string): Promise<RefundResult>;
+}
+
+export interface RefundInput {
+  /** Our id for the refund (the intent id: one refund per payment). */
+  readonly refundId: string;
+  readonly gatewayRef: string;
+  readonly amountCents: number;
+}
+
+export interface RefundResult {
+  /** accepted = on its way; completed = money returned; rejected = will not happen. */
+  readonly status: 'accepted' | 'completed' | 'rejected';
+  readonly reason: string | null;
 }
 
 /**

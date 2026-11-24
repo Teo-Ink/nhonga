@@ -23,6 +23,8 @@ interface AlertLabels {
   smsPreview: string;
   none: string;
   error: string;
+  /** Shown when the visitor is not signed in (alerts need an account). */
+  login?: string;
 }
 
 function read(): SavedSearch[] {
@@ -76,7 +78,7 @@ export function SaveSearch({
   const href = qs ? `${pathname}?${qs}` : pathname;
   const [saved, setSaved] = useState(false);
   const [phone, setPhone] = useState('');
-  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
+  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error' | 'login'>('idle');
   const [sms, setSms] = useState<string | null>(null);
 
   useEffect(() => {
@@ -116,6 +118,10 @@ export function SaveSearch({
           query: buildQuery(pathname, qs),
         }),
       });
+      if (created.status === 401) {
+        setState('login');
+        return;
+      }
       const { id } = (await created.json().catch(() => ({}))) as { id?: string };
       if (!created.ok || !id) {
         setState('error');
@@ -178,6 +184,13 @@ export function SaveSearch({
                   {state === 'sending' ? alerts.sending : alerts.cta}
                 </button>
               </div>
+              {state === 'login' ? (
+                <span className="field__error" role="alert">
+                  <a href={`/entrar?next=${encodeURIComponent(href)}`}>
+                    {alerts.login ?? 'Inicie sessão para receber alertas.'}
+                  </a>
+                </span>
+              ) : null}
               {state === 'error' ? (
                 <span className="field__error" role="alert">
                   {alerts.error}

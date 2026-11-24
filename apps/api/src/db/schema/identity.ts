@@ -47,7 +47,11 @@ export const appUser = pgTable(
       .where(sql`${table.deletedAt} is null`),
     check('app_user_locale_check', sql`${table.locale} in ('pt-MZ','en')`),
     check('app_user_status_check', sql`${table.status} in ('active','suspended','deleted')`),
-    check('app_user_phone_format_check', sql`${table.phoneE164} ~ '^\\+258[8][2-7][0-9]{7}$'`),
+    // A deleted account's number becomes "deleted:<id>" (migration 0021).
+    check(
+      'app_user_phone_format_check',
+      sql`${table.status} = 'deleted' or ${table.phoneE164} ~ '^\\+258[8][2-7][0-9]{7}$'`,
+    ),
   ],
 );
 
@@ -73,6 +77,8 @@ export const otpChallenge = pgTable(
   },
   (table) => [
     index('otp_challenge_phone_idx').on(table.phoneE164, table.createdAt.desc()),
+    // Global hourly OTP limit (SEC-02, migration 0019).
+    index('otp_challenge_created_idx').on(table.createdAt.desc()),
     check(
       'otp_challenge_purpose_check',
       sql`${table.purpose} in ('login','verify_phone','payout_change')`,

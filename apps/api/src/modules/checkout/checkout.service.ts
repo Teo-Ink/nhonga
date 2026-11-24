@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -27,6 +28,7 @@ import {
   type CheckoutGateway,
   type FetchLike,
   type GatewayId,
+  type RefundResult,
   type PayMethod,
 } from './checkout.types.js';
 
@@ -101,7 +103,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     amountCents: number,
     method: string,
   ): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão para carregar a carteira.');
+    if (!token) throw new UnauthorizedException('Inicie sessão para carregar a carteira.');
     const shop = await this.wallets.requireShop(token);
     const amount = Math.round(amountCents);
     if (!Number.isFinite(amount) || amount < MIN_TOPUP_CENTS || amount > MAX_TOPUP_CENTS) {
@@ -116,7 +118,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     packageId: string,
     method: string,
   ): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão para comprar um pacote.');
+    if (!token) throw new UnauthorizedException('Inicie sessão para comprar um pacote.');
     const shop = await this.wallets.requireShop(token);
     const pkg = packageById(packageId);
     if (!pkg) throw new BadRequestException('Pacote inválido.');
@@ -219,7 +221,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
 
   /** The caller's own intent, refreshed from the gateway while still pending. */
   async get(token: string | null, id: string): Promise<CheckoutView> {
-    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    if (!token) throw new UnauthorizedException('Inicie sessão.');
     const shop = await this.wallets.requireShop(token);
     const intent = await this.find(id);
     if (!intent || intent.vendorId !== shop.id)
@@ -271,7 +273,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     outcome: 'paid' | 'failed',
   ): Promise<CheckoutView> {
     if (!this.setup.mock) throw new ForbiddenException('Simulador indisponível.');
-    if (!token) throw new UnauthorizedException('Inicia sessão.');
+    if (!token) throw new UnauthorizedException('Inicie sessão.');
     const shop = await this.wallets.requireShop(token);
     const intent = await this.find(id);
     if (!intent || intent.vendorId !== shop.id || !intent.gatewayRef) {
@@ -347,6 +349,177 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     return row ?? ((await this.find(intent.id)) as Intent);
   }
 
+  // ── Refunds (P2-02) ────────────────────────────────────────────────────────
+
+  /**
+   * Refunds a paid top-up or package (ops only). One refund per payment, for
+   * its full amount. For a credited payment, the credit is taken back from the
+   * wallet first, in the same transaction that claims the refund — so a
+   * seller cannot spend money that is on its way back to them; if they already
+   * spent it, there is nothing to refund automatically (409). A payment in
+   * "review" was never credited, so only the money goes back. If the gateway
+   * refuses, the credit is restored.
+   */
+  async refund(id: string, reason: string): Promise<RefundView> {
+    const intent = await this.find(id);
+    if (!intent) throw new NotFoundException('Pagamento não encontrado.');
+    if (intent.refundStatus === 'pending' || intent.refundStatus === 'refunded') {
+      return refundView(intent);
+    }
+    if (intent.status !== 'paid' && intent.status !== 'review') {
+      throw new ConflictException('Só se reembolsa um pagamento recebido.');
+    }
+    const gateway = this.setup.byId.get(intent.gateway as GatewayId);
+    if (!gateway?.refund || !intent.gatewayRef) {
+      throw new ConflictException(
+        `O gateway ${intent.gateway} não reembolsa por API: faça o reembolso no painel dele.`,
+      );
+    }
+    const credit = intent.status === 'paid' ? creditFor(intent) : null;
+    const amount = Number(intent.amountCents);
+
+    const claimed = await this.db
+      .transaction(async (tx) => {
+        const [row] = await tx
+          .update(checkoutIntent)
+          .set({
+            refundStatus: 'pending',
+            refundAmountCents: amount,
+            refundReason: reason.slice(0, 500),
+            updatedAt: sql`now()`,
+          })
+          .where(
+            and(
+              eq(checkoutIntent.id, intent.id),
+              sql`(${checkoutIntent.refundStatus} is null or ${checkoutIntent.refundStatus} = 'failed')`,
+            ),
+          )
+          .returning();
+        if (!row) return null;
+        if (credit && row.vendorId) {
+          const debited = await tx
+            .update(wallet)
+            .set({
+              balanceCents: sql`${wallet.balanceCents} - ${credit.balanceCents}`,
+              points: sql`${wallet.points} - ${credit.points}`,
+              updatedAt: sql`now()`,
+            })
+            .where(
+              and(
+                eq(wallet.vendorId, row.vendorId),
+                sql`${wallet.balanceCents} >= ${credit.balanceCents}`,
+                sql`${wallet.points} >= ${credit.points}`,
+              ),
+            )
+            .returning({ v: wallet.vendorId });
+          if (debited.length === 0) throw new RefundBlocked();
+          await tx.insert(walletTransaction).values({
+            vendorId: row.vendorId,
+            kind: 'refund',
+            amountCents: -credit.balanceCents,
+            points: -credit.points,
+            description: `Reembolso: ${credit.description}`,
+          });
+        }
+        return row;
+      })
+      .catch((e: unknown) => {
+        if (e instanceof RefundBlocked) {
+          throw new ConflictException(
+            'O saldo deste carregamento já foi usado; o reembolso automático não é possível.',
+          );
+        }
+        throw e;
+      });
+    if (!claimed) return refundView((await this.find(id)) as Intent);
+
+    let result: RefundResult;
+    try {
+      result = await gateway.refund({
+        refundId: intent.id,
+        gatewayRef: intent.gatewayRef,
+        amountCents: amount,
+      });
+    } catch (e) {
+      result = { status: 'rejected', reason: errText(e) };
+    }
+    if (result.status === 'rejected') {
+      await this.failRefund(claimed, credit, result.reason ?? 'recusado');
+      this.log.error(`ALERT refund_failed intent=${intent.id} reason=${result.reason}`);
+      throw new ConflictException(`O gateway recusou o reembolso: ${result.reason ?? ''}`.trim());
+    }
+    const [done] = await this.db
+      .update(checkoutIntent)
+      .set(
+        result.status === 'completed'
+          ? { refundStatus: 'refunded', refundedAt: sql`now()`, updatedAt: sql`now()` }
+          : { updatedAt: sql`now()` },
+      )
+      .where(eq(checkoutIntent.id, intent.id))
+      .returning();
+    this.log.log(`refund ${result.status} intent=${intent.id} amount=${amount}`);
+    return refundView(done ?? claimed);
+  }
+
+  /** Re-reads a pending refund from the gateway (ops view, sweep). */
+  async refreshRefund(id: string): Promise<RefundView> {
+    const intent = await this.find(id);
+    if (!intent) throw new NotFoundException('Pagamento não encontrado.');
+    const gateway = this.setup.byId.get(intent.gateway as GatewayId);
+    if (intent.refundStatus === 'pending' && gateway?.refundStatus) {
+      const r = await gateway.refundStatus(intent.id);
+      if (r.status === 'completed') {
+        const [row] = await this.db
+          .update(checkoutIntent)
+          .set({ refundStatus: 'refunded', refundedAt: sql`now()`, updatedAt: sql`now()` })
+          .where(and(eq(checkoutIntent.id, id), eq(checkoutIntent.refundStatus, 'pending')))
+          .returning();
+        return refundView(row ?? intent);
+      }
+      if (r.status === 'rejected') {
+        await this.failRefund(
+          intent,
+          intent.status === 'paid' ? creditFor(intent) : null,
+          r.reason ?? 'FAILED',
+        );
+        this.log.error(`ALERT refund_failed intent=${id} reason=${r.reason}`);
+        return refundView((await this.find(id)) as Intent);
+      }
+    }
+    return refundView(intent);
+  }
+
+  /** The gateway will not return the money: give the credit back. */
+  private async failRefund(
+    intent: Intent,
+    credit: ReturnType<typeof creditFor>,
+    reason: string,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(checkoutIntent)
+        .set({ refundStatus: 'failed', refundReason: reason.slice(0, 500), updatedAt: sql`now()` })
+        .where(and(eq(checkoutIntent.id, intent.id), eq(checkoutIntent.refundStatus, 'pending')))
+        .returning();
+      if (!row || !credit || !row.vendorId) return;
+      await tx
+        .update(wallet)
+        .set({
+          balanceCents: sql`${wallet.balanceCents} + ${credit.balanceCents}`,
+          points: sql`${wallet.points} + ${credit.points}`,
+          updatedAt: sql`now()`,
+        })
+        .where(eq(wallet.vendorId, row.vendorId));
+      await tx.insert(walletTransaction).values({
+        vendorId: row.vendorId,
+        kind: 'refund_reversal',
+        amountCents: credit.balanceCents,
+        points: credit.points,
+        description: 'Reembolso recusado: crédito reposto',
+      });
+    });
+  }
+
   /** Exactly-once credit: the status flip and the wallet credit commit together. */
   private async settle(
     intent: Intent,
@@ -398,7 +571,7 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
     });
     if (row) {
       if (row.status === 'review')
-        this.log.error(`intent ${row.id} needs review: ${row.failureReason}`);
+        this.log.error(`ALERT payment_review intent=${row.id} reason=${row.failureReason}`);
       else this.log.log(`intent ${row.id} paid via ${row.gateway}`);
       return row;
     }
@@ -422,5 +595,29 @@ export function view(i: Intent): CheckoutView {
     failureReason: i.failureReason,
     createdAt: i.createdAt.toISOString(),
     paidAt: i.paidAt ? i.paidAt.toISOString() : null,
+  };
+}
+
+class RefundBlocked extends Error {}
+
+export interface RefundView {
+  readonly id: string;
+  readonly status: string;
+  readonly amountCents: number;
+  readonly refundStatus: 'pending' | 'refunded' | 'failed' | null;
+  readonly refundAmountCents: number | null;
+  readonly refundReason: string | null;
+  readonly refundedAt: string | null;
+}
+
+export function refundView(i: Intent): RefundView {
+  return {
+    id: i.id,
+    status: i.status,
+    amountCents: Number(i.amountCents),
+    refundStatus: (i.refundStatus ?? null) as RefundView['refundStatus'],
+    refundAmountCents: i.refundAmountCents === null ? null : Number(i.refundAmountCents),
+    refundReason: i.refundReason ?? null,
+    refundedAt: i.refundedAt ? new Date(i.refundedAt).toISOString() : null,
   };
 }

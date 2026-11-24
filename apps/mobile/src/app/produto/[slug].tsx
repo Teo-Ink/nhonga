@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   FlatList,
   Image,
   Linking,
@@ -17,7 +18,10 @@ import {
   getProduct,
   listProducts,
   recordEvent,
+  reportListing,
+  revealContact,
   formatMZN,
+  type ReportReason,
   type ProductDetail,
   type ProductListItem,
 } from '@/lib/api';
@@ -100,18 +104,29 @@ export default function ProductScreen() {
         : [];
   const specs = Object.entries(product.attributes ?? {});
   const price = formatMZN(product.priceCents);
-  const { whatsapp, phone } = product.vendor;
+  const channels = product.vendor.contact;
 
-  function openWhatsApp() {
-    if (!whatsapp || !product) return;
-    recordEvent(product.slug, 'contact');
-    const msg = `Olá! Tenho interesse no anúncio «${product.title}» (${price}) no Nhonga.`;
-    void Linking.openURL(`https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`);
+  // The number is not part of the listing data (PRIV-01): ask for it on tap.
+  async function numbers() {
+    if (!product) return null;
+    const n = await revealContact({ productSlug: product.slug });
+    if (!n)
+      Alert.alert(
+        'Contacto',
+        'Não foi possível mostrar o contacto agora. Tente mais tarde ou envie uma mensagem.',
+      );
+    return n;
   }
-  function call() {
-    if (!phone || !product) return;
-    recordEvent(product.slug, 'contact');
-    void Linking.openURL(`tel:+${phone}`);
+  async function openWhatsApp() {
+    const n = await numbers();
+    if (!n?.whatsapp || !product) return;
+    const msg = `Olá! Tenho interesse no anúncio «${product.title}» (${price}) no Nhonga.`;
+    void Linking.openURL(`https://wa.me/${n.whatsapp}?text=${encodeURIComponent(msg)}`);
+  }
+  async function call() {
+    const n = await numbers();
+    if (!n?.phone) return;
+    void Linking.openURL(`tel:+${n.phone}`);
   }
   async function share() {
     if (!product) return;
@@ -130,7 +145,7 @@ export default function ProductScreen() {
     }
   }
 
-  const hasContact = Boolean(whatsapp || phone);
+  const hasContact = Boolean(channels?.whatsapp || channels?.phone);
 
   return (
     <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
@@ -166,16 +181,22 @@ export default function ProductScreen() {
       </Pressable>
 
       {/* Contact block */}
-      {whatsapp ? (
-        <Pressable style={(s) => [styles.contactBtn, styles.wa, pressed(s)]} onPress={openWhatsApp}>
+      {channels?.whatsapp ? (
+        <Pressable
+          style={(s) => [styles.contactBtn, styles.wa, pressed(s)]}
+          onPress={() => void openWhatsApp()}
+        >
           <Ionicons name="logo-whatsapp" size={20} color="#fff" />
           <Text style={styles.contactText}>Contactar pelo WhatsApp</Text>
         </Pressable>
       ) : null}
-      {phone ? (
-        <Pressable style={(s) => [styles.contactBtn, styles.call, pressed(s)]} onPress={call}>
+      {channels?.phone ? (
+        <Pressable
+          style={(s) => [styles.contactBtn, styles.call, pressed(s)]}
+          onPress={() => void call()}
+        >
           <Ionicons name="call" size={18} color="#fff" />
-          <Text style={styles.contactText}>Ligar · {formatMsisdn(phone)}</Text>
+          <Text style={styles.contactText}>Ligar</Text>
         </Pressable>
       ) : null}
       <Pressable style={(s) => [styles.contactBtn, styles.shareBtn, pressed(s)]} onPress={share}>
@@ -183,6 +204,15 @@ export default function ProductScreen() {
         <Text style={styles.shareText}>Partilhar</Text>
       </Pressable>
       {!hasContact ? <Text style={styles.muted}>Este vendedor não deixou contacto.</Text> : null}
+      <Pressable
+        style={(s) => [styles.reportBtn, pressed(s)]}
+        onPress={() => askReport(product.slug)}
+        accessibilityRole="button"
+        accessibilityLabel="Denunciar este anúncio"
+      >
+        <Ionicons name="flag-outline" size={16} color={brand.muted} />
+        <Text style={styles.muted}>Denunciar anúncio</Text>
+      </Pressable>
       <View style={styles.safeBox}>
         <Ionicons name="shield-checkmark-outline" size={18} color={brand.green} />
         <Text style={styles.safe}>
@@ -300,6 +330,14 @@ const styles = StyleSheet.create({
   contactText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   shareBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: brand.border },
   shareText: { color: brand.text, fontWeight: '600', fontSize: 15 },
+  reportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingVertical: 10,
+    minHeight: 44,
+  },
   safeBox: {
     marginTop: space.sm,
     flexDirection: 'row',
@@ -348,9 +386,18 @@ const styles = StyleSheet.create({
   simPrice: { fontSize: 14, fontWeight: '800', color: brand.green, marginTop: 2 },
 });
 
-// Display a Mozambican MSISDN (E.164 "258841234567") as "+258 84 123 4567".
-function formatMsisdn(e164: string): string {
-  const digits = e164.replace(/\D/g, '');
-  const m = /^258(\d{2})(\d{3})(\d{4})$/.exec(digits);
-  return m ? `+258 ${m[1]} ${m[2]} ${m[3]}` : `+${digits}`;
+/** Report flow (P0-18): pick a reason, send, thank. */
+function askReport(slug: string): void {
+  const send = (reason: ReportReason) => {
+    reportListing(slug, reason)
+      .then(() => Alert.alert('Obrigado', 'A equipa Nhonga vai rever este anúncio.'))
+      .catch(() => Alert.alert('Denúncia', 'Não foi possível enviar. Tente de novo.'));
+  };
+  Alert.alert('Denunciar anúncio', 'Qual é o problema?', [
+    { text: 'Burla ou fraude', onPress: () => send('fraud') },
+    { text: 'Produto proibido', onPress: () => send('prohibited') },
+    { text: 'Spam ou repetido', onPress: () => send('spam') },
+    { text: 'Ofensivo', onPress: () => send('offensive') },
+    { text: 'Cancelar', style: 'cancel' },
+  ]);
 }

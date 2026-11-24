@@ -1,0 +1,74 @@
+## Pesquisa: implementação
+        vStatus: vendor.status,
+        vProUntil: vendor.proUntil,
+        vLocation: district.name,
+        vRatingAvg: vendor.ratingAvg,
+        vRatingCount: vendor.ratingCount,
+        descPt: product.descriptionPt,
+        descEn: product.descriptionEn,
+        provName: province.name,
+      })
+      .from(product)
+      .innerJoin(vendor, eq(product.vendorId, vendor.id))
+      .innerJoin(category, eq(product.categoryId, category.id))
+      .leftJoin(district, eq(vendor.districtId, district.id))
+      .leftJoin(province, eq(district.provinceCode, province.code))
+      .where(and(...conds));
+
+    // Relevance score per listing (only meaningful with a text query).
+    const scores = new Map<string, number>();
+    if (hasQuery) {
+      for (const p of rows) {
+        scores.set(
+          p.id,
+          scoreListing(tokens, {
+            title: normalise(`${p.titlePt} ${p.titleEn ?? ''}`),
+            category: normalise(`${p.catSlug} ${p.catPt} ${p.catEn ?? ''}`),
+            attributes: normalise(Object.values(p.attributes ?? {}).join(' ')),
+            location: normalise(`${p.vLocation ?? ''} ${p.provName ?? ''}`),
+            vendor: normalise(p.vName),
+            description: normalise(`${p.descPt ?? ''} ${p.descEn ?? ''}`),
+          }),
+        );
+      }
+    }
+
+    // Per-category counts for the query (before the category filter narrows it).
+    let categoryCounts: ProductListResponse['categoryCounts'];
+    if (hasQuery) {
+      const byCat = new Map<string, { slug: string; name: string; count: number }>();
+      for (const p of rows) {
+        const cur = byCat.get(p.catSlug) ?? {
+          slug: p.catSlug,
+          name: pickText(p.catPt, p.catEn, lang),
+          count: 0,
+        };
+        cur.count += 1;
+        byCat.set(p.catSlug, cur);
+      }
+      categoryCounts = [...byCat.values()].sort((a, b) => b.count - a.count);
+    }
+    const scopedRows =
+      hasQuery && filters.categorySlug
+
+## Índices em product
+41:    uniqueIndex('category_slug_key').on(table.slug),
+42:    index('category_parent_idx').on(table.parentId),
+72:    uniqueIndex('category_attribute_key').on(table.categoryId, table.key),
+119:    uniqueIndex('product_slug_key').on(table.slug),
+120:    index('product_vendor_status_idx').on(table.vendorId, table.status),
+121:    index('product_category_active_idx')
+124:    index('product_attributes_gin').using('gin', table.attributes),
+148:  (table) => [index('product_image_product_idx').on(table.productId, table.sortOrder)],
+169:    uniqueIndex('product_variant_sku_key').on(table.productId, table.sku),
+170:    index('product_variant_product_idx').on(table.productId),
+210:    index('stock_ledger_variant_idx').on(table.variantId, table.createdAt.desc()),
+211:    index('stock_ledger_reference_idx').on(table.referenceId),
+
+## pg_trgm / unaccent / tsvector
+(vazio = sem full-text na BD)
+
+## Limites de paginação
+54:    @Query('limit') limit?: string,
+59:    const lim = intOrUndef(limit);
+73:      ...(lim !== undefined ? { limit: lim } : {}),

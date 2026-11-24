@@ -2,9 +2,9 @@
 // as an <img> source on the listing/cards/storefront (.svg), and as the og:image
 // + download (.png). The id carries the format suffix so the URL reads as an
 // image.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, withApi } from '../../../../lib/bff';
 
-export async function GET(
+async function handleGET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
@@ -12,7 +12,7 @@ export async function GET(
   const isPng = /\.png$/i.test(id);
   const clean = id.replace(/\.(svg|png)$/i, '');
   const ext = isPng ? 'png' : 'svg';
-  const res = await fetch(`${API_URL}/banners/${encodeURIComponent(clean)}.${ext}`, {
+  const res = await apiFetch(`/banners/${encodeURIComponent(clean)}.${ext}`, {
     cache: 'no-store',
   });
   if (!res.ok) return new Response('Not found', { status: res.status });
@@ -25,3 +25,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = withApi(handleGET);

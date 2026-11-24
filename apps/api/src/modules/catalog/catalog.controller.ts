@@ -21,6 +21,16 @@ import type {
   ProductListResponse,
   SortKey,
 } from './catalog.types.js';
+import {
+  ContactReveal,
+  ListingEvent,
+  ListingInput,
+  ListingReport,
+  ListingStatus,
+} from '@nhonga/shared';
+import { ZodBody } from '../../common/zod-body.js';
+import { ContactOut, ListingCreatedOut, ProductListOut } from '@nhonga/shared';
+import { Returns } from '../../common/returns.js';
 
 const SORTS: readonly SortKey[] = ['relevance', 'price_asc', 'price_desc', 'rating', 'newest'];
 
@@ -39,6 +49,7 @@ interface CreateListingBody {
 export class CatalogController {
   constructor(private readonly catalog: CatalogService) {}
 
+  @Returns(ProductListOut)
   @Get('products')
   async list(
     @Headers('accept-language') acceptLanguage: string | undefined,
@@ -53,6 +64,7 @@ export class CatalogController {
     @Query('sort') sort?: string,
     @Query('limit') limit?: string,
     @Query('attributes') attributes?: string,
+    @Query('cursor') cursor?: string,
   ): Promise<ProductListResponse> {
     const min = intOrUndef(minPrice);
     const max = intOrUndef(maxPrice);
@@ -71,14 +83,15 @@ export class CatalogController {
       ...(attrs ? { attributes: attrs } : {}),
       ...(s2 !== undefined ? { sort: s2 } : {}),
       ...(lim !== undefined ? { limit: lim } : {}),
+      ...(cursor ? { cursor } : {}),
     };
-    return this.catalog.listProducts(langOf(acceptLanguage), filters);
+    return this.catalog.listProductsCached(langOf(acceptLanguage), filters);
   }
 
   /** Live marketplace totals for the home social-proof strip. */
   @Get('stats')
   stats(): Promise<{ listings: number; vendors: number; verifiedVendors: number }> {
-    return this.catalog.homeStats();
+    return this.catalog.homeStatsCached();
   }
 
   /** Provinces for the location search picker. */
@@ -93,11 +106,12 @@ export class CatalogController {
     return this.catalog.districts();
   }
 
-  /** Create a listing (real "Publicar"). No auth in the demo. */
+  /** Create a listing ("Publicar"). Needs a session; 10 per shop per day. */
+  @Returns(ListingCreatedOut)
   @Post('products')
   @HttpCode(201)
   create(
-    @Body() body: CreateListingBody,
+    @Body(new ZodBody(ListingInput)) body: CreateListingBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ id: string; slug: string }> {
     const str = (v: unknown): string => (typeof v === 'string' ? v : '');
@@ -143,7 +157,7 @@ export class CatalogController {
   @Patch('products/:id')
   update(
     @Param('id') id: string,
-    @Body() body: CreateListingBody,
+    @Body(new ZodBody(ListingInput)) body: CreateListingBody,
     @Headers('authorization') authz?: string,
   ): Promise<{ slug: string }> {
     const str = (v: unknown): string | undefined => (typeof v === 'string' ? v : undefined);
@@ -182,7 +196,7 @@ export class CatalogController {
   @Patch('products/:id/status')
   setStatus(
     @Param('id') id: string,
-    @Body() body: { status?: unknown },
+    @Body(new ZodBody(ListingStatus)) body: { status?: unknown },
     @Headers('authorization') authz?: string,
   ): Promise<{ ok: true; status: string }> {
     const status = body.status;
@@ -204,7 +218,7 @@ export class CatalogController {
     @Query('q') q?: string,
     @Headers('accept-language') acceptLanguage?: string,
   ): Promise<{ slug: string; title: string }[]> {
-    return this.catalog.suggest(q ?? '', langOf(acceptLanguage));
+    return this.catalog.suggestCached(q ?? '', langOf(acceptLanguage));
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */
@@ -229,7 +243,7 @@ export class CatalogController {
   @HttpCode(204)
   async event(
     @Param('idOrSlug') idOrSlug: string,
-    @Body() body: { type?: unknown },
+    @Body(new ZodBody(ListingEvent)) body: { type?: unknown },
   ): Promise<void> {
     const type = body.type;
     if (type !== 'contact' && type !== 'share' && type !== 'view') {
@@ -238,12 +252,22 @@ export class CatalogController {
     await this.catalog.recordEvent(idOrSlug, type);
   }
 
+  /** The seller's numbers, on request (PRIV-01). Rate limited per client. */
+  @Returns(ContactOut)
+  @Post('contacts')
+  @HttpCode(200)
+  contact(
+    @Body(new ZodBody(ContactReveal)) body: { productSlug?: string; vendorSlug?: string },
+  ): Promise<{ whatsapp: string | null; phone: string | null }> {
+    return this.catalog.revealContact(body);
+  }
+
   /** File a trust-&-safety report against a listing (anonymous). */
   @Post('products/:idOrSlug/reports')
   @HttpCode(201)
   async report(
     @Param('idOrSlug') idOrSlug: string,
-    @Body() body: { reason?: unknown; note?: unknown },
+    @Body(new ZodBody(ListingReport)) body: { reason?: unknown; note?: unknown },
   ): Promise<{ id: string }> {
     const reason = typeof body.reason === 'string' ? body.reason : '';
     const note = typeof body.note === 'string' ? body.note : undefined;

@@ -1,11 +1,15 @@
 // BFF: subscribe a shop to Loja Pro, forwarded to the API.
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
+import { apiFetch, idempotency, withApi } from '../../../lib/bff';
 
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const body = await req.text();
-  const res = await fetch(`${API_URL}/subscriptions`, {
+  const res = await apiFetch(`/subscriptions`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'accept-language': 'pt' },
+    headers: {
+      ...idempotency(req),
+      'content-type': 'application/json',
+      'accept-language': 'pt',
+    },
     body,
     cache: 'no-store',
   });
@@ -15,3 +19,5 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const POST = withApi(handlePOST);

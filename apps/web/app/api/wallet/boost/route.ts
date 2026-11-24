@@ -1,16 +1,15 @@
 // BFF: spend wallet balance to promote one of the seller's listings.
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, idempotency, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function POST(req: Request): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return Response.json({ detail: 'Inicia sessão.' }, { status: 401 });
+  if (!token) return Response.json({ detail: 'Inicie sessão.' }, { status: 401 });
   const body = await req.text();
-  const res = await fetch(`${API_URL}/wallet/boost`, {
+  const res = await apiFetch(`/wallet/boost`, {
     method: 'POST',
     headers: {
+      ...idempotency(req),
       authorization: `Bearer ${token}`,
       'content-type': 'application/json',
       'accept-language': 'pt',
@@ -24,3 +23,5 @@ export async function POST(req: Request): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const POST = withApi(handlePOST);

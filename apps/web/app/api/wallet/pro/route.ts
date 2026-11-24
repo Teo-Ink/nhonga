@@ -1,15 +1,17 @@
 // BFF: subscribe / renew "Loja Pro" for the signed-in seller (demo charge).
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE, apiFetch, idempotency, withApi } from '../../../../lib/bff';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:3000';
-const SESSION_COOKIE = 'nhonga_session';
-
-export async function POST(): Promise<Response> {
+async function handlePOST(req: Request): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return Response.json({ detail: 'Inicia sessão.' }, { status: 401 });
-  const res = await fetch(`${API_URL}/wallet/pro`, {
+  if (!token) return Response.json({ detail: 'Inicie sessão.' }, { status: 401 });
+  const res = await apiFetch(`/wallet/pro`, {
     method: 'POST',
-    headers: { authorization: `Bearer ${token}`, 'accept-language': 'pt' },
+    headers: {
+      ...idempotency(req),
+      authorization: `Bearer ${token}`,
+      'accept-language': 'pt',
+    },
     cache: 'no-store',
   });
   const text = await res.text();
@@ -18,3 +20,5 @@ export async function POST(): Promise<Response> {
     headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
   });
 }
+
+export const POST = withApi(handlePOST);

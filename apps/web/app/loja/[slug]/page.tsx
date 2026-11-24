@@ -1,3 +1,5 @@
+import { ShopWhatsApp } from '../../../components/ShopWhatsApp';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { StoreGrid } from '../../../components/StoreGrid';
 import { SellerReviews } from '../../../components/SellerReviews';
@@ -12,6 +14,28 @@ import {
 import { getDictionary } from '../../../lib/i18n/index';
 
 export const dynamic = 'force-dynamic';
+
+// Title, description and share card for a shop page (WEB-02).
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const shop = await getShopDetail(slug).catch(() => null);
+  if (!shop) return { title: 'Loja · Nhonga' };
+  const where = shop.location ? ` em ${shop.location}` : '';
+  const title = `${shop.displayName} — Loja no Nhonga`;
+  const description = `${shop.activeCount} anúncios de ${shop.displayName}${where}. Veja os produtos e contacte o vendedor no Nhonga.`;
+  const url = `/loja/${encodeURIComponent(slug)}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { title, description, url, type: 'profile' },
+    twitter: { card: 'summary', title, description },
+  };
+}
 
 // Public seller storefront. Reuses the catalogue (?vendor=slug); the header is
 // built only from what the catalogue knows about the vendor (name, verified,
@@ -90,15 +114,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           ) : null}
         </div>
         <div className="store__cta">
-          {shop?.whatsapp ? (
-            <a
-              className="btn btn--cta store__contact"
-              href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t.seller.contact_whatsapp}
-            </a>
+          {shop?.contact?.whatsapp ? (
+            <ShopWhatsApp
+              vendorSlug={slug}
+              label={t.seller.contact_whatsapp}
+              failed={t.contact.reveal_failed}
+              limited={t.contact.reveal_limited}
+            />
           ) : null}
           <a
             className="btn btn--ghost store__contact"

@@ -46,7 +46,9 @@ export function ListingRow({ p, t }: { p: ProductListItem; t: Dictionary }) {
           )}
         </div>
         <div className="lrow__body">
-          <h3 className="lrow__title">{p.title}</h3>
+          {/* h2: results sit directly under the page's h1. With h3, phones
+              (where the filter headings are hidden) jumped from h1 to h3. */}
+          <h2 className="lrow__title">{p.title}</h2>
           {summary ? <p className="lrow__specs">{summary}</p> : null}
           <div className="lrow__meta">
             <span className="lrow__loc">

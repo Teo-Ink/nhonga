@@ -163,7 +163,7 @@ function ReviewRow({ r, t }: { r: VendorReview; t: Dictionary['reviews'] }) {
 
 function Stars({ value }: { value: number }) {
   return (
-    <span className="stars" aria-label={`${value}/5`}>
+    <span className="stars" role="img" aria-label={`${value}/5`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <IconStar
           key={n}

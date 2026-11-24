@@ -12,7 +12,7 @@ import { AlertsService } from './alerts.service.js';
  * Periodically runs every saved search and delivers alerts for new matches.
  * Disabled by default (ALERTS_SWEEP_MINUTES=0) so the demo stays quiet; set a
  * positive interval to turn the alert loop on. The timer is unref'd so it never
- * holds the process open, mirroring the payments reconciliation worker.
+ * holds the process open, like the checkout sweeper.
  */
 @Injectable()
 export class AlertsSweeper implements OnApplicationBootstrap, OnModuleDestroy {

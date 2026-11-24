@@ -5,19 +5,36 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { jsonBodyLimits } from './common/body-limits.js';
 import { rateLimitMiddleware } from './common/rate-limit.js';
+import { postgresCounter, sharedLimitMiddleware } from './common/shared-limit.js';
+import { idempotencyMiddleware, postgresIdemStore } from './common/idempotency.js';
+import { DB } from './db/database.module.js';
+import type { Db } from './db/types.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
+import { requestContextMiddleware } from './common/request-context.js';
+import { apiVersionMiddleware } from './common/api-version.js';
+import { JsonLogger } from './common/json-logger.js';
+import { initErrorReporting } from './common/error-reporter.js';
 import type { AppConfig } from './config/config.schema.js';
 
 async function bootstrap(): Promise<void> {
+  const tracking = await initErrorReporting();
+  // JSON log lines everywhere except a developer's terminal (P1-08).
+  const json = (process.env['NODE_ENV'] ?? 'development') !== 'development';
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    ...(json ? { logger: new JsonLogger() } : {}),
     // Preserve the exact request bytes so webhook signature verification can
     // run against them (payments webhook receiver).
     rawBody: true,
   });
-  // Allow base64 image uploads (AI photo listing + listing photos). Nest still
-  // captures rawBody for the payments webhook — `verify` is reserved for that.
-  app.useBodyParser('json', { limit: '12mb' });
+  // 100 KB JSON everywhere, 12 MB only on the photo upload routes (SEC-07).
+  // Registered first so Nest's default parser skips already-parsed bodies; it
+  // keeps rawBody for the payment webhook signatures.
+  // /v1/… is the canonical address; the prefix is stripped before routing.
+  app.use(apiVersionMiddleware());
+  app.use(requestContextMiddleware());
+  app.use(jsonBodyLimits());
   const log = new Logger('Bootstrap');
   const config = app.get(ConfigService<AppConfig, true>);
   const nodeEnv = config.get('nodeEnv', { infer: true });
@@ -29,6 +46,10 @@ async function bootstrap(): Promise<void> {
   // load balancer; one trusted hop.
   if (nodeEnv !== 'development') app.set('trust proxy', 1);
   app.use(rateLimitMiddleware());
+  // Abuse-prone writes are counted in Postgres so the limit holds across tasks (P0-04).
+  app.use(sharedLimitMiddleware(postgresCounter(app.get<Db>(DB))));
+  // Retried payment requests replay the first answer instead of charging twice (P2-11).
+  app.use(idempotencyMiddleware(postgresIdemStore(app.get<Db>(DB))));
 
   // CORS for browser clients only. The web app reaches the API server-side via
   // its BFF and native mobile fetches are not subject to CORS, so this exists
@@ -68,7 +89,9 @@ async function bootstrap(): Promise<void> {
 
   const port = config.get('port', { infer: true });
   await app.listen(port, '0.0.0.0');
-  log.log(`nhonga api listening on :${port} (${nodeEnv})`);
+  log.log(
+    `nhonga api listening on :${port} (${nodeEnv}) version=${process.env['APP_VERSION'] ?? 'unknown'} error_tracking=${tracking ? 'on' : 'off'}`,
+  );
 }
 
 void bootstrap();

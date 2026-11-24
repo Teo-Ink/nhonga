@@ -2,10 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/config.schema.js';
 import { DatabaseModule } from './db/database.module.js';
-import { WebhooksModule } from './modules/payments/http/webhooks/webhooks.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
-import { PaymentsHttpModule } from './modules/payments/http/payments.module.js';
 import { AssistantModule } from './modules/assistant/assistant.module.js';
 import { PromotionsModule } from './modules/promotions/promotions.module.js';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module.js';
@@ -19,6 +17,7 @@ import { AdsModule } from './modules/ads/ads.module.js';
 import { WalletModule } from './modules/wallet/wallet.module.js';
 import { BannersModule } from './modules/banners/banners.module.js';
 import { CheckoutModule } from './modules/checkout/checkout.module.js';
+import { ComplaintsModule } from './modules/complaints/complaints.module.js';
 import { HealthController } from './health/health.controller.js';
 
 @Module({
@@ -32,8 +31,6 @@ import { HealthController } from './health/health.controller.js';
     DatabaseModule,
     CatalogModule,
     AuthModule,
-    PaymentsHttpModule,
-    WebhooksModule,
     AssistantModule,
     PromotionsModule,
     SubscriptionsModule,
@@ -47,6 +44,7 @@ import { HealthController } from './health/health.controller.js';
     WalletModule,
     BannersModule,
     CheckoutModule,
+    ComplaintsModule,
   ],
   controllers: [HealthController],
 })

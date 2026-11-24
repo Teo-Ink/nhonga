@@ -13,26 +13,32 @@
     "db:generate": "tsc -p tsconfig.json && drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f scripts/seed.sql"
+    "db:seed": "psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f scripts/seed.sql",
+    "openapi:write": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && pnpm build && node scripts/write-openapi.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1175.0",
     "@nestjs/common": "^12.6.0",
     "@nestjs/config": "^12.1.1",
     "@nestjs/core": "^12.6.0",
     "@nestjs/platform-express": "^12.6.0",
     "@nhonga/shared": "workspace:*",
     "@resvg/resvg-js": "2.6.2",
+    "@sentry/node": "11.16.0",
     "drizzle-orm": "0.45.2",
+    "express": "5.3.0",
     "helmet": "^8.3.0",
     "postgres": "3.4.9",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "20.16.11",
     "drizzle-kit": "0.31.10",
     "typescript": "5.6.3",
-    "vitest": "4.1.12"
+    "vitest": "4.1.12",
+    "yaml": "2.8.3"
   }
 }

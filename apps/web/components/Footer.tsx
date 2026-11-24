@@ -34,6 +34,7 @@ export function Footer({ t }: { t: Dictionary }) {
         { label: f.link_messages, href: '/mensagens' },
         { label: f.link_terms, href: '/termos' },
         { label: f.link_privacy, href: '/privacidade' },
+        { label: f.link_complaints, href: '/reclamacoes' },
         ...(IS_DEMO ? [{ label: f.link_design, href: '/estilo' }] : []),
       ],
     },

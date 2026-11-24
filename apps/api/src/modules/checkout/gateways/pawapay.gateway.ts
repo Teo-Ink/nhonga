@@ -25,6 +25,8 @@ import {
   type CheckoutGateway,
   type CreateCheckoutInput,
   type CreatedCheckout,
+  type RefundInput,
+  type RefundResult,
   type FetchLike,
   type GatewayStatus,
   type PayMethod,
@@ -126,6 +128,55 @@ export class PawaPayGateway implements CheckoutGateway {
         // ACCEPTED, PROCESSING, IN_RECONCILIATION: still in flight.
         return { status: 'pending', amountCents: null, failureReason: null };
     }
+  }
+
+  /** POST /v2/refunds: returns the deposit to the payer's wallet. */
+  async refund(input: RefundInput): Promise<RefundResult> {
+    const { status, json } = await requestJson(
+      this.fetchImpl,
+      this.id,
+      `${this.config.baseUrl}/v2/refunds`,
+      {
+        method: 'POST',
+        headers: this.headers(),
+        body: {
+          refundId: input.refundId,
+          depositId: input.gatewayRef,
+          amount: centsToDecimal(input.amountCents),
+          currency: 'MZN',
+        },
+      },
+    );
+    const body = json as { status?: string; failureReason?: { failureMessage?: string } } | null;
+    if (status >= 500)
+      throw new GatewayUnavailableError(this.id, `PawaPay refund failed (${status})`);
+    if (body?.status === 'ACCEPTED' || body?.status === 'DUPLICATE_IGNORED') {
+      return { status: 'accepted', reason: null };
+    }
+    return {
+      status: 'rejected',
+      reason: body?.failureReason?.failureMessage ?? `PawaPay recusou o reembolso (${status})`,
+    };
+  }
+
+  /** GET /v2/refunds/{refundId}. */
+  async refundStatus(refundId: string): Promise<RefundResult> {
+    const { status, json } = await requestJson(
+      this.fetchImpl,
+      this.id,
+      `${this.config.baseUrl}/v2/refunds/${encodeURIComponent(refundId)}`,
+      { method: 'GET', headers: this.headers() },
+    );
+    if (status >= 400)
+      throw new GatewayUnavailableError(this.id, `PawaPay refund status (${status})`);
+    const d = (
+      json as { data?: { status?: string; failureReason?: { failureMessage?: string } } } | null
+    )?.data;
+    if (d?.status === 'COMPLETED') return { status: 'completed', reason: null };
+    if (d?.status === 'FAILED') {
+      return { status: 'rejected', reason: d.failureReason?.failureMessage ?? 'FAILED' };
+    }
+    return { status: 'accepted', reason: null };
   }
 
   parseWebhook(input: WebhookInput): WebhookResult {

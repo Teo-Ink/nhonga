@@ -7,7 +7,10 @@
  * total computed on the phone matches the one computed at settlement is gone.
  */
 const CONFIG_FILES = '.config.(ts|js|cjs|mjs)$';
-const TEST_FILES = '.test.ts$';
+// Tests, and the end-to-end package (apps/e2e), which never ships.
+// Developer tooling that never ships in an image (migrate.mjs does, so it is not here).
+const TOOLING = 'scripts/write-openapi\\.mjs$';
+const TEST_FILES = '(\\.test\\.ts$|\\.spec\\.ts$|^apps/e2e/)';
 
 module.exports = {
   forbidden: [
@@ -43,7 +46,7 @@ module.exports = {
       severity: 'error',
       comment:
         'Production code importing a devDependency fails at runtime in the container. Tests and build-time configs (drizzle.config.ts, vitest.config.ts) are exempt - they never ship.',
-      from: { path: '^(apps|packages)', pathNot: [TEST_FILES, CONFIG_FILES] },
+      from: { path: '^(apps|packages)', pathNot: [TEST_FILES, CONFIG_FILES, TOOLING] },
       // type-only imports (import type ...) are erased by the compiler and never
       // exist in the runtime bundle, so importing @types/* as types is fine.
       to: { dependencyTypes: ['npm-dev'], dependencyTypesNot: ['type-only'] },

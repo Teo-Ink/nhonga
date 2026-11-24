@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { currentRequestId } from './request-context.js';
 
 /**
  * Every error leaves the API as application/problem+json (RFC 7807), which is
@@ -25,6 +26,19 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<Request>();
+
+    // An id in the URL that is not a UUID makes Postgres refuse the query
+    // (22P02). To the caller that is simply "no such thing", not a server
+    // fault: answer 404 and keep it out of the error alarms (PRE-01).
+    if (!(exception instanceof HttpException) && isMalformedId(exception)) {
+      res.status(HttpStatus.NOT_FOUND).type('application/problem+json').json({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: HttpStatus.NOT_FOUND,
+        instance: req.path,
+      });
+      return;
+    }
 
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -61,7 +75,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     } else {
       // Unexpected: log the real thing server-side, tell the client nothing.
       this.logger.error(
-        `Unhandled ${req.method} ${req.url}`,
+        `Unhandled ${req.method} ${req.path}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
     }
@@ -74,8 +88,20 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         title,
         status,
         ...(detail ? { detail } : {}),
-        instance: req.url,
+        instance: req.path,
         ...extra,
+        // Quoted by support to find the exact log lines of a failure.
+        ...(status >= 500 ? { requestId: currentRequestId() } : {}),
       });
   }
+}
+
+/** Postgres "invalid input syntax" (22P02), on the error or on its cause. */
+export function isMalformedId(e: unknown): boolean {
+  for (let cur: unknown = e, depth = 0; cur && depth < 4; depth++) {
+    if (typeof cur !== 'object') return false;
+    if ((cur as { code?: unknown }).code === '22P02') return true;
+    cur = (cur as { cause?: unknown }).cause;
+  }
+  return false;
 }

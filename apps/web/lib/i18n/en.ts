@@ -1,7 +1,8 @@
+import { CLASSIFIEDS_EN, withListingCopy } from './classifieds';
 import type { Dictionary } from './pt';
 
 // English — secondary locale, same shape as pt.ts.
-export const en: Dictionary = {
+const enBase: Dictionary = {
   common: {
     brand: 'Nhonga',
     search_placeholder: 'Search cars, homes, jobs…',
@@ -87,6 +88,7 @@ export const en: Dictionary = {
     link_design: 'Design system',
     link_terms: 'Terms of use',
     link_privacy: 'Privacy',
+    link_complaints: 'Complaints',
     payments: 'Payments: M-Pesa · e-Mola · Bank transfer · Visa · Cash on delivery',
     rights: '© 2026 Nhonga',
     demo_suffix: 'Demo store',
@@ -427,12 +429,6 @@ export const en: Dictionary = {
     payment_title: 'Payment',
     pay_phone_label: 'Number for payment',
     pay_phone_hint: 'You will get a confirmation request on this phone',
-    pay_mpesa: 'M-Pesa',
-    pay_mpesa_note: 'Vodacom',
-    pay_emola: 'e-Mola',
-    pay_emola_note: 'Movitel',
-    pay_cod: 'Cash on delivery',
-    pay_cod_note: 'Pay when you receive it',
     suggested: 'Suggested for your number',
     summary_title: 'Order summary',
     summary_items: 'Items',
@@ -625,13 +621,15 @@ export const en: Dictionary = {
     publish_free: 'Publish for free',
     publish_paid: 'Publish as featured',
     publishing: 'Publishing…',
+    publish_limit: 'You have reached today’s listing limit. Please try again tomorrow.',
     publish_error: 'Could not publish. Please try again.',
     shop_label: 'Your shop name',
     shop_name_ph: 'e.g. João’s Shop',
     shop_hint: 'Shown on your listings. You can change it later.',
     publishing_as: 'Publishing as',
-    shop_community: 'Community Listings',
-    shop_login: 'Sign in to publish to your shop',
+    login_note:
+      'To publish you need to sign in with your number. What you type is kept on this device.',
+    shop_login: 'Sign in now',
   },
   plans: {
     title: 'Plans & boosts',
@@ -729,6 +727,8 @@ export const en: Dictionary = {
     cta_quote: 'Request a quote on WhatsApp',
     wa_quote: 'Hi! I saw the “{title}” service on Nhonga and would like a quote.',
     show_number: 'Show number',
+    reveal_failed: 'Could not show the contact. Please try again.',
+    reveal_limited: 'You asked for many contacts recently. Try again later or send a message.',
     send_message: 'Send message',
     whatsapp_short: 'WhatsApp',
     call_short: 'Call',
@@ -1004,6 +1004,11 @@ export const en: Dictionary = {
       'To report a problem with a listing, use the “Report” button on the listing page.',
   },
   messages: {
+    block: 'Block',
+    unblock: 'Unblock',
+    block_confirm:
+      'Block this person? Neither of you can send messages and the conversation leaves your inbox.',
+    blocked_note: 'You blocked this conversation. No one can send messages.',
     title: 'Messages',
     demo_note: 'Demo: messaging is not wired yet. Nothing is sent or stored.',
     empty_title: 'You have no conversations yet',
@@ -1040,7 +1045,28 @@ export const en: Dictionary = {
     send_error: 'Could not send. Please try again.',
     thread_empty: 'No messages yet.',
   },
+  privacyAccount: {
+    title: 'Privacy and account',
+    export_title: 'Your data',
+    export_body:
+      'Download a copy of everything Nhonga holds about you: account, listings, messages sent, favourites, alerts and orders.',
+    export_cta: 'Download my data',
+    delete_title: 'Delete account',
+    delete_body: 'Deletion is immediate and cannot be undone.',
+    delete_item_listings: 'Your listings leave the site and your shop closes.',
+    delete_item_sessions:
+      'You are signed out everywhere. Your number becomes free for a new account.',
+    delete_item_kept:
+      'We keep only what the law or other people need: payments and orders (accounting), and messages and reviews already sent, now shown as “Deleted account”.',
+    confirm_word: 'ELIMINAR',
+    confirm_label: 'To confirm, type {word}',
+    delete_cta: 'Delete my account',
+    deleting: 'Deleting…',
+    delete_error: 'Could not delete the account. Please try again.',
+    link: 'Privacy and account',
+  },
   account: {
+    privacy_link: 'Privacy and account',
     title: 'My account',
     demo_note:
       'Demo: accounts are not wired yet. Orders are stored only on this device and browser.',
@@ -1262,3 +1288,5 @@ export const en: Dictionary = {
     status_note: 'Demo statuses — the order does not advance because the payment is not real.',
   },
 };
+
+export const en: Dictionary = withListingCopy(enBase, CLASSIFIEDS_EN);

@@ -50,6 +50,11 @@ export const checkoutIntent = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(now),
     paidAt: timestamp('paid_at', { withTimezone: true }),
+    /** Refund (P2-02, migration 0025): null | pending | refunded | failed. */
+    refundStatus: text('refund_status'),
+    refundAmountCents: bigint('refund_amount_cents', { mode: 'number' }),
+    refundReason: text('refund_reason'),
+    refundedAt: timestamp('refunded_at', { withTimezone: true }),
   },
   (table) => [
     unique('checkout_intent_gateway_ref_unique').on(table.gateway, table.gatewayRef),

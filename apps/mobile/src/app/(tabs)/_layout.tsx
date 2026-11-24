@@ -26,7 +26,11 @@ export default function TabsLayout() {
           title: 'Nhonga',
           tabBarLabel: 'Início',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color as string}
+            />
           ),
         }}
       />
@@ -35,7 +39,11 @@ export default function TabsLayout() {
         options={{
           title: 'Favoritos',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'heart' : 'heart-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'heart' : 'heart-outline'}
+              size={size}
+              color={color as string}
+            />
           ),
         }}
       />
@@ -47,7 +55,7 @@ export default function TabsLayout() {
             <Ionicons
               name={focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline'}
               size={size}
-              color={color}
+              color={color as string}
             />
           ),
         }}
@@ -57,7 +65,11 @@ export default function TabsLayout() {
         options={{
           title: 'Conta',
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={color as string}
+            />
           ),
         }}
       />

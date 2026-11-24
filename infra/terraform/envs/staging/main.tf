@@ -49,6 +49,18 @@ variable "web_image_tag" {
   default     = "latest"
   description = "The web image tag to deploy. The deploy pipeline advances it per release."
 }
+# Error tracking (P0-13). Empty = off. The DSN only allows sending events, so it
+# is configuration, not a secret.
+variable "sentry_dsn" {
+  type    = string
+  default = ""
+}
+
+variable "alarm_email" {
+  type        = string
+  default     = ""
+  description = "Email for CloudWatch alarm notifications (OPS-02). Empty: subscribe later."
+}
 variable "certificate_arn" {
   type        = string
   default     = ""
@@ -107,6 +119,12 @@ module "secrets" {
   db_name     = module.database.db_name
   db_username = module.database.username
   db_password = module.database.password
+
+  # Simulated SMS shows the login code on screen: limit sign-in to the team (P0-05).
+  otp_dev_allowlist = true
+
+  # AI assistant: placeholder until the owner puts the key (runbooks/segredos.md).
+  optional = ["ANTHROPIC_API_KEY"]
 }
 
 module "alb" {
@@ -187,39 +205,25 @@ module "api" {
     CHECKOUT_MODE  = "mock"
     SMS_MODE       = "mock"
     LOG_LEVEL      = "debug"
+    APP_VERSION    = var.image_tag
+    SENTRY_DSN     = var.sentry_dsn
+    MEDIA_BUCKET   = module.media.bucket
+    MEDIA_CDN_URL  = "https://${module.media.cdn_domain}"
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
 
-    # The demo uses the real assistant: cap the monthly spend (AI-00).
+    # The demo uses the real assistant: cap the monthly spend (AI-01).
     ASSISTANT_MONTHLY_TOKEN_CAP = "500000"
   }
-  secret_arns = {
-    DATABASE_URL      = module.secrets.database_url_arn
-    ANTHROPIC_API_KEY = aws_secretsmanager_secret.anthropic_api_key.arn
-  }
-}
-
-# ── AI assistant key (AI-00) ────────────────────────────────────────────────
-# Container plus a placeholder written once, so the API task starts before the
-# owner puts the real key (the API ignores anything not starting "sk-ant-").
-# The owner's value is never overwritten: the placeholder runs only when the
-# container is created. AI-01 moves both into module.secrets.
-resource "aws_secretsmanager_secret" "anthropic_api_key" {
-  name                    = "${local.project}-${local.env}/ANTHROPIC_API_KEY"
-  description             = "ANTHROPIC_API_KEY for the ${local.env} API (optional, set by the owner)"
-  recovery_window_in_days = 7
-}
-
-resource "terraform_data" "anthropic_api_key_placeholder" {
-  triggers_replace = [aws_secretsmanager_secret.anthropic_api_key.arn]
-  provisioner "local-exec" {
-    command = "aws secretsmanager put-secret-value --region \"$REGION\" --secret-id \"$ID\" --secret-string definir-chave >/dev/null"
-    environment = {
-      REGION = var.region
-      ID     = aws_secretsmanager_secret.anthropic_api_key.arn
-    }
-  }
+  secret_arns = merge(
+    {
+      DATABASE_URL      = module.secrets.database_url_arn
+      ADMIN_API_TOKEN   = module.secrets.admin_api_token_arn
+      OTP_DEV_ALLOWLIST = module.secrets.otp_dev_allowlist_arn
+    },
+    module.secrets.optional_arns,
+  )
 }
 
 module "web" {
@@ -252,7 +256,24 @@ module "web" {
 
     # The stand-in payment page for CHECKOUT_MODE=mock on the api.
     CHECKOUT_SIMULATOR = "1"
+
+    # Photos come from the media CDN (P1-03); the CSP must allow it.
+    IMAGE_HOSTS = module.media.cdn_domain
   }
+}
+
+module "alarms" {
+  source                    = "../../modules/alarms"
+  project                   = local.project
+  environment               = local.env
+  alarm_email               = var.alarm_email
+  alb_arn_suffix            = module.alb.arn_suffix
+  target_group_arn_suffixes = { api = module.alb.target_group_arn_suffix, web = module.alb.web_target_group_arn_suffix }
+  cluster_name              = aws_ecs_cluster.this.name
+  service_names             = ["api", "web"]
+  db_identifier             = module.database.identifier
+  db_allocated_storage_gb   = module.database.allocated_storage_gb
+  api_log_group             = module.api.log_group
 }
 
 output "alb_dns_name" { value = module.alb.dns_name }
@@ -261,3 +282,31 @@ output "api_url" { value = "http://${module.alb.dns_name}:${local.api_http_port}
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
 output "web_ecr_repository_url" { value = aws_ecr_repository.web.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
+
+# Listing photos in S3 behind CloudFront (P1-03, P1-04).
+module "media" {
+  source         = "../../modules/media"
+  project        = local.project
+  environment    = local.env
+  task_role_name = module.api.task_role_name
+}
+
+# Web application firewall on the load balancer (P2-05).
+module "waf" {
+  source      = "../../modules/waf"
+  project     = local.project
+  environment = local.env
+  alb_arn     = module.alb.arn
+}
+
+# The assistant key was created at the top level by the demo hotfix (AI-00):
+# move it into the module instead of recreating it (keeps the owner's value).
+moved {
+  from = aws_secretsmanager_secret.anthropic_api_key
+  to   = module.secrets.aws_secretsmanager_secret.optional["ANTHROPIC_API_KEY"]
+}
+
+moved {
+  from = terraform_data.anthropic_api_key_placeholder
+  to   = module.secrets.terraform_data.put_optional_placeholder["ANTHROPIC_API_KEY"]
+}

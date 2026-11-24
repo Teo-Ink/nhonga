@@ -5,6 +5,7 @@ import { IconSearch } from '../icons';
 import { useSession } from '../auth/SessionProvider';
 import { WalletBar } from './WalletBar';
 import { formatPrice } from '../../lib/format';
+import { useActionKey } from '../../lib/action-key';
 
 interface MineItem {
   id: string;
@@ -47,6 +48,7 @@ interface MineResponse {
 // Client component: it reads the session, loads /api/mine/products, and lets the
 // seller edit or remove each listing. Falls back to sign-in / empty states.
 export function MyShopPanel() {
+  const payKey = useActionKey();
   const dict = useDict();
   const t = dict.sell;
   const dash = dict.dash;
@@ -135,7 +137,10 @@ export function MyShopPanel() {
     try {
       const res = await fetch('/api/wallet/boost', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          ...payKey.headers(JSON.stringify({ productId, planCode })),
+        },
         body: JSON.stringify({ productId, planCode }),
       });
       const d = await res.json();
@@ -143,6 +148,7 @@ export function MyShopPanel() {
         setBoostMsg(d.detail ?? d.message ?? dash.promote_fail);
         return;
       }
+      payKey.done();
       setBoostFor(null);
       setBoostMsg(`${dash.promoted} (${d.planName}).`);
       setWalletSignal((s) => s + 1);

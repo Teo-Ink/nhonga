@@ -168,12 +168,13 @@ button {
   line-height: 1;
   padding: 4px 3px;
   color: inherit;
-  opacity: 0.5;
+  /* 0.72 keeps the inactive language at ≥ 4.5:1 on the header (WCAG AA). */
+  opacity: 0.72;
   cursor: pointer;
   border-radius: var(--radius-sm);
 }
 .langsel__opt:hover {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .langsel__opt.is-on {
   opacity: 1;
@@ -259,7 +260,7 @@ button {
   padding: var(--space-3);
 }
 .trust__ico {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   flex: 0 0 auto;
 }
 .trust__t {
@@ -670,7 +671,7 @@ button {
   border-radius: var(--radius-md);
 }
 .deliv svg {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 .desc {
   font-size: var(--text-sm);
@@ -2090,7 +2091,7 @@ a.seller:focus-visible {
   padding: var(--space-2) var(--space-3);
 }
 .ds__note svg {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   flex: 0 0 auto;
 }
 .ds__h2 {
@@ -2805,7 +2806,7 @@ a.seller:focus-visible {
   padding: var(--space-2) 0;
 }
 .assurance > svg {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   flex: 0 0 auto;
   margin-top: 2px;
 }
@@ -3533,7 +3534,7 @@ a.seller:focus-visible {
   color: var(--text);
 }
 .herocard__benefits svg {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   flex: 0 0 auto;
 }
 
@@ -5609,12 +5610,14 @@ a.seller:focus-visible {
   text-decoration: none;
 }
 .contactbtn--wa {
-  background: #25d366;
+  /* WhatsApp's dark green: white text on the bright #25d366 is 2:1, this is
+     7.7:1 (WCAG AA). */
+  background: #075e54;
   color: #ffffff;
   border: none;
 }
 .contactbtn--wa:hover {
-  background: #1eb457;
+  background: #054a42;
 }
 .contactbtn--call {
   background: var(--brand-solid);
@@ -5731,7 +5734,7 @@ a.seller:focus-visible {
 }
 .spotbox__cta {
   flex-shrink: 0;
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   font-weight: 600;
   white-space: nowrap;
 }
@@ -5783,7 +5786,7 @@ a.seller:focus-visible {
   padding: var(--space-4);
 }
 .spotwhy__icon {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 .spotwhy__body strong {
   display: block;
@@ -5938,7 +5941,7 @@ a.seller:focus-visible {
   font-size: var(--text-xs);
 }
 .review__link {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 .reviewform {
   margin-top: var(--space-4);
@@ -5977,7 +5980,7 @@ a.seller:focus-visible {
 }
 .reviewform__msg {
   font-size: var(--text-sm);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 .reviewform__msg--err {
   color: var(--color-danger-600, var(--danger));
@@ -6203,7 +6206,7 @@ a.seller:focus-visible {
   height: 56px;
   border-radius: 50%;
   background: var(--surface-sunken);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   margin-bottom: var(--space-3);
 }
 .refer__label {
@@ -6245,7 +6248,7 @@ a.seller:focus-visible {
   height: 72px;
   border-radius: 50%;
   background: var(--surface-sunken);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   margin: var(--space-4) auto var(--space-3);
 }
 .invite__body {
@@ -6296,7 +6299,7 @@ a.seller:focus-visible {
   font-size: var(--text-xs);
 }
 .storestat--ok strong {
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 
 /* ── Safety centre (B) ──────────────────────────────────────────── */
@@ -6318,7 +6321,7 @@ a.seller:focus-visible {
   gap: 8px;
   font-size: var(--text-lg);
   margin-bottom: var(--space-2);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
 }
 .safetylist {
   margin: 0;
@@ -6358,7 +6361,7 @@ a.seller:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   margin-bottom: 4px;
 }
 .aihelper__hint {
@@ -6473,7 +6476,7 @@ a.seller:focus-visible {
   height: 56px;
   border-radius: 50%;
   background: var(--surface-sunken);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   transition:
     background var(--dur-base) var(--ease-out),
     color var(--dur-base) var(--ease-out),
@@ -6554,7 +6557,7 @@ a.seller:focus-visible {
 .spotbooked__title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   display: block;
   margin-bottom: 4px;
 }
@@ -6672,7 +6675,7 @@ a.seller:focus-visible {
 }
 .reportbox__done {
   margin-top: var(--space-3);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   font-size: var(--text-sm);
 }
 
@@ -6958,7 +6961,7 @@ a.seller:focus-visible {
   height: 56px;
   border-radius: 50%;
   background: var(--surface-sunken);
-  color: var(--brand-500);
+  color: var(--brand); /* text on sand needs green-700 for 4.5:1 */
   margin-bottom: var(--space-2);
 }
 .howstep__title {

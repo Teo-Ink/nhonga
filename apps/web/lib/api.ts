@@ -1,6 +1,8 @@
 // Server-side data access for the storefront. Runs in Next server components,
 // so it talks to the API over the private network, never from the browser.
 
+import { forwardedFor } from './client-ip';
+
 const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 
 export interface Image {
@@ -19,9 +21,9 @@ export interface VendorSummary {
   isPro?: boolean;
   ratingAvg: number | null;
   ratingCount: number;
-  /** Contact channels — only populated on the product detail; null when hidden. */
-  whatsapp?: string | null;
-  phone?: string | null;
+  /** Channels the seller offers, without the digits (PRIV-01): the numbers
+   *  come from /api/contact when the visitor asks. Detail and shop only. */
+  contact?: { whatsapp: boolean; phone: boolean; hint: string | null };
 }
 export interface ListingStats {
   views: number;
@@ -92,8 +94,8 @@ async function get<T>(path: string): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt++) {
     let res: Response;
     try {
-      res = await fetch(`${API_URL}${path}`, {
-        headers: { 'accept-language': 'pt' },
+      res = await fetch(`${API_URL}/v1${path}`, {
+        headers: { 'accept-language': 'pt', ...(await forwardedFor()) },
         // Always fresh in the local test env; production would cache per D-09.
         cache: 'no-store',
       });
@@ -238,8 +240,7 @@ export interface ShopDetail {
   memberSince: string;
   activeCount: number;
   soldCount: number;
-  whatsapp: string | null;
-  phone: string | null;
+  contact?: { whatsapp: boolean; phone: boolean; hint: string | null };
 }
 
 /** Public shop detail (header, trust, contact, stats), or null. */

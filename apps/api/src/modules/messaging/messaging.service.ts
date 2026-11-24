@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, desc, eq, gt, inArray, isNull, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
-import { conversation, message } from '../../db/schema/messaging.js';
+import { conversation, message, userBlock } from '../../db/schema/messaging.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { product } from '../../db/schema/catalog.js';
 import { appUser } from '../../db/schema/identity.js';
@@ -13,7 +13,7 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 export class MessagingError extends Error {
   constructor(
     message: string,
-    readonly code: 'invalid_input' | 'not_found' | 'forbidden',
+    readonly code: 'invalid_input' | 'not_found' | 'forbidden' | 'blocked',
   ) {
     super(message);
     this.name = 'MessagingError';
@@ -79,6 +79,7 @@ export class MessagingService {
         .limit(1)
     )[0];
     if (!shop) throw new MessagingError('shop not found', 'not_found');
+    await this.assertNotBlocked(user.id, shop.id);
 
     let productId: string | null = null;
     let productTitle: string | null = null;
@@ -133,7 +134,70 @@ export class MessagingService {
     const body = bodyRaw.trim();
     if (body.length === 0) throw new MessagingError('empty message', 'invalid_input');
     const { conv, role } = await this.participant(id, user);
+    await this.assertNotBlocked(conv.buyerUserId, conv.vendorId);
     await this.post(id, user.id, body, { isBuyer: role === 'buyer', vendorId: conv.vendorId });
+    return { ok: true };
+  }
+
+  // ── Blocks (P0-18) ─────────────────────────────────────────────────────────
+
+  /** Either side blocked the other: no new conversation, no new message. */
+  private async assertNotBlocked(buyerUserId: string, vendorId: string): Promise<void> {
+    const rows = await this.db
+      .select({ id: userBlock.id })
+      .from(userBlock)
+      .where(
+        or(
+          and(eq(userBlock.blockerUserId, buyerUserId), eq(userBlock.blockedVendorId, vendorId)),
+          and(
+            eq(userBlock.blockedUserId, buyerUserId),
+            inArray(
+              userBlock.blockerUserId,
+              this.db
+                .select({ id: vendorUser.userId })
+                .from(vendorUser)
+                .where(eq(vendorUser.vendorId, vendorId)),
+            ),
+          ),
+        ),
+      )
+      .limit(1);
+    if (rows.length > 0) {
+      throw new MessagingError('Esta conversa foi bloqueada.', 'blocked');
+    }
+  }
+
+  /** Block the other side of a conversation: the shop (as buyer) or the buyer
+   *  (as seller). The conversation disappears from the blocker's inbox. */
+  async block(id: string, token: string | null): Promise<{ ok: true }> {
+    const user = await this.me(token);
+    const { conv, role } = await this.participant(id, user);
+    await this.db
+      .insert(userBlock)
+      .values({
+        id: randomUUID(),
+        blockerUserId: user.id,
+        ...(role === 'buyer'
+          ? { blockedVendorId: conv.vendorId }
+          : { blockedUserId: conv.buyerUserId }),
+      })
+      .onConflictDoNothing();
+    return { ok: true };
+  }
+
+  async unblock(id: string, token: string | null): Promise<{ ok: true }> {
+    const user = await this.me(token);
+    const { conv, role } = await this.participant(id, user);
+    await this.db
+      .delete(userBlock)
+      .where(
+        and(
+          eq(userBlock.blockerUserId, user.id),
+          role === 'buyer'
+            ? eq(userBlock.blockedVendorId, conv.vendorId)
+            : eq(userBlock.blockedUserId, conv.buyerUserId),
+        ),
+      );
     return { ok: true };
   }
 
@@ -202,65 +266,59 @@ export class MessagingService {
       vids.length > 0
         ? or(eq(conversation.buyerUserId, user.id), inArray(conversation.vendorId, vids))
         : eq(conversation.buyerUserId, user.id);
+    // Conversations with someone this user blocked are hidden from them.
+    const notBlocked = sql`not exists (
+      select 1 from user_block b
+      where b.blocker_user_id = ${user.id}
+        and (b.blocked_vendor_id = ${conversation.vendorId}
+             or b.blocked_user_id = ${conversation.buyerUserId}))`;
+    const isBuyer = sql`${conversation.buyerUserId} = ${user.id}`;
 
+    // One query: last message and unread count as correlated subqueries (they
+    // use message_conversation_idx), instead of two queries per conversation.
     const rows = await this.db
       .select({
         id: conversation.id,
-        vendorId: conversation.vendorId,
         buyerUserId: conversation.buyerUserId,
         productTitle: conversation.productTitle,
-        productId: conversation.productId,
         lastMessageAt: conversation.lastMessageAt,
-        buyerLastReadAt: conversation.buyerLastReadAt,
-        sellerLastReadAt: conversation.sellerLastReadAt,
         vendorName: vendor.displayName,
         buyerName: appUser.displayName,
+        lastMessage: sql<string | null>`(
+          select m.body from message m where m.conversation_id = ${conversation.id}
+          order by m.created_at desc limit 1)`,
+        unread: sql<number>`(
+          select count(*)::int from message m
+          where m.conversation_id = ${conversation.id}
+            and m.sender_user_id <> ${user.id}
+            and m.created_at > coalesce(
+              case when ${isBuyer} then ${conversation.buyerLastReadAt}
+                   else ${conversation.sellerLastReadAt} end,
+              '-infinity'::timestamptz))`,
       })
       .from(conversation)
       .innerJoin(vendor, eq(conversation.vendorId, vendor.id))
       .innerJoin(appUser, eq(conversation.buyerUserId, appUser.id))
-      .where(cond)
+      .where(and(cond, notBlocked))
       .orderBy(desc(conversation.lastMessageAt))
       .limit(100);
 
-    const items: ConversationDto[] = [];
     let unreadTotal = 0;
-    for (const r of rows) {
+    const items: ConversationDto[] = rows.map((r) => {
       const role: 'buyer' | 'seller' = r.buyerUserId === user.id ? 'buyer' : 'seller';
-      const lastRead = role === 'buyer' ? r.buyerLastReadAt : r.sellerLastReadAt;
-      const last = (
-        await this.db
-          .select({ body: message.body })
-          .from(message)
-          .where(eq(message.conversationId, r.id))
-          .orderBy(desc(message.createdAt))
-          .limit(1)
-      )[0];
-      const unread = (
-        await this.db
-          .select({ n: sql<number>`count(*)::int` })
-          .from(message)
-          .where(
-            and(
-              eq(message.conversationId, r.id),
-              ne(message.senderUserId, user.id),
-              lastRead ? gt(message.createdAt, lastRead) : sql`true`,
-            ),
-          )
-      )[0];
-      const n = unread?.n ?? 0;
+      const n = Number(r.unread ?? 0);
       unreadTotal += n;
-      items.push({
+      return {
         id: r.id,
         counterpart: role === 'buyer' ? r.vendorName : r.buyerName,
         productTitle: r.productTitle,
         productSlug: null,
-        lastMessage: last?.body ?? null,
-        lastMessageAt: r.lastMessageAt.toISOString(),
+        lastMessage: r.lastMessage ?? null,
+        lastMessageAt: new Date(r.lastMessageAt).toISOString(),
         unread: n,
         role,
-      });
-    }
+      };
+    });
     return { items, unread: unreadTotal };
   }
 

@@ -1,3 +1,4 @@
+import { preload } from 'react-dom';
 import type { Dictionary } from '../../lib/i18n/index';
 import type { District, Province } from '../../lib/api';
 import { HeroVideo } from './HeroVideo';
@@ -17,6 +18,10 @@ export function HomeHeroSearch({
   provinces?: Province[];
   districts?: District[];
 }) {
+  // The hero still is the largest thing on the phone screen (LCP) but it is a
+  // CSS background, which the browser only discovers after the stylesheet.
+  // Preloading it starts the download with the HTML (PRE-04).
+  preload('/hero/market-poster.webp', { as: 'image', fetchPriority: 'high' });
   return (
     <section className="herofind" aria-label={t.home.search_title}>
       {/* Mozambique-reality still (Maputo municipal market). Sits under the video
@@ -26,11 +31,15 @@ export function HomeHeroSearch({
         className="herofind__photo"
         aria-hidden="true"
         style={{
-          backgroundImage: 'url("https://live.staticflickr.com/2618/3858546840_da8a76b450_b.jpg")',
+          // Local still (a frame of the hero video, ~75 KB WebP) instead of a
+          // hotlinked photo: works under the CSP and costs little on mobile.
+          backgroundImage: 'url("/hero/market-poster.webp")',
         }}
       />
       <HeroVideo
         src="/hero/market.mp4"
+        webmSrc="/hero/market.webm"
+        poster="/hero/market-poster.webp"
         pauseLabel={t.home.hero_pause}
         playLabel={t.home.hero_play}
       />

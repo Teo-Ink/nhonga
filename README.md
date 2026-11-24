@@ -1,5 +1,7 @@
 # Nhonga — Multi-Vendor Marketplace for Mozambique
 
+> **Comece aqui:** [arquitectura actual](docs/ARQUITECTURA.md) · [rotas da API](docs/api/rotas.md) · [desenvolvimento local](docs/local-dev.md) · [auditoria de pré-produção](docs/audit/RELATORIO-EXECUTIVO.md)
+
 > **Name:** "Nhonga" — chosen 2026-09-16, replacing the earlier codename "Banca". Not yet
 > trademark-cleared — see [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) OQ-1. Still cheap to change:
 > it lives in one tokens file and the i18n string bundles.
@@ -35,17 +37,17 @@ mobile-money-first, and engineered for 3G connectivity on low-end Android hardwa
 
 ## Phase 2 deliverables
 
-| Document                                                                               | What it covers                                                                |
-| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [`00-stack-rationale.md`](docs/phase-2-architecture/00-stack-rationale.md)             | Every technology choice justified, with rejections recorded                   |
-| [`01-system-architecture.md`](docs/phase-2-architecture/01-system-architecture.md)     | Context and module diagrams, request paths, outbox, caching, failure modes    |
-| [`02-data-model.md`](docs/phase-2-architecture/02-data-model.md)                       | ERD, core DDL, snapshots, audit log, encryption, retention                    |
-| [`03-api-contract.md`](docs/phase-2-architecture/03-api-contract.md)                   | Conventions, rate limits, endpoint notes                                      |
-| [`apps/api/openapi.yaml`](apps/api/openapi.yaml)                                       | The machine-readable contract — 20 endpoints, 30 schemas                      |
-| [`04-payments-architecture.md`](docs/phase-2-architecture/04-payments-architecture.md) | Provider interface, mock design, **production swap runbook**                  |
-| [`05-security-architecture.md`](docs/phase-2-architecture/05-security-architecture.md) | Threat model, OWASP coverage, Mozambican regulatory flags                     |
-| [`06-infrastructure.md`](docs/phase-2-architecture/06-infrastructure.md)               | Terraform layout, CI/CD, rollback, cost estimate, store checklists            |
-| [Architecture overview](https://claude.ai/artifact/K4HqizwEDR7eATwUKbqTDe)             | Shareable summary — diagrams, the production swap runbook, cost, and blockers |
+| Document                                                                               | What it covers                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`00-stack-rationale.md`](docs/phase-2-architecture/00-stack-rationale.md)             | Every technology choice justified, with rejections recorded                                                                                                                                   |
+| [`01-system-architecture.md`](docs/phase-2-architecture/01-system-architecture.md)     | Context and module diagrams, request paths, outbox, caching, failure modes                                                                                                                    |
+| [`02-data-model.md`](docs/phase-2-architecture/02-data-model.md)                       | ERD, core DDL, snapshots, audit log, encryption, retention                                                                                                                                    |
+| [`03-api-contract.md`](docs/phase-2-architecture/03-api-contract.md)                   | Conventions, rate limits, endpoint notes                                                                                                                                                      |
+| [`apps/api/openapi.yaml`](apps/api/openapi.yaml)                                       | The machine-readable contract, **generated from the code** — 88 operations, 31 request schemas (the Phase 2 design document is kept in `docs/phase-2-architecture/openapi-design-fase2.yaml`) |
+| [`04-payments-architecture.md`](docs/phase-2-architecture/04-payments-architecture.md) | Provider interface, mock design, **production swap runbook**                                                                                                                                  |
+| [`05-security-architecture.md`](docs/phase-2-architecture/05-security-architecture.md) | Threat model, OWASP coverage, Mozambican regulatory flags                                                                                                                                     |
+| [`06-infrastructure.md`](docs/phase-2-architecture/06-infrastructure.md)               | Terraform layout, CI/CD, rollback, cost estimate, store checklists                                                                                                                            |
+| [Architecture overview](https://claude.ai/artifact/K4HqizwEDR7eATwUKbqTDe)             | Shareable summary — diagrams, the production swap runbook, cost, and blockers                                                                                                                 |
 
 ## Phase 3a deliverables — the money core
 

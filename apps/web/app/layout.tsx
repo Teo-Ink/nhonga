@@ -1,5 +1,7 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Inter, Ubuntu } from 'next/font/google';
+import { headers } from 'next/headers';
+import localFont from 'next/font/local';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 import { PromoBar } from '../components/PromoBar';
@@ -9,6 +11,7 @@ import { DictProvider } from '../components/i18n/DictProvider';
 import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
 import { getDictionary } from '../lib/i18n/index';
+import { isIndexable, siteOrigin } from '../lib/site';
 import './globals.css';
 import './ux.css';
 
@@ -16,33 +19,60 @@ import './ux.css';
 // and Ubuntu for headings/display (warmth + local character). next/font
 // self-hosts both (no runtime request to Google) and exposes them via CSS
 // variables that tokens.css maps to --font-sans / --font-display.
-const inter = Inter({
-  subsets: ['latin'],
+// Self-hosted from app/fonts (Fontsource, latin subset, which covers
+// Portuguese), so builds need no network access to Google Fonts (WEB-03).
+// Licences: app/fonts/LICENSE-*.txt.
+const inter = localFont({
+  src: './fonts/inter-latin-wght-normal.woff2',
+  weight: '100 900',
   display: 'swap',
   variable: '--font-inter',
 });
-const ubuntu = Ubuntu({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const ubuntu = localFont({
+  src: [
+    { path: './fonts/ubuntu-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/ubuntu-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/ubuntu-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-ubuntu',
 });
 
-export const metadata = {
-  title: 'Nhonga — Compre e venda em Moçambique',
-  description:
-    'O mercado online de Moçambique. Pague com M-Pesa, e-Mola, transferência bancária, Visa ou na entrega.',
-  manifest: '/manifest.webmanifest',
-  applicationName: 'Nhonga',
-  appleWebApp: { capable: true, statusBarStyle: 'default' as const, title: 'Nhonga' },
-  icons: {
-    icon: [
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-    ],
-    apple: [{ url: '/icons/icon-180.png', sizes: '180x180' }],
-  },
-};
+const SITE_TITLE = 'Nhonga — Compre e venda em Moçambique';
+const SITE_DESCRIPTION =
+  'Classificados de Moçambique: compre e venda viaturas, imóveis, telemóveis e muito mais perto de si.';
+
+// Site-wide defaults, including the Open Graph card used when any page is
+// shared on WhatsApp or Facebook (WEB-02). Pages override title, description
+// and image. Outside production, every page is marked noindex.
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await siteOrigin();
+  return {
+    metadataBase: new URL(origin),
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    manifest: '/manifest.webmanifest',
+    applicationName: 'Nhonga',
+    appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Nhonga' },
+    icons: {
+      icon: [
+        { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [{ url: '/icons/icon-180.png', sizes: '180x180' }],
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'Nhonga',
+      locale: 'pt_MZ',
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: 'Nhonga' }],
+    },
+    twitter: { card: 'summary', title: SITE_TITLE, description: SITE_DESCRIPTION },
+    ...(isIndexable() ? {} : { robots: { index: false, follow: false } }),
+  };
+}
 
 export const viewport = {
   // Browser/status bar = the header colour (tokens.css --header-bg).
@@ -58,12 +88,14 @@ const bootScript = `(function(){try{var d=document.documentElement;var t=localSt
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getDictionary();
+  // Per-request CSP nonce from middleware.ts (SEC-10).
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     // The no-flash script sets data-theme on <html> before hydration, so the
     // server markup intentionally differs from the client here.
     <html lang={locale} className={`${inter.variable} ${ubuntu.variable}`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
       {/* Browser extensions (e.g. ColorZilla's cz-shortcut-listen) mutate body
           before hydration; suppress the resulting attribute mismatch. */}

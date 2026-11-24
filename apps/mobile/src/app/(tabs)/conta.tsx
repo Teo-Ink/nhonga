@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import {
   boostListing,
   clearToken,
+  deleteAccount,
   formatMZN,
   getWalletPlans,
   me,
@@ -29,6 +30,7 @@ import {
   type BoostPlan,
   type MineResponse,
 } from '@/lib/api';
+import { ActionKeys } from '@/lib/action-key';
 import { registerForPush, unregisterForPush } from '@/lib/push';
 import { useFavorites } from '@/lib/favorites';
 import { WalletCard } from '@/components/WalletCard';
@@ -38,6 +40,7 @@ type Step = 'phone' | 'code' | 'done';
 type PushState = 'unknown' | 'on' | 'off' | 'unavailable';
 
 export default function AccountScreen() {
+  const payKeys = useRef(new ActionKeys());
   const router = useRouter();
   const { count: favCount } = useFavorites();
   const [step, setStep] = useState<Step>('phone');
@@ -67,7 +70,12 @@ export default function AccountScreen() {
   async function doBoost(productId: string, planCode: string) {
     setBoostBusy(productId);
     try {
-      const r = await boostListing(productId, planCode);
+      const r = await boostListing(
+        productId,
+        planCode,
+        payKeys.current.keyFor(`boost:${productId}:${planCode}`),
+      );
+      payKeys.current.done();
       setBoostFor(null);
       setWalletSignal((s) => s + 1);
       loadMine();
@@ -176,6 +184,31 @@ export default function AccountScreen() {
     }
   }
 
+  // Account deletion from inside the app (P0-06; required by both stores).
+  function onDeleteAccount() {
+    Alert.alert(
+      'Eliminar a conta',
+      'A eliminação é imediata e não pode ser desfeita. Os seus anúncios saem do Nhonga e sai de todos os dispositivos. Guardamos só pagamentos e encomendas, por obrigação contabilística.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: () => {
+            deleteAccount()
+              .then(async () => {
+                await onSignOut();
+                Alert.alert('Conta eliminada', 'A sua conta foi eliminada.');
+              })
+              .catch((e: unknown) =>
+                Alert.alert('Eliminar a conta', e instanceof Error ? e.message : 'Tente de novo.'),
+              );
+          },
+        },
+      ],
+    );
+  }
+
   async function onSignOut() {
     await unregisterForPush();
     await clearToken();
@@ -228,7 +261,7 @@ export default function AccountScreen() {
             </Text>
             <Text style={styles.notifyHint}>
               {push === 'on'
-                ? 'Avisamos-te por notificação e SMS quando surgir algo nas tuas pesquisas guardadas.'
+                ? 'Avisamos por notificação e SMS quando surgir algo nas suas pesquisas guardadas.'
                 : push === 'unavailable'
                   ? 'As notificações push funcionam na app instalada; aqui usamos SMS.'
                   : 'Recebe uma notificação quando surgirem novos anúncios para ti.'}
@@ -253,7 +286,7 @@ export default function AccountScreen() {
               <Stat n={stats?.contacts ?? 0} label="Contactos" />
             </View>
             {items.length === 0 ? (
-              <Text style={styles.muted}>Ainda não tens anúncios.</Text>
+              <Text style={styles.muted}>Ainda não tem anúncios.</Text>
             ) : (
               items.map((it) => {
                 const rowBusy = busyId === it.id;
@@ -400,6 +433,14 @@ export default function AccountScreen() {
         <Pressable style={styles.secondary} onPress={onSignOut}>
           <Text style={styles.secondaryText}>Terminar sessão</Text>
         </Pressable>
+        <Pressable
+          style={styles.secondary}
+          onPress={onDeleteAccount}
+          accessibilityRole="button"
+          accessibilityHint="Elimina a conta de forma permanente"
+        >
+          <Text style={[styles.secondaryText, { color: '#b42318' }]}>Eliminar a minha conta</Text>
+        </Pressable>
       </ScrollView>
     );
   }
@@ -407,7 +448,7 @@ export default function AccountScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Entrar ou criar conta</Text>
-      <Text style={styles.muted}>Usamos o teu telemóvel e um código para confirmar.</Text>
+      <Text style={styles.muted}>Usamos o seu telemóvel e um código para confirmar.</Text>
 
       {step === 'phone' ? (
         <>
