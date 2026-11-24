@@ -13,16 +13,16 @@
   },
   "dependencies": {
     "@nhonga/shared": "workspace:*",
-    "lucide-react": "^1.51.0",
+    "lucide-react": "^1.77.0",
     "next": "15.5.29",
-    "react": "19.1.10",
-    "react-dom": "19.1.10"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@types/node": "20.16.11",
-    "@types/react": "19.1.1",
-    "@types/react-dom": "19.1.1",
-    "typescript": "5.6.3",
+    "@types/node": "20.19.43",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3",
     "vitest": "4.1.12"
   }
 }
