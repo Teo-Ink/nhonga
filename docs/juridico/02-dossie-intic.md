@@ -131,17 +131,17 @@ _(Anexar o diagrama de `docs/` do repositório.)_
 
 ## Requisitos que o regulamento impõe depois da licença
 
-| Requisito                                                          | Estado no Nhonga                                   | O que falta                                                                             |
-| ------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Representante legal em Moçambique, com contactos públicos (art. 6) | Empresa moçambicana                                | Publicar os contactos nos Termos                                                        |
-| Termos e regras de moderação em linguagem simples (art. 7)         | Feito (rascunho)                                   | Aprovação do advogado                                                                   |
-| Notificação prévia do tratamento de dados pessoais (art. 38)       | Por fazer                                          | Perguntar ao INTIC como se faz                                                          |
-| Registos de acesso guardados 5 anos (art. 42)                      | **Não cumpre:** os registos técnicos ficam 30 dias | Engenharia: arquivo de 5 anos (confirmar primeiro o que conta como «registo de acesso») |
-| Sistema de reclamações, guardadas 5 anos (art. 45)                 | Parcial (denúncias na plataforma)                  | Definir canal de reclamações e conservação                                              |
-| Contratos guardados 10 anos (art. 45)                              | Registos de pagamento ficam guardados              | Confirmar o prazo com o advogado                                                        |
-| Sistemas de gestão ISO/IEC 20000 e 27001 (art. 45)                 | **Não tem**                                        | Perguntar ao INTIC se é exigido a startups e em que prazo                               |
-| Comunicar alterações em 15/30 dias (art. 46)                       | —                                                  | Procedimento interno                                                                    |
-| Iniciar actividade em 3 meses após a licença (art. 49)             | —                                                  | Planear a data do pedido                                                                |
+| Requisito                                                          | Estado no Nhonga                                                                                      | O que falta                                                            |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Representante legal em Moçambique, com contactos públicos (art. 6) | Empresa moçambicana                                                                                   | Publicar os contactos nos Termos                                       |
+| Termos e regras de moderação em linguagem simples (art. 7)         | Feito (rascunho)                                                                                      | Aprovação do advogado                                                  |
+| Notificação prévia do tratamento de dados pessoais (art. 38)       | Por fazer                                                                                             | Perguntar ao INTIC como se faz                                         |
+| Registos de acesso guardados 5 anos (art. 42)                      | **Preparado para produção:** registos de acesso do balanceador de carga em S3 durante 5 anos (LEG-02) | Confirmar com o INTIC se estes registos bastam; aplicar com a produção |
+| Sistema de reclamações, guardadas 5 anos (art. 45)                 | **Feito:** página `/reclamacoes`, referência por reclamação, registo sem eliminação (LEG-02)          | Fixar o prazo de resposta; ver `runbooks/reclamacoes.md`               |
+| Contratos guardados 10 anos (art. 45)                              | Registos de pagamento ficam guardados                                                                 | Confirmar o prazo com o advogado                                       |
+| Sistemas de gestão ISO/IEC 20000 e 27001 (art. 45)                 | **Não tem**                                                                                           | Perguntar ao INTIC se é exigido a startups e em que prazo              |
+| Comunicar alterações em 15/30 dias (art. 46)                       | —                                                                                                     | Procedimento interno                                                   |
+| Iniciar actividade em 3 meses após a licença (art. 49)             | —                                                                                                     | Planear a data do pedido                                               |
 
 ## Modelo de requerimento
 

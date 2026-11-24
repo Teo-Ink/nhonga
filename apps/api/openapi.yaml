@@ -1352,6 +1352,105 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /complaints:
+    post:
+      tags:
+        - complaints
+      operationId: Complaints_create
+      summary: POST /complaints
+      security:
+        - bearerAuth: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComplaintCreate"
+      responses:
+        "201":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "401":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /complaints/admin:
+    get:
+      tags:
+        - complaints
+      operationId: Complaints_list
+      summary: GET /complaints/admin
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
+  /complaints/admin/{reference}/resolve:
+    post:
+      tags:
+        - complaints
+      operationId: Complaints_resolve
+      summary: POST /complaints/admin/{reference}/resolve
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComplaintResolve"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /conversations:
     get:
       tags:
@@ -2541,6 +2640,50 @@ components:
           maxLength: 1000
       required:
         - reason
+    ComplaintCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        contact:
+          type: string
+          minLength: 1
+          maxLength: 160
+        subject:
+          type: string
+          enum:
+            - payment
+            - listing
+            - account
+            - privacy
+            - advertising
+            - other
+        body:
+          type: string
+          minLength: 10
+          maxLength: 4000
+      required:
+        - name
+        - contact
+        - subject
+        - body
+    ComplaintResolve:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - answered
+            - closed
+        resolution:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+        - status
+        - resolution
     ConversationStart:
       type: object
       properties:

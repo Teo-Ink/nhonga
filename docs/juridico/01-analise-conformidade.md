@@ -138,6 +138,10 @@ regime dos jogos de fortuna ou azar; se há registo público de concessionárias
 - As duas páginas **continuam marcadas como rascunho** (`draft`) até o
   advogado aprovar e os campos entre parêntesis rectos serem preenchidos.
 
+- **LEG-02 (engenharia):** canal de reclamações em `/reclamacoes` com
+  referência e conservação sem eliminação; registos de acesso do balanceador
+  guardados 5 anos em produção.
+
 ## Aprovações necessárias
 
 | Quem                  | Porquê                                                     | Estado   |

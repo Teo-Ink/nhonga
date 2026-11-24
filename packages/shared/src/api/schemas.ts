@@ -62,6 +62,26 @@ export const ListingReport = z.object({
   note: text(1000).optional(),
 });
 
+/** A formal complaint to the platform (LEG-02). */
+export const COMPLAINT_SUBJECTS = [
+  'payment',
+  'listing',
+  'account',
+  'privacy',
+  'advertising',
+  'other',
+] as const;
+export const ComplaintCreate = z.object({
+  name: required(120),
+  contact: required(160),
+  subject: z.enum(COMPLAINT_SUBJECTS),
+  body: z.string().trim().min(10).max(4000),
+});
+export const ComplaintResolve = z.object({
+  status: z.enum(['answered', 'closed']),
+  resolution: required(4000),
+});
+
 // ── Messaging, favourites, reviews, alerts ───────────────────────────────────
 export const ConversationStart = z.object({
   vendorSlug: slug,
@@ -172,6 +192,8 @@ export const API_BODIES = {
   ListingStatus,
   ListingEvent,
   ListingReport,
+  ComplaintCreate,
+  ComplaintResolve,
   ConversationStart,
   MessageSend,
   FavoriteAdd,

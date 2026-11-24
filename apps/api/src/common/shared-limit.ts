@@ -48,6 +48,14 @@ export const SHARED_RULES: readonly SharedRule[] = [
     by: 'client',
   },
   {
+    name: 'complaint',
+    method: 'POST',
+    pattern: /^\/complaints\/?$/,
+    limit: 5,
+    windowSeconds: 3600,
+    by: 'client',
+  },
+  {
     name: 'message',
     method: 'POST',
     pattern: /^\/conversations(\/[^/]+\/messages)?\/?$/,

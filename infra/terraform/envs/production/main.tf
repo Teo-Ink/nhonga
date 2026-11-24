@@ -153,6 +153,9 @@ module "alb" {
   # Site and API on one HTTPS listener, routed by host (P0-08).
   web_port = local.web_port
   api_host = "api.${var.domain}"
+
+  # Access logs for 5 years (INTIC regulation, Decreto 59/2023 art. 42).
+  access_log_retention_days = 1825
 }
 
 # Container registry for the api image (shared across environments; created here

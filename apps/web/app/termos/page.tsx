@@ -146,8 +146,9 @@ export default function TermsPage() {
       <p>
         Estes Termos regem-se pela lei da República de Moçambique. Em caso de litígio, procuraremos
         primeiro uma solução amigável; não sendo possível, são competentes os tribunais judiciais da
-        cidade de Maputo, sem prejuízo de outras regras legais imperativas. Pode também apresentar
-        reclamação às entidades de defesa do consumidor.
+        cidade de Maputo, sem prejuízo de outras regras legais imperativas. Pode apresentar uma
+        reclamação em <a href="/reclamacoes">Reclamações</a> e também às entidades de defesa do
+        consumidor.
       </p>
 
       <h2>12. Contactos e identificação</h2>
