@@ -12,8 +12,10 @@ interface Reporter {
 let reporter: Reporter | null = null;
 
 export async function initErrorReporting(env = process.env): Promise<boolean> {
-  const dsn = env['SENTRY_DSN'];
-  if (!dsn) return false;
+  // The DSN comes from a secret that starts as a placeholder; only a real
+  // address turns reporting on.
+  const dsn = env['SENTRY_DSN']?.trim();
+  if (!dsn || !dsn.startsWith('https://')) return false;
   try {
     const Sentry = await import('@sentry/node');
     Sentry.init({

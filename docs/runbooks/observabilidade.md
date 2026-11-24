@@ -36,8 +36,10 @@ Nunca vão para os logs: query strings, corpos de pedidos, códigos de login
 Desligado até existir um DSN. Para ligar:
 
 1. Criar o projecto Node no Sentry (plano gratuito chega para começar).
-2. Pôr o DSN na variável `sentry_dsn` de `infra/terraform/envs/<env>`
-   (não é segredo: só permite enviar eventos).
+2. Pôr o DSN no segredo `nhonga-<env>/SENTRY_DSN` (o repositório é público,
+   por isso o DSN não fica no código):
+   `aws secretsmanager put-secret-value --region af-south-1 --secret-id nhonga-<env>/SENTRY_DSN --secret-string "<DSN>"`
+   e reiniciar o serviço: `aws ecs update-service --region af-south-1 --cluster nhonga-<env> --service api --force-new-deployment`.
 3. Depois do deploy, a linha de arranque diz `error_tracking=on` e
    `version=<sha da imagem>`.
 

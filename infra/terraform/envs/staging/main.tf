@@ -49,13 +49,6 @@ variable "web_image_tag" {
   default     = "latest"
   description = "The web image tag to deploy. The deploy pipeline advances it per release."
 }
-# Error tracking (P0-13). Empty = off. The DSN only allows sending events, so it
-# is configuration, not a secret.
-variable "sentry_dsn" {
-  type    = string
-  default = ""
-}
-
 variable "alarm_email" {
   type        = string
   default     = ""
@@ -124,7 +117,7 @@ module "secrets" {
   otp_dev_allowlist = true
 
   # AI assistant: placeholder until the owner puts the key (runbooks/segredos.md).
-  optional = ["ANTHROPIC_API_KEY"]
+  optional = ["ANTHROPIC_API_KEY", "SENTRY_DSN"]
 }
 
 module "alb" {
@@ -206,9 +199,8 @@ module "api" {
     SMS_MODE       = "mock"
     LOG_LEVEL      = "debug"
     APP_VERSION    = var.image_tag
-    SENTRY_DSN     = var.sentry_dsn
     MEDIA_BUCKET   = module.media.bucket
-    MEDIA_CDN_URL  = "https://${module.media.cdn_domain}"
+    MEDIA_CDN_URL  = module.media.cdn_domain == "" ? "" : "https://${module.media.cdn_domain}"
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
     PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
     PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
@@ -289,6 +281,11 @@ module "media" {
   project        = local.project
   environment    = local.env
   task_role_name = module.api.task_role_name
+
+  # Off until AWS verifies the account for CloudFront (the first apply failed
+  # with "Your account must be verified"). Photos go to S3 and the API serves
+  # them. Set to true and re-apply once AWS Support confirms.
+  cdn_enabled = false
 }
 
 # Web application firewall on the load balancer (P2-05).
