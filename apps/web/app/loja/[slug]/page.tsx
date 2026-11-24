@@ -1,3 +1,4 @@
+import { ShopWhatsApp } from '../../../components/ShopWhatsApp';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { StoreGrid } from '../../../components/StoreGrid';
@@ -113,15 +114,13 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
           ) : null}
         </div>
         <div className="store__cta">
-          {shop?.whatsapp ? (
-            <a
-              className="btn btn--cta store__contact"
-              href={`https://wa.me/${shop.whatsapp.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t.seller.contact_whatsapp}
-            </a>
+          {shop?.contact?.whatsapp ? (
+            <ShopWhatsApp
+              vendorSlug={slug}
+              label={t.seller.contact_whatsapp}
+              failed={t.contact.reveal_failed}
+              limited={t.contact.reveal_limited}
+            />
           ) : null}
           <a
             className="btn btn--ghost store__contact"

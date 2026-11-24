@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { contentSecurityPolicy, imageHostsFromEnv } from './lib/security-headers.mjs';
+import {
+  contentSecurityPolicy,
+  imageHostsFromEnv,
+  isCrossSiteWrite,
+} from './lib/security-headers.mjs';
 
 // Per-request Content-Security-Policy with a nonce (SEC-10 / P2-07), and HSTS
 // when the request reached us over HTTPS (SEC-03; the ALB sets
@@ -16,6 +20,21 @@ const imageHosts = imageHostsFromEnv({
 const dev = process.env.NODE_ENV !== 'production';
 
 export function middleware(req: NextRequest) {
+  // A write to our API from another site's page is refused (PRE-03).
+  if (
+    isCrossSiteWrite({
+      method: req.method,
+      path: req.nextUrl.pathname,
+      origin: req.headers.get('origin'),
+      host: req.headers.get('x-forwarded-host') ?? req.headers.get('host'),
+    })
+  ) {
+    return NextResponse.json(
+      { status: 403, title: 'Forbidden', detail: 'Pedido recusado.' },
+      { status: 403 },
+    );
+  }
+
   const nonce = btoa(crypto.randomUUID());
   const csp = contentSecurityPolicy({ dev, imageHosts, nonce });
 

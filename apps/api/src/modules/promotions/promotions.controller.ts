@@ -1,3 +1,4 @@
+import { isMalformedId } from '../../common/problem-details.filter.js';
 import {
   BadRequestException,
   Body,
@@ -88,5 +89,7 @@ function toHttp(e: unknown): HttpException {
       return new HttpException({ message: e.message }, HttpStatus.SERVICE_UNAVAILABLE);
     return new BadRequestException({ message: e.message });
   }
+  if (e instanceof HttpException) return e;
+  if (isMalformedId(e)) return new NotFoundException({ message: 'Not found' });
   return new HttpException({ message: 'internal error' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

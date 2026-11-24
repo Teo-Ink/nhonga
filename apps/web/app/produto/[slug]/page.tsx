@@ -263,8 +263,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             slug={product.slug}
             title={product.title}
             priceLabel={priceText}
-            whatsapp={product.vendor.whatsapp ?? null}
-            phone={product.vendor.phone ?? null}
+            contact={product.vendor.contact ?? null}
             t={t.contact}
             ctaLabel={ctaLabel}
             waMessage={waMessage}

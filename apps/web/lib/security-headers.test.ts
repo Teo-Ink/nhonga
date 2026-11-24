@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contentSecurityPolicy } from './security-headers.mjs';
+import { contentSecurityPolicy, isCrossSiteWrite } from './security-headers.mjs';
 
 describe('Content-Security-Policy (SEC-10)', () => {
   it('runs only scripts carrying the request nonce', () => {
@@ -22,5 +22,32 @@ describe('Content-Security-Policy (SEC-10)', () => {
 
   it('falls back to inline scripts only without a nonce', () => {
     expect(contentSecurityPolicy({})).toContain("script-src 'self' 'unsafe-inline'");
+  });
+});
+
+describe('isCrossSiteWrite (PRE-03)', () => {
+  const base = { path: '/api/favorites', host: 'nhonga.co.mz' };
+  it('refuses a write whose Origin is another site', () => {
+    expect(isCrossSiteWrite({ ...base, method: 'POST', origin: 'https://evil.example' })).toBe(
+      true,
+    );
+    expect(isCrossSiteWrite({ ...base, method: 'DELETE', origin: 'null' })).toBe(true);
+  });
+  it('lets our own pages, reads and non-API paths through', () => {
+    expect(isCrossSiteWrite({ ...base, method: 'POST', origin: 'https://nhonga.co.mz' })).toBe(
+      false,
+    );
+    expect(isCrossSiteWrite({ ...base, method: 'GET', origin: 'https://evil.example' })).toBe(
+      false,
+    );
+    expect(isCrossSiteWrite({ ...base, method: 'POST', origin: null })).toBe(false);
+    expect(
+      isCrossSiteWrite({
+        method: 'POST',
+        path: '/entrar',
+        origin: 'https://evil.example',
+        host: 'nhonga.co.mz',
+      }),
+    ).toBe(false);
   });
 });

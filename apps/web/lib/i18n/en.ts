@@ -727,6 +727,8 @@ const enBase: Dictionary = {
     cta_quote: 'Request a quote on WhatsApp',
     wa_quote: 'Hi! I saw the “{title}” service on Nhonga and would like a quote.',
     show_number: 'Show number',
+    reveal_failed: 'Could not show the contact. Please try again.',
+    reveal_limited: 'You asked for many contacts recently. Try again later or send a message.',
     send_message: 'Send message',
     whatsapp_short: 'WhatsApp',
     call_short: 'Call',

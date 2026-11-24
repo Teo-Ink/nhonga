@@ -19,6 +19,7 @@ import {
   listProducts,
   recordEvent,
   reportListing,
+  revealContact,
   formatMZN,
   type ReportReason,
   type ProductDetail,
@@ -103,18 +104,29 @@ export default function ProductScreen() {
         : [];
   const specs = Object.entries(product.attributes ?? {});
   const price = formatMZN(product.priceCents);
-  const { whatsapp, phone } = product.vendor;
+  const channels = product.vendor.contact;
 
-  function openWhatsApp() {
-    if (!whatsapp || !product) return;
-    recordEvent(product.slug, 'contact');
-    const msg = `Olá! Tenho interesse no anúncio «${product.title}» (${price}) no Nhonga.`;
-    void Linking.openURL(`https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`);
+  // The number is not part of the listing data (PRIV-01): ask for it on tap.
+  async function numbers() {
+    if (!product) return null;
+    const n = await revealContact({ productSlug: product.slug });
+    if (!n)
+      Alert.alert(
+        'Contacto',
+        'Não foi possível mostrar o contacto agora. Tente mais tarde ou envie uma mensagem.',
+      );
+    return n;
   }
-  function call() {
-    if (!phone || !product) return;
-    recordEvent(product.slug, 'contact');
-    void Linking.openURL(`tel:+${phone}`);
+  async function openWhatsApp() {
+    const n = await numbers();
+    if (!n?.whatsapp || !product) return;
+    const msg = `Olá! Tenho interesse no anúncio «${product.title}» (${price}) no Nhonga.`;
+    void Linking.openURL(`https://wa.me/${n.whatsapp}?text=${encodeURIComponent(msg)}`);
+  }
+  async function call() {
+    const n = await numbers();
+    if (!n?.phone) return;
+    void Linking.openURL(`tel:+${n.phone}`);
   }
   async function share() {
     if (!product) return;
@@ -133,7 +145,7 @@ export default function ProductScreen() {
     }
   }
 
-  const hasContact = Boolean(whatsapp || phone);
+  const hasContact = Boolean(channels?.whatsapp || channels?.phone);
 
   return (
     <ScrollView style={{ backgroundColor: brand.bg }} contentContainerStyle={styles.content}>
@@ -169,16 +181,22 @@ export default function ProductScreen() {
       </Pressable>
 
       {/* Contact block */}
-      {whatsapp ? (
-        <Pressable style={(s) => [styles.contactBtn, styles.wa, pressed(s)]} onPress={openWhatsApp}>
+      {channels?.whatsapp ? (
+        <Pressable
+          style={(s) => [styles.contactBtn, styles.wa, pressed(s)]}
+          onPress={() => void openWhatsApp()}
+        >
           <Ionicons name="logo-whatsapp" size={20} color="#fff" />
           <Text style={styles.contactText}>Contactar pelo WhatsApp</Text>
         </Pressable>
       ) : null}
-      {phone ? (
-        <Pressable style={(s) => [styles.contactBtn, styles.call, pressed(s)]} onPress={call}>
+      {channels?.phone ? (
+        <Pressable
+          style={(s) => [styles.contactBtn, styles.call, pressed(s)]}
+          onPress={() => void call()}
+        >
           <Ionicons name="call" size={18} color="#fff" />
-          <Text style={styles.contactText}>Ligar · {formatMsisdn(phone)}</Text>
+          <Text style={styles.contactText}>Ligar</Text>
         </Pressable>
       ) : null}
       <Pressable style={(s) => [styles.contactBtn, styles.shareBtn, pressed(s)]} onPress={share}>
@@ -367,13 +385,6 @@ const styles = StyleSheet.create({
   simTitle: { fontSize: 13, color: brand.text, lineHeight: 17 },
   simPrice: { fontSize: 14, fontWeight: '800', color: brand.green, marginTop: 2 },
 });
-
-// Display a Mozambican MSISDN (E.164 "258841234567") as "+258 84 123 4567".
-function formatMsisdn(e164: string): string {
-  const digits = e164.replace(/\D/g, '');
-  const m = /^258(\d{2})(\d{3})(\d{4})$/.exec(digits);
-  return m ? `+258 ${m[1]} ${m[2]} ${m[3]}` : `+${digits}`;
-}
 
 /** Report flow (P0-18): pick a reason, send, thank. */
 function askReport(slug: string): void {

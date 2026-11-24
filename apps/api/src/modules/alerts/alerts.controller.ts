@@ -1,3 +1,4 @@
+import { isMalformedId } from '../../common/problem-details.filter.js';
 import {
   BadRequestException,
   Body,
@@ -115,9 +116,12 @@ export class AlertsController {
 }
 
 function toHttp(e: unknown): HttpException {
+  // An HTTP error raised on purpose (404 without a token, 401) keeps its status.
+  if (e instanceof HttpException) return e;
   if (e instanceof AlertError) {
     if (e.code === 'not_found') return new NotFoundException({ message: e.message });
     return new BadRequestException({ message: e.message });
   }
+  if (isMalformedId(e)) return new NotFoundException({ message: 'Not found' });
   return new HttpException({ message: 'internal error' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

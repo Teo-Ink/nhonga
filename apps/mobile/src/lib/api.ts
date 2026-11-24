@@ -53,7 +53,7 @@ export interface ProductDetail extends ProductListItem {
   attributes: Record<string, string>;
   ratingAvg: number;
   ratingCount: number;
-  vendor: { displayName: string; slug: string; whatsapp: string | null; phone: string | null };
+  vendor: { displayName: string; slug: string; contact?: SellerChannels };
   variants: ProductVariant[];
   options: OptionGroup[];
   stats: { views: number; contacts: number; shares: number };
@@ -172,8 +172,32 @@ export interface Shop {
   memberSince: string;
   activeCount: number;
   soldCount: number;
+  contact?: SellerChannels;
+}
+
+/** Channels a seller offers, without the digits (PRIV-01). */
+export interface SellerChannels {
+  whatsapp: boolean;
+  phone: boolean;
+  hint: string | null;
+}
+export interface SellerNumbers {
   whatsapp: string | null;
   phone: string | null;
+}
+/**
+ * The seller's numbers, asked for when the user taps WhatsApp or Ligar. The
+ * API counts it as a contact and limits how many a person may ask for.
+ * Returns null when it cannot be shown now (limit reached or no network).
+ */
+export async function revealContact(
+  target: { productSlug: string } | { vendorSlug: string },
+): Promise<SellerNumbers | null> {
+  try {
+    return await post<SellerNumbers>('/catalog/contacts', target);
+  } catch {
+    return null;
+  }
 }
 export function getShop(slug: string): Promise<Shop | null> {
   return get(`/catalog/shops/${encodeURIComponent(slug)}`);

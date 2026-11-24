@@ -647,6 +647,32 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /catalog/contacts:
+    post:
+      tags:
+        - catalog
+      operationId: Catalog_contact
+      summary: POST /catalog/contacts
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactReveal"
+      responses:
+        "200":
+          description: Sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactOut"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /catalog/districts:
     get:
       tags:
@@ -2640,6 +2666,17 @@ components:
           maxLength: 1000
       required:
         - reason
+    ContactReveal:
+      type: object
+      properties:
+        productSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
+        vendorSlug:
+          type: string
+          minLength: 1
+          maxLength: 160
     ComplaintCreate:
       type: object
       properties:
@@ -3198,6 +3235,22 @@ components:
                     type:
                       - string
                       - "null"
+                  contact:
+                    type: object
+                    properties:
+                      whatsapp:
+                        type: boolean
+                      phone:
+                        type: boolean
+                      hint:
+                        type:
+                          - string
+                          - "null"
+                    required:
+                      - whatsapp
+                      - phone
+                      - hint
+                    additionalProperties: false
                 required:
                   - id
                   - slug
@@ -3267,6 +3320,21 @@ components:
         - total
         - items
         - page
+      additionalProperties: false
+    ContactOut:
+      type: object
+      properties:
+        whatsapp:
+          type:
+            - string
+            - "null"
+        phone:
+          type:
+            - string
+            - "null"
+      required:
+        - whatsapp
+        - phone
       additionalProperties: false
     AuthUserOut:
       type: object

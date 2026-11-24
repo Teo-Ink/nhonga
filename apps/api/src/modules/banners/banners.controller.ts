@@ -1,3 +1,4 @@
+import { isMalformedId } from '../../common/problem-details.filter.js';
 import {
   Body,
   Controller,
@@ -189,5 +190,7 @@ function toHttp(e: unknown): HttpException {
     return new HttpException({ message: e.message, code: e.code }, status);
   }
   if (e instanceof HttpException) return e;
+  if (e instanceof HttpException) return e;
+  if (isMalformedId(e)) return new NotFoundException({ message: 'Not found' });
   return new HttpException({ message: 'Erro ao gerar banner.' }, HttpStatus.INTERNAL_SERVER_ERROR);
 }

@@ -75,3 +75,23 @@ export function imageHostsFromEnv(env) {
   if (demo) hosts.push('live.staticflickr.com'); // seed sample photos
   return hosts;
 }
+
+/**
+ * Cross-site request check for the BFF (PRE-03). A browser sends Origin on
+ * every cross-site POST/PUT/PATCH/DELETE; when it names another site, the
+ * request did not come from our pages. The session cookie is already
+ * SameSite=Lax, which stops this in current browsers: this is the second lock.
+ * Requests without Origin (older browsers on same-origin forms, server-to-
+ * server calls, the mobile app) are left to the cookie rule.
+ *
+ * @param {{ method: string, path: string, origin: string | null, host: string | null }} req
+ * @returns {boolean} true when the request must be refused
+ */
+export function isCrossSiteWrite(req) {
+  if (!req.path.startsWith('/api/')) return false;
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return false;
+  if (!req.origin || !req.host) return false;
+  // An Origin is "scheme://host[:port]"; anything else ("null", junk) is not us.
+  const m = /^https?:\/\/([^/?#]+)$/i.exec(req.origin);
+  return !m || m[1].toLowerCase() !== req.host.toLowerCase();
+}

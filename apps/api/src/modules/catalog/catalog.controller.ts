@@ -21,9 +21,15 @@ import type {
   ProductListResponse,
   SortKey,
 } from './catalog.types.js';
-import { ListingEvent, ListingInput, ListingReport, ListingStatus } from '@nhonga/shared';
+import {
+  ContactReveal,
+  ListingEvent,
+  ListingInput,
+  ListingReport,
+  ListingStatus,
+} from '@nhonga/shared';
 import { ZodBody } from '../../common/zod-body.js';
-import { ListingCreatedOut, ProductListOut } from '@nhonga/shared';
+import { ContactOut, ListingCreatedOut, ProductListOut } from '@nhonga/shared';
 import { Returns } from '../../common/returns.js';
 
 const SORTS: readonly SortKey[] = ['relevance', 'price_asc', 'price_desc', 'rating', 'newest'];
@@ -79,13 +85,13 @@ export class CatalogController {
       ...(lim !== undefined ? { limit: lim } : {}),
       ...(cursor ? { cursor } : {}),
     };
-    return this.catalog.listProducts(langOf(acceptLanguage), filters);
+    return this.catalog.listProductsCached(langOf(acceptLanguage), filters);
   }
 
   /** Live marketplace totals for the home social-proof strip. */
   @Get('stats')
   stats(): Promise<{ listings: number; vendors: number; verifiedVendors: number }> {
-    return this.catalog.homeStats();
+    return this.catalog.homeStatsCached();
   }
 
   /** Provinces for the location search picker. */
@@ -212,7 +218,7 @@ export class CatalogController {
     @Query('q') q?: string,
     @Headers('accept-language') acceptLanguage?: string,
   ): Promise<{ slug: string; title: string }[]> {
-    return this.catalog.suggest(q ?? '', langOf(acceptLanguage));
+    return this.catalog.suggestCached(q ?? '', langOf(acceptLanguage));
   }
 
   /** Filterable attributes for a category (drives the per-category filter UI). */
@@ -244,6 +250,16 @@ export class CatalogController {
       throw new BadRequestException({ message: 'type must be contact, share or view' });
     }
     await this.catalog.recordEvent(idOrSlug, type);
+  }
+
+  /** The seller's numbers, on request (PRIV-01). Rate limited per client. */
+  @Returns(ContactOut)
+  @Post('contacts')
+  @HttpCode(200)
+  contact(
+    @Body(new ZodBody(ContactReveal)) body: { productSlug?: string; vendorSlug?: string },
+  ): Promise<{ whatsapp: string | null; phone: string | null }> {
+    return this.catalog.revealContact(body);
   }
 
   /** File a trust-&-safety report against a listing (anonymous). */

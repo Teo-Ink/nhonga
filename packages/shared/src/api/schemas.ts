@@ -62,6 +62,13 @@ export const ListingReport = z.object({
   note: text(1000).optional(),
 });
 
+/** Ask for a seller's number (PRIV-01): by listing or by shop. */
+export const ContactReveal = z
+  .object({ productSlug: slug.optional(), vendorSlug: slug.optional() })
+  .refine((v) => Boolean(v.productSlug) !== Boolean(v.vendorSlug), {
+    message: 'indique productSlug ou vendorSlug',
+  });
+
 /** A formal complaint to the platform (LEG-02). */
 export const COMPLAINT_SUBJECTS = [
   'payment',
@@ -192,6 +199,7 @@ export const API_BODIES = {
   ListingStatus,
   ListingEvent,
   ListingReport,
+  ContactReveal,
   ComplaintCreate,
   ComplaintResolve,
   ConversationStart,

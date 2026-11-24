@@ -9,6 +9,8 @@
 //     route-specific fallback (e.g. "not signed in");
 //   - any other unexpected failure becomes a 502 instead of a 500.
 
+import { forwardedFor } from './client-ip';
+
 export const API_URL = process.env.API_URL ?? 'http://localhost:3000';
 export const SESSION_COOKIE = 'nhonga_session';
 /** Every call goes to the versioned API (P2-11). */
@@ -51,6 +53,10 @@ export async function apiFetch(
   // it writes for this call, and a failure here logs the same id.
   const headers = new Headers(rest.headers);
   if (!headers.has('x-request-id')) headers.set('x-request-id', `web-${crypto.randomUUID()}`);
+  // Tell the API who the visitor is, so its limits count people, not this server (PRE-02).
+  if (!headers.has('x-forwarded-for')) {
+    for (const [k, v] of Object.entries(await forwardedFor())) headers.set(k, v);
+  }
   try {
     return await fetchImpl(`${API_URL}/${API_VERSION}${path}`, {
       ...rest,

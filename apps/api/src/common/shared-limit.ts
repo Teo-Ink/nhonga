@@ -48,6 +48,16 @@ export const SHARED_RULES: readonly SharedRule[] = [
     by: 'client',
   },
   {
+    // Seller numbers are handed out one at a time (PRIV-01): enough for a
+    // buyer comparing listings, too slow to harvest the catalogue.
+    name: 'contact',
+    method: 'POST',
+    pattern: /^\/catalog\/contacts\/?$/,
+    limit: 30,
+    windowSeconds: 3600,
+    by: 'client',
+  },
+  {
     name: 'complaint',
     method: 'POST',
     pattern: /^\/complaints\/?$/,

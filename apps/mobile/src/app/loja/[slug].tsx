@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Linking,
   Pressable,
@@ -11,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { getShop, listProducts, recordEvent, type ProductListItem, type Shop } from '@/lib/api';
+import { getShop, listProducts, revealContact, type ProductListItem, type Shop } from '@/lib/api';
 import { ProductGridCard } from '@/components/ProductGridCard';
 import { brand, radius, shadow, space } from '@/lib/theme';
 
@@ -58,18 +59,24 @@ export default function ShopScreen() {
   const count = items.length;
   const countLabel = count === 1 ? '1 anúncio' : `${count} anúncios`;
 
-  function contactWhatsApp() {
-    if (!shop?.whatsapp) return;
-    recordEvent(String(slug), 'contact');
+  // Numbers are asked for on tap (PRIV-01), not shipped with the shop data.
+  async function numbers() {
+    const n = await revealContact({ vendorSlug: String(slug) });
+    if (!n) Alert.alert('Contacto', 'Não foi possível mostrar o contacto agora. Tente mais tarde.');
+    return n;
+  }
+  async function contactWhatsApp() {
+    const n = await numbers();
+    if (!n?.whatsapp) return;
     const msg = `Olá! Encontrei a sua loja «${name}» no Nhonga.`;
     void Linking.openURL(
-      `https://wa.me/${shop.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`,
+      `https://wa.me/${n.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`,
     );
   }
-  function call() {
-    if (!shop?.phone) return;
-    recordEvent(String(slug), 'contact');
-    void Linking.openURL(`tel:+${shop.phone.replace(/\D/g, '')}`);
+  async function call() {
+    const n = await numbers();
+    if (!n?.phone) return;
+    void Linking.openURL(`tel:+${n.phone.replace(/\D/g, '')}`);
   }
 
   const header = (
@@ -114,21 +121,21 @@ export default function ShopScreen() {
         </View>
       </View>
 
-      {shop && (shop.whatsapp || shop.phone) ? (
+      {shop && (shop.contact?.whatsapp || shop.contact?.phone) ? (
         <View style={styles.ctaRow}>
-          {shop.whatsapp ? (
+          {shop.contact?.whatsapp ? (
             <Pressable
               style={({ pressed }) => [styles.cta, styles.wa, pressed && styles.pressed]}
-              onPress={contactWhatsApp}
+              onPress={() => void contactWhatsApp()}
             >
               <Ionicons name="logo-whatsapp" size={18} color="#fff" />
               <Text style={styles.ctaText}>WhatsApp</Text>
             </Pressable>
           ) : null}
-          {shop.phone ? (
+          {shop.contact?.phone ? (
             <Pressable
               style={({ pressed }) => [styles.cta, styles.call, pressed && styles.pressed]}
-              onPress={call}
+              onPress={() => void call()}
             >
               <Ionicons name="call" size={16} color="#fff" />
               <Text style={styles.ctaText}>Ligar</Text>

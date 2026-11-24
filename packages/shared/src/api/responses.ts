@@ -25,6 +25,17 @@ export const VendorSummaryOut = z.object({
   isPro: z.boolean(),
   ratingAvg: z.number().nullable(),
   ratingCount: z.number().int(),
+  // Always null since PRIV-01: numbers are only returned by POST /catalog/contacts.
+  whatsapp: z.string().nullable(),
+  phone: z.string().nullable(),
+  /** Which channels the seller offers, without the digits (detail and shop only). */
+  contact: z
+    .object({ whatsapp: z.boolean(), phone: z.boolean(), hint: z.string().nullable() })
+    .optional(),
+});
+
+/** The seller's numbers, returned only when someone asks to contact (PRIV-01). */
+export const ContactOut = z.object({
   whatsapp: z.string().nullable(),
   phone: z.string().nullable(),
 });
@@ -154,6 +165,7 @@ export const OkOut = z.object({ ok: z.literal(true) });
 /** Every response schema, by name (OpenAPI components). */
 export const API_RESPONSES = {
   ProductListOut,
+  ContactOut,
   AuthUserOut,
   OtpRequestOut,
   SessionOut,

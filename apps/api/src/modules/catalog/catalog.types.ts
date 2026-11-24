@@ -17,10 +17,12 @@ export interface VendorSummaryDto {
   readonly isPro: boolean;
   readonly ratingAvg: number | null;
   readonly ratingCount: number;
-  /** Classifieds contact — null when the seller hides the channel or has no
-   *  number. E.164 (2588…). Only populated on the product detail. */
+  /** Always null since PRIV-01: the numbers are returned only by
+   *  POST /catalog/contacts. Kept so older clients do not break. */
   readonly whatsapp: string | null;
   readonly phone: string | null;
+  /** Channels offered, without digits (PRIV-01). Detail and shop only. */
+  readonly contact?: { whatsapp: boolean; phone: boolean; hint: string | null };
 }
 
 export interface ListingStats {

@@ -27,6 +27,19 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const res = ctx.getResponse<Response>();
     const req = ctx.getRequest<Request>();
 
+    // An id in the URL that is not a UUID makes Postgres refuse the query
+    // (22P02). To the caller that is simply "no such thing", not a server
+    // fault: answer 404 and keep it out of the error alarms (PRE-01).
+    if (!(exception instanceof HttpException) && isMalformedId(exception)) {
+      res.status(HttpStatus.NOT_FOUND).type('application/problem+json').json({
+        type: 'about:blank',
+        title: 'Not Found',
+        status: HttpStatus.NOT_FOUND,
+        instance: req.path,
+      });
+      return;
+    }
+
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
@@ -81,4 +94,14 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         ...(status >= 500 ? { requestId: currentRequestId() } : {}),
       });
   }
+}
+
+/** Postgres "invalid input syntax" (22P02), on the error or on its cause. */
+export function isMalformedId(e: unknown): boolean {
+  for (let cur: unknown = e, depth = 0; cur && depth < 4; depth++) {
+    if (typeof cur !== 'object') return false;
+    if ((cur as { code?: unknown }).code === '22P02') return true;
+    cur = (cur as { cause?: unknown }).cause;
+  }
+  return false;
 }

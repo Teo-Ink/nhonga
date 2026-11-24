@@ -2,6 +2,10 @@
 
 ## Veredicto: **Não pronto** para produção pública. Pronto para demos controladas.
 
+> **Auditoria pré-produção (24/11/2026):** pronto para piloto fechado depois do
+> merge e da criação da produção; ver
+> [`17-auditoria-pre-producao.md`](17-auditoria-pre-producao.md).
+>
 > **Actualização (4.ª ronda, 22/11/2026):** a engenharia que dependia só de
 > código está feita (app no SDK 58, reembolsos, fluxo legado removido,
 > respostas tipadas, produção com o site, CSP com nonce). O código chega a

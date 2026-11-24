@@ -1,3 +1,4 @@
+import { BrowseCache, browseCacheTtlMs } from './browse-cache.js';
 import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
@@ -42,6 +43,7 @@ import {
   buildOptions,
   headlineVariant,
   pickText,
+  contactAvailability,
   sellerContact,
   toImageDto,
   toListItem,
@@ -98,7 +100,8 @@ export class CatalogService {
     return rows[0]?.n ?? 0;
   }
 
-  async createListing(
+  /** @internal use createListing(): it also refreshes the public lists. */
+  async createListingImpl(
     input: {
       title: string;
       categorySlug: string;
@@ -238,6 +241,7 @@ export class CatalogService {
     soldCount: number;
     whatsapp: string | null;
     phone: string | null;
+    contact: { whatsapp: boolean; phone: boolean; hint: string | null };
   } | null> {
     const v = (
       await this.db
@@ -270,7 +274,7 @@ export class CatalogService {
       .groupBy(product.status);
     const activeCount = counts.find((c) => c.status === 'active')?.n ?? 0;
     const soldCount = counts.find((c) => c.status === 'sold')?.n ?? 0;
-    const contact = sellerContact({
+    const contact = contactAvailability({
       whatsapp: v.whatsapp,
       contactPhone: v.contactPhone,
       showWhatsapp: v.showWhatsapp,
@@ -288,9 +292,47 @@ export class CatalogService {
       memberSince: v.createdAt.toISOString(),
       activeCount,
       soldCount,
-      whatsapp: contact.whatsapp,
-      phone: contact.phone,
+      whatsapp: null,
+      phone: null,
+      contact,
     };
+  }
+
+  /**
+   * The seller's numbers for one listing or shop (PRIV-01). Public pages carry
+   * only which channels exist; the digits are handed out here, one request at
+   * a time and rate limited, so the catalogue cannot be harvested for phone
+   * numbers. Asking through a listing counts as a contact for the seller.
+   */
+  async revealContact(input: {
+    productSlug?: string;
+    vendorSlug?: string;
+  }): Promise<{ whatsapp: string | null; phone: string | null }> {
+    const cols = {
+      whatsapp: vendor.whatsapp,
+      contactPhone: vendor.contactPhone,
+      showWhatsapp: vendor.showWhatsapp,
+      showPhone: vendor.showPhone,
+    };
+    const row = input.productSlug
+      ? (
+          await this.db
+            .select(cols)
+            .from(product)
+            .innerJoin(vendor, eq(product.vendorId, vendor.id))
+            .where(and(eq(product.slug, input.productSlug), eq(product.status, 'active')))
+            .limit(1)
+        )[0]
+      : (
+          await this.db
+            .select(cols)
+            .from(vendor)
+            .where(eq(vendor.slug, input.vendorSlug ?? ''))
+            .limit(1)
+        )[0];
+    if (!row) throw new NotFoundException({ message: 'Anúncio ou loja não encontrados.' });
+    if (input.productSlug) await this.recordEvent(input.productSlug, 'contact');
+    return sellerContact(row);
   }
 
   /** The signed-in seller's own listings — all statuses (active/sold/archived),
@@ -402,7 +444,8 @@ export class CatalogService {
   }
 
   /** Change one of the seller's listings between active / sold / archived. */
-  async setListingStatus(
+  /** @internal use setListingStatus(): it also refreshes the public lists. */
+  async setListingStatusImpl(
     id: string,
     status: 'active' | 'sold' | 'archived',
     sessionToken: string | null,
@@ -424,7 +467,8 @@ export class CatalogService {
   }
 
   /** Edit one of the seller's own listings. */
-  async updateListing(
+  /** @internal use updateListing(): it also refreshes the public lists. */
+  async updateListingImpl(
     id: string,
     input: {
       title?: string;
@@ -543,7 +587,8 @@ export class CatalogService {
   }
 
   /** Remove (archive) one of the seller's own listings. */
-  async archiveListing(id: string, sessionToken: string | null): Promise<{ ok: true }> {
+  /** @internal use archiveListing(): it also refreshes the public lists. */
+  async archiveListingImpl(id: string, sessionToken: string | null): Promise<{ ok: true }> {
     const vendorIds = await this.userVendorIds(sessionToken);
     const prod = (
       await this.db
@@ -717,6 +762,47 @@ export class CatalogService {
    * the headline price is derived from the cheapest in-stock variant. At real
    * scale this moves to OpenSearch (D-09); the behaviour and shape are the same.
    */
+  // Listing writes go through these, so public lists never show stale data
+  // from this process after a seller changes something (PRE-05).
+  createListing(...a: Parameters<CatalogService['createListingImpl']>) {
+    return this.createListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  setListingStatus(...a: Parameters<CatalogService['setListingStatusImpl']>) {
+    return this.setListingStatusImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  updateListing(...a: Parameters<CatalogService['updateListingImpl']>) {
+    return this.updateListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+  archiveListing(...a: Parameters<CatalogService['archiveListingImpl']>) {
+    return this.archiveListingImpl(...a).finally(() => this.invalidateBrowse());
+  }
+
+  /** listProducts for public pages, answered from the short cache (PRE-05). */
+  listProductsCached(lang: Lang, filters: ProductFilters = {}): Promise<ProductListResponse> {
+    return this.browse.get(`list:${lang}:${JSON.stringify(filters)}`, () =>
+      this.listProducts(lang, filters),
+    ) as Promise<ProductListResponse>;
+  }
+
+  /** suggest for the search box, answered from the short cache (PRE-05). */
+  suggestCached(q: string, lang: Lang): Promise<{ slug: string; title: string }[]> {
+    return this.browse.get(`suggest:${lang}:${q.trim().toLowerCase().slice(0, 60)}`, () =>
+      this.suggest(q, lang),
+    ) as Promise<{ slug: string; title: string }[]>;
+  }
+
+  /** Home page counters, answered from the short cache (PRE-05). */
+  homeStatsCached(): ReturnType<CatalogService['homeStats']> {
+    return this.browse.get('stats', () => this.homeStats()) as ReturnType<
+      CatalogService['homeStats']
+    >;
+  }
+
+  /** Called after any listing write, so public lists show it at once. */
+  invalidateBrowse(): void {
+    this.browse.clear();
+  }
+
   async listProducts(lang: Lang, filters: ProductFilters = {}): Promise<ProductListResponse> {
     const tokens = tokenize(filters.q ?? '');
     const first = await this.runListQuery(lang, filters, tokens);
@@ -757,6 +843,10 @@ export class CatalogService {
     this.vocabCache = { at: now, vocab };
     return vocab;
   }
+
+  private readonly browse = new BrowseCache<unknown>(
+    browseCacheTtlMs(process.env['CATALOG_CACHE_SECONDS']),
+  );
 
   private vocabCache: { at: number; vocab: Map<string, number> } | null = null;
 
@@ -1139,7 +1229,13 @@ export class CatalogService {
     const conds: SQL[] = [eq(product.status, 'active')];
     for (const token of tokens) {
       // Prefix match (not whole-word): suggestions run while the user is still typing.
-      const m = or(...inflections(token).map((a) => sql`${titleHay} ~ ${`\\m${a}`}`));
+      const alts = inflections(token);
+      // search_doc contains the title, so a word starting in the title also
+      // starts in search_doc: this first test uses the trigram index and
+      // leaves the exact title test only a few rows to check (PRE-05).
+      const pre = or(...alts.map((a) => sql`${product.searchDoc} ~ ${`\\m${a}`}`));
+      if (pre) conds.push(pre);
+      const m = or(...alts.map((a) => sql`${titleHay} ~ ${`\\m${a}`}`));
       if (m) conds.push(m);
     }
     const rows = await this.db
@@ -1244,7 +1340,9 @@ export class CatalogService {
       ...base,
       vendor: {
         ...base.vendor,
-        ...sellerContact({
+        whatsapp: null,
+        phone: null,
+        contact: contactAvailability({
           whatsapp: p.vWhatsapp,
           contactPhone: p.vContactPhone,
           showWhatsapp: p.vShowWhatsapp,

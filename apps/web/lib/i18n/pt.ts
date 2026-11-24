@@ -749,6 +749,9 @@ const ptBase = {
     cta_quote: 'Pedir orçamento pelo WhatsApp',
     wa_quote: 'Olá! Vi o serviço «{title}» no Nhonga e gostaria de um orçamento.',
     show_number: 'Ver número',
+    reveal_failed: 'Não foi possível mostrar o contacto. Tente de novo.',
+    reveal_limited:
+      'Pediu muitos contactos há pouco. Tente de novo mais tarde ou envie uma mensagem.',
     send_message: 'Enviar mensagem',
     whatsapp_short: 'WhatsApp',
     call_short: 'Ligar',
