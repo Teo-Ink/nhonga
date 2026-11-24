@@ -5,7 +5,7 @@
 # `pnpm deploy` to produce a self-contained bundle for the api alone with its
 # workspace dependency (@nhonga/shared) copied in and dev dependencies dropped.
 # ─────────────────────────────────────────────────────────────────────────────
-FROM node:24-bookworm-slim AS builder
+FROM node:25-bookworm-slim AS builder
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 WORKDIR /repo
@@ -27,7 +27,7 @@ RUN pnpm --filter @nhonga/shared build \
 # ─────────────────────────────────────────────────────────────────────────────
 # Runtime: slim, non-root, only the bundle.
 # ─────────────────────────────────────────────────────────────────────────────
-FROM node:24-bookworm-slim AS runtime
+FROM node:25-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 
