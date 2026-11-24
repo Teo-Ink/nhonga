@@ -18,6 +18,11 @@ variable "price_class" {
   type    = string
   default = "PriceClass_All"
 }
+variable "cdn_enabled" {
+  description = "Create the CloudFront distribution. Off: photos still go to the bucket and the API serves them (slower, no edge cache). Needed while the AWS account is not yet verified for CloudFront."
+  type        = bool
+  default     = true
+}
 
 locals {
   name = "${var.project}-${var.environment}-media"
@@ -98,6 +103,7 @@ data "aws_cloudfront_cache_policy" "optimized" {
 #trivy:ignore:AWS-0013
 #trivy:ignore:AWS-0010
 resource "aws_cloudfront_distribution" "media" {
+  count           = var.cdn_enabled ? 1 : 0
   enabled         = true
   comment         = "${local.name}: listing photos"
   price_class     = var.price_class
@@ -132,18 +138,21 @@ resource "aws_cloudfront_distribution" "media" {
 # The wildcards are an object prefix (media/*) and a TLS-only Deny on s3:*.
 #trivy:ignore:AWS-0057
 data "aws_iam_policy_document" "bucket" {
-  statement {
-    sid       = "CloudFrontReadsPhotos"
-    actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.media.arn}/media/*"]
-    principals {
-      type        = "Service"
-      identifiers = ["cloudfront.amazonaws.com"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-      values   = [aws_cloudfront_distribution.media.arn]
+  dynamic "statement" {
+    for_each = var.cdn_enabled ? [1] : []
+    content {
+      sid       = "CloudFrontReadsPhotos"
+      actions   = ["s3:GetObject"]
+      resources = ["${aws_s3_bucket.media.arn}/media/*"]
+      principals {
+        type        = "Service"
+        identifiers = ["cloudfront.amazonaws.com"]
+      }
+      condition {
+        test     = "StringEquals"
+        variable = "AWS:SourceArn"
+        values   = [aws_cloudfront_distribution.media[0].arn]
+      }
     }
   }
   statement {
@@ -190,4 +199,12 @@ resource "aws_iam_role_policy" "task_media" {
 }
 
 output "bucket" { value = aws_s3_bucket.media.bucket }
-output "cdn_domain" { value = aws_cloudfront_distribution.media.domain_name }
+output "cdn_domain" {
+  description = "CloudFront domain, or empty when the CDN is off."
+  value       = var.cdn_enabled ? aws_cloudfront_distribution.media[0].domain_name : ""
+}
+
+moved {
+  from = aws_cloudfront_distribution.media
+  to   = aws_cloudfront_distribution.media[0]
+}

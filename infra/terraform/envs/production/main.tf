@@ -44,13 +44,6 @@ variable "image_tag" {
   default     = "latest"
   description = "The api image tag to deploy. The deploy pipeline overrides this per release."
 }
-# Error tracking (P0-13). Empty = off. The DSN only allows sending events, so it
-# is configuration, not a secret.
-variable "sentry_dsn" {
-  type    = string
-  default = ""
-}
-
 variable "domain" {
   type        = string
   default     = "nhonga.co.mz"
@@ -136,7 +129,7 @@ module "secrets" {
 
   # Put by the owner (runbooks/segredos.md): external before the first
   # production deploy; optional (the assistant key) whenever it is ready.
-  optional = ["ANTHROPIC_API_KEY"]
+  optional = ["ANTHROPIC_API_KEY", "SENTRY_DSN"]
   external = ["PAWAPAY_API_TOKEN", "SMS_GATEWAY_URL", "SMS_GATEWAY_TOKEN"]
 }
 
@@ -215,7 +208,6 @@ module "api" {
     CORS_ORIGINS    = "https://${var.domain}"
     LOG_LEVEL       = "info"
     APP_VERSION     = var.image_tag
-    SENTRY_DSN      = var.sentry_dsn
     MEDIA_BUCKET    = module.media.bucket
     MEDIA_CDN_URL   = "https://${module.media.cdn_domain}"
 
