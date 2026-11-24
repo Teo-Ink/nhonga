@@ -43,7 +43,19 @@ Desligado até existir um DSN. Para ligar:
 3. Depois do deploy, a linha de arranque diz `error_tracking=on` e
    `version=<sha da imagem>`.
 
-Cada erro chega com `release` = SHA da imagem e a etiqueta `request_id`.
+Cada erro chega com `release` = SHA da imagem e a etiqueta `request_id`. A
+versão é lida da imagem que a tarefa corre (metadados do ECS) quando
+`APP_VERSION` diz `latest`.
+
+Para confirmar de ponta a ponta, com o token de administração
+(`nhonga-<env>/ADMIN_API_TOKEN`):
+
+```
+curl -X POST -H "x-admin-token: <token>" https://<api>/v1/health/admin/error-test
+```
+
+A resposta traz uma referência `diag-xxxxxxxx`; o erro com essa referência
+aparece no Sentry em menos de um minuto. Sem o token a resposta é 404.
 
 ## Alarmes (SNS → email)
 

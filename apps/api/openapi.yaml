@@ -1741,6 +1741,31 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /health/admin/error-test:
+    post:
+      tags:
+        - health
+      operationId: Health_errorTest
+      summary: POST /health/admin/error-test
+      parameters:
+        - name: x-admin-token
+          in: header
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        "202":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "404":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /health/live:
     get:
       tags:

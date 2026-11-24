@@ -15,10 +15,13 @@ import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { requestContextMiddleware } from './common/request-context.js';
 import { apiVersionMiddleware } from './common/api-version.js';
 import { JsonLogger } from './common/json-logger.js';
+import { resolveAppVersion } from './common/app-version.js';
 import { initErrorReporting } from './common/error-reporter.js';
 import type { AppConfig } from './config/config.schema.js';
 
 async function bootstrap(): Promise<void> {
+  // Before the error tracker starts, so its release is the real version.
+  process.env['APP_VERSION'] = await resolveAppVersion();
   const tracking = await initErrorReporting();
   // JSON log lines everywhere except a developer's terminal (P1-08).
   const json = (process.env['NODE_ENV'] ?? 'development') !== 'development';
