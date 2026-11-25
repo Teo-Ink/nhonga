@@ -19,6 +19,9 @@ const ptBase = {
     menu: 'Menu',
     loading: 'A carregar…',
     retry: 'Tentar novamente',
+    page_error_title: 'Algo correu mal',
+    page_error_body:
+      'Não foi possível mostrar esta página. O problema foi registado; tente novamente dentro de momentos.',
     back: 'Voltar',
     see_all: 'Ver tudo',
     verified: 'Verificado',

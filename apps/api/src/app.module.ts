@@ -19,6 +19,7 @@ import { BannersModule } from './modules/banners/banners.module.js';
 import { CheckoutModule } from './modules/checkout/checkout.module.js';
 import { ComplaintsModule } from './modules/complaints/complaints.module.js';
 import { HealthController } from './health/health.controller.js';
+import { ClientErrorsController } from './modules/client-errors/client-errors.controller.js';
 
 @Module({
   imports: [
@@ -46,6 +47,6 @@ import { HealthController } from './health/health.controller.js';
     CheckoutModule,
     ComplaintsModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, ClientErrorsController],
 })
 export class AppModule {}

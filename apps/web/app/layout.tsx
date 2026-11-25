@@ -10,6 +10,7 @@ import { SessionProvider } from '../components/auth/SessionProvider';
 import { DictProvider } from '../components/i18n/DictProvider';
 import { ChatWidget } from '../components/support/ChatWidget';
 import { PwaProvider } from '../components/pwa/PwaProvider';
+import { ErrorReporter } from '../components/ErrorReporter';
 import { getDictionary } from '../lib/i18n/index';
 import { isIndexable, siteOrigin } from '../lib/site';
 import './globals.css';
@@ -115,6 +116,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <BottomNav t={t} />
             <ChatWidget t={t.assistant} />
             <PwaProvider t={t.pwa} />
+            <ErrorReporter />
           </SessionProvider>
         </DictProvider>
       </body>

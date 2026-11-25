@@ -95,9 +95,9 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Registo de erros técnicos</strong>: Sentry (Functional Software, Inc.), com
-          alojamento na Alemanha. Recebe dados técnicos de falhas do serviço (data, endereço pedido,
-          versão e tipo de dispositivo), sem o seu endereço IP, cookies ou conteúdo dos pedidos{' '}
-          <strong>[confirmar contrato]</strong>;
+          alojamento na Alemanha. Recebe dados técnicos de falhas do serviço, do site e da aplicação
+          (data, endereço pedido, versão e tipo de dispositivo), sem o seu endereço IP, cookies ou
+          conteúdo dos pedidos <strong>[confirmar contrato]</strong>;
         </li>
         <li>autoridades, quando a lei o exigir.</li>
       </ul>

@@ -476,6 +476,22 @@ export function recordEvent(slug: string, type: 'contact' | 'share' | 'view'): v
   }).catch(() => {});
 }
 
+/** Send a crash report (OPS-06). Best-effort: never throws, never retries. */
+export function sendCrashReport(report: {
+  source: 'mobile';
+  message: string;
+  stack?: string;
+  route?: string;
+  release?: string;
+  platform?: string;
+}): void {
+  void fetch(`${API}/client-errors`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(report),
+  }).catch(() => {});
+}
+
 export function formatMZN(cents: number): string {
   const neg = cents < 0;
   const n = Math.abs(Math.round(cents));

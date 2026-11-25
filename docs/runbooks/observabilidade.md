@@ -69,3 +69,24 @@ aparece no Sentry em menos de um minuto. Sem o token a resposta é 404.
 
 Para receber os alarmes, confirmar a subscrição no email enviado pela AWS
 depois do primeiro `apply` com `alarm_email`.
+
+## Erros do site e da app (OPS-06)
+
+O site e a app não falam com o Sentry. Enviam os erros não tratados para a
+API (`POST /v1/client-errors`), que os limpa (sem parâmetros de URL, e-mails
+ou números longos) e os regista como erro. Chegam ao mesmo projecto do Sentry
+com o nome da origem:
+
+| Nome no Sentry | Origem                                            |
+| -------------- | ------------------------------------------------- |
+| `ClientWeb`    | Erro no browser de um visitante                   |
+| `WebServer`    | Erro ao gerar uma página no servidor do site      |
+| `ClientMobile` | Erro de JavaScript na app (`[fatal]` se a fechou) |
+
+Limites: 5 erros distintos por página ou por arranque da app, 20 por hora por
+endereço IP e 120 por minuto no total. Estes erros contam para o alarme
+`*-api-error-logs` (mais de 20 linhas de erro em 5 minutos): uma versão
+partida do site ou da app dispara-o.
+
+Não cobre falhas nativas da app (fecho sem erro de JavaScript); essas vêem-se
+na Play Console e no App Store Connect.
