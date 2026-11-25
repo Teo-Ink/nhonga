@@ -211,6 +211,11 @@ module "api" {
     MEDIA_BUCKET    = module.media.bucket
     MEDIA_CDN_URL   = "https://${module.media.cdn_domain}"
 
+    # PawaPay live API (the code defaults to the sandbox) and signed
+    # callbacks only (PAY-07). See docs/runbooks/pawapay.md.
+    PAWAPAY_BASE_URL                 = "https://api.pawapay.io"
+    PAWAPAY_REQUIRE_SIGNED_CALLBACKS = "true"
+
     # Listings untouched for 90 days leave search (P2-10).
     LISTING_TTL_DAYS = "90"
 
