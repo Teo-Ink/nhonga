@@ -54,10 +54,15 @@ variable "alarm_email" {
   default     = ""
   description = "Email for CloudWatch alarm notifications (OPS-02). Empty: subscribe later."
 }
+variable "domain" {
+  type        = string
+  default     = "nhonga.co.mz"
+  description = "Registered domain (hosted zone in Route 53). Staging answers at staging.<domain> and api-staging.<domain> once certificate_arn is set."
+}
 variable "certificate_arn" {
   type        = string
-  default     = ""
-  description = "ACM cert for HTTPS. Empty until the domain is registered (OQ-1); ALB serves HTTP:80 until then."
+  default     = "arn:aws:acm:af-south-1:526156223765:certificate/007dd4e3-478c-4c99-b527-fdb81bfbe76b"
+  description = "ACM certificate for <domain> and *.<domain> (OPS-07). Empty: no HTTPS, the ALB serves HTTP on 80 and the api on 8080."
 }
 
 data "aws_caller_identity" "current" {}
@@ -71,7 +76,18 @@ locals {
 
   web_port      = 3001
   api_port      = 3000
-  api_http_port = 8080 # api on the load balancer until a domain exists (OQ-1)
+  api_http_port = 8080 # api on the load balancer when there is no certificate
+
+  # With a certificate, staging has its own names and everything is HTTPS
+  # (OPS-07). One level only: the certificate covers *.<domain>.
+  https_on = var.certificate_arn != ""
+  web_host = "staging.${var.domain}"
+  api_host = "api-staging.${var.domain}"
+  web_url  = local.https_on ? "https://${local.web_host}" : "http://${module.alb.dns_name}"
+  api_url  = local.https_on ? "https://${local.api_host}" : "http://${module.alb.dns_name}:${local.api_http_port}"
+
+  # The plain-HTTP api port is only opened while there is no certificate.
+  api_public_port = local.https_on ? 0 : local.api_http_port
 }
 
 module "network" {
@@ -89,7 +105,7 @@ module "security_groups" {
   app_port    = local.api_port
 
   web_port        = local.web_port
-  api_public_port = local.api_http_port
+  api_public_port = local.api_public_port
 }
 
 module "database" {
@@ -131,7 +147,28 @@ module "alb" {
   certificate_arn   = var.certificate_arn
 
   web_port        = local.web_port
-  api_public_port = local.api_http_port
+  api_public_port = local.api_public_port
+  api_host        = local.https_on ? local.api_host : ""
+}
+
+# Public names (OPS-07). The hosted zone is created once by hand
+# (docs/runbooks/https.md); the records are managed here.
+data "aws_route53_zone" "public" {
+  count = local.https_on ? 1 : 0
+  name  = var.domain
+}
+
+resource "aws_route53_record" "public" {
+  for_each = local.https_on ? toset([local.web_host, local.api_host]) : toset([])
+  zone_id  = data.aws_route53_zone.public[0].zone_id
+  name     = each.value
+  type     = "A"
+
+  alias {
+    name                   = module.alb.dns_name
+    zone_id                = module.alb.zone_id
+    evaluate_target_health = true
+  }
 }
 
 # Private DNS inside the VPC: the web tasks reach the api as
@@ -202,8 +239,8 @@ module "api" {
     MEDIA_BUCKET   = module.media.bucket
     MEDIA_CDN_URL  = module.media.cdn_domain == "" ? "" : "https://${module.media.cdn_domain}"
     SEED_DEMO      = "1" # demo catalogue on first start of an empty database
-    PUBLIC_WEB_URL = "http://${module.alb.dns_name}"
-    PUBLIC_API_URL = "http://${module.alb.dns_name}:${local.api_http_port}"
+    PUBLIC_WEB_URL = local.web_url
+    PUBLIC_API_URL = local.api_url
 
     # The demo uses the real assistant: cap the monthly spend (AI-01).
     ASSISTANT_MONTHLY_TOKEN_CAP = "500000"
@@ -242,9 +279,12 @@ module "web" {
     NODE_ENV = "production"
     API_URL  = "http://api.${aws_service_discovery_private_dns_namespace.internal.name}:${local.api_port}"
 
-    # No domain, so no HTTPS yet: browsers drop Secure cookies over plain
-    # HTTP. Staging only; production always has a certificate.
-    SESSION_COOKIE_INSECURE = "1"
+    # Without a certificate there is no HTTPS, and browsers drop Secure
+    # cookies over plain HTTP. With one, the cookie is Secure ("0").
+    SESSION_COOKIE_INSECURE = local.https_on ? "0" : "1"
+
+    # Canonical address for links and metadata. Staging is never indexed.
+    SITE_URL = local.web_url
 
     # The stand-in payment page for CHECKOUT_MODE=mock on the api.
     CHECKOUT_SIMULATOR = "1"
@@ -269,8 +309,8 @@ module "alarms" {
 }
 
 output "alb_dns_name" { value = module.alb.dns_name }
-output "web_url" { value = "http://${module.alb.dns_name}" }
-output "api_url" { value = "http://${module.alb.dns_name}:${local.api_http_port}" }
+output "web_url" { value = local.web_url }
+output "api_url" { value = local.api_url }
 output "ecr_repository_url" { value = aws_ecr_repository.api.repository_url }
 output "web_ecr_repository_url" { value = aws_ecr_repository.web.repository_url }
 output "cluster_name" { value = aws_ecs_cluster.this.name }
