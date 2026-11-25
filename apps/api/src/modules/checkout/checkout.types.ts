@@ -51,7 +51,12 @@ export interface WebhookInput {
 
 export type WebhookResult =
   | { readonly valid: true; readonly gatewayRef: string }
-  | { readonly valid: false; readonly reason: 'bad_signature' | 'malformed' };
+  | {
+      readonly valid: false;
+      readonly reason: 'bad_signature' | 'malformed';
+      /** Why, for the log (never shown to the caller). */
+      readonly detail?: string;
+    };
 
 export interface CheckoutGateway {
   readonly id: GatewayId;
@@ -61,7 +66,7 @@ export interface CheckoutGateway {
   /** Authoritative status. `createdAt` lets a gateway time out an abandoned page. */
   status(gatewayRef: string, createdAt?: Date): Promise<GatewayStatus>;
   /** Verify (if the gateway signs) and extract which payment changed. Pure. */
-  parseWebhook(input: WebhookInput): WebhookResult;
+  parseWebhook(input: WebhookInput): WebhookResult | Promise<WebhookResult>;
   /** Sends the money back to the payer (P2-02). Absent when the gateway has
    *  no refund API; the refund is then done in its dashboard. */
   refund?(input: RefundInput): Promise<RefundResult>;

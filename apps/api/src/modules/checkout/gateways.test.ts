@@ -44,7 +44,12 @@ describe('amount helpers', () => {
 });
 
 describe('PawaPay', () => {
-  const cfg = { apiToken: 'tok', baseUrl: 'https://api.sandbox.pawapay.io' };
+  const cfg = {
+    apiToken: 'tok',
+    baseUrl: 'https://api.sandbox.pawapay.io',
+    callbackUrl: 'https://api.nhonga.co.mz/v1/checkout/webhooks/pawapay',
+    requireSignedCallbacks: false,
+  };
 
   it('creates a payment page using the intent id as depositId', async () => {
     const calls: Call[] = [];
@@ -128,10 +133,10 @@ describe('PawaPay', () => {
     await expect(gw.create(input)).rejects.toBeInstanceOf(GatewayUnavailableError);
   });
 
-  it('extracts depositId from callbacks', () => {
+  it('extracts depositId from callbacks', async () => {
     const gw = new PawaPayGateway(cfg, fakeFetch(200, {}));
     expect(
-      gw.parseWebhook({
+      await gw.parseWebhook({
         headers: {},
         rawBody: JSON.stringify({ depositId: ID, status: 'COMPLETED' }),
       }),
@@ -139,7 +144,7 @@ describe('PawaPay', () => {
       valid: true,
       gatewayRef: ID,
     });
-    expect(gw.parseWebhook({ headers: {}, rawBody: 'not json' }).valid).toBe(false);
+    expect((await gw.parseWebhook({ headers: {}, rawBody: 'not json' })).valid).toBe(false);
   });
 });
 

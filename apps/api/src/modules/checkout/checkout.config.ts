@@ -8,6 +8,9 @@
  *   CHECKOUT_BACKUP          pawapay | paysuite | none   (default paysuite)
  *   PAWAPAY_API_TOKEN        Bearer token from the PawaPay dashboard
  *   PAWAPAY_BASE_URL         default https://api.sandbox.pawapay.io
+ *   PAWAPAY_CALLBACK_URL     default {PUBLIC_API_URL}/v1/checkout/webhooks/pawapay;
+ *                            must be the URL registered in the PawaPay dashboard
+ *   PAWAPAY_REQUIRE_SIGNED_CALLBACKS  "true" rejects callbacks without a signature
  *   PAYSUITE_API_TOKEN       Bearer token from the PaySuite dashboard
  *   PAYSUITE_WEBHOOK_SECRET  Webhook signing secret from the PaySuite dashboard
  *   PAYSUITE_BASE_URL        default https://paysuite.tech
@@ -59,6 +62,9 @@ export function buildCheckoutSetup(env: Env, fetchImpl: FetchLike): CheckoutSetu
         {
           apiToken: required(env, 'PAWAPAY_API_TOKEN'),
           baseUrl: trimSlash(env['PAWAPAY_BASE_URL'] ?? 'https://api.sandbox.pawapay.io'),
+          callbackUrl:
+            env['PAWAPAY_CALLBACK_URL'] ?? `${publicApiUrl}/v1/checkout/webhooks/pawapay`,
+          requireSignedCallbacks: flag(env['PAWAPAY_REQUIRE_SIGNED_CALLBACKS']),
         },
         fetchImpl,
       );
@@ -98,6 +104,10 @@ function required(env: Env, key: string): string {
   const v = env[key]?.trim();
   if (!v) throw new Error(`CHECKOUT_MODE=live needs ${key}`);
   return v;
+}
+
+function flag(v: string | undefined): boolean {
+  return ['1', 'true', 'yes', 'on'].includes((v ?? '').trim().toLowerCase());
 }
 
 function trimSlash(u: string): string {

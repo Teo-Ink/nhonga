@@ -241,9 +241,11 @@ export class CheckoutService implements OnModuleInit, OnModuleDestroy {
   ): Promise<'ok'> {
     const gw = this.setup.byId.get(gatewayId as GatewayId);
     if (!gw) throw new NotFoundException();
-    const parsed = gw.parseWebhook({ headers, rawBody });
+    const parsed = await gw.parseWebhook({ headers, rawBody });
     if (!parsed.valid) {
-      this.log.warn(`webhook ${gatewayId}: ${parsed.reason}`);
+      this.log.warn(
+        `webhook ${gatewayId}: ${parsed.reason}${parsed.detail ? ` (${parsed.detail})` : ''}`,
+      );
       if (parsed.reason === 'bad_signature') throw new UnauthorizedException();
       return 'ok';
     }
