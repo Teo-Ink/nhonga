@@ -1,5 +1,13 @@
 # Runbook — Activar HTTPS e domínio (OPS-01)
 
+> **Staging (OPS-07):** já está em código. Com a zona `nhonga.co.mz` no
+> Route 53 e o certificado `nhonga.co.mz` + `*.nhonga.co.mz` emitido, o
+> Terraform de staging cria `staging.nhonga.co.mz` (site) e
+> `api-staging.nhonga.co.mz` (API), redirecciona 80 → 443, fecha a porta 8080
+> e passa o cookie de sessão a `Secure`. Os nomes têm um só nível porque o
+> certificado cobre `*.nhonga.co.mz` e não `*.staging.nhonga.co.mz`.
+> Para voltar atrás: `certificate_arn = ""` em `envs/staging`.
+
 Pré-requisito do dono: domínio `nhonga.co.mz` registado (OQ-1), com acesso ao
 painel DNS.
 

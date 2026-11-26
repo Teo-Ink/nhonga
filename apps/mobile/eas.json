@@ -25,7 +25,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.staging.nhonga.co.mz"
+        "EXPO_PUBLIC_API_URL": "https://api-staging.nhonga.co.mz"
       }
     },
     "production": {
