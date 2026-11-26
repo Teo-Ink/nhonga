@@ -58,6 +58,16 @@ export const SHARED_RULES: readonly SharedRule[] = [
     by: 'client',
   },
   {
+    // Crash reports from the site and the app (OPS-06). A broken page can
+    // loop; a visitor does not need more than this to tell us it is broken.
+    name: 'client_error',
+    method: 'POST',
+    pattern: /^\/client-errors\/?$/,
+    limit: 20,
+    windowSeconds: 3600,
+    by: 'ip',
+  },
+  {
     name: 'complaint',
     method: 'POST',
     pattern: /^\/complaints\/?$/,

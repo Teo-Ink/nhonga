@@ -19,6 +19,9 @@ const enBase: Dictionary = {
     menu: 'Menu',
     loading: 'Loading…',
     retry: 'Try again',
+    page_error_title: 'Something went wrong',
+    page_error_body:
+      'This page could not be shown. The problem was recorded; please try again in a moment.',
     back: 'Back',
     see_all: 'See all',
     verified: 'Verified',

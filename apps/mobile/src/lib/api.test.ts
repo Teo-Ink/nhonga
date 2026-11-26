@@ -15,6 +15,7 @@ import {
   removeFavorite,
   requestOtp,
   revealContact,
+  sendCrashReport,
   setToken,
   topupWallet,
   verifyOtp,
@@ -188,6 +189,23 @@ describe('best-effort calls', () => {
     const real = globalThis.fetch;
     globalThis.fetch = (() => Promise.reject(new Error('offline'))) as typeof fetch;
     assert.doesNotThrow(() => recordEvent('toyota-runx', 'share'));
+    await new Promise((r) => setTimeout(r, 5));
+    globalThis.fetch = real;
+  });
+
+  it('posts crash reports to the API and swallows failures', async () => {
+    sendCrashReport({ source: 'mobile', message: 'TypeError: x', platform: 'android 14' });
+    await new Promise((r) => setTimeout(r, 5));
+    assert.equal(calls[0]!.url.endsWith('/v1/client-errors'), true);
+    assert.deepEqual(calls[0]!.body, {
+      source: 'mobile',
+      message: 'TypeError: x',
+      platform: 'android 14',
+    });
+    assert.equal(calls[0]!.headers['authorization'], undefined);
+    const real = globalThis.fetch;
+    globalThis.fetch = (() => Promise.reject(new Error('offline'))) as typeof fetch;
+    assert.doesNotThrow(() => sendCrashReport({ source: 'mobile', message: 'x' }));
     await new Promise((r) => setTimeout(r, 5));
     globalThis.fetch = real;
   });

@@ -78,6 +78,20 @@ export const COMPLAINT_SUBJECTS = [
   'advertising',
   'other',
 ] as const;
+/** A crash or unhandled error seen by the site or the app (OPS-06). Only
+ *  technical fields; the server never stores who sent it. */
+export const ClientErrorReport = z.object({
+  source: z.enum(['web', 'web-server', 'mobile']),
+  message: z.string().trim().min(1).max(500),
+  stack: z.string().max(4000).optional(),
+  /** Screen or path where it happened, without query string. */
+  route: z.string().max(200).optional(),
+  release: z.string().max(64).optional(),
+  /** e.g. "android 14", "Chrome 131". */
+  platform: z.string().max(64).optional(),
+});
+export type ClientErrorReport = z.infer<typeof ClientErrorReport>;
+
 export const ComplaintCreate = z.object({
   name: required(120),
   contact: required(160),
@@ -200,6 +214,7 @@ export const API_BODIES = {
   ListingEvent,
   ListingReport,
   ContactReveal,
+  ClientErrorReport,
   ComplaintCreate,
   ComplaintResolve,
   ConversationStart,

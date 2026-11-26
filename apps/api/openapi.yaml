@@ -1378,6 +1378,31 @@ paths:
           $ref: "#/components/responses/Problem"
         default:
           $ref: "#/components/responses/Problem"
+  /client-errors:
+    post:
+      tags:
+        - client-errors
+      operationId: ClientErrors_report
+      summary: POST /client-errors
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientErrorReport"
+      responses:
+        "202":
+          description: Sucesso
+          content:
+            application/json:
+              schema: {}
+        "400":
+          $ref: "#/components/responses/Problem"
+        "429":
+          $ref: "#/components/responses/Problem"
+        default:
+          $ref: "#/components/responses/Problem"
   /complaints:
     post:
       tags:
@@ -2702,6 +2727,34 @@ components:
           type: string
           minLength: 1
           maxLength: 160
+    ClientErrorReport:
+      type: object
+      properties:
+        source:
+          type: string
+          enum:
+            - web
+            - web-server
+            - mobile
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+        stack:
+          type: string
+          maxLength: 4000
+        route:
+          type: string
+          maxLength: 200
+        release:
+          type: string
+          maxLength: 64
+        platform:
+          type: string
+          maxLength: 64
+      required:
+        - source
+        - message
     ComplaintCreate:
       type: object
       properties:
