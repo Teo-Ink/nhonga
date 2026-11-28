@@ -94,6 +94,13 @@ export default function PrivacyPage() {
           <strong>[confirmar contratos]</strong>;
         </li>
         <li>
+          <strong>Início de sessão com Google ou Facebook</strong>, se escolher essa forma de
+          entrar: recebemos da Google (Google LLC) ou do Facebook (Meta Platforms) o seu nome, o
+          endereço de e-mail e um identificador da sua conta. Não recebemos a sua palavra-passe, não
+          publicamos nada em seu nome e não acedemos aos seus contactos. Pode desligar essa conta em
+          Conta → Privacidade e conta <strong>[confirmar termos dos fornecedores]</strong>;
+        </li>
+        <li>
           <strong>Registo de erros técnicos</strong>: Sentry (Functional Software, Inc.), com
           alojamento na Alemanha. Recebe dados técnicos de falhas do serviço, do site e da aplicação
           (data, endereço pedido, versão e tipo de dispositivo), sem o seu endereço IP, cookies ou

@@ -105,13 +105,26 @@ export class AlertsController {
     await this.alerts.remove(id, user.phoneE164);
   }
 
-  private async user(authz: string | undefined): Promise<AuthUser> {
+  /** Alerts are sent by SMS, so they belong to a confirmed number. An account
+   *  opened with Google/Facebook has to confirm one first (AUTH-10). */
+  private async user(authz: string | undefined): Promise<AuthUser & { phoneE164: string }> {
     const token = authz?.startsWith('Bearer ') ? authz.slice(7).trim() : null;
+    let me: AuthUser;
     try {
-      return await this.auth.me(token);
+      me = await this.auth.me(token);
     } catch {
       throw new UnauthorizedException({ message: 'Inicie sessão para criar alertas.' });
     }
+    if (me.phoneE164 === null) {
+      throw new HttpException(
+        {
+          code: 'phone_required',
+          message: 'Confirme o seu número de telefone para receber alertas por SMS.',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    return { ...me, phoneE164: me.phoneE164 };
   }
 }
 

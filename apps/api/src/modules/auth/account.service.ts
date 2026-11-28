@@ -6,7 +6,7 @@ import { savedSearch } from '../../db/schema/alerts.js';
 import { product } from '../../db/schema/catalog.js';
 import { order as orderTable } from '../../db/schema/commerce.js';
 import { favorite } from '../../db/schema/favorites.js';
-import { address, appUser, refreshToken } from '../../db/schema/identity.js';
+import { address, appUser, refreshToken, userIdentity } from '../../db/schema/identity.js';
 import { conversation, message } from '../../db/schema/messaging.js';
 import { devicePushToken, notification, notificationPref } from '../../db/schema/notifications.js';
 import { review } from '../../db/schema/reviews.js';
@@ -73,7 +73,9 @@ export class AccountService {
         await tx.delete(vendorUser).where(eq(vendorUser.userId, me.id));
       }
 
-      await tx.delete(savedSearch).where(eq(savedSearch.phoneE164, me.phoneE164));
+      if (me.phoneE164 !== null) {
+        await tx.delete(savedSearch).where(eq(savedSearch.phoneE164, me.phoneE164));
+      }
       await tx.delete(address).where(eq(address.userId, me.id));
       await tx.delete(favorite).where(eq(favorite.userId, me.id));
       await tx.delete(devicePushToken).where(eq(devicePushToken.userId, me.id));
@@ -83,6 +85,10 @@ export class AccountService {
         .update(review)
         .set({ authorName: DELETED_NAME })
         .where(eq(review.authorUserId, me.id));
+
+      // Google/Facebook links go too: the same provider account can open a
+      // fresh Nhonga account later, and nothing ties it to this one (AUTH-10).
+      await tx.delete(userIdentity).where(eq(userIdentity.userId, me.id));
 
       // Every session ends now, on every device.
       await tx
@@ -145,7 +151,8 @@ export class AccountService {
       exportedAt: new Date().toISOString(),
       account: {
         id: user?.id,
-        phone: user?.phoneE164,
+        phone: user?.phoneE164 ?? null,
+        signInProviders: me.providers,
         email: user?.email ?? null,
         displayName: user?.displayName,
         locale: user?.locale,
@@ -157,14 +164,17 @@ export class AccountService {
         .select({ productId: favorite.productId })
         .from(favorite)
         .where(eq(favorite.userId, me.id)),
-      savedSearches: await this.db
-        .select({
-          label: savedSearch.label,
-          href: savedSearch.href,
-          createdAt: savedSearch.createdAt,
-        })
-        .from(savedSearch)
-        .where(eq(savedSearch.phoneE164, me.phoneE164)),
+      savedSearches:
+        me.phoneE164 === null
+          ? []
+          : await this.db
+              .select({
+                label: savedSearch.label,
+                href: savedSearch.href,
+                createdAt: savedSearch.createdAt,
+              })
+              .from(savedSearch)
+              .where(eq(savedSearch.phoneE164, me.phoneE164)),
       addresses: await this.db.select().from(address).where(eq(address.userId, me.id)),
       conversations: asBuyer,
       messagesSent: sent,

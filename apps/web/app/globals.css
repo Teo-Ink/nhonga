@@ -1719,6 +1719,25 @@ a.seller:focus-visible {
   font-weight: var(--weight-semibold);
   border: 1px solid transparent;
 }
+.social-btn {
+  text-decoration: none;
+}
+.signin-methods {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+.signin-methods li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+.phoneconfirm {
+  margin-top: var(--space-4);
+}
 .social-btn--google {
   background: #fff;
   color: #1f1f1f;

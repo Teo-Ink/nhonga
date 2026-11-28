@@ -11,6 +11,7 @@ import {
 } from '../../../components/icons';
 import { PhotoUpload } from '../../../components/PhotoUpload';
 import { useSession } from '../../../components/auth/SessionProvider';
+import { PhoneConfirm } from '../../../components/auth/PhoneConfirm';
 import { formatPrice } from '../../../lib/format';
 import { clearDraft, loadDraft, saveDraft } from '../../../lib/listing-draft';
 import { useActionKey } from '../../../lib/action-key';
@@ -46,6 +47,7 @@ export default function NewListingPage() {
   const [plan, setPlan] = useState<'free' | 'destaque' | 'turbo'>('free');
   const [photos, setPhotos] = useState<string[]>([]);
   const { user, loading: sessionLoading } = useSession();
+  const [needsPhone, setNeedsPhone] = useState(false);
   const [shop, setShop] = useState<{ slug: string; displayName: string } | null>(null);
   const [shopChecked, setShopChecked] = useState(false);
   const [shopName, setShopName] = useState('');
@@ -231,6 +233,14 @@ export default function NewListingPage() {
       window.location.href = `/entrar?next=${encodeURIComponent('/vender/novo')}`;
       return;
     }
+    // Buyers reach sellers by phone: an account opened with Google/Facebook
+    // confirms a number first. The form stays filled in meanwhile (AUTH-10).
+    if (!user.phoneVerified) {
+      saveDraft({ title, category, description, price, stock, plan, shopName, photos });
+      setNeedsPhone(true);
+      document.getElementById('confirmar-numero')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     setPublishing(true);
     try {
       const res = await fetch('/api/listings', {
@@ -285,6 +295,11 @@ export default function NewListingPage() {
 
   return (
     <section className="newlisting">
+      {user && needsPhone && !user.phoneVerified ? (
+        <div id="confirmar-numero">
+          <PhoneConfirm onDone={() => setNeedsPhone(false)} />
+        </div>
+      ) : null}
       <a className="pdp__back" href="/vender">
         <IconChevronLeft /> {t.back_dash}
       </a>

@@ -4,7 +4,7 @@ import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import { normaliseMzMsisdn } from '@nhonga/shared';
 import { DB } from '../../db/database.module.js';
 import type { Db } from '../../db/types.js';
-import { appUser, otpChallenge, refreshToken } from '../../db/schema/identity.js';
+import { appUser, otpChallenge, refreshToken, userIdentity } from '../../db/schema/identity.js';
 import { referral } from '../../db/schema/referrals.js';
 import { vendor, vendorUser } from '../../db/schema/vendors.js';
 import { wallet, walletTransaction } from '../../db/schema/wallet.js';
@@ -29,7 +29,16 @@ export class AuthError extends Error {
       | 'wrong_code'
       | 'unauthenticated'
       | 'not_allowed'
-      | 'sms_unavailable',
+      | 'sms_unavailable'
+      // AUTH-10: Google/Facebook sign-in and adding a phone to an account.
+      | 'phone_in_use'
+      | 'phone_required'
+      | 'not_available'
+      | 'provider_unavailable'
+      | 'social_failed'
+      | 'identity_in_use'
+      | 'already_linked'
+      | 'last_sign_in_method',
     readonly userMessage: string,
   ) {
     super(`${code}: ${userMessage}`);
@@ -39,11 +48,17 @@ export class AuthError extends Error {
 
 export interface AuthUser {
   readonly id: string;
-  readonly phoneE164: string;
+  /** Null for an account opened with Google/Facebook that has not confirmed a
+   *  number yet (AUTH-10). Selling and SMS alerts need one. */
+  readonly phoneE164: string | null;
   readonly displayName: string;
   readonly email: string | null;
   readonly phoneVerified: boolean;
+  /** Linked sign-in providers, e.g. ["google"]. */
+  readonly providers: readonly string[];
 }
+
+export type OtpPurpose = 'login' | 'verify_phone';
 
 export interface OtpRequestResult {
   readonly challengeId: string;
@@ -102,7 +117,7 @@ export class AuthService {
 
   constructor(@Inject(DB) private readonly db: Db) {}
 
-  async requestOtp(phone: string): Promise<OtpRequestResult> {
+  async requestOtp(phone: string, purpose: OtpPurpose = 'login'): Promise<OtpRequestResult> {
     const phoneE164 = normaliseMzMsisdn(phone);
     if (phoneE164 === null) {
       throw new AuthError('invalid_phone', 'O número deve ter 9 dígitos e começar por 8.');
@@ -134,7 +149,7 @@ export class AuthService {
       id: challengeId,
       phoneE164,
       codeHash: hashOtpCode(code),
-      purpose: 'login',
+      purpose,
       maxAttempts: MAX_ATTEMPTS,
       expiresAt: new Date(Date.now() + OTP_TTL_SECONDS * 1000),
     });
@@ -164,7 +179,16 @@ export class AuthService {
     };
   }
 
-  async verifyOtp(challengeId: string, code: string, referralCode?: string): Promise<VerifyResult> {
+  /**
+   * Checks a code and consumes its challenge; returns the phone it proves.
+   * A challenge only works for the purpose it was issued for, so a code sent
+   * to confirm a number can never be turned into a sign-in, or the reverse.
+   */
+  private async consumeChallenge(
+    challengeId: string,
+    code: string,
+    purpose: OtpPurpose,
+  ): Promise<string> {
     // Claim one attempt atomically BEFORE checking the code (SEC-01). Concurrent
     // guesses each need their own row update, so at most max_attempts of them
     // ever get to compare a code, however many arrive at once.
@@ -174,6 +198,7 @@ export class AuthService {
       .where(
         and(
           eq(otpChallenge.id, challengeId),
+          eq(otpChallenge.purpose, purpose),
           sql`${otpChallenge.attempts} < ${otpChallenge.maxAttempts}`,
           isNull(otpChallenge.consumedAt),
           gt(otpChallenge.expiresAt, sql`now()`),
@@ -197,8 +222,26 @@ export class AuthService {
     if (consumed.length === 0) {
       throw new AuthError('challenge_not_found', 'Este código já foi usado. Comece de novo.');
     }
+    return ch.phoneE164;
+  }
 
-    const { user, created } = await this.upsertUser(ch.phoneE164);
+  async verifyOtp(challengeId: string, code: string, referralCode?: string): Promise<VerifyResult> {
+    const phoneE164 = await this.consumeChallenge(challengeId, code, 'login');
+    const { user, created } = await this.upsertUser(phoneE164);
+    const session = await this.issueSession(user);
+
+    // Referral attribution happens once, only for a brand-new account. Never let
+    // it break sign-in.
+    if (created && referralCode) {
+      await this.recordReferral(user.id, referralCode).catch((e) =>
+        this.log.warn(`referral attribution failed: ${e instanceof Error ? e.message : e}`),
+      );
+    }
+    return session;
+  }
+
+  /** Opens a session for a user who has just proved who they are. */
+  async issueSession(user: AuthUser): Promise<VerifyResult> {
     const token = newSessionToken();
     const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 3600 * 1000);
     await this.db.insert(refreshToken).values({
@@ -209,15 +252,6 @@ export class AuthService {
       deviceLabel: 'web',
       expiresAt,
     });
-
-    // Referral attribution happens once, only for a brand-new account. Never let
-    // it break sign-in.
-    if (created && referralCode) {
-      await this.recordReferral(user.id, referralCode).catch((e) =>
-        this.log.warn(`referral attribution failed: ${e instanceof Error ? e.message : e}`),
-      );
-    }
-
     return { sessionToken: token.raw, expiresAt: expiresAt.toISOString(), user };
   }
 
@@ -275,7 +309,62 @@ export class AuthService {
       .limit(1);
     const u = rows[0];
     if (u === undefined) throw new AuthError('unauthenticated', 'Sessão inválida.');
-    return toAuthUser(u);
+    return toAuthUser(u, await this.providersOf(u.id));
+  }
+
+  private async providersOf(userId: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ provider: userIdentity.provider })
+      .from(userIdentity)
+      .where(eq(userIdentity.userId, userId));
+    return rows.map((r) => r.provider).sort();
+  }
+
+  /** The signed-in user's id, for the sibling services of this module. */
+  async requireUserId(rawToken: string | null): Promise<string> {
+    return this.userIdForToken(rawToken);
+  }
+
+  /** Step 1 of adding a number to an account that has none (AUTH-10). */
+  async requestPhoneLink(rawToken: string | null, phone: string): Promise<OtpRequestResult> {
+    await this.userIdForToken(rawToken);
+    return this.requestOtp(phone, 'verify_phone');
+  }
+
+  /**
+   * Step 2: the code proves the number is theirs. A number that already has a
+   * Nhonga account is refused: joining two accounts is not something a code
+   * sent to one of them should be able to do.
+   */
+  async verifyPhoneLink(
+    rawToken: string | null,
+    challengeId: string,
+    code: string,
+  ): Promise<AuthUser> {
+    const userId = await this.userIdForToken(rawToken);
+    const phoneE164 = await this.consumeChallenge(challengeId, code, 'verify_phone');
+    const inUse = () =>
+      new AuthError(
+        'phone_in_use',
+        'Este número já tem uma conta Nhonga. Termine a sessão e entre com o número, ou use outro.',
+      );
+    const owner = await this.db
+      .select({ id: appUser.id })
+      .from(appUser)
+      .where(eq(appUser.phoneE164, phoneE164))
+      .limit(1);
+    if (owner[0] && owner[0].id !== userId) throw inUse();
+    try {
+      await this.db
+        .update(appUser)
+        .set({ phoneE164, phoneVerifiedAt: new Date(), updatedAt: new Date() })
+        .where(eq(appUser.id, userId));
+    } catch (e) {
+      // Two accounts confirming the same number at once: the unique index decides.
+      if ((e as { code?: string }).code === '23505') throw inUse();
+      throw e;
+    }
+    return this.me(rawToken);
   }
 
   async logout(rawToken: string | null): Promise<void> {
@@ -326,10 +415,10 @@ export class AuthService {
           .where(eq(appUser.id, existing[0].id));
       }
       return {
-        user: toAuthUser({
-          ...existing[0],
-          phoneVerifiedAt: existing[0].phoneVerifiedAt ?? new Date(),
-        }),
+        user: toAuthUser(
+          { ...existing[0], phoneVerifiedAt: existing[0].phoneVerifiedAt ?? new Date() },
+          await this.providersOf(existing[0].id),
+        ),
         created: false,
       };
     }
@@ -347,10 +436,17 @@ export class AuthService {
       .limit(1);
     // onConflictDoNothing means a race could find an existing row — treat a row
     // whose id matches the one we generated as the freshly created account.
-    return { user: toAuthUser(rows[0]!), created: rows[0]!.id === id };
+    return { user: toAuthUser(rows[0]!, []), created: rows[0]!.id === id };
   }
 
   // ── Referrals (H) ─────────────────────────────────────────────────
+  /** Referral attribution for a brand-new account. Never breaks a sign-in. */
+  async attributeReferral(userId: string, code: string): Promise<void> {
+    await this.recordReferral(userId, code).catch((e) =>
+      this.log.warn(`referral attribution failed: ${e instanceof Error ? e.message : e}`),
+    );
+  }
+
   private static readonly REFERRAL_POINTS = 20;
 
   /** The short invite code for a user id: the first UUID block, uppercased. */
@@ -441,18 +537,22 @@ export class AuthService {
   }
 }
 
-function toAuthUser(u: {
-  id: string;
-  phoneE164: string;
-  displayName: string;
-  email: string | null;
-  phoneVerifiedAt: Date | null;
-}): AuthUser {
+export function toAuthUser(
+  u: {
+    id: string;
+    phoneE164: string | null;
+    displayName: string;
+    email: string | null;
+    phoneVerifiedAt: Date | null;
+  },
+  providers: readonly string[],
+): AuthUser {
   return {
     id: u.id,
     phoneE164: u.phoneE164,
     displayName: u.displayName,
     email: u.email,
-    phoneVerified: u.phoneVerifiedAt !== null,
+    phoneVerified: u.phoneE164 !== null && u.phoneVerifiedAt !== null,
+    providers,
   };
 }

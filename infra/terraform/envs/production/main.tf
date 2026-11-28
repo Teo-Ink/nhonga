@@ -129,7 +129,15 @@ module "secrets" {
 
   # Put by the owner (runbooks/segredos.md): external before the first
   # production deploy; optional (the assistant key) whenever it is ready.
-  optional = ["ANTHROPIC_API_KEY", "SENTRY_DSN"]
+  optional = [
+    "ANTHROPIC_API_KEY",
+    "SENTRY_DSN",
+    # Sign in with Google/Facebook (AUTH-10); off until real values are put.
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "FACEBOOK_APP_ID",
+    "FACEBOOK_APP_SECRET",
+  ]
   external = ["PAWAPAY_API_TOKEN", "SMS_GATEWAY_URL", "SMS_GATEWAY_TOKEN"]
 }
 

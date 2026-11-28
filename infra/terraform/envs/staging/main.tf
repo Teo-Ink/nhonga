@@ -133,7 +133,15 @@ module "secrets" {
   otp_dev_allowlist = true
 
   # AI assistant: placeholder until the owner puts the key (runbooks/segredos.md).
-  optional = ["ANTHROPIC_API_KEY", "SENTRY_DSN"]
+  optional = [
+    "ANTHROPIC_API_KEY",
+    "SENTRY_DSN",
+    # Sign in with Google/Facebook (AUTH-10); off until real values are put.
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "FACEBOOK_APP_ID",
+    "FACEBOOK_APP_SECRET",
+  ]
 }
 
 module "alb" {
