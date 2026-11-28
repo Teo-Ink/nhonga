@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   skelTitle: { marginTop: space.md, height: 22, width: '80%', borderRadius: radius.sm },
   skelPrice: { marginTop: space.sm, height: 24, width: '40%', borderRadius: radius.sm },
   skelSeller: { marginTop: space.sm, height: 16, width: '55%', borderRadius: radius.sm },
-  skelBtn: { marginTop: space.sm, height: 50, width: '100%', borderRadius: radius.pill },
+  skelBtn: { marginTop: space.sm, height: 50, width: '100%', borderRadius: radius.md },
   content: { padding: space.lg, gap: space.sm },
   title: {
     marginTop: space.md,
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: space.sm,
     height: 50,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: space.xs,

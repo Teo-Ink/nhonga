@@ -205,9 +205,12 @@
   --space-16: 64px;
 
   /* ── Radius ────────────────────────────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Corners (UX-12): one small radius for buttons, fields, cards and tags.
+     --radius-pill is only for things meant to be round (avatars, dots,
+     counters, switches). */
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
   --radius-pill: 999px;
 
   /* ── Elevation (soft, low-opacity, warm-tinted, layered) ───── */

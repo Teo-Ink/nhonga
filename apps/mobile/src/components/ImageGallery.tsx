@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     bottom: space.sm,
     right: space.sm,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },

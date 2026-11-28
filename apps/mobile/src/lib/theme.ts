@@ -15,7 +15,10 @@ export const brand = {
   danger: '#c0362c',
 } as const;
 
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 };
+// Corners (UX-12): one small radius for buttons, fields, cards and tags, like
+// the classifieds sites people already know. `pill` is only for things that
+// are meant to be round: avatars and dots.
+export const radius = { sm: 4, md: 4, lg: 4, pill: 999 };
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
 
 // Soft, layered elevation that reads as real depth. Uses the modern cross-platform

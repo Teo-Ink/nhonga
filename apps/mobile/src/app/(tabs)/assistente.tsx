@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     paddingHorizontal: space.lg,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     backgroundColor: brand.green,
   },
   sendDisabled: { opacity: 0.5 },
