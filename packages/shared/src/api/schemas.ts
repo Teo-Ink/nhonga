@@ -78,6 +78,16 @@ export const COMPLAINT_SUBJECTS = [
   'advertising',
   'other',
 ] as const;
+/** Completing a Google/Facebook sign-in (AUTH-10): the one-time code the
+ *  provider returned, plus the values issued by /auth/social/:provider/start. */
+export const SocialComplete = z.object({
+  code: z.string().min(1).max(2048),
+  nonce: z.string().min(16).max(128),
+  codeVerifier: z.string().min(16).max(128),
+  referralCode: z.string().max(32).optional(),
+});
+export type SocialComplete = z.infer<typeof SocialComplete>;
+
 /** A crash or unhandled error seen by the site or the app (OPS-06). Only
  *  technical fields; the server never stores who sent it. */
 export const ClientErrorReport = z.object({
@@ -209,6 +219,7 @@ export const AssistantSearchQuery = z.object({
 export const API_BODIES = {
   OtpRequest,
   OtpVerify,
+  SocialComplete,
   ListingInput,
   ListingStatus,
   ListingEvent,

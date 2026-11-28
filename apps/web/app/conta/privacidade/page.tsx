@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useSession } from '../../../components/auth/SessionProvider';
 import { useDict } from '../../../components/i18n/DictProvider';
+import { SignInMethods } from '../../../components/auth/SignInMethods';
 
 // Privacy and account (P0-06): download my data, delete my account. The app
 // stores require deletion to be possible from inside the product, without
@@ -51,6 +52,8 @@ export default function PrivacyAccountPage() {
         ← {d.account.title}
       </a>
       <h1 className="section__title">{t.title}</h1>
+
+      <SignInMethods />
 
       <div className="card">
         <h2 className="card__title">{t.export_title}</h2>

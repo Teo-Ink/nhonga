@@ -1,7 +1,5 @@
 'use client';
 import { IS_DEMO } from '../../lib/demo';
-
-const SOCIAL_LOGIN = process.env.NEXT_PUBLIC_SOCIAL_LOGIN === '1';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isValidMzMsisdn } from '@nhonga/shared';
@@ -9,8 +7,10 @@ import { pt } from '../../lib/i18n/pt';
 import { IconGoogle, IconFacebook, IconChevronLeft } from '../../components/icons';
 import { useSession } from '../../components/auth/SessionProvider';
 
-// Sign in / register via phone OTP — the real, wired flow. Social sign-in stays
-// a labelled demo (it needs server-side OAuth token exchange that is not set up).
+// Sign in / register with the phone number (SMS code), Google or Facebook.
+// The Google/Facebook buttons appear only for providers that are configured
+// on the server; each is a plain link to our own /api/auth/social/... route,
+// which sends the browser to the provider (AUTH-10).
 type Step = 'phone' | 'code';
 
 export default function AuthPage() {
@@ -37,7 +37,21 @@ export default function AuthPage() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [socialNotice, setSocialNotice] = useState(false);
+  const [providers, setProviders] = useState<string[]>([]);
+  const [next, setNext] = useState('/conta');
+
+  useEffect(() => {
+    setNext(destination());
+    const erro = new URLSearchParams(window.location.search).get('erro');
+    if (erro === 'suspensa') setError(t.social_suspended);
+    else if (erro) setError(t.social_failed);
+    fetch('/api/auth/social/providers')
+      .then((r) => r.json())
+      .then((d: { providers?: string[] }) => setProviders(d.providers ?? []))
+      .catch(() => setProviders([]));
+  }, []);
+  const socialHref = (provider: string) =>
+    `/api/auth/social/${provider}/start?next=${encodeURIComponent(next)}`;
 
   const phoneValid = isValidMzMsisdn(phone);
 
@@ -140,36 +154,26 @@ export default function AuthPage() {
               </p>
             </form>
 
-            {/* Social sign-in is not built yet: buttons that only say "not
-                available" erode trust, so they stay hidden until it exists. */}
-            {SOCIAL_LOGIN ? (
+            {providers.length > 0 ? (
               <>
                 <div className="auth__divider" role="separator">
                   <span>{t.social_or}</span>
                 </div>
                 <div className="auth__social">
-                  <button
-                    type="button"
-                    className="social-btn social-btn--google"
-                    onClick={() => setSocialNotice(true)}
-                  >
-                    <IconGoogle />
-                    <span>{t.google}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="social-btn social-btn--facebook"
-                    onClick={() => setSocialNotice(true)}
-                  >
-                    <IconFacebook />
-                    <span>{t.facebook}</span>
-                  </button>
+                  {providers.includes('google') ? (
+                    <a className="social-btn social-btn--google" href={socialHref('google')}>
+                      <IconGoogle />
+                      <span>{t.google}</span>
+                    </a>
+                  ) : null}
+                  {providers.includes('facebook') ? (
+                    <a className="social-btn social-btn--facebook" href={socialHref('facebook')}>
+                      <IconFacebook />
+                      <span>{t.facebook}</span>
+                    </a>
+                  ) : null}
                 </div>
-                {socialNotice ? (
-                  <p className="auth__notice" role="alert">
-                    {t.not_wired}
-                  </p>
-                ) : null}
+                <p className="auth__legal">{t.social_note}</p>
               </>
             ) : null}
           </>

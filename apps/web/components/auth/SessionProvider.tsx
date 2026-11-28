@@ -3,10 +3,13 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 export interface SessionUser {
   id: string;
-  phoneE164: string;
+  /** Null until an account opened with Google/Facebook confirms a number. */
+  phoneE164: string | null;
   displayName: string;
   email: string | null;
   phoneVerified: boolean;
+  /** Linked sign-in providers: "google", "facebook". */
+  providers?: string[];
 }
 
 export interface SessionShop {

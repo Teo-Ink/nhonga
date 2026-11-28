@@ -3,6 +3,9 @@
  *
  * Phone-first: the MSISDN is the account identifier and also the wallet identifier (D-04, D-05).
  * Email exists but is never required to transact.
+ *
+ * Since AUTH-10 an account can also be opened with Google or Facebook; it has no phone until
+ * the owner confirms one, which is required before selling.
  */
 
 import { sql } from 'drizzle-orm';
@@ -26,7 +29,8 @@ export const appUser = pgTable(
   'app_user',
   {
     id: uuid('id').primaryKey(),
-    phoneE164: text('phone_e164').notNull(),
+    /** Null only for an account opened with Google/Facebook that has not confirmed a number yet. */
+    phoneE164: text('phone_e164'),
     phoneVerifiedAt: timestamp('phone_verified_at', { withTimezone: true }),
     email: text('email'),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
@@ -50,8 +54,32 @@ export const appUser = pgTable(
     // A deleted account's number becomes "deleted:<id>" (migration 0021).
     check(
       'app_user_phone_format_check',
-      sql`${table.status} = 'deleted' or ${table.phoneE164} ~ '^\\+258[8][2-7][0-9]{7}$'`,
+      sql`${table.status} = 'deleted' or ${table.phoneE164} is null or ${table.phoneE164} ~ '^\\+258[8][2-7][0-9]{7}$'`,
     ),
+  ],
+);
+
+/**
+ * Provider accounts (Google, Facebook) linked to a Nhonga account (AUTH-10).
+ * `subject` is the provider's stable id for the person. The e-mail is for the
+ * owner's reference only and is never used to find or merge accounts.
+ */
+export const userIdentity = pgTable(
+  'user_identity',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => appUser.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    subject: text('subject').notNull(),
+    email: text('email'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(now),
+  },
+  (table) => [
+    uniqueIndex('user_identity_provider_subject_key').on(table.provider, table.subject),
+    uniqueIndex('user_identity_user_provider_key').on(table.userId, table.provider),
+    check('user_identity_provider_check', sql`${table.provider} in ('google','facebook')`),
   ],
 );
 

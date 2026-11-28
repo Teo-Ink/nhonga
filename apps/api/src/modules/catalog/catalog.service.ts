@@ -140,6 +140,17 @@ export class CatalogService {
     )[0];
     if (!cat) throw new BadRequestException({ message: 'unknown category' });
 
+    // Buyers reach a seller by phone or WhatsApp, so selling needs a confirmed
+    // number. An account opened with Google/Facebook confirms one here (AUTH-10).
+    if (user.phoneE164 === null || !user.phoneVerified) {
+      throw new HttpException(
+        {
+          code: 'phone_required',
+          message: 'Confirme o seu número de telefone para publicar anúncios.',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     const vendorId = await this.ensureUserVendor(user, input.shopName);
     const today = await this.listingsCreatedToday(vendorId);
     if (today >= listingsPerDay()) {
@@ -653,10 +664,10 @@ export class CatalogService {
     const name =
       shopName?.trim().slice(0, 80) ||
       user.displayName.trim() ||
-      `Loja ${user.phoneE164.slice(-4)}`;
+      `Loja ${(user.phoneE164 ?? '').slice(-4)}`;
     const slug = await this.uniqueVendorSlug(name);
     const vendorId = randomUUID();
-    const phone = user.phoneE164.replace(/^\+/, '');
+    const phone = (user.phoneE164 ?? '').replace(/^\+/, '');
     // status 'pending_kyc' → no "Verificado" selo until they pass KYC or go Pro.
     await this.db.insert(vendor).values({
       id: vendorId,

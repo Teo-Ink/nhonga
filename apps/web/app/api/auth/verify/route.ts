@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { SESSION_COOKIE, apiFetch, readJson, withApi } from '../../../../lib/bff';
+import { apiFetch, readJson, withApi } from '../../../../lib/bff';
+import { sessionCookie } from '../../../../lib/session-cookie';
 
 const REFERRAL_COOKIE = 'nhonga_ref';
 
@@ -29,16 +30,7 @@ async function handlePOST(req: Request): Promise<Response> {
     );
   }
   const out = NextResponse.json({ user: data.user });
-  out.cookies.set(SESSION_COOKIE, data.sessionToken, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 7 * 24 * 3600,
-    // Secure in production builds. Staging without a domain is plain HTTP, where
-    // browsers drop Secure cookies, so it opts out explicitly; never set this
-    // where real users sign in.
-    secure: process.env.NODE_ENV === 'production' && process.env.SESSION_COOKIE_INSECURE !== '1',
-  });
+  out.cookies.set(sessionCookie(data.sessionToken));
   // The invite code has been consumed (or ignored) — clear it either way.
   if (referralCode) out.cookies.set(REFERRAL_COOKIE, '', { path: '/', maxAge: 0 });
   return out;

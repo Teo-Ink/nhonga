@@ -109,20 +109,30 @@ export class AuthController {
   }
 }
 
-function bearer(authz: string | undefined): string | null {
+export function bearer(authz: string | undefined): string | null {
   if (!authz) return null;
   const m = /^Bearer\s+(.+)$/i.exec(authz.trim());
   return m ? m[1]! : null;
 }
 
-function toHttp(e: unknown): HttpException {
+export function toHttp(e: unknown): HttpException {
   if (e instanceof AuthError) {
     const payload = { error: 'Auth', message: e.userMessage, code: e.code };
     if (e.code === 'unauthenticated') return new UnauthorizedException(payload);
     if (e.code === 'rate_limited') return new HttpException(payload, HttpStatus.TOO_MANY_REQUESTS);
     if (e.code === 'not_allowed') return new HttpException(payload, HttpStatus.FORBIDDEN);
-    if (e.code === 'sms_unavailable') {
+    if (e.code === 'sms_unavailable' || e.code === 'provider_unavailable') {
       return new HttpException(payload, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+    if (e.code === 'phone_required') return new HttpException(payload, HttpStatus.FORBIDDEN);
+    if (e.code === 'not_available') return new HttpException(payload, HttpStatus.NOT_FOUND);
+    if (
+      e.code === 'phone_in_use' ||
+      e.code === 'identity_in_use' ||
+      e.code === 'already_linked' ||
+      e.code === 'last_sign_in_method'
+    ) {
+      return new HttpException(payload, HttpStatus.CONFLICT);
     }
     return new BadRequestException(payload);
   }

@@ -58,6 +58,25 @@ export const SHARED_RULES: readonly SharedRule[] = [
     by: 'client',
   },
   {
+    // Google/Facebook sign-in (AUTH-10): each attempt costs calls to the
+    // provider, and a code can only be used once anyway.
+    name: 'social_sign_in',
+    method: 'POST',
+    pattern: /^\/auth\/social\/[a-z]+\/(start|complete|link)\/?$/,
+    limit: 30,
+    windowSeconds: 3600,
+    by: 'ip',
+  },
+  {
+    // Adding a phone to an account sends an SMS: same care as a login code.
+    name: 'phone_link',
+    method: 'POST',
+    pattern: /^\/auth\/phone\/(request|verify)\/?$/,
+    limit: 10,
+    windowSeconds: 3600,
+    by: 'ip',
+  },
+  {
     // Crash reports from the site and the app (OPS-06). A broken page can
     // loop; a visitor does not need more than this to tell us it is broken.
     name: 'client_error',

@@ -74,16 +74,35 @@ export const ProductListOut = z.object({
 
 export const AuthUserOut = z.object({
   id: z.string(),
-  phoneE164: z.string(),
+  /** Null until an account opened with Google/Facebook confirms a number. */
+  phoneE164: z.string().nullable(),
   displayName: z.string(),
   email: z.string().nullable(),
   phoneVerified: z.boolean(),
+  /** Linked sign-in providers: "google", "facebook". */
+  providers: z.array(z.string()),
+});
+
+export const SocialProvidersOut = z.object({ providers: z.array(z.enum(['google', 'facebook'])) });
+export const SocialStartOut = z.object({
+  url: z.string(),
+  state: z.string(),
+  nonce: z.string(),
+  codeVerifier: z.string(),
 });
 
 export const OtpRequestOut = z.object({
   challengeId: z.string(),
   expiresInSeconds: z.number().int(),
   devCode: z.string().optional().describe('Só em ambientes de teste com SMS simulado'),
+});
+
+export const SocialSessionOut = z.object({
+  sessionToken: z.string(),
+  expiresAt: z.string(),
+  user: AuthUserOut,
+  /** True when this sign-in opened a new account. */
+  created: z.boolean(),
 });
 
 export const SessionOut = z.object({
@@ -167,6 +186,9 @@ export const API_RESPONSES = {
   ProductListOut,
   ContactOut,
   AuthUserOut,
+  SocialProvidersOut,
+  SocialStartOut,
+  SocialSessionOut,
   OtpRequestOut,
   SessionOut,
   WalletOut,
