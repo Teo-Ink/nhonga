@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   btn: {
     flex: 1,
     height: 44,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   proBtn: {
     paddingHorizontal: space.md,
     paddingVertical: 6,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: brand.green,
   },
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: space.md,
     paddingVertical: 8,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: brand.border,
     backgroundColor: brand.bg,

@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     backgroundColor: brand.surfaceSunken,
     borderWidth: 1,
     borderColor: brand.border,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     paddingHorizontal: 12,
     paddingVertical: 5,
     fontSize: 12,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   chip: {
     borderWidth: 1,
     borderColor: brand.border,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
     paddingVertical: 8,
     backgroundColor: brand.surface,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   },
   primary: {
     height: 48,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     backgroundColor: brand.green,
     alignItems: 'center',
     justifyContent: 'center',

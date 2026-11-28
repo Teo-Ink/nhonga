@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: space.sm,
     height: 46,
-    borderRadius: radius.pill,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadow.sm,
